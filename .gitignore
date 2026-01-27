@@ -1,0 +1,50 @@
+.vs/
+*.pch
+*.ipch
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+Debug/
+Release/
+x64/
+x86/
+*.log
+
+# Build artifacts
+*.obj
+*.exe
+*.dll
+*.lib
+*.exp
+*.pdb
+*.idb
+
+# Precompiled headers
+*.pch
+*.gch
+
+# Auto-generated files
+*.ilk
+*.iobj
+*.ipdb
+*.tlog
+
+*.fxc
+*.cso
+*.hlsl~*
+*.hlsli~*
+
+*.VC.db
+*.VC.VC.opendb
+*.opensdf
+*.sdf
+*.cache
+*.tmp
+*.bak
+*.old
+*.orig

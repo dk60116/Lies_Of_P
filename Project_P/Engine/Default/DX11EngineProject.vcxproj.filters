@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{a15fdb63-2ab6-4d9a-b0c8-058919793c06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="System">
+      <UniqueIdentifier>{1bfa8629-f70a-4155-96b2-c86709fb08bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Default">
+      <UniqueIdentifier>{11209af0-9518-49c6-8255-412fe76d3fb3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Define">
+      <UniqueIdentifier>{d143b52f-927e-486d-9482-661f4578dde4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="System\WinAPI">
+      <UniqueIdentifier>{6d422d06-39da-4700-bbdd-bd85bf485037}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Resource.h">
+      <Filter>Engine\Default</Filter>
+    </ClInclude>
+    <ClInclude Include="DX11EngineProject.h">
+      <Filter>System\WinAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="epch.h">
+      <Filter>Engine\Default</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\EngineDefine.h">
+      <Filter>Engine\Define</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\EngineEnum.h">
+      <Filter>Engine\Define</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\EngineMacro.h">
+      <Filter>Engine\Define</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\EngineStruct.h">
+      <Filter>Engine\Define</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\EngineTypedef.h">
+      <Filter>Engine\Define</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\framework.h">
+      <Filter>Engine\Define</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="DX11EngineProject.ico">
+      <Filter>Engine\Default</Filter>
+    </Image>
+    <Image Include="small.ico">
+      <Filter>Engine\Default</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="DX11EngineProject.rc">
+      <Filter>Engine\Default</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="DX11EngineProject.cpp">
+      <Filter>System\WinAPI</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

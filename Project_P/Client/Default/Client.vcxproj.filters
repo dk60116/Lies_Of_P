@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Default">
+      <UniqueIdentifier>{8b3e34ce-8c99-4032-a9a3-e6a0bb05b5a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Client">
+      <UniqueIdentifier>{852db554-57a8-42fa-8932-8aedd43767e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts">
+      <UniqueIdentifier>{4e9e2feb-d1d4-4d65-9a54-e50cbc00863d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object">
+      <UniqueIdentifier>{c3c838b3-fad6-4c6b-a95f-3ec27fda1e3f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Scene">
+      <UniqueIdentifier>{f86f4b3c-77f8-417b-a472-cd7c4aae6129}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Managers">
+      <UniqueIdentifier>{7e77c92c-b5f8-4953-8818-db81040e9151}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\Weapons">
+      <UniqueIdentifier>{785d7feb-a664-4502-9e6e-d3e416fa3a21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\Weapons\Swords">
+      <UniqueIdentifier>{4875964f-b372-481b-85e5-a697977c75c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\Player">
+      <UniqueIdentifier>{12fd9748-fc20-4537-829c-7897701f5c7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\UI">
+      <UniqueIdentifier>{ae3f04d2-af05-4951-98b8-0cf5b06cd86a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\Monster">
+      <UniqueIdentifier>{b429eb31-5b1a-4116-925e-90de21a678c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\Monster\Woolf">
+      <UniqueIdentifier>{b607f882-87d4-4497-9fb1-8ffd9ac63b8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\Monster\Controller">
+      <UniqueIdentifier>{cb7a6411-3369-4889-8c97-5eade2d0e8ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\Monster\Controller\Behaviours">
+      <UniqueIdentifier>{d175a37c-e52c-446d-ad25-93b13ecb8e90}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Header\MainScene.h">
+      <Filter>Scripts\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Client.h">
+      <Filter>Client</Filter>
+    </ClInclude>
+    <ClInclude Include="cpch.h">
+      <Filter>Default</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Default</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Default</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\LoadingScene.h">
+      <Filter>Scripts\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\GameManager.h">
+      <Filter>Scripts\Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\GameScene.h">
+      <Filter>Scripts\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\Weapon.h">
+      <Filter>Scripts\Object\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\WoodenSword.h">
+      <Filter>Scripts\Object\Weapons\Swords</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\Monster.h">
+      <Filter>Scripts\Object\Monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\Wolf.h">
+      <Filter>Scripts\Object\Monster\Woolf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\Player.h">
+      <Filter>Scripts\Object\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\PlayerHUD.h">
+      <Filter>Scripts\Object\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\PlayerCamera.h">
+      <Filter>Scripts\Object\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\MonsterController.h">
+      <Filter>Scripts\Object\Monster\Controller</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\Behaviour_Patrole.h">
+      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\MonsterBehaviour.h">
+      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\Behaviour_Idle.h">
+      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\Behaviour_Tracking.h">
+      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\Behaviour_Combat.h">
+      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\Behaviour_Find.h">
+      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Code\MainScene.cpp">
+      <Filter>Scripts\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Client.cpp">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="cpch.cpp">
+      <Filter>Default</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\LoadingScene.cpp">
+      <Filter>Scripts\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\GameManager.cpp">
+      <Filter>Scripts\Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\GameScene.cpp">
+      <Filter>Scripts\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\Weapon.cpp">
+      <Filter>Scripts\Object\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\WoodenSword.cpp">
+      <Filter>Scripts\Object\Weapons\Swords</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\Monster.cpp">
+      <Filter>Scripts\Object\Monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\Wolf.cpp">
+      <Filter>Scripts\Object\Monster\Woolf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerCamera.cpp">
+      <Filter>Scripts\Object\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\Player.cpp">
+      <Filter>Scripts\Object\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerHUD.cpp">
+      <Filter>Scripts\Object\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\MonsterController.cpp">
+      <Filter>Scripts\Object\Monster\Controller</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\Behaviour_Patrole.cpp">
+      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\MonsterBehaviour.cpp">
+      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\Behaviour_Idle.cpp">
+      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\Behaviour_Tracking.cpp">
+      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\Behaviour_Combat.cpp">
+      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\Behaviour_Find.cpp">
+      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Client.ico">
+      <Filter>Default</Filter>
+    </Image>
+    <Image Include="small.ico">
+      <Filter>Default</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Client.rc">
+      <Filter>Default</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

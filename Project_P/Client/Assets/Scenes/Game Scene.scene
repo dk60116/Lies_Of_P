@@ -1,0 +1,33 @@
+SceneName : Game Scene
+Main_BG : MainMenu/Main_Backgrouond.png : [Texture]
+Main_Logo : MainMenu/Zelda_Logo.png : [Texture]
+// Link
+Link_Model : Player/Link.fbx : [Skinned Mesh] [Material]
+Link_Idle : Player/Link_Idle.fbx : [Animation Clip]
+Link_Walk : Player/Link_Walk.fbx : [Animation Clip]
+Link_BackWalk : Player/Link_BackWalk.fbx : [Animation Clip]
+Link_CombatBackWalk : Player/Link_CombatBackWalk.fbx : [Animation Clip]
+Link_LeftWalk : Player/Link_WalkLeft.fbx : [Animation Clip]
+Link_RightWalk : Player/Link_WalkRight.fbx : [Animation Clip]
+Link_Run : Player/Link_Run.fbx : [Animation Clip]
+Link_CombatRun : Player/Link_CombatRun.fbx : [Animation Clip]
+Link_CombatIdle : Player/Link_CombatIdle.fbx : [Animation Clip]
+Link_Jump : Player/Link_Jump.fbx : [Animation Clip]
+Link_AttackCombo : Player/Link_AttackCombo.fbx : [Animation Clip]
+Link_SwordAttack1 : Player/Link_SowrdAttack_1.fbx : [Animation Clip]
+// Wolf
+Wolf_Model : Monsters/Wolf/Wolf.fbx : [Skinned Mesh]
+Wolf_BaseMap : Monsters/Wolf/BaseMap.png : [Texture] 
+Wolf_Idle : Monsters/Wolf/Wolf_Idle.fbx : [Animation Clip]
+Wolf_Walk : Monsters/Wolf/Wolf_Walk.fbx : [Animation Clip]
+Wolf_LookAround : Monsters/Wolf/Wolf_LookAround.fbx : [Animation Clip]
+Wolf_Find : Monsters/Wolf/Wolf_Find.fbx : [Animation Clip]
+Wolf_Run : Monsters/Wolf/Wolf_Run.fbx : [Animation Clip]
+Wolf_Attack01 : Monsters/Wolf/Wolf_Attack01.fbx : [Animation Clip]
+// Space
+//Sample_Terrain : Terrain : [1, 300, 300, 2.0, 50.0, Map/TerrainHeight.png]
+Terrain_MainTex : Map/Grass.png : [Texture]
+VahMedoh : Map/VahMedoh/VahMedoh_Body.fbx : [Mesh] [Material]
+WoodenSword : Weapons/WoodenSword.fbx : [Mesh] [Material]
+// UI
+HeartBar : UI/HUDUI/HeartBar.png : [Texture]
