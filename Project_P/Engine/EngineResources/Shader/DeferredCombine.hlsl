@@ -48,7 +48,10 @@ float4 PSMain(VSOut input) : SV_Target
     float shadowF = gShadow.Sample(gSampler, uv).r;
     float4 diffuse = gShading.Sample(gSampler, uv);
     float4 specualr = gSpecular.Sample(gSampler, uv);
-    float shadowValue = (1.f - shadowF) * 0.1f;
+    
+    float shadowValue = (1.f - shadowF) * 0.15f;
+    if (diffuse.r <= 0.2f && diffuse.g <= 0.2f && diffuse.b)
+        shadowValue = 0.f;
     float4 shadow = float4(shadowValue, shadowValue, shadowValue, 0.f);
     
     float4 ad = albedo * diffuse;

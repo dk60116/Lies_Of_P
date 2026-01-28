@@ -64,12 +64,10 @@ float3 DecodeNormal(float3 enc01)
 
 float3 ReconstructWorldPos(float2 uv, float depth01)
 {
-    // uv는 이미 y-flip 된 상태라고 가정 (uv.y = 1-uv.y 적용 후)
     float2 ndc;
     ndc.x = uv.x * 2.0f - 1.0f;
     ndc.y = uv.y * 2.0f - 1.0f;
 
-    // D3D NDC z는 0..1 이므로 depth01 그대로 사용
     float4 clip = float4(ndc, depth01, 1.0f);
 
     float4 world = mul(clip, gInvViewProj);
@@ -158,7 +156,6 @@ float4 PSMain(VSOut i) : SV_Target
 
     float3 globalAmbient = 0.2f;
 
-    // "알베도는 빼고 명암만" 이므로 조명 결과만 출력
     float3 lit = saturate(globalAmbient + ambientSum + diffuseSum + specularSum);
     return float4(lit, 1);
 }

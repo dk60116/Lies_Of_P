@@ -8,7 +8,7 @@ class ENGINE_DLL CRenderTarget final
 public:
     enum class RTType
     {
-        Defalut,
+        Present,
         ShadowDepthPresent,
         ShadowMaskPresent,
         Combine,
@@ -17,7 +17,7 @@ public:
         Material,
         Depth,
         ShadowDepth,
-        Shading,
+        Diffuse,
         Specular,
         ShadowMask
     };

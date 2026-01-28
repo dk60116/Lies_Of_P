@@ -239,7 +239,7 @@ HRESULT CRenderTargetManager::CreateTargets(ID3D11Device* device, _uint width, _
     if (FAILED(m_rtList[CRenderTarget::RTType::ShadowDepth].Create(CRenderTarget::RTType::ShadowDepth, device, shadowMapSize, shadowMapSize, DXGI_FORMAT_R32_TYPELESS, true)))
         return E_FAIL;
 
-    if (FAILED(m_rtList[CRenderTarget::RTType::Shading].Create(CRenderTarget::RTType::Shading, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))
+    if (FAILED(m_rtList[CRenderTarget::RTType::Diffuse].Create(CRenderTarget::RTType::Diffuse, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))
         return E_FAIL;
 
     if (FAILED(m_rtList[CRenderTarget::RTType::Specular].Create(CRenderTarget::RTType::Specular, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))
