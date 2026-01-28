@@ -101,15 +101,16 @@ void CRenderTargetManager::Bind_GBuffer(ID3D11DeviceContext* ctx, const D3D11_VI
     Unbind_AllSRVs_PS(ctx);
 
     auto rtvA = GetRTV(CRenderTarget::RTType::Albedo);
+    auto rtvO = GetRTV(CRenderTarget::RTType::Object);
     auto rtvN = GetRTV(CRenderTarget::RTType::Normal);
     auto rtvM = GetRTV(CRenderTarget::RTType::Material);
     auto dsv = GetDSV(CRenderTarget::RTType::Depth);
 
-    if (!rtvA || !rtvN || !rtvM || !dsv)
+    if (!rtvA || !rtvO || !rtvN || !rtvM || !dsv)
         return;
 
-    ID3D11RenderTargetView* rtvs[3] = { rtvA, rtvN, rtvM };
-    ctx->OMSetRenderTargets(3, rtvs, dsv);
+    ID3D11RenderTargetView* rtvs[4] = { rtvA, rtvO, rtvN, rtvM };
+    ctx->OMSetRenderTargets(4, rtvs, dsv);
 
     if (vp) 
         ctx->RSSetViewports(1, vp);
@@ -167,6 +168,7 @@ void CRenderTargetManager::Clear_RenderTarget(const CRenderTarget::RTType type)
 void CRenderTargetManager::Clear_GBuffer()
 {
     Clear_RenderTarget(CRenderTarget::RTType::Albedo);
+    Clear_RenderTarget(CRenderTarget::RTType::Object);
     Clear_RenderTarget(CRenderTarget::RTType::Normal);
     Clear_RenderTarget(CRenderTarget::RTType::Material);
     Clear_RenderTarget(CRenderTarget::RTType::Depth);
@@ -223,6 +225,9 @@ HRESULT CRenderTargetManager::CreateTargets(ID3D11Device* device, _uint width, _
         return E_FAIL;
 
     if (FAILED(m_rtList[CRenderTarget::RTType::Albedo] .Create(CRenderTarget::RTType::Albedo, device, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, true)))
+        return E_FAIL;
+
+    if (FAILED(m_rtList[CRenderTarget::RTType::Object].Create(CRenderTarget::RTType::Object, device, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, true)))
         return E_FAIL;
 
     if (FAILED(m_rtList[CRenderTarget::RTType::Normal].Create(CRenderTarget::RTType::Normal, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))

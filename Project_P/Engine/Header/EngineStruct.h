@@ -1329,9 +1329,9 @@ namespace Engine
     struct CameraCB
     {
         _float3 camPos;
+        _float padding;
         _matrix view;
         _matrix proj;
-        _float padding;
     };
 
     struct MaterialCB

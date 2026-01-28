@@ -313,6 +313,9 @@ void CScene::Update()
 
 		(*it)->m_bPrevActive = (*it)->m_bActive;
 	}
+
+	if (CInput::GetInstance().GetMouseButtonDown(0))
+		CDebug::LogError(CInput::GetInstance().GetMousePos());
 }
 
 void CScene::FixedUpdate()
@@ -382,26 +385,26 @@ void CScene::Render_Game()
 	if (Get_Camera())
 		backgroudColor = Get_Camera()->Get_BackgroundColor();
 
-	// 1) Renderer 큐 적재
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		if ((*it)->IsActive())
 			(*it)->Render();
 
-	// 2) Camera Pre
-	for (TRAVERSAL_ITER(m_lCameraList, it)) (*it)->OnPreCull();
-	for (TRAVERSAL_ITER(m_lCameraList, it)) (*it)->OnPreRender();
+	for (TRAVERSAL_ITER(m_lCameraList, it)) 
+		(*it)->OnPreCull();
+	for (TRAVERSAL_ITER(m_lCameraList, it)) 
+		(*it)->OnPreRender();
 
 	// 3) GBuffer 패스 (MRT 유지!)
 	ID3D11DeviceContext* ctx = m_pContext;
 	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_GameViewport();
-	if (!vp) vp = CGraphicDevice::GetInstance().Get_CurrentViewport();
+	if (!vp) 
+		vp = CGraphicDevice::GetInstance().Get_CurrentViewport();
 
-	auto& RTM = CRenderTargetManager::GetInstance();
+	auto& trm = CRenderTargetManager::GetInstance();
 
-	RTM.Bind_GBuffer(ctx, vp);
-	RTM.Clear_GBuffer();
+	trm.Bind_GBuffer(ctx, vp);
+	trm.Clear_GBuffer();
 
-	// SkyBox를 GBuffer에 넣을 거면 여기서 (Albedo만 쓰고 싶으면 SkyBox 전용 PS 필요)
 	if (m_pSkyBox && !m_lCameraList.empty())
 	{
 		m_pContext->RSSetState(m_pSkyBoxResterizerState);
@@ -435,12 +438,12 @@ void CScene::Render_Game()
 		}
 	}
 
-	// 4) BackBuffer 복귀 + UI/디버그
+	// BackBuffer 복귀 + UI/디버그
 	CGraphicDevice::GetInstance().Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
 	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&backgroudColor);
 	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
-	// (추가) Combine Present를 먼저 백버퍼에 출력
+	// Combine Present를 먼저 백버퍼에 출력
 	for (TRAVERSAL_ITER(m_lCameraList, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())

@@ -2,7 +2,7 @@
 #include "RenderTarget.h"
 
 CRenderTarget::CRenderTarget()
-    : m_type(RTType::Albedo)
+    : m_type(RTType::Present)
     , m_width(0)
     , m_height(0)
     , m_format(DXGI_FORMAT_UNKNOWN)

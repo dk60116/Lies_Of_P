@@ -1344,8 +1344,9 @@ void CResources::Ready_GameResources()
 	CShader* litShader = LoadOnGame<CShader>(L"Lit (Shader)");
 	CMaterial::MATERIALDESC litMatDesc = { litShader, true };
 	litMatDesc.customFloatValues.push_back({ L"gSmoothness", 0.f });
-	litMatDesc.customVector2Values.push_back({ L"gTiling", {1.f, 1.f} });
-	litMatDesc.customVector2Values.push_back({ L"gOffset", {0.f, 0.f} });
+	litMatDesc.customVector2Values.push_back({ L"gTiling", { 1.f, 1.f } });
+	litMatDesc.customVector2Values.push_back({ L"gOffset", { 0.f, 0.f } });
+	litMatDesc.customVector3Values.push_back({ L"gObjectNum", { 1.f, 1.f, 1.f } });
 	LoadResourceComplete_Game<CMaterial>(L"LitMaterial (Material)", L"", &litMatDesc);
 
 	CShader::SHADERDESC skyBoxShaderDesc = { L"../EngineResources/Shader/Skybox.hlsl", L"",  VertexTexNormalTangentBuffer::numElements, VertexTexNormalTangentBuffer::elementDesc };
@@ -1364,8 +1365,8 @@ void CResources::Ready_GameResources()
 	CShader* g_BufferLitShader = LoadOnGame<CShader>(L"G_BufferLit (Shader)");
 	CMaterial::MATERIALDESC g_BufferLitDesc = { g_BufferLitShader, false };
 	g_BufferLitDesc.customFloatValues.push_back({ L"gSmoothness", 0.25f });
+	g_BufferLitDesc.customIntValues.push_back({ L"gObjectID", 0 });
 	g_BufferLitDesc.customVector2Values.push_back({ L"gTiling", {1.f, 1.f} });
-	g_BufferLitDesc.customVector2Values.push_back({ L"gOffset", {0.f, 0.f} });
 	LoadResourceComplete_Game<CMaterial>(L"G_BufferLit (Material)", L"", &g_BufferLitDesc);
 
 	CShader::SHADERDESC deferredPresentShaderDesc = { L"../EngineResources/Shader/DeferredPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };

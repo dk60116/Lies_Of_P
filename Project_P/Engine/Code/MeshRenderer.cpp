@@ -108,36 +108,6 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 	m_pMaterial->Bind_Matrix(matWorld);
 	m_pMaterial->Bind_Camera(camPos, matView, matProj, 0);
 
-	//if (m_pMaterial->IsUseLight())
-	//{
-	//	list<CLight*> lights = CSceneManager::GetInstance().Get_CrtScene()->Get_LightList();
-	//	const _uint lightCount = static_cast<_uint>(lights.size());
-
-	//	vector<_matrix> vLightInfos = {};
-
-	//	_uint index = 0;
-
-	//	for (TRAVERSAL_ITER(lights, it))
-	//	{
-	//		if (!(*it))
-	//			continue;
-
-	//		_float4x4 lightInfo = (*it)->To_LightInfo();
-	//		
-	//		if (index == 0)
-	//			lightInfo._44 = static_cast<_float>(lights.size());
-	//		else
-	//			lightInfo._44 = 0.f;
-
-	//		vLightInfos.push_back(XMLoadFloat4x4(&lightInfo));
-
-	//		++index;
-	//	}
-
-	//	m_pMaterial->Bind_Light(vLightInfos.data(), static_cast<_uint>(lights.size()));
-	//}
-
-	//실제 메쉬 렌더링 (버퍼 바인딩 및 Draw)
 	pBuffer->Render();
 }
 

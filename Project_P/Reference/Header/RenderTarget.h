@@ -6,13 +6,14 @@ NS_BEGIN(Engine)
 class ENGINE_DLL CRenderTarget final
 {
 public:
-    enum class RTType
+    enum class RTType : _uint
     {
-        Present,
+        Present = 0,
         ShadowDepthPresent,
         ShadowMaskPresent,
         Combine,
         Albedo,
+        Object,
         Normal,
         Material,
         Depth,

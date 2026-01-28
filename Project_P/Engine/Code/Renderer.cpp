@@ -11,6 +11,15 @@ CRenderer::~CRenderer()
 {
 }
 
+void CRenderer::Update()
+{
+	if (m_pMaterial)
+	{
+		_uint id = m_pGameObject->Get_UniqueID();
+		m_pMaterial->Set_IntValue(L"gObjectID", id);
+	}
+}
+
 void CRenderer::OnDestroy()
 {
 	Safe_Release(m_pMaterial);

@@ -99,6 +99,7 @@ HRESULT CCamera::Initialize()
 
 	pushDisplay(CRenderTarget::RTType::Combine, presentMat);
 	pushDisplay(CRenderTarget::RTType::Albedo, presentMat);
+	pushDisplay(CRenderTarget::RTType::Object, presentMat);
 	pushDisplay(CRenderTarget::RTType::Normal, presentMat);
 	pushDisplay(CRenderTarget::RTType::Material, presentMat);
 	pushDisplay(CRenderTarget::RTType::Depth, depthPresentMat);
@@ -429,7 +430,6 @@ void CCamera::RenderDisplay()
     if (!presentMat)
         return;
 
-    // --- 상태 백업
     ID3D11DepthStencilState* prevDS = nullptr; 
 	_uint prevStencilRef = 0;
     ID3D11RasterizerState* prevRS = nullptr;
@@ -440,30 +440,33 @@ void CCamera::RenderDisplay()
     ctx->RSGetState(&prevRS);
     ctx->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
-    D3D11_VIEWPORT prevVP{}; _uint prevVPCount = 1;
+    D3D11_VIEWPORT prevVP = {};
+	_uint prevVPCount = 1;
     ctx->RSGetViewports(&prevVPCount, &prevVP);
 
     // --- 뷰포트 (게임 뷰포트 우선)
     const D3D11_VIEWPORT* useVP = CGraphicDevice::GetInstance().Get_GameViewport();
-    if (!useVP) useVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
-    if (useVP) ctx->RSSetViewports(1, useVP);
 
-    const float W = useVP ? useVP->Width  : (_float)CDisplay::GetInstance().Get_ScreenResolution().x;
-    const float H = useVP ? useVP->Height : (_float)CDisplay::GetInstance().Get_ScreenResolution().y;
+    if (!useVP) 
+		useVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
+    if (useVP) 
+		ctx->RSSetViewports(1, useVP);
 
-    // --- Present는 Depth 불필요(OFF), Cull OFF
-    if (m_pRTDebugDS) ctx->OMSetDepthStencilState(m_pRTDebugDS, 0);
-    if (m_pRTDebugRS) ctx->RSSetState(m_pRTDebugRS);
+    const _float W = useVP ? useVP->Width  : (_float)CDisplay::GetInstance().Get_ScreenResolution().x;
+    const _float H = useVP ? useVP->Height : (_float)CDisplay::GetInstance().Get_ScreenResolution().y;
+
+    if (m_pRTDebugDS) 
+		ctx->OMSetDepthStencilState(m_pRTDebugDS, 0);
+    if (m_pRTDebugRS) 
+		ctx->RSSetState(m_pRTDebugRS);
     const _float bf[4] = { 0,0,0,0 };
     ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF);
 
-    // --- 픽셀 Ortho(좌상단 원점)
     _matrix v = XMMatrixIdentity();
     _matrix p = XMMatrixOrthographicOffCenterLH(0.f, W, H, 0.f, 0.f, 1.f);
     _matrix w = XMMatrixScaling(W, H, 1.f) * XMMatrixTranslation(W * 0.5f, H * 0.5f, 0.f);
-    _float3 camPos = {}; // Present에는 의미 없음
+    _float3 camPos = {};
 
-    // --- SRV 충돌 방지 + 바인딩
     rtm.Unbind_AllSRVs_PS(ctx);
 
     presentMat->Bind_Matrix(w);
@@ -472,11 +475,11 @@ void CCamera::RenderDisplay()
     ctx->PSSetShaderResources(0, 1, &srvCombine);
     m_pRectBuffer->Render();
 
-    // --- 정리
     rtm.Unbind_AllSRVs_PS(ctx);
 
-    // --- 상태 복원
-    if (prevVPCount > 0) ctx->RSSetViewports(1, &prevVP);
+    if (prevVPCount > 0) 
+		ctx->RSSetViewports(1, &prevVP);
+
     ctx->OMSetDepthStencilState(prevDS, prevStencilRef);
     ctx->RSSetState(prevRS);
     ctx->OMSetBlendState(prevBS, prevBlendFactor, prevSampleMask);
@@ -493,7 +496,6 @@ void CCamera::RenderRTDebugDisplay()
 	if (!context || m_mRTDebugDisplays.empty())
 		return;
 
-	// 상태 백업
 	ID3D11DepthStencilState* prevDS = nullptr;
 	_uint prevStencilRef = 0;
 	ID3D11RasterizerState* prevRS = nullptr;
@@ -516,24 +518,19 @@ void CCamera::RenderRTDebugDisplay()
 	_float screenW = (_float)res.x;
 	_float screenH = (_float)res.y;
 
-	// 뷰포트(디버그 출력은 백버퍼 전체)
-	{
-		D3D11_VIEWPORT vp{};
-		vp.TopLeftX = 0.f; vp.TopLeftY = 0.f;
-		vp.Width = screenW; vp.Height = screenH;
-		vp.MinDepth = 0.f; vp.MaxDepth = 1.f;
-		context->RSSetViewports(1, &vp);
-	}
+	D3D11_VIEWPORT vp = {};
+	vp.TopLeftX = 0.f; vp.TopLeftY = 0.f;
+	vp.Width = screenW; vp.Height = screenH;
+	vp.MinDepth = 0.f; vp.MaxDepth = 1.f;
+	context->RSSetViewports(1, &vp);
 
-	// 픽셀 좌표 Ortho (좌상단 원점)
 	_matrix view = XMMatrixIdentity();
 	_matrix proj = XMMatrixOrthographicOffCenterLH(0.f, screenW, screenH, 0.f, 0.f, 1.f);
 	_float3 camPos = { 0.f, 0.f, -1.f };
 
-	const float margin = 12.f;
-	const float gap = 10.f;
+	const _float margin = 12.f;
+	const _float gap = 10.f;
 
-	// 게임 뷰포트 기준 aspect (없으면 화면 기준)
 	const D3D11_VIEWPORT* gameVP = CGraphicDevice::GetInstance().Get_GameViewport();
 	float srcW = gameVP ? gameVP->Width : screenW;
 	float srcH = gameVP ? gameVP->Height : screenH;
@@ -542,6 +539,7 @@ void CCamera::RenderRTDebugDisplay()
 	CRenderTarget::RTType types[] =
 	{
 		CRenderTarget::RTType::Albedo,
+		CRenderTarget::RTType::Object,
 		CRenderTarget::RTType::Normal,
 		CRenderTarget::RTType::Material,
 		CRenderTarget::RTType::Depth,
@@ -552,13 +550,14 @@ void CCamera::RenderRTDebugDisplay()
 	};
 	const _int kCount = (_int)(sizeof(types) / sizeof(types[0]));
 
-	// 썸네일 크기(원하시면 여기 수치만 더 키우면 됩니다)
+	// 썸네일 크기
 	const _uint screenes = CDisplay::GetInstance().Get_ScreenResolution().y;
 	const _float resHeightFive = (CDisplay::GetInstance().Get_ScreenResolution().y / 5.f) * 1.6f;
 	_float maxBox = resHeightFive;
 
-	float rectW = maxBox;
-	float rectH = rectW / srcAspect;
+	_float rectW = maxBox;
+	_float rectH = rectW / srcAspect;
+
 	if (rectH > maxBox)
 	{
 		rectH = maxBox;
@@ -575,14 +574,14 @@ void CCamera::RenderRTDebugDisplay()
 		if (!disp.quad || !disp.material)
 			continue;
 
-		const bool bRightColumn = (i < 5);
-		const int row = bRightColumn ? i : (i - 5);
+		const _bool bRightColumn = (i < 5);
+		const _int row = bRightColumn ? i : (i - 5);
 
-		float cx = bRightColumn
+		_float cx = bRightColumn
 			? (screenW - margin - rectW * 0.5f)
 			: (margin + rectW * 0.5f);
 
-		float cy = screenH - margin - rectH * 0.5f - row * (rectH + gap);
+		_float cy = screenH - margin - rectH * 0.5f - row * (rectH + gap);
 
 		_matrix world = XMMatrixScaling(rectW, rectH, 1.f) * XMMatrixTranslation(cx, cy, 0.f);
 
@@ -595,10 +594,8 @@ void CCamera::RenderRTDebugDisplay()
 		disp.quad->Render();
 	}
 
-	// SRV 해제
 	CRenderTargetManager::GetInstance().Unbind_AllSRVs_PS(context);
 
-	// 상태 복원
 	context->OMSetDepthStencilState(prevDS, prevStencilRef);
 	context->RSSetState(prevRS);
 	context->OMSetBlendState(prevBS, prevBlendFactor, prevSampleMask);
@@ -719,13 +716,13 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 	if (!ctx)
 		return;
 
-	auto& RTM = CRenderTargetManager::GetInstance();
+	auto& rtm = CRenderTargetManager::GetInstance();
 
-	ID3D11ShaderResourceView* srvNormal = RTM.GetSRV(CRenderTarget::RTType::Normal);
-	ID3D11ShaderResourceView* srvDepth = RTM.GetSRV(CRenderTarget::RTType::Depth);
-	ID3D11ShaderResourceView* srvMaterial = RTM.GetSRV(CRenderTarget::RTType::Material);
+	ID3D11ShaderResourceView* srvNormal = rtm.GetSRV(CRenderTarget::RTType::Normal);
+	ID3D11ShaderResourceView* srvDepth = rtm.GetSRV(CRenderTarget::RTType::Depth);
+	ID3D11ShaderResourceView* srvMaterial = rtm.GetSRV(CRenderTarget::RTType::Material);
 
-	ID3D11RenderTargetView* rtvSpecular = RTM.GetRTV(CRenderTarget::RTType::Specular);
+	ID3D11RenderTargetView* rtvSpecular = rtm.GetRTV(CRenderTarget::RTType::Specular);
 
 	if (!srvNormal || !srvDepth || !srvMaterial || !rtvSpecular)
 		return;
@@ -751,7 +748,7 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 	ctx->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
 	// --- SRV 충돌 방지
-	RTM.Unbind_AllSRVs_PS(ctx);
+	rtm.Unbind_AllSRVs_PS(ctx);
 
 	// --- Specular RTV 바인딩 (Depth는 필요 없으면 nullptr로)
 	ctx->OMSetRenderTargets(1, &rtvSpecular, nullptr);
@@ -804,7 +801,7 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 	m_pRectBuffer->Render();
 
 	// --- 정리
-	RTM.Unbind_AllSRVs_PS(ctx);
+	rtm.Unbind_AllSRVs_PS(ctx);
 
 	// --- 상태 복원
 	ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
@@ -1041,14 +1038,14 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	if (!ctx)
 		return;
 
-	auto& RTM = CRenderTargetManager::GetInstance();
+	auto& rtm = CRenderTargetManager::GetInstance();
 
-	ID3D11ShaderResourceView* srvAlbedo = RTM.GetSRV(CRenderTarget::RTType::Albedo);
-	ID3D11ShaderResourceView* srvDiffuse = RTM.GetSRV(CRenderTarget::RTType::Diffuse);
-	ID3D11ShaderResourceView* srvSpecular = RTM.GetSRV(CRenderTarget::RTType::Specular);
-	ID3D11ShaderResourceView* srvShadow = RTM.GetSRV(CRenderTarget::RTType::ShadowMask);
+	ID3D11ShaderResourceView* srvAlbedo = rtm.GetSRV(CRenderTarget::RTType::Albedo);
+	ID3D11ShaderResourceView* srvDiffuse = rtm.GetSRV(CRenderTarget::RTType::Diffuse);
+	ID3D11ShaderResourceView* srvSpecular = rtm.GetSRV(CRenderTarget::RTType::Specular);
+	ID3D11ShaderResourceView* srvShadow = rtm.GetSRV(CRenderTarget::RTType::ShadowMask);
 
-	ID3D11RenderTargetView* rtvCombine = RTM.GetRTV(CRenderTarget::RTType::Combine);
+	ID3D11RenderTargetView* rtvCombine = rtm.GetRTV(CRenderTarget::RTType::Combine);
 
 	if (!srvAlbedo || !srvDiffuse || !srvSpecular || !srvShadow || !rtvCombine)
 		return;
@@ -1074,7 +1071,7 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	ctx->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
 	// --- SRV 충돌 방지
-	RTM.Unbind_AllSRVs_PS(ctx);
+	rtm.Unbind_AllSRVs_PS(ctx);
 
 	// --- Specular RTV 바인딩 (Depth는 필요 없으면 nullptr로)
 	ctx->OMSetRenderTargets(1, &rtvCombine, nullptr);
@@ -1123,7 +1120,7 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	m_pRectBuffer->Render();
 
 	// --- 정리
-	RTM.Unbind_AllSRVs_PS(ctx);
+	rtm.Unbind_AllSRVs_PS(ctx);
 
 	// --- 상태 복원
 	ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
