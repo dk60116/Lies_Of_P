@@ -11,7 +11,7 @@ cbuffer PerCamera : register(b1)
     float cpadding;
 };
 
-Texture2D gObjectTex : register(t0);
+Texture2D<uint> gObjectTex : register(t0);
 SamplerState gSampler : register(s0);
 
 struct VSIn
@@ -36,37 +36,44 @@ VSOut VSMain(VSIn v)
     return o;
 }
 
-uint DecodeID24(float3 rgb01)
+uint Hash32(uint x)
 {
-    uint3 c = (uint3)round(saturate(rgb01) * 255.0f);
-    return c.x | (c.y << 8) | (c.z << 16);
+    x ^= x >> 16;
+    x *= 0x7feb352du;
+    x ^= x >> 15;
+    x *= 0x846ca68bu;
+    x ^= x >> 16;
+    return x;
 }
 
-float3 hsv2rgb(float3 c)
+float3 IdToColor(uint id)
 {
-    float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-    float3 p = abs(frac(c.xxx + K.xyz) * 6.0 - K.www);
-    return c.z * lerp(K.xxx, saturate(p - K.xxx), c.y);
-}
+    if (id == 0)
+        return float3(0, 0, 0);
 
-float3 DebugColorFromID(uint id)
-{
-    float h = frac((float) id * 0.61803398875);
-    return hsv2rgb(float3(h, 0.95, 1.0));
+    uint h = Hash32(id);
+    uint r = (h) & 0xFF;
+    uint g = (h >> 8) & 0xFF;
+    uint b = (h >> 16) & 0xFF;
+
+    r = max(r, 64u);
+    g = max(g, 64u);
+    b = max(b, 64u);
+
+    return float3(r, g, b) / 255.0f;
 }
 
 float4 PSMain(VSOut i) : SV_Target
 {
     float2 uv = i.uv;
-    uv.y = 1.0f - uv.y;
+    uv.y = 1.f - uv.y;
     
-    float3 rgb01 = gObjectTex.Sample(gSampler, uv).rgb;
-    
-    uint id = DecodeID24(rgb01);
-    float3 dbg = DebugColorFromID(id);
+    uint w, h;
+    gObjectTex.GetDimensions(w, h);
 
-    if (id == 0)
-        dbg = 0;
+    int2 pix = int2(uv * float2(w, h));
+    pix = clamp(pix, int2(0, 0), int2(int(w) - 1, int(h) - 1));
 
-    return float4(dbg, 1);
+    uint id = gObjectTex.Load(int3(pix, 0));
+    return float4(IdToColor(id), 1);
 }

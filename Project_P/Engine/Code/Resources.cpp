@@ -1370,16 +1370,20 @@ void CResources::Ready_GameResources()
 	LoadResourceComplete_Game<CMaterial>(L"G_BufferLit (Material)", L"", &g_BufferLitDesc);
 
 	CShader::SHADERDESC deferredPresentShaderDesc = { L"../EngineResources/Shader/DeferredPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
-	LoadResourceComplete_Game<CShader>(L"DeferredPresent (Shader)", L"", &deferredPresentShaderDesc);
+	CShader* deferredPresentShader = LoadResourceComplete_Game<CShader>( L"DeferredPresent (Shader)", L"", &deferredPresentShaderDesc);
 
-	CShader* deferredPresentShader = LoadOnGame<CShader>(L"DeferredPresent (Shader)");
 	CMaterial::MATERIALDESC deferredPresentMatDesc = { deferredPresentShader, false };
 	LoadResourceComplete_Game<CMaterial>(L"DeferredPresent (Material)", L"", &deferredPresentMatDesc);
 
-	CShader::SHADERDESC depthPresentShaderDesc = { L"../EngineResources/Shader/DepthPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
-	LoadResourceComplete_Game<CShader>(L"DepthPresent (Shader)", L"", &depthPresentShaderDesc);
+	CShader::SHADERDESC objectIDPresentShaderDesc = { L"../EngineResources/Shader/ObjectIDPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
+	CShader* objectIDPresentShader = LoadResourceComplete_Game<CShader>(L"ObjectIDPresent (Shader)", L"", &objectIDPresentShaderDesc);
 
-	CShader* depthPresentShader = LoadOnGame<CShader>(L"DepthPresent (Shader)");
+	CMaterial::MATERIALDESC objectIDPresentMatDesc = { objectIDPresentShader, false };
+	LoadResourceComplete_Game<CMaterial>(L"ObjectIDPresent (Material)", L"", &objectIDPresentMatDesc);
+
+	CShader::SHADERDESC depthPresentShaderDesc = { L"../EngineResources/Shader/DepthPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
+	CShader* depthPresentShader = LoadResourceComplete_Game<CShader>(L"DepthPresent (Shader)", L"", &depthPresentShaderDesc);
+
 	CMaterial::MATERIALDESC depthPresentMatDesc = { depthPresentShader, false };
 	LoadResourceComplete_Game<CMaterial>(L"DepthPresent (Material)", L"", &depthPresentMatDesc);
 

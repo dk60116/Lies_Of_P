@@ -9,6 +9,7 @@ public:
     enum class RTType : _uint
     {
         Present = 0,
+        ObjectPresent,
         ShadowDepthPresent,
         ShadowMaskPresent,
         Combine,

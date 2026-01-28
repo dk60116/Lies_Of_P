@@ -96,7 +96,7 @@ inline T* CResources::LoadResourceComplete_Game(const wstring& _name, const wstr
     if (newResource)
         CDebug::Log(L"Create Game resource successfully: " + newResource->Get_ResourceName());
     else
-        CDebug::LogError(L"Failed create Scene resource" + _name);
+        CDebug::LogError(L"Failed create Scene resource: " + _name);
 
     return dynamic_cast<T*>(newResource);
 }
@@ -109,7 +109,7 @@ inline T* CResources::LoadResourceComplete_Scene(const wstring& _name, const wst
     if (newResource)
         CDebug::Log(L"Create Scene resource successfully: " + newResource->Get_ResourceName());
     else
-        CDebug::LogError(L"Failed create Scene resource" + _name);
+        CDebug::LogError(L"Failed create Scene resource: " + _name);
 
     return dynamic_cast<T*>(newResource);
 }

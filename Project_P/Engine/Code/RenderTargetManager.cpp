@@ -136,7 +136,7 @@ void CRenderTargetManager::Clear_RenderTarget(const CRenderTarget::RTType type)
         if (!dsv)
             return;
 
-        context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+        context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH, 1.0f, 0);
         return;
     }
 
@@ -237,7 +237,7 @@ HRESULT CRenderTargetManager::CreateTargets(ID3D11Device* device, _uint width, _
     if (FAILED(m_rtList[CRenderTarget::RTType::Albedo] .Create(CRenderTarget::RTType::Albedo, device, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, true)))
         return E_FAIL;
 
-    if (FAILED(m_rtList[CRenderTarget::RTType::Object].Create(CRenderTarget::RTType::Object, device, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, true)))
+    if (FAILED(m_rtList[CRenderTarget::RTType::Object].Create(CRenderTarget::RTType::Object, device, width, height, DXGI_FORMAT_R32_UINT, true)))
         return E_FAIL;
 
     if (FAILED(m_rtList[CRenderTarget::RTType::Normal].Create(CRenderTarget::RTType::Normal, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))

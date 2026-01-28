@@ -431,6 +431,7 @@ void CScene::Render_Game()
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 		{
+			(*it)->RenderObjectIDPass(vp);
 			(*it)->RenderLightingPass_ToDiffuse(vp);
 			(*it)->RenderLightingPass_ToSpecular(vp);
 			(*it)->RenderShadowMaskPass(vp);
