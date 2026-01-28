@@ -22,6 +22,7 @@ public:
     void Clear_GBuffer();
 
 public:
+    ID3D11Texture2D* GetTexture(const CRenderTarget::RTType type) const;
     ID3D11RenderTargetView* GetRTV(const CRenderTarget::RTType type) const;
     ID3D11ShaderResourceView* GetSRV(const CRenderTarget::RTType type) const;
     ID3D11DepthStencilView* GetDSV(const CRenderTarget::RTType type) const;

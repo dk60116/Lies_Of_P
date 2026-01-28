@@ -36,15 +36,14 @@ VSOut VSMain(VSIn v)
     return o;
 }
 
-float4 PSMain(VSOut input) : SV_Target
+float4 PSMain(VSOut i) : SV_Target
 {
-    float2 uv = input.uv;
+    float2 uv = i.uv;
     uv.y = 1.0f - uv.y;
 
-    float d = gDepth.SampleLevel(gSampler, uv, 0); // non-linear 0..1
+    float d = gDepth.SampleLevel(gSampler, uv, 0);
 
-    // 너무 큰 스케일은 saturate로 바로 흰색이 됩니다.
-    float v = saturate((1.0f - d) * 50.0f); // 50~300 추천
+    float v = saturate((1.0f - d) * 50.0f);
     return float4(v, v, v, 1);
 }
 

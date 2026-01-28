@@ -177,6 +177,16 @@ void CRenderTargetManager::Clear_GBuffer()
     Clear_RenderTarget(CRenderTarget::RTType::Combine);
 }
 
+ID3D11Texture2D* CRenderTargetManager::GetTexture(const CRenderTarget::RTType type) const
+{
+    auto it = m_rtList.find(type);
+
+    if (it == m_rtList.end())
+        return nullptr;
+
+    return it->second.GetTexture();
+}
+
 ID3D11RenderTargetView* CRenderTargetManager::GetRTV(const CRenderTarget::RTType type) const
 {
     auto it = m_rtList.find(type);

@@ -16,8 +16,8 @@ SamplerState gSampler : register(s0);
 
 struct VSIn
 {
-    float3 posL : POSITION; // VertexTexNormalTangentBuffer.position
-    float2 uv : TEXCOORD0; // VertexTexNormalTangentBuffer.uv
+    float3 posL : POSITION; 
+    float2 uv : TEXCOORD0;
 };
 
 struct VSOut
@@ -36,10 +36,10 @@ VSOut VSMain(VSIn v)
     return o;
 }
 
-float4 PSMain(VSOut input) : SV_Target
+float4 PSMain(VSOut i) : SV_Target
 {
-    float2 uv = input.uv;
-    uv.y = 1.0f - uv.y; // 상하 플립
+    float2 uv = i.uv;
+    uv.y = 1.0f - uv.y;
 
     float4 c = gTexture.Sample(gSampler, uv);
     c.a = 1.0f;

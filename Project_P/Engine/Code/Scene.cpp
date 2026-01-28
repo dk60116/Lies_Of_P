@@ -315,7 +315,7 @@ void CScene::Update()
 	}
 
 	if (CInput::GetInstance().GetMouseButtonDown(0))
-		CDebug::LogError(CInput::GetInstance().GetMousePos());
+		CDebug::LogError(Get_Camera()->GetColorPickingID(CInput::GetInstance().GetMousePos()));
 }
 
 void CScene::FixedUpdate()

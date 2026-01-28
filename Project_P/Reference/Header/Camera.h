@@ -80,8 +80,13 @@ public:
 	void RenderCombine(const D3D11_VIEWPORT* vp);
 
 public:
+	const _int GetColorPickingID(const vector2Int& _mousePos);
+
 	CPhysics::Ray ScreenPointToRay(const vector2Int& _pixel, _float _maxDist = 999999.f);
 	CPhysics::Ray ScreenPointToRay_Editor(const vector2Int& _pixel, _float _maxDist = 999999.f);
+
+private:
+	const bool EnsurePickStaging();
 
 private:
 	CMaterial* Add_RectMaterial(const CRenderTarget::RTType _type, const wstring& _path);
@@ -123,6 +128,8 @@ private:
 
 	CLight* m_pMainLight;
 	CLight::ShadowMatrices m_sMainLightMatrix;
+
+	ID3D11Texture2D* m_pPickStaging;
 };
 
 NS_END

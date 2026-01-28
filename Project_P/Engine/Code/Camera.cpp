@@ -30,6 +30,7 @@ CCamera::CCamera()
 	, m_pShadowCB(nullptr)
 	, m_pMainLight(nullptr)
 	, m_sMainLightMatrix()
+	, m_pPickStaging(nullptr)
 {
 	m_strName = L"Camera";
 }
@@ -247,6 +248,8 @@ void CCamera::OnDestroy()
 
 	Safe_Release(m_pInvViewProjCB);
 	Safe_Release(m_pShadowCB);
+
+	Safe_Release(m_pPickStaging);
 }
 
 _matrix CCamera::Get_ViewMatrix() const
@@ -532,9 +535,9 @@ void CCamera::RenderRTDebugDisplay()
 	const _float gap = 10.f;
 
 	const D3D11_VIEWPORT* gameVP = CGraphicDevice::GetInstance().Get_GameViewport();
-	float srcW = gameVP ? gameVP->Width : screenW;
-	float srcH = gameVP ? gameVP->Height : screenH;
-	float srcAspect = (srcH > 0.f) ? (srcW / srcH) : 1.f;
+	_float srcW = gameVP ? gameVP->Width : screenW;
+	_float srcH = gameVP ? gameVP->Height : screenH;
+	_float srcAspect = (srcH > 0.f) ? (srcW / srcH) : 1.f;
 
 	CRenderTarget::RTType types[] =
 	{
@@ -1138,6 +1141,57 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	Safe_Release(prevBS);
 }
 
+const _int CCamera::GetColorPickingID(const vector2Int& _mouseVPPos)
+{
+	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
+	auto& rtm = CRenderTargetManager::GetInstance();
+	ID3D11DeviceContext* ctx = CGraphicDevice::GetInstance().Get_Context();
+	if (!device || !ctx) 
+		return 0;
+
+	if (!EnsurePickStaging()) 
+		return 0;
+
+	ID3D11Texture2D* srcTex = rtm.GetTexture(CRenderTarget::RTType::Object);
+	if (!srcTex) return 0;
+
+	// 1x1 영역만 복사
+	D3D11_BOX box;
+	box.left = _mouseVPPos.x;
+	box.right = _mouseVPPos.x + 1;
+	box.top = _mouseVPPos.y;
+	box.bottom = _mouseVPPos.y + 1;
+	box.front = 0;
+	box.back = 1;
+
+	ctx->CopySubresourceRegion
+	(
+		m_pPickStaging, 0,
+		0, 0, 0,
+		srcTex, 0,    
+		&box);
+
+	D3D11_MAPPED_SUBRESOURCE mapped = {};
+	if (FAILED(ctx->Map(m_pPickStaging, 0, D3D11_MAP_READ, 0, &mapped)))
+		return 0;
+
+	const uint8_t* p = (const uint8_t*)mapped.pData;
+	uint32_t r = p[0];
+	uint32_t g = p[1];
+	uint32_t b = p[2];
+
+	ctx->Unmap(m_pPickStaging, 0);
+
+	uint32_t id = (r) | (g << 8) | (b << 16);
+
+	return id;
+}
+
+CPhysics::Ray CCamera::ScreenPointToRay(const vector2Int& _pixel, _float _maxDist)
+{
+	return CPhysics::Ray();
+}
+
 CPhysics::Ray CCamera::ScreenPointToRay_Editor(const vector2Int& _pixel, _float _maxDist)
 {
 	auto eo = CEditor::GetInstance().Get_Options();
@@ -1182,6 +1236,32 @@ CPhysics::Ray CCamera::ScreenPointToRay_Editor(const vector2Int& _pixel, _float 
 
 	CPhysics::Ray result = { origin, resultDir.normalized(), _maxDist };
 	return result;
+}
+
+const bool CCamera::EnsurePickStaging()
+{
+	if (m_pPickStaging)
+		return true;
+
+	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
+
+	if (!device) 
+		return false;
+
+	D3D11_TEXTURE2D_DESC d = {};
+	d.Width = 1;
+	d.Height = 1;
+	d.MipLevels = 1;
+	d.ArraySize = 1;
+	d.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	d.SampleDesc.Count = 1;
+	d.SampleDesc.Quality = 0;
+	d.Usage = D3D11_USAGE_STAGING;
+	d.BindFlags = 0;
+	d.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+	d.MiscFlags = 0;
+
+	return SUCCEEDED(device->CreateTexture2D(&d, nullptr, &m_pPickStaging));
 }
 
 CMaterial* CCamera::Add_RectMaterial(const CRenderTarget::RTType _type, const wstring& _path)

@@ -117,6 +117,33 @@ VSOut VSMain(VSIn v)
     return o;
 }
 
+uint Hash32(uint x)
+{
+    x ^= x >> 16;
+    x *= 0x7feb352du;
+    x ^= x >> 15;
+    x *= 0x846ca68bu;
+    x ^= x >> 16;
+    return x;
+}
+
+float3 IdToColor_HighContrast(uint id)
+{
+    uint h = Hash32(id);
+
+    // 24bit 뽑기
+    uint r = h & 0xFF;
+    uint g = (h >> 8) & 0xFF;
+    uint b = (h >> 16) & 0xFF;
+
+    // 너무 어두운 색 방지(바닥 올리기)
+    r = max(r, 64u);
+    g = max(g, 64u);
+    b = max(b, 64u);
+
+    return float3(r, g, b) / 255.0f;
+}
+
 PSOut PSMain(VSOut input)
 {
     PSOut o;
@@ -127,18 +154,9 @@ PSOut PSMain(VSOut input)
 
     o.Albedo = saturate(baseColor * texColor);
     
-    uint id = gObjectID;
-    uint r = id & 0xFF;
-    uint g = (id >> 8) & 0xFF;
-    uint b = (id >> 16) & 0xFF;
-
-    o.Object = float4
-    (
-        (float)r / 255.0f,
-        (float)g / 255.0f,
-        (float)b / 255.0f,
-        1.0f
-    );
+    uint id = (uint) gObjectID;
+    float3 c = IdToColor_HighContrast(id);
+    o.Object = float4(c, 1.0f);
 
     float3 Nw = normalize(input.normalW);
 
