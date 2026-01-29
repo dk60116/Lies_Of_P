@@ -86,7 +86,7 @@ VSOut VSMain(VSIn v)
             float w = v.boneWeights[i];
             uint  idx = v.boneIndices[i];
 
-            if (w > 0.0f && idx < 128)
+            if (w > 0.0f && idx < 512)
             {
                 float4x4 M = gBones[idx];
                 skinnedPos += mul(float4(v.posL, 1.0f), M) * w;

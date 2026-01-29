@@ -54,7 +54,7 @@ HRESULT CPlayer::Initialize()
 	CTexture* tex = CResources::GetInstance().LoadOnScene<CTexture>(L"Link_Texture (Texture)");
 
 	//m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"Link_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"Link_Model (MeshBuffer)"), 0.01f, vector3::up() * 180.f);
-	m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"Eve_BodyModel (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"Link_Model (MeshBuffer)"), 0.01f, vector3::up() * 180.f);
+	m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"Eve_BodyModel (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"Eve_BodyModel (MeshBuffer)"), 0.01f, vector3::up() * 180.f);
 
 	//m_pAnimator = m_pGameObject->AddComponent<CAnimator>();
 	//m_pAnimator->Add_Animation(L"Idle", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_Idle (Animation)"));
@@ -144,35 +144,33 @@ void CPlayer::GetDamage(const _uint _damage)
 
 void CPlayer::PlayerControle()
 {
-	return;
-
 	m_bLockOnMode = CInput::GetInstance().GetKey(SHIFT);
 	m_bIsAttack = CInput::GetInstance().GetMouseButtonDown(0);
 	m_bIsJump = CInput::GetInstance().GetKeyDown(SPACE);
 
-	if (m_bIsJump && !m_bIsPrevJump)
-	{
-		PlayJumpAnimation();
-	}
+	//if (m_bIsJump && !m_bIsPrevJump)
+	//{
+	//	PlayJumpAnimation();
+	//}
 
-	if (m_bIsAttack && !m_bIsPrevAttack)
-	{
-		PlaySwordAnimation();
-		m_bSwordActionDuring = true;
-		m_fAttackComboNT = 0.f;
-		return;
-	}
+	//if (m_bIsAttack && !m_bIsPrevAttack)
+	//{
+	//	PlaySwordAnimation();
+	//	m_bSwordActionDuring = true;
+	//	m_fAttackComboNT = 0.f;
+	//	return;
+	//}
 
-	if (m_bSwordActionDuring)
-		PlayerControle_AttackCombo();
+	//if (m_bSwordActionDuring)
+	//	PlayerControle_AttackCombo();
 
-	if (m_bLockOnMode != m_bPrevLockOnMode)
-	{
-		if (m_vMoveDirection == vector3::zero())
-			PlayIdleAnimation();
-		else
-			PlayMoveAnimation();
-	}
+	//if (m_bLockOnMode != m_bPrevLockOnMode)
+	//{
+	//	if (m_vMoveDirection == vector3::zero())
+	//		PlayIdleAnimation();
+	//	else
+	//		PlayMoveAnimation();
+	//}
 
 	m_vMoveDirection = vector3::zero();
 	m_fRotateDirection = 0.f;
@@ -186,21 +184,21 @@ void CPlayer::PlayerControle()
 		m_vMoveDirection += vector3::back();
 	}
 
-	if ((m_vMoveDirection.z != m_vPrevMoveDirectoin.z && m_vMoveDirection != vector3::zero()))
-	{
-		PlayMoveAnimation();
-		m_pAnimator->Pause();
-	}
+	//if ((m_vMoveDirection.z != m_vPrevMoveDirectoin.z && m_vMoveDirection != vector3::zero()))
+	//{
+	//	PlayMoveAnimation();
+	//	m_pAnimator->Pause();
+	//}
 
 	if (!m_bLockOnMode)
 		PlayerControle_NoneLockOn();
 	else
 		PlayerControle_LockOn();
 
-	if (m_vMoveDirection != m_vPrevMoveDirectoin && m_vMoveDirection == vector3::zero())
-	{
-		PlayIdleAnimation();
-	}
+	//if (m_vMoveDirection != m_vPrevMoveDirectoin && m_vMoveDirection == vector3::zero())
+	//{
+	//	PlayIdleAnimation();
+	//}
 
 	m_bBackMove = m_vMoveDirection.z < 0.f;
 
@@ -209,22 +207,22 @@ void CPlayer::PlayerControle()
 	else
 		m_fCrtMoveSpeed = m_sPlayerStatus.moveSpeed;
 
-	if (m_bSwordActionDuring)
-		m_fCrtMoveSpeed = m_sPlayerStatus.moveSpeed * 0.3f;
+	//if (m_bSwordActionDuring)
+	//	m_fCrtMoveSpeed = m_sPlayerStatus.moveSpeed * 0.3f;
 
-	if (m_vMoveDirection != m_vPrevMoveDirectoin)
-	{
-		PlayMoveAnimation();
-	}
+	//if (m_vMoveDirection != m_vPrevMoveDirectoin)
+	//{
+	//	PlayMoveAnimation();
+	//}
 
-	if (m_bLockOnMode != m_bPrevLockOnMode)
-	{
-		if (!CInput::GetInstance().GetKey(SHIFT))
-		{
-			if (m_fRotateDirection != 0.f)
-				PlayMoveAnimation();
-		}
-	}
+	//if (m_bLockOnMode != m_bPrevLockOnMode)
+	//{
+	//	if (!CInput::GetInstance().GetKey(SHIFT))
+	//	{
+	//		if (m_fRotateDirection != 0.f)
+	//			PlayMoveAnimation();
+	//	}
+	//}
 
 	if (m_vMoveDirection != vector3::zero())
 	{

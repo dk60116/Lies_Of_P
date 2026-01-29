@@ -22,7 +22,7 @@ cbuffer PerMaterial : register(b2)
 
 cbuffer PerBones : register(b3)
 {
-    float4x4 gBones[128];
+    float4x4 gBones[512];
 };
 
 cbuffer PerCustomValue : register(b10)

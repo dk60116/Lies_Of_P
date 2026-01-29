@@ -2,7 +2,7 @@ SceneName : Game Scene
 Main_BG : MainMenu/Main_Backgrouond.png : [Texture]
 Main_Logo : MainMenu/Zelda_Logo.png : [Texture]
 // Link
-Link_Model : Player/Link.fbx : [Skinned Mesh] [Material]
+//Link_Model : Player/Link.fbx : [Skinned Mesh] [Material]
 Link_Idle : Player/Link_Idle.fbx : [Animation Clip]
 Link_Walk : Player/Link_Walk.fbx : [Animation Clip]
 Link_BackWalk : Player/Link_BackWalk.fbx : [Animation Clip]

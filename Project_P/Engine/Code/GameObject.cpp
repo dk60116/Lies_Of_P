@@ -321,34 +321,54 @@ vector<CMeshRenderer*> CGameObject::CreateMeshHierachy(vector<MeshBundle> _meshI
 {
 	CTransform* parentTransform = Get_Transform();
 
-	if (_meshInfos.empty())
+	if (!m_pScene || !parentTransform)
 	{
-		CDebug::LogError(L"Failed create Mesh hierachy - empty mesh info: " + parentTransform->Get_GameObject()->Get_ObjectNameID());
+		CDebug::LogError(L"CreateMeshHierachy failed - scene/transform null: " + Get_ObjectNameID());
 		return {};
 	}
 
-	vector<CMeshRenderer*> renderers = {};
-
-	for (_uint i = 0; i < _meshInfos.size(); ++i)
+	if (_meshInfos.empty())
 	{
-		if (!_meshInfos[i].meshBuffer)
+		CDebug::LogError(L"Failed create Mesh hierachy - empty mesh info: " +
+			parentTransform->Get_GameObject()->Get_ObjectNameID());
+		return {};
+	}
+
+	vector<CMeshRenderer*> renderers;
+	renderers.reserve(_meshInfos.size());
+
+	for (const auto& mb : _meshInfos)
+	{
+		if (!mb.meshBuffer)
 			continue;
 
-		CGameObject* child = m_pScene->Add_GameObject(_meshInfos[i].meshBuffer->Get_ResourceName());
+		CGameObject* child = m_pScene->Add_GameObject(mb.meshBuffer->Get_ResourceName());
+		if (!child || !child->Get_Transform())
+			continue;
+
+		// Hierarchy
 		child->Get_Transform()->SetParent(parentTransform);
+
+		// Local transform defaults (원하면 여기서 position/rotation도 초기화 가능)
 		child->Get_Transform()->Set_LocalScale(_scaleFactor);
 
+		// Renderer
 		CMeshRenderer* ren = child->AddComponent<CMeshRenderer>();
+		if (!ren || !ren->Get_MeshFilter())
+			continue;
 
 		renderers.push_back(ren);
 
-		ren->Get_MeshFilter()->Set_MeshBuffer(_meshInfos[i].meshBuffer);
-		ren->Set_Material(CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferLit (Material)"));
+		// Mesh
+		ren->Get_MeshFilter()->Set_MeshBuffer(mb.meshBuffer);
 
-		if (!_meshInfos[i].texture)
-			continue;
+		// Material
+		CMaterial* mat = CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferLit (Material)");
+		ren->Set_Material(mat);
 
-		ren->Get_Material()->Set_Texture(_meshInfos[i].texture, 0);
+		// Texture (optional)
+		if (mb.texture && ren->Get_Material())
+			ren->Get_Material()->Set_Texture(mb.texture, 0);
 	}
 
 	return renderers;
@@ -377,14 +397,14 @@ vector<CSkinnedMeshRenderer*> CGameObject::CreateSkinnedMeshHierachy(vector<Skin
 		auto* r = g->AddComponent<CSkinnedMeshRenderer>();
 		r->Set_MeshBuffer(si.meshBuffer);
 		r->Set_Material(CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferLit (Material)"));
-		if (si.texture) 
+		if (si.texture)
 			r->Get_Material()->Set_Texture(si.texture, 0);
 		renderers.push_back(r);
 	}
 
 	CTransform* rootBone = nullptr;
-
 	vector<CTransform*> boneTfs(_bonesInfo.size(), nullptr);
+
 	for (size_t i = 0; i < _bonesInfo.size(); ++i)
 	{
 		CGameObject* g = m_pScene->Add_GameObject(_bonesInfo[i].name);
@@ -405,11 +425,20 @@ vector<CSkinnedMeshRenderer*> CGameObject::CreateSkinnedMeshHierachy(vector<Skin
 	{
 		_matrix m = XMLoadFloat4x4(&_bonesInfo[i].transformation);
 		_vector S, R, T;
-		XMMatrixDecompose(&S, &R, &T, m);
+		if (!XMMatrixDecompose(&S, &R, &T, m))
+		{
+			const _float4x4& M = _bonesInfo[i].transformation;
+			T = XMVectorSet(M._41, M._42, M._43, 0.f);
+			R = XMQuaternionIdentity();
+			S = XMVectorSet(1.f, 1.f, 1.f, 0.f);
+		}
 		boneTfs[i]->Set_LocalScale(S);
 		boneTfs[i]->Set_LocalQuaternion(R);
 		boneTfs[i]->Set_LocalPosition(T);
 	}
+
+	if (!rootBone)
+		rootBone = rootTf;
 
 	rootBone->Set_LocalScale(_scaleFactor);
 	rootBone->Set_LocalEulerAngles(_rotationFactor);
@@ -422,11 +451,13 @@ vector<CSkinnedMeshRenderer*> CGameObject::CreateSkinnedMeshHierachy(vector<Skin
 	CTransform* baseTransform = nullptr;
 
 	for (auto& b : _bonesInfo)
-		if (b.parentId == -1) 
-		{ 
+	{
+		if (b.parentId == -1)
+		{
 			baseTransform = nameMap[b.name];
-			break; 
+			break;
 		}
+	}
 
 	for (auto* r : renderers)
 	{

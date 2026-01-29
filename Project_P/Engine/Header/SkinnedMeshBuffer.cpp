@@ -37,39 +37,34 @@ HRESULT CSkinnedMeshBuffer::Initiailize_Custom(SkinnedBufferInitiaizeInfo _info,
     m_sInfo = _info.desc;
     m_strResourceName = _info.meshName;
 
-    const size_t vtxBytes = _info.desc.vertexSize *
-        _info.desc.vertextCount;
+    const size_t vtxBytes = _info.desc.vertexSize * _info.desc.vertextCount;
 
-    m_pVertexSysMem = std::malloc(vtxBytes);
-    std::memcpy(m_pVertexSysMem, _info.buffer.data(), vtxBytes);
+    m_pVertexSysMem = malloc(vtxBytes);
+    memcpy(m_pVertexSysMem, _info.buffer.data(), vtxBytes);
 
-    if (_info.desc.indexCount &&
-        !_info.indices.empty())
+    if (_info.desc.indexCount && !_info.indices.empty())
     {
-        const size_t idxBytes = sizeof(_uint) *
-            _info.desc.indexCount;
-        m_pIndexSysMem = std::malloc(idxBytes);
-        std::memcpy(m_pIndexSysMem,
-            _info.indices.data(),
-            idxBytes);
+        const size_t idxBytes = sizeof(_uint) * _info.desc.indexCount;
+        m_pIndexSysMem = malloc(idxBytes);
+        memcpy(m_pIndexSysMem, _info.indices.data(), idxBytes);
     }
 
     ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
     HRESULT hr = S_OK;
 
     {
-        D3D11_BUFFER_DESC   bd{};
-        D3D11_SUBRESOURCE_DATA sd{};
+        D3D11_BUFFER_DESC bd = {};
+        D3D11_SUBRESOURCE_DATA sd = {};
         bd.ByteWidth = static_cast<_uint>(vtxBytes);
         bd.Usage = D3D11_USAGE_DEFAULT;
         bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
         sd.pSysMem = _info.buffer.data();
         hr = device->CreateBuffer(&bd, &sd, &m_pVertexBuffer);
-        if (FAILED(hr)) goto BufferFail;
+        if (FAILED(hr))
+            goto BufferFail;
     }
 
-    if (_info.desc.indexCount &&
-        !_info.indices.empty())
+    if (_info.desc.indexCount && !_info.indices.empty())
     {
         D3D11_BUFFER_DESC   bd{};
         D3D11_SUBRESOURCE_DATA sd{};
@@ -78,15 +73,15 @@ HRESULT CSkinnedMeshBuffer::Initiailize_Custom(SkinnedBufferInitiaizeInfo _info,
         bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
         sd.pSysMem = _info.indices.data();
         hr = device->CreateBuffer(&bd, &sd, &m_pIndexBuffer);
-        if (FAILED(hr)) goto BufferFail;
+        if (FAILED(hr))
+            goto BufferFail;
     }
 
-    m_vBoneNames = _info.boneNames;      
+    m_vBoneNames = _info.boneNames;
     m_vBoneOffsetMatrices = _info.boneOffsetMatrices; // ½ºÅ² º» offset
 
-    XMFLOAT4X4 identity;
-    XMStoreFloat4x4(&identity,
-        DirectX::XMMatrixIdentity());
+    _float4x4 identity;
+    XMStoreFloat4x4(&identity, DirectX::XMMatrixIdentity());
 
     for (const auto& node : _bonesInfo)
     {
