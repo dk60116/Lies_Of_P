@@ -189,7 +189,7 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 	_matrix matProj = _cam->Get_ProjectionMatrix();
 
 	// 2) Bone Count Clamp
-	const _uint boneCount = min<_uint>(static_cast<_uint>(m_vBones.size()), 128u);
+	const _uint boneCount = min<_uint>(static_cast<_uint>(m_vBones.size()), 512u);
 
 	// 3) Bone Matrices (항상 128개)
 	_matrix boneMatrices[128];
@@ -291,7 +291,7 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 	_matrix matProj = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.proj));
 
 	// 3) Bone Count Clamp
-	const _uint boneCount = min<_uint>(static_cast<_uint>(m_vBones.size()), 128u);
+	const _uint boneCount = min<_uint>(static_cast<_uint>(m_vBones.size()), 512u);
 
 	// 4) Bone Matrices (항상 128개)
 	_matrix boneMatrices[128];
