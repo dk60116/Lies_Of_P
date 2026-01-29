@@ -208,8 +208,7 @@ void CCamera::Update()
 {
 	m_fAspect = static_cast<_float>(CDisplay::GetInstance().Get_ScreenResolution().x) / CDisplay::GetInstance().Get_ScreenResolution().y;
 
-	if (!m_pMainLight)
-		Find_MainLight();
+	Find_MainLight();
 	
 	if (m_pMainLight)
 		m_pMainLight->BuildDirectionalShadow(this, CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().directionalLightShadowDist, m_sMainLightMatrix);
@@ -251,6 +250,7 @@ void CCamera::OnDestroy()
 	Safe_Release(m_pShadowCB);
 
 	Safe_Release(m_pPickStaging);
+	Safe_Release(m_pMainLight);
 }
 
 _matrix CCamera::Get_ViewMatrix() const
@@ -1268,6 +1268,7 @@ CMaterial* CCamera::Add_RectMaterial(const CRenderTarget::RTType _type, const ws
 	if (!newMat)
 	{
 		CDebug::LogError((wstring(L"Not found ") + _path));
+		Safe_Release(m_pMainLight);
 		return nullptr;
 	}
 
@@ -1297,14 +1298,33 @@ void CCamera::Find_MainLight()
 	auto& lights = CSceneManager::GetInstance().Get_CrtScene()->Get_LightList();
 
 	if (lights.empty())
-		return;
-
-	for (TRAVERSAL_ITER(lights, it))
 	{
-		if ((*it)->Get_Enable() && (*it)->Get_GameObject()->IsActive() && (*it)->IsCastShadow() && (*it)->Get_Type() == CLight::Type::Directional)
+		if (m_pMainLight)
 		{
-			m_pMainLight = *it;
-			break;
+			Safe_Release(m_pMainLight);
+			m_pMainLight = nullptr;
+		}
+		return;
+	}
+
+	if (!m_pMainLight)
+	{
+		for (TRAVERSAL_ITER(lights, it))
+		{
+			if ((*it)->Get_Enable() && (*it)->Get_GameObject()->IsActive() && (*it)->IsCastShadow() && (*it)->Get_Type() == CLight::Type::Directional)
+			{
+				m_pMainLight = *it;
+				m_pMainLight->AddRef();
+				break;
+			}
+		}
+	}
+	else
+	{
+		if (!m_pMainLight->Get_GameObject()->IsActive() || !m_pMainLight->Get_Enable())
+		{
+			Safe_Release(m_pMainLight);
+			m_pMainLight = nullptr;
 		}
 	}
 }

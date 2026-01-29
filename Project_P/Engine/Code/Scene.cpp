@@ -23,6 +23,7 @@ CScene::CScene()
 	, m_pSkyBox(nullptr)
 	, m_pEditorCamera(nullptr)
 	, m_iUniqueObjectCount(0)
+	, m_mObjectOfId({})
 	, m_pSkyBoxDepthStencillState(nullptr)
 	, m_pMeshDepthStencilState(nullptr)
 	, m_pUIDepthStencilState(nullptr)
@@ -294,6 +295,14 @@ void CScene::Update_Editor()
 
 void CScene::Update()
 {
+	if (CInput::GetInstance().GetMouseButtonDown(0))
+	{
+		const _uint id = Get_Camera()->GetColorPickingID(CInput::GetInstance().GetMousePos());
+		CGameObject* pickedObj = FindGameObjectOfId(id);
+		if (pickedObj)
+			CDebug::LogError(L"Picked: " + pickedObj->Get_ObjectName());
+	}
+
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
 		if ((*it)->IsRecursiveActive())
@@ -313,9 +322,6 @@ void CScene::Update()
 
 		(*it)->m_bPrevActive = (*it)->m_bActive;
 	}
-
-	if (CInput::GetInstance().GetMouseButtonDown(0))
-		CDebug::LogError(Get_Camera()->GetColorPickingID(CInput::GetInstance().GetMousePos()));
 }
 
 void CScene::FixedUpdate()
@@ -798,10 +804,12 @@ CGameObject* CScene::Add_GameObject(wstring _name)
 
 	if (FAILED(m_lObjectList.back()->Initialize()))
 	{
+		--m_iUniqueObjectCount;
 		Safe_Release(newObj);
 		return nullptr;
 	}
 
+	m_mObjectOfId.insert({ newObj->m_iUniqueID, newObj });
 	newObj->Set_Scene(this);
 
 	return newObj;
@@ -962,6 +970,16 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 const _uint CScene::Get_UniqueObjectCount() const
 {
 	return m_iUniqueObjectCount;
+}
+
+CGameObject* CScene::FindGameObjectOfId(const _uint id)
+{
+	auto it = m_mObjectOfId.find(id);
+
+	if (it == m_mObjectOfId.end())
+		return nullptr;
+	
+	return (*it).second;
 }
 
 HRESULT CScene::PreLoadResources()
