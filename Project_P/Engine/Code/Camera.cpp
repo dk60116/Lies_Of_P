@@ -805,7 +805,8 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 	rtm.Unbind_AllSRVs_PS(ctx);
 
 	ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
-	if (prevVPCount > 0) ctx->RSSetViewports(1, &prevVP);
+	if (prevVPCount > 0)
+		ctx->RSSetViewports(1, &prevVP);
 
 	ctx->OMSetDepthStencilState(prevDS, prevStencilRef);
 	ctx->RSSetState(prevRS);
@@ -1000,7 +1001,7 @@ void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 	const _float shadowSize = (_float)CSceneManager::GetInstance().Get_LightSetting().shadowMapSize;
 	scb.invShadowMapSize = _float2(1.0f / shadowSize, 1.0f / shadowSize);
 
-	scb.bias = -0.0025f;
+	scb.bias = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().shadowBias;
 
 	ctx->UpdateSubresource(m_pShadowCB, 0, nullptr, &scb, 0, 0);
 	ctx->PSSetConstantBuffers(6, 1, &m_pShadowCB);

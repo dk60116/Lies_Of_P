@@ -89,7 +89,7 @@ float4 PSMain(VSOut i) : SV_Target
 
     // Forward의 gSmoothness에 해당하는 strength를 Material RT에서 가져옴
     float4 sp = gSpecParams.Sample(gSampler, uvTex);
-    float specularStrength = sp.g;
+    float specularStrength = sp.r;
 
     // 카메라 벡터 (Forward: V = normalize(pos - input.posW))
     float3 V = normalize(camPos - posW);

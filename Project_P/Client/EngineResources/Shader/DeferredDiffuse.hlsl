@@ -1,4 +1,4 @@
-// DeferredLighting_DiffuseOnly.hlsl
+// DeffrredDiffuse.hlsl
 
 // 라이트 정의
 #define MAX_LIGHTS 64

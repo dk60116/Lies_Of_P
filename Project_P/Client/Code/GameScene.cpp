@@ -23,11 +23,17 @@ HRESULT CGameScene::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
+	CGameObject* cube = Add_GameObject(L"Cube");
+	CMeshRenderer* cubeMesh = cube->AddComponent<CMeshRenderer>();
+	cubeMesh->Get_MeshFilter()->Set_MeshBuffer(CResources::GetInstance().LoadOnGame<CMeshBuffer>(L"Cube (Mesh Buffer)"));
+
 	CGameObject* cameraObject = Add_GameObject(L"Player Camera");
 	m_pPlayerCamera = cameraObject->AddComponent<CPlayerCamera>();
 
 	CGameObject* lightObject = Add_GameObject(L"Directional Light");
 	m_pDirLight = lightObject->AddComponent<CLight>();
+
+	m_pDirLight->Get_Transform()->Set_EulerAngles(40.f, -180.f, 0.f);
 
 	CGameObject* lightObject2 = Add_GameObject(L"Point Light");
 	CLight* pointLight = lightObject2->AddComponent<CLight>();

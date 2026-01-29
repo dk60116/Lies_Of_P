@@ -14,7 +14,7 @@ public:
 
 	struct LightSettings
 	{
-		shadowQualityOptions shadowQuality = SuperHigh;
+		shadowQualityOptions shadowQuality = High;
 		_uint shadowMapSize = 0;
 	};
 

@@ -1,5 +1,3 @@
-// ShadowDepth.hlsl (Depth-only + 스킨 포함, GBufferLit와 유사 구조)
-
 cbuffer PerObject : register(b0)
 {
     float4x4 world;

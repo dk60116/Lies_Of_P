@@ -51,10 +51,26 @@ HRESULT CPlayer::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
-	CTexture* tex = CResources::GetInstance().LoadOnScene<CTexture>(L"Link_Texture (Texture)");
+	//CTexture* tex = CResources::GetInstance().LoadOnScene<CTexture>(L"Link_Texture (Texture)");
+	CTexture* suit_baseColorTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Suit_Base (Texture)");
+	CTexture* suit_normalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Suit_Normal (Texture)");
+
+	CTexture* skin_baseColorTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Skin_Base (Texture)");
+	CTexture* skin_normalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Skin_Normal (Texture)");
 
 	//m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"Link_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"Link_Model (MeshBuffer)"), 0.01f, vector3::up() * 180.f);
-	m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"Eve_BodyModel (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"Eve_BodyModel (MeshBuffer)"), 0.01f, vector3::up() * 180.f);
+	vector<CSkinnedMeshRenderer*> meshes = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveBody_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveBody_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
+
+	for (TRAVERSAL_ITER(meshes, it))
+	{
+		(*it)->Get_Material()->Set_Texture(suit_baseColorTex);
+		(*it)->Get_Material()->Set_Texture(suit_normalTex, 1);
+		(*it)->Get_Material()->Set_FloatValue(L"gSmoothness", 0.7f);
+	}
+
+	meshes[3]->Get_Material()->Set_Texture(skin_baseColorTex);
+	meshes[3]->Get_Material()->Set_Texture(skin_normalTex, 1);
+	meshes[3]->Get_Material()->Set_FloatValue(L"gSmoothness", 0.1f);
 
 	//m_pAnimator = m_pGameObject->AddComponent<CAnimator>();
 	//m_pAnimator->Add_Animation(L"Idle", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_Idle (Animation)"));
@@ -96,6 +112,7 @@ HRESULT CPlayer::Initialize()
 
 void CPlayer::Awake()
 {
+	Get_Transform()->Set_PositionY(-2.864f);
 	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp;
 }
 

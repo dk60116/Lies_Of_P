@@ -29,7 +29,9 @@ cbuffer PerBones : register(b3)
 cbuffer PerCustomValue : register(b10)
 {
     float gSmoothness;
+    float gMetalic;
     uint gObjectID;
+    uint gPadding;
     float2 gTiling;
     float2 gOffset;
 };
@@ -145,7 +147,7 @@ PSOut PSMain(VSOut input)
     o.Normal = float4(Nw * 0.5f + 0.5f, 1.0f);
     
     float f0 = 0.04f;
-    o.Material = float4(0.f, gSmoothness, 0.f, 1.f);
+    o.Material = float4(gSmoothness, gMetalic, 0.f, 1.f);
 
     return o;
 }

@@ -38,6 +38,7 @@ public:
         wstring skyBox = L"DefaultSky (SkyBox)";
         _float ambient = 0.2f;
         _float directionalLightShadowDist = 150.f;
+        _float shadowBias = 0.f;
     };
 
 protected:
@@ -90,6 +91,7 @@ public:
     const EnviromentSettings& Get_EnviromentSetting();
 
     void Set_DirectionalLightShadowDist(const _float _value);
+    void Set_ShadwoBias(const _float _value);
 
     class CCamera* Get_Camera() const;
     CCamera* Get_Camera(const _int _index) const;

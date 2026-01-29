@@ -862,6 +862,11 @@ void CScene::Set_DirectionalLightShadowDist(const _float _value)
 	m_sEnviromentSettings.directionalLightShadowDist = _value;
 }
 
+void CScene::Set_ShadwoBias(const _float _value)
+{
+	m_sEnviromentSettings.shadowBias = _value;
+}
+
 CCamera* CScene::Get_Camera() const
 {
 	if (m_lCameraList.size() <= 0)
