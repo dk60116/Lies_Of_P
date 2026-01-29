@@ -54,4 +54,6 @@
 using namespace std;
 using namespace Engine;
 
+#define MAX_BONE 512u
+
 #endif // Engine_Define_h__

@@ -28,6 +28,7 @@ CComponent* CSkinnedMeshRenderer::Clone() const
 
 	clone->m_pMeshBuffer = this->m_pMeshBuffer;
 	if (clone->m_pMeshBuffer)
+	if (clone->m_pMeshBuffer)
 		clone->m_pMeshBuffer->AddRef();
 
 	clone->m_vBones.clear();
@@ -58,10 +59,10 @@ HRESULT CSkinnedMeshRenderer::Initialize()
 
 	auto mat = m_pMaterial;
 
-	// 본 행렬 상수 버퍼 생성 (최대 본 갯수 = 128 가정)
+	// 본 행렬 상수 버퍼 생성 (최대 본 갯수 = 512 가정)
 	D3D11_BUFFER_DESC desc = {};
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	desc.ByteWidth = sizeof(XMMATRIX) * 128;
+	desc.ByteWidth = sizeof(_matrix) * 512;
 	desc.Usage = D3D11_USAGE_DYNAMIC;
 	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
@@ -189,17 +190,16 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 	_matrix matProj = _cam->Get_ProjectionMatrix();
 
 	// 2) Bone Count Clamp
-	const _uint boneCount = min<_uint>(static_cast<_uint>(m_vBones.size()), 512u);
+	const _uint boneCount = min<_uint>(static_cast<_uint>(m_vBones.size()), MAX_BONE);
 
-	// 3) Bone Matrices (항상 128개)
-	_matrix boneMatrices[128];
-	for (int i = 0; i < 128; ++i)
+	// 3) Bone Matrices (항상 512개)
+	_matrix boneMatrices[MAX_BONE];
+	for (int i = 0; i < MAX_BONE; ++i)
 		boneMatrices[i] = XMMatrixIdentity();
 
 	// 메시 월드 역행렬은 루프 밖에서 1회 계산
 	_matrix meshWorldInv = XMMatrixIdentity();
 	{
-		// m_pGameObject는 여기까지 왔으면 유효하다고 가정하지만, 안전하게 체크
 		if (m_pGameObject && m_pGameObject->Get_Transform())
 		{
 			_matrix meshWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
@@ -207,9 +207,6 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 		}
 	}
 
-	// 4) Bone matrices 계산
-	// 목표: 셰이더가 mul(pos, gBones[idx]) 패턴(행 벡터 스타일)일 때
-	// CPU에서 Transpose해서 올린 행렬을 사용하도록 맞춘다.
 	for (_uint i = 0; i < boneCount; ++i)
 	{
 		if (!m_vBones[i])
@@ -232,7 +229,7 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 		boneMatrices[i] = XMMatrixTranspose(invBindPose * boneMeshLocal);
 	}
 
-	// 5) Bone buffer upload (항상 128개 업로드)
+	// 5) Bone buffer upload (항상 512개 업로드)
 	if (!m_pBoneMatrixBuffer)
 	{
 		CDebug::LogError(L"Skinned MeshRenderer - BoneMatrixBuffer is null: " + m_pGameObject->Get_ObjectNameID());
@@ -243,7 +240,7 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 	HRESULT hrMap = m_pContext->Map(m_pBoneMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedRes);
 	if (SUCCEEDED(hrMap))
 	{
-		memcpy(mappedRes.pData, boneMatrices, sizeof(XMMATRIX) * 128);
+		memcpy(mappedRes.pData, boneMatrices, sizeof(XMMATRIX) * MAX_BONE);
 		m_pContext->Unmap(m_pBoneMatrixBuffer, 0);
 	}
 	else
@@ -290,12 +287,12 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 	_matrix matView = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.view));
 	_matrix matProj = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.proj));
 
-	// 3) Bone Count Clamp
+	// Bone Count Clamp
 	const _uint boneCount = min<_uint>(static_cast<_uint>(m_vBones.size()), 512u);
 
-	// 4) Bone Matrices (항상 128개)
-	_matrix boneMatrices[128];
-	for (int i = 0; i < 128; ++i)
+	//Bone Matrices
+	_matrix boneMatrices[MAX_BONE];
+	for (int i = 0; i < MAX_BONE; ++i)
 		boneMatrices[i] = XMMatrixIdentity();
 
 	// meshWorldInv 1회 계산
@@ -332,7 +329,7 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 		return;
 	}
 
-	memcpy(mappedRes.pData, boneMatrices, sizeof(XMMATRIX) * 128);
+	memcpy(mappedRes.pData, boneMatrices, sizeof(_matrix) * MAX_BONE);
 	m_pContext->Unmap(m_pBoneMatrixBuffer, 0);
 
 	// 7) Material bind
