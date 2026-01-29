@@ -12,9 +12,10 @@ cbuffer PerCamera : register(b1)
 };
 
 Texture2D gAlbedo : register(t0);
-Texture2D gShading : register(t1);
-Texture2D gSpecular : register(t2);
-Texture2D gShadow : register(t3);
+Texture2D<float> gDepth : register(t1);
+Texture2D gShading : register(t2);
+Texture2D gSpecular : register(t3);
+Texture2D<float> gShadow : register(t4);
 SamplerState gSampler : register(s0);
 
 struct VSIn
@@ -45,16 +46,18 @@ float4 PSMain(VSOut input) : SV_Target
     uv.y = 1.0f - uv.y;
 
     float4 albedo = gAlbedo.Sample(gSampler, uv);
-    float shadowF = gShadow.Sample(gSampler, uv).r;
+    float depth = gDepth.SampleLevel(gSampler, uv, 0);
+    float shadowF = gShadow.Sample(gSampler, uv);
     float4 diffuse = gShading.Sample(gSampler, uv);
     float4 specualr = gSpecular.Sample(gSampler, uv);
     
-    float shadowValue = (1.f - shadowF) * 0.15f;
-    if (diffuse.r <= 0.2f && diffuse.g <= 0.2f && diffuse.b)
-        shadowValue = 0.f;
+    if (depth >= 0.999999f)
+        return albedo;
+    
+    float shadowValue = (1.f - shadowF) * 0.3f;
     float4 shadow = float4(shadowValue, shadowValue, shadowValue, 0.f);
     
-    float4 ad = albedo * diffuse;
+    float4 ad = diffuse;
     float4 ads = ad + specualr;
     float4 adss = ads - shadow;
     

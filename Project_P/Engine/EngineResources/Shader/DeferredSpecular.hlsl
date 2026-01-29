@@ -1,14 +1,19 @@
-// DeferredSpecular_ForwardMatch.hlsl
-// 목적: Forward 셰이더의 Specular(Reflect-Phong) 계산식을 Deferred에서 동일하게 재현
-// t1: Normal, t2: Depth, t3: Material(=SpecParams: .g = smoothness/strength), b5: gInvViewProj
+// DeferredSpecular_PBR.hlsl
+// t0: Albedo (rgb)
+// t1: Normal (encoded 0~1)
+// t2: Depth  (float)
+// t3: Material (r=smoothness, g=metallic)
+// b5: gInvViewProj
 
+#define PI 3.14159265359
 #define MAX_LIGHTS 64
+
 #define LIGHT_TYPE_DIRECTIONAL 0
 #define LIGHT_TYPE_POINT 1
 
 cbuffer PerObject : register(b0)
 {
-    float4x4 world; // fullscreen quad world (pixel-space)
+    float4x4 world; // fullscreen quad world
 };
 
 cbuffer PerCamera : register(b1)
@@ -31,10 +36,11 @@ cbuffer PerCustomValue : register(b5)
     float4x4 gInvViewProj;
 };
 
-Texture2D gNormal : register(t0);
-Texture2D<float> gDepth : register(t1);
-Texture2D gSpecParams : register(t2); 
-SamplerState gSampler : register(s0);
+Texture2D gAlbedo : register(t0);
+Texture2D gNormal : register(t1);
+Texture2D<float> gDepth : register(t2);
+Texture2D gMaterial : register(t3);
+SamplerState gSampler : register(s0); // <- s4 쓰지 말고 s0 권장
 
 struct VSIn
 {
@@ -67,8 +73,35 @@ float3 ReconstructWorldPos(float2 uvScreen, float depth01)
 {
     float2 ndc = float2(uvScreen.x * 2.0f - 1.0f, uvScreen.y * 2.0f - 1.0f);
     float4 clip = float4(ndc, depth01, 1.0f);
-    float4 w = mul(clip, gInvViewProj); // row_major + clip(행벡터) * M 형태 유지
+    float4 w = mul(clip, gInvViewProj);
     return w.xyz / max(w.w, 1e-6f);
+}
+
+// ---- GGX / Smith / Schlick ----
+float DistributionGGX(float NdotH, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float d = (NdotH * NdotH) * (a2 - 1.0f) + 1.0f;
+    return a2 / max(PI * d * d, 1e-6f);
+}
+
+float GeometrySchlickGGX(float NdotX, float roughness)
+{
+    float r = roughness + 1.0f;
+    float k = (r * r) / 8.0f; // UE4 스타일
+    return NdotX / max(NdotX * (1.0f - k) + k, 1e-6f);
+}
+
+float GeometrySmith(float NdotV, float NdotL, float roughness)
+{
+    return GeometrySchlickGGX(NdotV, roughness) * GeometrySchlickGGX(NdotL, roughness);
+}
+
+float3 FresnelSchlick(float cosTheta, float3 F0)
+{
+    float f = pow(saturate(1.0f - cosTheta), 5.0f);
+    return F0 + (1.0f - F0) * f;
 }
 
 float4 PSMain(VSOut i) : SV_Target
@@ -76,27 +109,33 @@ float4 PSMain(VSOut i) : SV_Target
     float2 uvScreen = i.uv;
     float2 uvTex = float2(i.uv.x, 1.0f - i.uv.y);
 
-    // Depth
     float depth01 = gDepth.SampleLevel(gSampler, uvTex, 0);
-
-    // Sky / background
     if (depth01 >= 0.999999f)
         return float4(0, 0, 0, 1);
 
-    // Normal / WorldPos
     float3 N = DecodeNormal(gNormal.Sample(gSampler, uvTex).xyz);
+
+    float3 albedo = saturate(gAlbedo.Sample(gSampler, uvTex).rgb);
+
+    float4 mat = gMaterial.Sample(gSampler, uvTex);
+    float smoothness = saturate(mat.r);
+    float metallic = saturate(mat.g);
+
+    float roughness = saturate(1.0f - smoothness);
+    roughness = max(roughness, 0.045f); // 폭주 방지(선택)
+
     float3 posW = ReconstructWorldPos(uvScreen, depth01);
-
-    // Forward의 gSmoothness에 해당하는 strength를 Material RT에서 가져옴
-    float4 sp = gSpecParams.Sample(gSampler, uvTex);
-    float specularStrength = sp.r;
-
-    // 카메라 벡터 (Forward: V = normalize(pos - input.posW))
     float3 V = normalize(camPos - posW);
+
+    float NdotV = saturate(dot(N, V));
+    if (NdotV <= 1e-6f)
+        return float4(0, 0, 0, 1);
+
+    // 금속: F0 = albedo(착색 반사), 비금속: F0 = 0.04
+    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallic);
 
     float3 specSum = 0;
 
-    // LightCount: gLight[0][3][3] 규약 유지
     int lightCount = (int) gLight[0][3][3];
 
     [loop]
@@ -112,7 +151,6 @@ float4 PSMain(VSOut i) : SV_Target
 
         float intensity = gLight[li][1][3];
         float range = gLight[li][0][3];
-        float attenuationK = gLight[li][3][1];
 
         float3 L = 0;
         float att = 1.0f;
@@ -125,34 +163,49 @@ float4 PSMain(VSOut i) : SV_Target
         else if (lightType == LIGHT_TYPE_POINT)
         {
             float3 toL = lightPos - posW;
-            float dist = length(toL);
+            float distSq = dot(toL, toL);
+            float rangeSq = range * range;
 
-            // Forward와 동일한 형태로 early-out
-            if (range <= 1e-6f || dist >= range)
+            if (range <= 1e-6f || distSq >= rangeSq)
                 continue;
 
+            float dist = sqrt(distSq);
             L = toL / max(dist, 1e-6f);
 
-            // Forward와 동일: saturate(1 - dist/range) * attenuationK
-            att = saturate(1.0f - dist / range) * attenuationK;
+            // (당신 Diffuse PBR 패스와 동일한 감쇠로 맞춤)
+            float falloff = saturate(1.0f - dist / range);
+            falloff *= falloff;
+
+            float invSqNorm = rangeSq / max(distSq, 1e-3f);
+            invSqNorm = min(invSqNorm, 16.0f);
+
+            att = falloff * invSqNorm;
         }
         else
         {
             continue;
         }
 
-        // Forward Specular (Reflect-Phong):
-        // R = reflect(-L, N)
-        // fSpecular = pow(saturate(dot(R, V)), 50)
-        float3 R = reflect(-L, N);
-        float RdotV = saturate(dot(R, V));
-        float fSpecular = pow(RdotV, 50.0f);
+        float NdotL = saturate(dot(N, L));
+        if (NdotL <= 1e-6f)
+            continue;
 
-        float3 specular = lightCol * (fSpecular * specularStrength * intensity * att);
-        specSum += specular;
+        float3 H = normalize(V + L);
+        float NdotH = saturate(dot(N, H));
+        float VdotH = saturate(dot(V, H));
+
+        float3 radiance = lightCol * (intensity * att);
+
+        float D = DistributionGGX(NdotH, roughness);
+        float G = GeometrySmith(NdotV, NdotL, roughness);
+        float3 F = FresnelSchlick(VdotH, F0);
+
+        float3 spec = (D * G * F) / max(4.0f * NdotV * NdotL, 1e-6f);
+
+        // spec-only 누적
+        specSum += spec * radiance * NdotL;
     }
 
-    // spec only 출력
-    specSum = saturate(specSum);
+    // HDR 유지 권장: 여기서 saturate 하지 마세요.
     return float4(specSum, 1);
 }

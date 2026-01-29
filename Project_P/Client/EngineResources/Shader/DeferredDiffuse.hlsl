@@ -1,15 +1,23 @@
-// DeffrredDiffuse.hlsl
+// DeferredLighting_DiffuseOnly.hlsl
 
 // 라이트 정의
+#define PI 3.141592
+
 #define MAX_LIGHTS 64
 
 #define LIGHT_TYPE_DIRECTIONAL 0
 #define LIGHT_TYPE_POINT 1
 #define LIGHT_TYPE_SPOT 2
 
+#define METALLIC_GAMMA 0.45f  
+#define METALLIC_BOOST 1.35f  
+#define DIFFUSE_KILL_POWER 1.75f  
+#define SPEC_BOOST 2.0f  
+#define ROUGHNESS_METAL_MUL 0.35f 
+
 cbuffer PerObject : register(b0)
 {
-    float4x4 world; // fullscreen quad용 (그대로 유지)
+    float4x4 world;
 };
 
 cbuffer PerCamera : register(b1)
@@ -31,8 +39,10 @@ cbuffer PerCustomValue : register(b5)
     float4x4 gInvViewProj;
 };
 
-Texture2D gNormal : register(t0);
-Texture2D<float> gDepth : register(t1);
+Texture2D gAlbedo : register(t0);
+Texture2D gNormal : register(t1);
+Texture2D<float> gDepth : register(t2);
+Texture2D gMaterial : register(t3);
 SamplerState gSampler : register(s0);
 
 struct VSIn
@@ -76,28 +86,82 @@ float3 ReconstructWorldPos(float2 uv, float depth01)
     return world.xyz;
 }
 
+float RemapMetallicArt(float m)
+{
+    m = saturate(m * METALLIC_BOOST);
+    // gamma로 0/1쪽으로 몰기
+    m = pow(m, METALLIC_GAMMA);
+    // 극단 강화(선택): 중간값을 더 빠르게 밀어줌
+    m = smoothstep(0.05f, 0.95f, m);
+    return m;
+}
+
+float DistributionGGX(float NdotH, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float d = (NdotH * NdotH) * (a2 - 1.0f) + 1.0f;
+    return a2 / max(PI * d * d, 1e-6f);
+}
+
+float GeometrySchlickGGX(float NdotX, float roughness)
+{
+    // UE4 스타일 k
+    float r = roughness + 1.0f;
+    float k = (r * r) / 8.0f;
+    return NdotX / max(NdotX * (1.0f - k) + k, 1e-6f);
+}
+
+float GeometrySmith(float NdotV, float NdotL, float roughness)
+{
+    float ggxV = GeometrySchlickGGX(NdotV, roughness);
+    float ggxL = GeometrySchlickGGX(NdotL, roughness);
+    return ggxV * ggxL;
+}
+
+float3 FresnelSchlick(float cosTheta, float3 F0)
+{
+    // pow(1 - cosTheta, 5)
+    float f = pow(saturate(1.0f - cosTheta), 5.0f);
+    return F0 + (1.0f - F0) * f;
+}
+
 float4 PSMain(VSOut i) : SV_Target
 {
     float2 uvScreen = i.uv;
     float2 uvTex = float2(i.uv.x, 1.0f - i.uv.y);
 
+    // GBuffer fetch
+    float depth01 = gDepth.SampleLevel(gSampler, uvTex, 0);
+    
+    if (depth01 >= 0.999999f)
+        return float4(0, 0, 0, 1);
+
     float3 N = DecodeNormal(gNormal.Sample(gSampler, uvTex).xyz);
 
-    float depth01 = gDepth.SampleLevel(gSampler, uvTex, 0);
-    if (depth01 >= 0.999999f)
-        return float4(1.f, 1.f, 1.f, 1);
+    float3 albedo = gAlbedo.Sample(gSampler, uvTex).rgb;
+    albedo = saturate(albedo);
 
-    float2 ndc = float2(uvScreen.x * 2 - 1, uvScreen.y * 2 - 1);
+    float4 mat = gMaterial.Sample(gSampler, uvTex);
+    float smoothness = saturate(mat.r);
+    float metallic = saturate(mat.g);
 
-    float4 clip = float4(ndc, depth01, 1);
-    float4 wpos4 = mul(clip, gInvViewProj);
-    float3 posW = wpos4.xyz / wpos4.w;
+    // Smoothness -> Roughness
+    float roughness = saturate(1.0f - smoothness);
+    roughness = max(roughness, 0.045f); // 너무 날카로운 하이라이트 폭주 방지
 
+    // World position / view vector
+    float3 posW = ReconstructWorldPos(uvScreen, depth01);
     float3 V = normalize(camPos - posW);
 
-    float3 diffuseSum = 0;
-    float3 ambientSum = 0;
-    float3 specularSum = 0;
+    float NdotV = saturate(dot(N, V));
+    if (NdotV <= 1e-5f)
+        return float4(0, 0, 0, 1);
+
+    // Dielectric F0 = 0.04, Metallic은 Albedo가 F0가 됨(착색 반사)
+    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallic);
+
+    float3 Lo = 0;
 
     int lightCount = (int) gLight[0][3][3];
 
@@ -114,8 +178,6 @@ float4 PSMain(VSOut i) : SV_Target
 
         float intensity = gLight[li][1][3];
         float range = gLight[li][0][3];
-        float attenK = gLight[li][3][1];
-        float ambientK = gLight[li][2][3];
 
         float3 L = 0;
         float att = 1.0f;
@@ -151,11 +213,37 @@ float4 PSMain(VSOut i) : SV_Target
         }
 
         float NdotL = saturate(dot(N, L));
-        diffuseSum += lightCol * (NdotL * intensity * att);
+        if (NdotL <= 1e-6f)
+            continue;
+
+        float3 H = normalize(V + L);
+        float NdotH = saturate(dot(N, H));
+        float VdotH = saturate(dot(V, H));
+
+        // Radiance
+        float3 radiance = lightCol * (intensity * att) * PI;
+
+        // Cook-Torrance BRDF
+        float D = DistributionGGX(NdotH, roughness);
+        float G = GeometrySmith(NdotV, NdotL, roughness);
+        float3 F = FresnelSchlick(VdotH, F0);
+
+        float3 spec = (D * G * F) / max(4.0f * NdotV * NdotL, 1e-6f);
+
+        // Diffuse: metallic일수록 줄어듦 + 에너지 보존(F) 반영
+        float3 kS = F;
+        float3 kD = (1.0f - kS) * (1.0f - metallic);
+
+        float3 diffuse = (kD * albedo);
+
+        Lo += (diffuse + spec) * radiance * NdotL;
     }
 
-    float3 globalAmbient = 0.2f;
+    // (간단) 글로벌 앰비언트: IBL 없을 때 임시
+    float3 ambient = 0.2f * albedo * (1.0f - metallic);
 
-    float3 lit = saturate(globalAmbient + ambientSum + diffuseSum + specularSum);
-    return float4(lit, 1);
+    float3 color = ambient + Lo;
+    color = saturate(color);
+
+    return float4(color, 1);
 }

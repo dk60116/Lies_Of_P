@@ -627,6 +627,7 @@ void CCamera::RenderLightingPass_ToDiffuse(const D3D11_VIEWPORT* vp)
 
 	auto& rtm = CRenderTargetManager::GetInstance();
 
+	ID3D11ShaderResourceView* srvAlbedo = rtm.GetSRV(CRenderTarget::RTType::Albedo);
 	ID3D11ShaderResourceView* srvNormal = rtm.GetSRV(CRenderTarget::RTType::Normal);
 	ID3D11ShaderResourceView* srvDepth = rtm.GetSRV(CRenderTarget::RTType::Depth);
 	ID3D11ShaderResourceView* srvMaterial = rtm.GetSRV(CRenderTarget::RTType::Material);
@@ -694,8 +695,8 @@ void CCamera::RenderLightingPass_ToDiffuse(const D3D11_VIEWPORT* vp)
 	if (!lights.empty())
 		shadingMat->Bind_Light(lights.data(), (_uint)lights.size());
 
-	ID3D11ShaderResourceView* srvs[3] = { srvNormal, srvDepth, srvMaterial };
-	ctx->PSSetShaderResources(0, 3, srvs);
+	ID3D11ShaderResourceView* srvs[4] = { srvAlbedo, srvNormal, srvDepth, srvMaterial };
+	ctx->PSSetShaderResources(0, 4, srvs);
 
 	m_pRectBuffer->Render();
 
@@ -729,13 +730,14 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 
 	auto& rtm = CRenderTargetManager::GetInstance();
 
+	ID3D11ShaderResourceView* srvAlbedo = rtm.GetSRV(CRenderTarget::RTType::Albedo);
 	ID3D11ShaderResourceView* srvNormal = rtm.GetSRV(CRenderTarget::RTType::Normal);
 	ID3D11ShaderResourceView* srvDepth = rtm.GetSRV(CRenderTarget::RTType::Depth);
 	ID3D11ShaderResourceView* srvMaterial = rtm.GetSRV(CRenderTarget::RTType::Material);
 
 	ID3D11RenderTargetView* rtvSpecular = rtm.GetRTV(CRenderTarget::RTType::Specular);
 
-	if (!srvNormal || !srvDepth || !srvMaterial || !rtvSpecular)
+	if (!srvAlbedo || !srvNormal || !srvDepth || !srvMaterial || !rtvSpecular)
 		return;
 
 	ID3D11RenderTargetView* prevRTV = nullptr;
@@ -797,8 +799,8 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 	if (!lights.empty())
 		specularMat->Bind_Light(lights.data(), (_uint)lights.size());
 
-	ID3D11ShaderResourceView* srvs[3] = { srvNormal, srvDepth, srvMaterial };
-	ctx->PSSetShaderResources(0, 3, srvs);
+	ID3D11ShaderResourceView* srvs[4] = { srvAlbedo, srvNormal, srvDepth, srvMaterial };
+	ctx->PSSetShaderResources(0, 4, srvs);
 
 	m_pRectBuffer->Render();
 
@@ -1042,13 +1044,14 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	auto& rtm = CRenderTargetManager::GetInstance();
 
 	ID3D11ShaderResourceView* srvAlbedo = rtm.GetSRV(CRenderTarget::RTType::Albedo);
+	ID3D11ShaderResourceView* srvDepth = rtm.GetSRV(CRenderTarget::RTType::Depth);
 	ID3D11ShaderResourceView* srvDiffuse = rtm.GetSRV(CRenderTarget::RTType::Diffuse);
 	ID3D11ShaderResourceView* srvSpecular = rtm.GetSRV(CRenderTarget::RTType::Specular);
 	ID3D11ShaderResourceView* srvShadow = rtm.GetSRV(CRenderTarget::RTType::ShadowMask);
 
 	ID3D11RenderTargetView* rtvCombine = rtm.GetRTV(CRenderTarget::RTType::Combine);
 
-	if (!srvAlbedo || !srvDiffuse || !srvSpecular || !srvShadow || !rtvCombine)
+	if (!srvDepth || !srvAlbedo || !srvDiffuse || !srvSpecular || !srvShadow || !rtvCombine)
 		return;
 
 	// --- 상태 백업
@@ -1114,8 +1117,8 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	combineMat->Bind_Camera(camPos, v, p, 0);
 
 	// --- SRV 바인딩
-	ID3D11ShaderResourceView* srvs[4] = { srvAlbedo, srvDiffuse, srvSpecular, srvShadow };
-	ctx->PSSetShaderResources(0, 4, srvs);
+	ID3D11ShaderResourceView* srvs[5] = { srvAlbedo, srvDepth, srvDiffuse, srvSpecular, srvShadow };
+	ctx->PSSetShaderResources(0, 5, srvs);
 
 	// --- Draw
 	m_pRectBuffer->Render();

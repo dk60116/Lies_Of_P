@@ -66,11 +66,13 @@ HRESULT CPlayer::Initialize()
 		(*it)->Get_Material()->Set_Texture(suit_baseColorTex);
 		(*it)->Get_Material()->Set_Texture(suit_normalTex, 1);
 		(*it)->Get_Material()->Set_FloatValue(L"gSmoothness", 0.7f);
+		(*it)->Get_Material()->Set_FloatValue(L"gMetailc", 0.5f);
 	}
 
 	meshes[3]->Get_Material()->Set_Texture(skin_baseColorTex);
 	meshes[3]->Get_Material()->Set_Texture(skin_normalTex, 1);
 	meshes[3]->Get_Material()->Set_FloatValue(L"gSmoothness", 0.1f);
+	meshes[3]->Get_Material()->Set_FloatValue(L"gMetailc", 0.f);
 
 	//m_pAnimator = m_pGameObject->AddComponent<CAnimator>();
 	//m_pAnimator->Add_Animation(L"Idle", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_Idle (Animation)"));
