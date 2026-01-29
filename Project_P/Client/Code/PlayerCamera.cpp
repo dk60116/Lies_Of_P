@@ -65,6 +65,8 @@ void CPlayerCamera::Update()
 
 void CPlayerCamera::LateUpdate()
 {
+	return;
+
 	if (m_pPlayer)
 	{
 		CTransform* tf = Get_Transform();

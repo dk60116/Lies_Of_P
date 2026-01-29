@@ -15,6 +15,8 @@ Link_CombatIdle : Player/Link_CombatIdle.fbx : [Animation Clip]
 Link_Jump : Player/Link_Jump.fbx : [Animation Clip]
 Link_AttackCombo : Player/Link_AttackCombo.fbx : [Animation Clip]
 Link_SwordAttack1 : Player/Link_SowrdAttack_1.fbx : [Animation Clip]
+// Eve
+Eve_BodyModel : Player/Eve_Body.fbx :  [Skinned Mesh]
 // Wolf
 Wolf_Model : Monsters/Wolf/Wolf.fbx : [Skinned Mesh]
 Wolf_BaseMap : Monsters/Wolf/BaseMap.png : [Texture] 
