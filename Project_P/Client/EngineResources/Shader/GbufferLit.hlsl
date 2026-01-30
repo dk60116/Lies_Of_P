@@ -17,8 +17,8 @@ cbuffer PerMaterial : register(b2)
     float4 baseColor;
     uint useTexture;
     uint useNormalMap;
+    uint useORMMap;
     uint boneCount;
-    uint _padMat0;
 };
 
 cbuffer PerBones : register(b3)
@@ -28,16 +28,17 @@ cbuffer PerBones : register(b3)
 
 cbuffer PerCustomValue : register(b10)
 {
-    float gSmoothness;
-    float gMetalic;
+    float gOcculusion;
+    float gRoughness;
+    float gMetallic;
     uint gObjectID;
-    uint gPadding;
     float2 gTiling;
     float2 gOffset;
 };
 
 Texture2D gTexture   : register(t0);
 Texture2D gNormalMap : register(t1); 
+Texture2D gORMMap : register(t2);
 SamplerState gSampler : register(s0);
 
 struct VSIn
@@ -135,7 +136,7 @@ PSOut PSMain(VSOut input)
 
     if (useNormalMap != 0)
     {
-        float3 nTS = gNormalMap.Sample(gSampler, uv).xyz * 2.0f - 1.0f;
+        float3 nTS = gNormalMap.Sample(gSampler, uv).rgb * 2.0f - 1.0f;
 
         float3 T = normalize(input.tangentW);
         float3 B = normalize(input.bitanW);
@@ -146,8 +147,20 @@ PSOut PSMain(VSOut input)
 
     o.Normal = float4(Nw * 0.5f + 0.5f, 1.0f);
     
-    float f0 = 0.04f;
-    o.Material = float4(gSmoothness, gMetalic, 0.f, 1.f);
+    float occ = gOcculusion;
+    float rou = gRoughness;
+    float met = gMetallic;
+    
+    if (useORMMap != 0)
+    {
+        float3 orm = gORMMap.Sample(gSampler, uv).rgb;
+        
+        occ = orm.r;
+        rou = orm.g;
+        met = orm.b;
+    }
+    
+    o.Material = float4(occ, rou, met, 1.f);
 
     return o;
 }

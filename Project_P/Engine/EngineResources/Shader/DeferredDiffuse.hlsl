@@ -143,12 +143,10 @@ float4 PSMain(VSOut i) : SV_Target
     albedo = saturate(albedo);
 
     float4 mat = gMaterial.Sample(gSampler, uvTex);
-    float smoothness = saturate(mat.r);
-    float metallic = saturate(mat.g);
-
-    // Smoothness -> Roughness
-    float roughness = saturate(1.0f - smoothness);
-    roughness = max(roughness, 0.045f);
+    
+    float occulusion = saturate(mat.r);
+    float roughness = saturate(mat.g);
+    float metallic = saturate(mat.b);
 
     // World position / view vector
     float3 posW = ReconstructWorldPos(uvScreen, depth01);

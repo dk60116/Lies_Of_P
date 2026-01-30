@@ -1337,10 +1337,10 @@ namespace Engine
     struct MaterialCB
     {
         _float4 baseColor;
-        _uint  useTexture;
+        _uint useTexture;
         _uint useNormalMap;
-        _uint  boneCount;
-        _uint padding;
+        _uint useORMMap;
+        _uint boneCount;
     };
 
     struct LightCB

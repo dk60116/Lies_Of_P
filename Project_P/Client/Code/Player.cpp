@@ -55,42 +55,50 @@ HRESULT CPlayer::Initialize()
 	//CTexture* tex = CResources::GetInstance().LoadOnScene<CTexture>(L"Link_Texture (Texture)");
 	CTexture* suit_BaseTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Suit_Base (Texture)");
 	CTexture* suit_NormalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Suit_Normal (Texture)");
+	CTexture* suit_ORMTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Suit_ORM (Texture)");
 
 	CTexture* skin_BaseTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Skin_Base (Texture)");
 	CTexture* skin_NormalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Skin_Normal (Texture)");
 	
 	CTexture* boost_BaseTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Boost_Base (Texture)");
 	CTexture* boost_NormalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Boost_Normal (Texture)");
+	CTexture* boost_ORMTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Boost_ORM (Texture)");
 
 	CTexture* wing_BaseTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Wing_Base (Texture)");
 	CTexture* wing_NormalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Wing_Normal (Texture)");
+	CTexture* wing_ORMTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Wing_ORM (Texture)");
+
+	CTexture* frill_BaseTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Frill_Base (Texture)");
+	CTexture* frill_NormalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Frill_Normal (Texture)");
+	CTexture* frill_ORMTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Frill_ORM (Texture)");
 
 	//m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"Link_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"Link_Model (MeshBuffer)"), 0.01f, vector3::up() * 180.f);
 	m_vBodySuits = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveBody_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveBody_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
 
 	m_vBodySuits[0]->Get_Material()->Set_Texture(suit_BaseTex);
 	m_vBodySuits[0]->Get_Material()->Set_Texture(suit_NormalTex, 1);
-	m_vBodySuits[0]->Get_Material()->Set_FloatValue(L"gSmoothness", 0.7f);
-	m_vBodySuits[0]->Get_Material()->Set_FloatValue(L"gSmoothness", 0.7f);
-	m_vBodySuits[0]->Get_Material()->Set_FloatValue(L"gMetallic", 0.5f);
+	m_vBodySuits[0]->Get_Material()->Set_Texture(suit_ORMTex, 2);
 
 	m_vBodySuits[1]->Get_Material()->Set_Texture(boost_BaseTex);
 	m_vBodySuits[1]->Get_Material()->Set_Texture(boost_NormalTex, 1);
+	m_vBodySuits[1]->Get_Material()->Set_Texture(boost_ORMTex, 2);
 
 	m_vBodySuits[2]->Get_Material()->Set_Texture(wing_BaseTex);
 	m_vBodySuits[2]->Get_Material()->Set_Texture(wing_NormalTex, 1);
-	m_vBodySuits[2]->Get_Material()->Set_FloatValue(L"gSmoothness", 0.1f);
-	m_vBodySuits[2]->Get_Material()->Set_FloatValue(L"gMetallic", 0.f);
+	m_vBodySuits[2]->Get_Material()->Set_Texture(wing_ORMTex, 2);
 
 	m_vBodySuits[3]->Get_Material()->Set_Texture(skin_BaseTex);
 	m_vBodySuits[3]->Get_Material()->Set_Texture(skin_NormalTex, 1);
-	m_vBodySuits[3]->Get_Material()->Set_FloatValue(L"gSmoothness", 0.1f);
+	m_vBodySuits[3]->Get_Material()->Set_FloatValue(L"gRoughness", 0.9f);
 	m_vBodySuits[3]->Get_Material()->Set_FloatValue(L"gMetallic", 0.f);
 
 	m_vBodySuits[4]->Get_Material()->Set_Texture(wing_BaseTex);
 	m_vBodySuits[4]->Get_Material()->Set_Texture(wing_NormalTex, 1);
-	m_vBodySuits[4]->Get_Material()->Set_FloatValue(L"gSmoothness", 0.f);
-	m_vBodySuits[4]->Get_Material()->Set_FloatValue(L"gMetallic", 0.f);
+	m_vBodySuits[4]->Get_Material()->Set_Texture(wing_ORMTex, 2);
+
+	m_vBodySuits[5]->Get_Material()->Set_Texture(frill_BaseTex);
+	m_vBodySuits[5]->Get_Material()->Set_Texture(frill_NormalTex, 1);
+	m_vBodySuits[5]->Get_Material()->Set_Texture(frill_ORMTex, 2);
 
 	//m_pAnimator = m_pGameObject->AddComponent<CAnimator>();
 	//m_pAnimator->Add_Animation(L"Idle", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_Idle (Animation)"));
@@ -134,6 +142,8 @@ void CPlayer::Awake()
 {
 	Get_Transform()->Set_PositionY(-2.864f);
 	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp;
+
+	m_vBodySuits[4]->Get_GameObject()->SetActive(false);
 }
 
 void CPlayer::Start()
@@ -144,34 +154,6 @@ void CPlayer::Start()
 void CPlayer::Update()
 {
 	PlayerControle();
-
-	if (CInput::GetInstance().GetKey(T))
-	{
-		for (size_t i = 0; i < m_vBodySuits.size(); i++)
-		{
-			const _float f = m_vBodySuits[i]->Get_Material()->Get_FloatValue(L"gMetallic");
-			_float fM = f - DELTA_TIME * 0.3f;
-
-			if (i != 3)
-				m_vBodySuits[i]->Get_Material()->Set_FloatValue(L"gMetallic", fM);
-		}
-
-		CDebug::LogError(m_vBodySuits[0]->Get_Material()->Get_FloatValue(L"gMetallic"));
-	}
-
-	if (CInput::GetInstance().GetKey(Y))
-	{
-		for (size_t i = 0; i < m_vBodySuits.size(); i++)
-		{
-			const _float f = m_vBodySuits[i]->Get_Material()->Get_FloatValue(L"gMetallic");
-			_float fM = f + DELTA_TIME * 0.3f;
-
-			if (i != 3)
-				m_vBodySuits[i]->Get_Material()->Set_FloatValue(L"gMetallic", fM);
-		}
-
-		CDebug::LogError(m_vBodySuits[0]->Get_Material()->Get_FloatValue(L"gMetallic"));
-	}
 
 	if (CInput::GetInstance().GetKeyDown(Y))
 	{

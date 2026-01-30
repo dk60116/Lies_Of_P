@@ -118,11 +118,10 @@ float4 PSMain(VSOut i) : SV_Target
     float3 albedo = saturate(gAlbedo.Sample(gSampler, uvTex).rgb);
 
     float4 mat = gMaterial.Sample(gSampler, uvTex);
-    float smoothness = saturate(mat.r);
-    float metallic = saturate(mat.g);
-
-    float roughness = saturate(1.0f - smoothness);
-    roughness = max(roughness, 0.045f); // 폭주 방지(선택)
+    
+    float occulusion = saturate(mat.r);
+    float roughness = saturate(mat.g);
+    float metallic = saturate(mat.b);
 
     float3 posW = ReconstructWorldPos(uvScreen, depth01);
     float3 V = normalize(camPos - posW);

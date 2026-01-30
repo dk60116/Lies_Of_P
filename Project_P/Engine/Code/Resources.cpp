@@ -1460,13 +1460,13 @@ void CResources::Ready_GameResources()
 	LoadResourceComplete_Game<CShader>(L"G_BufferLit (Shader)", L"", &g_BufferlitShaderDesc);
 
 	CShader* g_BufferLitShader = LoadOnGame<CShader>(L"G_BufferLit (Shader)");
-	CMaterial::MATERIALDESC g_BufferLitDesc = { g_BufferLitShader, false, true };
-	g_BufferLitDesc.customFloatValues.push_back({ L"gSmoothness", 0.25f });
-	g_BufferLitDesc.customFloatValues.push_back({ L"gMetallic", 0.f });
-	g_BufferLitDesc.customIntValues.push_back({ L"gObjectID", 0 });
-	g_BufferLitDesc.customIntValues.push_back({ L"gPadding", 0 });
-	g_BufferLitDesc.customVector2Values.push_back({ L"gTiling", {1.f, 1.f} });
-	LoadResourceComplete_Game<CMaterial>(L"G_BufferLit (Material)", L"", &g_BufferLitDesc);
+	CMaterial::MATERIALDESC g_BufferLitMatDesc = { g_BufferLitShader, false, true, true };
+	g_BufferLitMatDesc.customFloatValues.push_back({ L"gOcculusion", 1.f });
+	g_BufferLitMatDesc.customFloatValues.push_back({ L"gRoughness", 0.5f });
+	g_BufferLitMatDesc.customFloatValues.push_back({ L"gMetallic", 0.f });
+	g_BufferLitMatDesc.customIntValues.push_back({ L"gObjectID", 0 });
+	g_BufferLitMatDesc.customVector2Values.push_back({ L"gTiling", {1.f, 1.f} });
+	LoadResourceComplete_Game<CMaterial>(L"G_BufferLit (Material)", L"", &g_BufferLitMatDesc);
 
 	CShader::SHADERDESC deferredPresentShaderDesc = { L"../EngineResources/Shader/DeferredPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
 	CShader* deferredPresentShader = LoadResourceComplete_Game<CShader>( L"DeferredPresent (Shader)", L"", &deferredPresentShaderDesc);

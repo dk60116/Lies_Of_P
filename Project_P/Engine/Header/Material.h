@@ -14,6 +14,7 @@ public:
 		class CShader* shaderPointer;
 		_bool usingRight = true;
 		_bool usingNormalMap = false;
+		_bool usingORMMap = false;
 		vector<pair<wstring, _float>> customFloatValues = {};
 		vector<pair<wstring, _int>> customIntValues = {};
 		vector<pair<wstring, _float2>> customVector2Values = {};
@@ -79,7 +80,7 @@ private:
 	ID3D11Buffer* m_pCustomBuffer;
 	vector<BYTE> m_vCustomBufferByteList;
 
-	_bool m_bUseLight, m_bUseNormalMap;
+	_bool m_bUseLight, m_bUseNormalMap, m_bUseORMMap;
 	_float4 m_vBaseColor;
 	vector<class CTexture*> m_vTextureList;
 	unordered_map<wstring, _float> m_mFloatValues;
