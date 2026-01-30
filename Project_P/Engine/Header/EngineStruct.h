@@ -1338,8 +1338,9 @@ namespace Engine
     {
         _float4 baseColor;
         _uint  useTexture;
+        _uint useNormalMap;
         _uint  boneCount;
-        _float2 padding;
+        _uint padding;
     };
 
     struct LightCB

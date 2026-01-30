@@ -11,6 +11,7 @@ CMaterial::CMaterial()
 	, m_pCustomBuffer(nullptr)
 	, m_vCustomBufferByteList({})
 	, m_bUseLight(false)
+	, m_bUseNormalMap(false)
 	, m_vBaseColor(ColorValue::white().f4Color())
 	, m_vTextureList({})
 	, m_mIntValues({})
@@ -32,6 +33,7 @@ CMaterial::CMaterial(const CMaterial& _other)
 	, m_pCustomBuffer(nullptr)
 	, m_vCustomBufferByteList(_other.m_vCustomBufferByteList)
 	, m_bUseLight(_other.m_bUseLight)
+	, m_bUseNormalMap(_other.m_bUseNormalMap)
 	, m_vTextureList({})
 	, m_vBaseColor(ColorValue::white().f4Color())
 	, m_mFloatValues(_other.m_mFloatValues)
@@ -78,6 +80,7 @@ HRESULT CMaterial::Initialize(const wstring& _name, wstring _filePath, void* _de
 
 		Set_Shader(matDesc->shaderPointer);
 		m_bUseLight = matDesc->usingRight;
+		m_bUseNormalMap = matDesc->usingNormalMap;
 
 		for (const auto& [key, value] : matDesc->customFloatValues)
 		{
@@ -198,6 +201,7 @@ void CMaterial::Bind_Camera(const _float3 _camPos, const _fmatrix _view, const _
 
 	mat.baseColor = m_vBaseColor;
 	mat.useTexture = (!m_vTextureList.empty() && m_vTextureList[0] != nullptr);
+	mat.useNormalMap = (m_vTextureList.size() >= 2 && m_bUseNormalMap && m_vTextureList[1] != nullptr);
 	mat.boneCount = _boneCount;
 
 	context->UpdateSubresource(m_pMaterialBuffer, 0, nullptr, &mat, 0, 0);
@@ -330,6 +334,78 @@ CTexture* CMaterial::Get_Texture(_int _index) const
 	return m_vTextureList[_index];
 }
 
+const _float CMaterial::Get_FloatValue(const wstring& _key) const
+{
+	auto it = m_mFloatValues.find(_key);
+
+	if (it != m_mFloatValues.end())
+		return (*it).second;
+	else
+		CDebug::LogError(L"Material - Get_FloatValue Failed - Key not found: " + _key + L" - " + m_strResourceName);
+
+	return 0.f;
+}
+
+const _int CMaterial::Get_IntValue(const wstring& _key) const
+{
+	auto it = m_mIntValues.find(_key);
+
+	if (it != m_mIntValues.end())
+		return (*it).second;
+	else
+		CDebug::LogError(L"Material - Get_IntValue Failed - Key not found: " + _key + L" - " + m_strResourceName);
+
+	return 0;
+}
+
+const _float2 CMaterial::Get_Vector2Value(const wstring& _key) const
+{
+	auto it = m_mVector2Values.find(_key);
+
+	if (it != m_mVector2Values.end())
+		return (*it).second;
+	else
+		CDebug::LogError(L"Material - Get_Vector2Value Failed - Key not found: " + _key + L" - " + m_strResourceName);
+
+	return {};
+}
+
+const _float3& CMaterial::Get_Vector3Value(const wstring& _key)
+{
+	auto it = m_mVector3Values.find(_key);
+
+	if (it != m_mVector3Values.end())
+		return (*it).second;
+	else
+		CDebug::LogError(L"Material - Get_Vector3Value Failed - Key not found: " + _key + L" - " + m_strResourceName);
+
+	return {};
+}
+
+const _float4& CMaterial::Get_Vector4Value(const wstring& _key)
+{
+	auto it = m_mVector4Values.find(_key);
+
+	if (it != m_mVector4Values.end())
+		return (*it).second;
+	else
+		CDebug::LogError(L"Material - Get_Vector4Value Failed - Key not found: " + _key + L" - " + m_strResourceName);
+
+	return {};
+}
+
+const _float4x4& CMaterial::Get_MatrixValue(const wstring& _key)
+{
+	auto it = m_mMatrixValues.find(_key);
+
+	if (it != m_mMatrixValues.end())
+		return (*it).second;
+	else
+		CDebug::LogError(L"Material - Get_MatrixValue Failed - Key not found: " + _key + L" - " + m_strResourceName);
+
+	return {};
+}
+
 void CMaterial::Set_Texture(CTexture* _texture, _int _index)
 {
 	if (_index < 0)
@@ -337,6 +413,9 @@ void CMaterial::Set_Texture(CTexture* _texture, _int _index)
 
 	while (m_vTextureList.size() <= _index)
 		m_vTextureList.push_back(nullptr);
+
+	if (m_vTextureList.size() < _index + 1)
+		m_vTextureList.resize(_index + 1);
 
 	Safe_Release(m_vTextureList[_index]);
 	m_vTextureList[_index] = _texture;
@@ -350,7 +429,7 @@ void CMaterial::Set_BaseColor(const _float4& _color)
 	m_vBaseColor = _color;
 }
 
-void CMaterial::Set_FloatValue(const wstring _key, const _float _value)
+void CMaterial::Set_FloatValue(const wstring& _key, const _float _value)
 {
 	auto it = m_mFloatValues.find(_key);
 
@@ -360,7 +439,7 @@ void CMaterial::Set_FloatValue(const wstring _key, const _float _value)
 		CDebug::LogError(L"Material - Set_FloatValue Failed - Key not found: " + _key  + L" - " + m_strResourceName);
 }
 
-void CMaterial::Set_IntValue(const wstring _key, const _int _value)
+void CMaterial::Set_IntValue(const wstring& _key, const _int _value)
 {
 	auto it = m_mIntValues.find(_key);
 
@@ -370,7 +449,7 @@ void CMaterial::Set_IntValue(const wstring _key, const _int _value)
 		CDebug::LogError(L"Material - Set_IntValue Failed - Key not found: " + _key + L" - " + m_strResourceName);
 }
 
-void CMaterial::Set_Vector2Value(const wstring _key, const _float2 _value)
+void CMaterial::Set_Vector2Value(const wstring& _key, const _float2 _value)
 {
 	auto it = m_mVector2Values.find(_key);
 
@@ -380,7 +459,7 @@ void CMaterial::Set_Vector2Value(const wstring _key, const _float2 _value)
 		CDebug::LogError(L"Material - Set_Vector2Value Failed - Key not found: " + _key + L" - " + m_strResourceName);
 }
 
-void CMaterial::Set_Vector3Value(const wstring _key, const _float3 _value)
+void CMaterial::Set_Vector3Value(const wstring& _key, const _float3& _value)
 {
 	auto it = m_mVector3Values.find(_key);
 
@@ -390,7 +469,7 @@ void CMaterial::Set_Vector3Value(const wstring _key, const _float3 _value)
 		CDebug::LogError(L"Material - Set_Vector3Value Failed - Key not found: " + _key + L" - " + m_strResourceName);
 }
 
-void CMaterial::Set_Vector4Value(const wstring _key, const _float4 _value)
+void CMaterial::Set_Vector4Value(const wstring& _key, const _float4& _value)
 {
 	auto it = m_mVector4Values.find(_key);
 
@@ -400,7 +479,7 @@ void CMaterial::Set_Vector4Value(const wstring _key, const _float4 _value)
 		CDebug::LogError(L"Material - Set_Vector4Value Failed - Key not found: " + _key + L" - " + m_strResourceName);
 }
 
-void CMaterial::Set_MatrixValue(const wstring _key, const _float4x4 _value)
+void CMaterial::Set_MatrixValue(const wstring& _key, const _float4x4& _value)
 {
 	auto it = m_mMatrixValues.find(_key);
 
@@ -481,27 +560,32 @@ void CMaterial::Bind_Texture() const
 {
 	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
 
-	ID3D11ShaderResourceView* texture = nullptr;
+	ID3D11ShaderResourceView* nullSRV[16] = {};
+	context->PSSetShaderResources(0, 16, nullSRV);
 
-	if (!m_vTextureList.empty() && m_vTextureList[0])
-		texture = m_vTextureList[0]->Get_SRV();
-
-	context->PSSetShaderResources(0, 1, &texture);
+	for (size_t i = 0; i < m_vTextureList.size(); ++i)
+	{
+		ID3D11ShaderResourceView* srv = nullptr;
+		if (m_vTextureList[i])
+		{
+			srv = m_vTextureList[i]->Get_SRV();
+			context->PSSetShaderResources((_uint)i, 1, &srv);
+		}
+	}
 
 	static ID3D11SamplerState* gSamplerState = nullptr;
-
 	if (!gSamplerState)
 	{
-		D3D11_SAMPLER_DESC sampleDesc = {};
-		sampleDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-		sampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-		sampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-		sampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-		sampleDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-		sampleDesc.MinLOD = 0;
-		sampleDesc.MaxLOD = D3D11_FLOAT32_MAX;
+		D3D11_SAMPLER_DESC s = {};
+		s.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+		s.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		s.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		s.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		s.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+		s.MinLOD = 0;
+		s.MaxLOD = D3D11_FLOAT32_MAX;
 
-		if (FAILED(CGraphicDevice::GetInstance().Get_Device()->CreateSamplerState(&sampleDesc, &gSamplerState)))
+		if (FAILED(CGraphicDevice::GetInstance().Get_Device()->CreateSamplerState(&s, &gSamplerState)))
 		{
 			CDebug::LogError(L"Create failed SamplerState in Material");
 			return;

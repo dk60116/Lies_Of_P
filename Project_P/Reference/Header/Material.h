@@ -13,6 +13,7 @@ public:
 	{
 		class CShader* shaderPointer;
 		_bool usingRight = true;
+		_bool usingNormalMap = false;
 		vector<pair<wstring, _float>> customFloatValues = {};
 		vector<pair<wstring, _int>> customIntValues = {};
 		vector<pair<wstring, _float2>> customVector2Values = {};
@@ -45,16 +46,23 @@ public:
 	class CTexture* Get_Texture(_int _index) const;
 
 public:
+	const _float Get_FloatValue(const wstring& _key) const;
+	const _int Get_IntValue(const wstring& _key) const;
+	const _float2 Get_Vector2Value(const wstring& _key) const;
+	const _float3& Get_Vector3Value(const wstring& _key);
+	const _float4& Get_Vector4Value(const wstring& _key);
+	const _float4x4& Get_MatrixValue(const wstring& _key);
+
 	void Set_Shader(CShader* _shader);
 	void Set_Texture(CTexture* _texture, _int _index = 0);
 	void Set_BaseColor(const _float4& _color);
 
-	void Set_FloatValue(const wstring _key, const _float _value);
-	void Set_IntValue(const wstring _key, const _int _value);
-	void Set_Vector2Value(const wstring _key, const _float2 _value);
-	void Set_Vector3Value(const wstring _key, const _float3 _value);
-	void Set_Vector4Value(const wstring _key, const _float4 _value);
-	void Set_MatrixValue(const wstring _key, const _float4x4 _value);
+	void Set_FloatValue(const wstring& _key, const _float _value);
+	void Set_IntValue(const wstring& _key, const _int _value);
+	void Set_Vector2Value(const wstring& _key, const _float2 _value);
+	void Set_Vector3Value(const wstring& _key, const _float3& _value);
+	void Set_Vector4Value(const wstring& _key, const _float4& _value);
+	void Set_MatrixValue(const wstring& _key, const _float4x4& _value);
 
 private:
 	HRESULT Create_ConstantBuffer();
@@ -71,7 +79,7 @@ private:
 	ID3D11Buffer* m_pCustomBuffer;
 	vector<BYTE> m_vCustomBufferByteList;
 
-	_bool m_bUseLight;
+	_bool m_bUseLight, m_bUseNormalMap;
 	_float4 m_vBaseColor;
 	vector<class CTexture*> m_vTextureList;
 	unordered_map<wstring, _float> m_mFloatValues;

@@ -19,9 +19,9 @@ Link_SwordAttack1 : Player/Link_SowrdAttack_1.fbx : [Animation Clip]
 EveBody_Model : Player/Eve/EveBody.fbx :  [Skinned Mesh]
 // Eve Textures
 EveBody_Suit_Base : Player/Eve/Texture/EveBody_Suit_BaseMap.png : [Texture]
-EveBody_Suit_Normal: Player/Eve/Texture/EveBody_Suit_NormalMap..png : [Texture]
+EveBody_Suit_Normal : Player/Eve/Texture/EveBody_Suit_NormalMap.png : [Texture]
 EveBody_Skin_Base : Player/Eve/Texture/EveBody_Skin_BaseMap.png : [Texture]
-EveBody_Skin_Normal: Player/Eve/Texture/EveBody_Skin_NormalMap.png : [Texture]
+EveBody_Skin_Normal : Player/Eve/Texture/EveBody_Skin_NormalMap.png : [Texture]
 // Wolf
 Wolf_Model : Monsters/Wolf/Wolf.fbx : [Skinned Mesh]
 Wolf_BaseMap : Monsters/Wolf/BaseMap.png : [Texture] 

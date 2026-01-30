@@ -15,10 +15,10 @@ cbuffer PerCamera : register(b1)
 cbuffer PerMaterial : register(b2)
 {
     float4 baseColor;
-    uint   useTexture;
-    uint   boneCount;
-    uint   useNormalMap;
-    uint   _padMat0;    
+    uint useTexture;
+    uint useNormalMap;
+    uint boneCount;
+    uint _padMat0;
 };
 
 cbuffer PerBones : register(b3)

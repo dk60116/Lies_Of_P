@@ -1460,9 +1460,9 @@ void CResources::Ready_GameResources()
 	LoadResourceComplete_Game<CShader>(L"G_BufferLit (Shader)", L"", &g_BufferlitShaderDesc);
 
 	CShader* g_BufferLitShader = LoadOnGame<CShader>(L"G_BufferLit (Shader)");
-	CMaterial::MATERIALDESC g_BufferLitDesc = { g_BufferLitShader, false };
+	CMaterial::MATERIALDESC g_BufferLitDesc = { g_BufferLitShader, false, true };
 	g_BufferLitDesc.customFloatValues.push_back({ L"gSmoothness", 0.25f });
-	g_BufferLitDesc.customFloatValues.push_back({ L"gMetailc", 0.f });
+	g_BufferLitDesc.customFloatValues.push_back({ L"gMetallic", 0.f });
 	g_BufferLitDesc.customIntValues.push_back({ L"gObjectID", 0 });
 	g_BufferLitDesc.customIntValues.push_back({ L"gPadding", 0 });
 	g_BufferLitDesc.customVector2Values.push_back({ L"gTiling", {1.f, 1.f} });

@@ -26,6 +26,7 @@ CPlayer::CPlayer()
 	, m_bIsJump(false)
 	, m_bIsPrevJump(false)
 	, m_pFocusTransform(nullptr)
+	, m_vBodySuits({})
 {
 	m_strName = L"Player";
 }
@@ -59,20 +60,21 @@ HRESULT CPlayer::Initialize()
 	CTexture* skin_normalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Skin_Normal (Texture)");
 
 	//m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"Link_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"Link_Model (MeshBuffer)"), 0.01f, vector3::up() * 180.f);
-	vector<CSkinnedMeshRenderer*> meshes = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveBody_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveBody_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
+	m_vBodySuits = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveBody_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveBody_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
 
-	for (TRAVERSAL_ITER(meshes, it))
+	for (TRAVERSAL_ITER(m_vBodySuits, it))
 	{
 		(*it)->Get_Material()->Set_Texture(suit_baseColorTex);
 		(*it)->Get_Material()->Set_Texture(suit_normalTex, 1);
 		(*it)->Get_Material()->Set_FloatValue(L"gSmoothness", 0.7f);
-		(*it)->Get_Material()->Set_FloatValue(L"gMetailc", 0.5f);
+		(*it)->Get_Material()->Set_FloatValue(L"gSmoothness", 0.7f);
+		(*it)->Get_Material()->Set_FloatValue(L"gMetallic", 0.5f);
 	}
 
-	meshes[3]->Get_Material()->Set_Texture(skin_baseColorTex);
-	meshes[3]->Get_Material()->Set_Texture(skin_normalTex, 1);
-	meshes[3]->Get_Material()->Set_FloatValue(L"gSmoothness", 0.1f);
-	meshes[3]->Get_Material()->Set_FloatValue(L"gMetailc", 0.f);
+	m_vBodySuits[3]->Get_Material()->Set_Texture(skin_baseColorTex);
+	m_vBodySuits[3]->Get_Material()->Set_Texture(skin_normalTex, 1);
+	m_vBodySuits[3]->Get_Material()->Set_FloatValue(L"gSmoothness", 0.1f);
+	m_vBodySuits[3]->Get_Material()->Set_FloatValue(L"gMetallic", 0.f);
 
 	//m_pAnimator = m_pGameObject->AddComponent<CAnimator>();
 	//m_pAnimator->Add_Animation(L"Idle", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_Idle (Animation)"));
@@ -126,6 +128,39 @@ void CPlayer::Start()
 void CPlayer::Update()
 {
 	PlayerControle();
+
+	if (CInput::GetInstance().GetKey(T))
+	{
+		for (size_t i = 0; i < m_vBodySuits.size(); i++)
+		{
+			const _float f = m_vBodySuits[i]->Get_Material()->Get_FloatValue(L"gMetallic");
+			_float fM = f - DELTA_TIME * 0.3f;
+
+			if (i != 3)
+				m_vBodySuits[i]->Get_Material()->Set_FloatValue(L"gMetallic", fM);
+		}
+
+		CDebug::LogError(m_vBodySuits[0]->Get_Material()->Get_FloatValue(L"gMetallic"));
+	}
+
+	if (CInput::GetInstance().GetKey(Y))
+	{
+		for (size_t i = 0; i < m_vBodySuits.size(); i++)
+		{
+			const _float f = m_vBodySuits[i]->Get_Material()->Get_FloatValue(L"gMetailc");
+			_float fM = f + DELTA_TIME * 0.3f;
+
+			if (i != 3)
+				m_vBodySuits[i]->Get_Material()->Set_FloatValue(L"gMetailc", fM);
+		}
+
+		CDebug::LogError(m_vBodySuits[0]->Get_Material()->Get_FloatValue(L"gMetailc"));
+	}
+
+	if (CInput::GetInstance().GetKeyDown(Y))
+	{
+		GetDamage(1);
+	}
 
 	if (CInput::GetInstance().GetKeyDown(P))
 	{

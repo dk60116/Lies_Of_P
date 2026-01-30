@@ -148,17 +148,14 @@ float4 PSMain(VSOut i) : SV_Target
 
     // Smoothness -> Roughness
     float roughness = saturate(1.0f - smoothness);
-    roughness = max(roughness, 0.045f); // 너무 날카로운 하이라이트 폭주 방지
+    roughness = max(roughness, 0.045f);
 
     // World position / view vector
     float3 posW = ReconstructWorldPos(uvScreen, depth01);
     float3 V = normalize(camPos - posW);
 
     float NdotV = saturate(dot(N, V));
-    if (NdotV <= 1e-5f)
-        return float4(0, 0, 0, 1);
 
-    // Dielectric F0 = 0.04, Metallic은 Albedo가 F0가 됨(착색 반사)
     float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallic);
 
     float3 Lo = 0;

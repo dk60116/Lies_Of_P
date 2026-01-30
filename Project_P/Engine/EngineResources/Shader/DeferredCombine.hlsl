@@ -54,7 +54,7 @@ float4 PSMain(VSOut input) : SV_Target
     if (depth >= 0.999999f)
         return albedo;
     
-    float shadowValue = (1.f - shadowF) * 0.3f;
+    float shadowValue = (1.f - shadowF) * 0.2f;
     float4 shadow = float4(shadowValue, shadowValue, shadowValue, 0.f);
     
     float4 ad = diffuse;

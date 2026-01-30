@@ -19,10 +19,10 @@ cbuffer PerCamera : register(b1)
 
 cbuffer PerMaterial : register(b2)
 {
-    float4 baseColor; // 미사용(바인딩 호환)
-    uint useTexture; // 알파테스트 시 사용 가능
+    float4 baseColor; 
+    uint useTexture; 
+    uint useNormalMap;
     uint boneCount;
-    uint useNormalMap; // 미사용(바인딩 호환)
     uint _padMat0;
 };
 

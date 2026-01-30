@@ -295,7 +295,7 @@ void CScene::Update_Editor()
 
 void CScene::Update()
 {
-	if (CInput::GetInstance().GetMouseButtonDown(0))
+	if (CInput::GetInstance().GetMouseButtonDown(1))
 	{
 		const _uint id = Get_Camera()->GetColorPickingID(CInput::GetInstance().GetMousePos());
 		CGameObject* pickedObj = FindGameObjectOfId(id);
