@@ -13,7 +13,7 @@ class ENGINE_DLL CAnimatorControllerEditorBox final : public CEditorBox
     friend class CEditor;
 
 public:
-    enum class ESelectType { None, Param, State };
+    enum class ESelectType { None, Param, State, Transition };
     enum class EDeleteType { None, Param, State };
     enum class EPendingSource { None, State, AnyState, Entry };
 
@@ -61,6 +61,9 @@ private:
         _float blend = 0.15f;
         _bool hasExitTime = false;
         _float exitTime = 1.f;
+        _bool fixedDuration = false;
+        _float transitionDuration = 0.15f;
+        _float transitionOffset = 0.f;
         string cond;
         _bool isAny = false;
     };
@@ -145,6 +148,7 @@ private:
 private:
     ESelectType m_eSelectType;
     _int m_iSelectedParamIndex;
+    _int m_iSelectedTransitionIndex = -1;
 
     EDeleteType m_eDeleteType;
     _int m_iDeleteParamIndex;

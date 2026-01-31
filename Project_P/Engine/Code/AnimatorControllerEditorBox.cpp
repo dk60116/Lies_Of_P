@@ -28,6 +28,37 @@ static _bool WriteAllText(const fs::path& p, const string& text)
     return true;
 }
 
+static float DistancePointToSegment(const ImVec2& p, const ImVec2& a, const ImVec2& b)
+{
+    const float vx = b.x - a.x;
+    const float vy = b.y - a.y;
+    const float wx = p.x - a.x;
+    const float wy = p.y - a.y;
+
+    const float c1 = vx * wx + vy * wy;
+    if (c1 <= 0.f)
+    {
+        const float dx = p.x - a.x;
+        const float dy = p.y - a.y;
+        return sqrtf(dx * dx + dy * dy);
+    }
+
+    const float c2 = vx * vx + vy * vy;
+    if (c2 <= c1)
+    {
+        const float dx = p.x - b.x;
+        const float dy = p.y - b.y;
+        return sqrtf(dx * dx + dy * dy);
+    }
+
+    const float t = c1 / c2;
+    const float px = a.x + t * vx;
+    const float py = a.y + t * vy;
+    const float dx = p.x - px;
+    const float dy = p.y - py;
+    return sqrtf(dx * dx + dy * dy);
+}
+
 CAnimatorControllerEditorBox::CAnimatorControllerEditorBox()
     : m_bOpen(false)
     , m_bLoaded(false)
@@ -77,6 +108,7 @@ void CAnimatorControllerEditorBox::OnDestroy()
 
     m_eSelectType = ESelectType::None;
     m_iSelectedParamIndex = -1;
+    m_iSelectedTransitionIndex = -1;
 
     m_eDeleteType = EDeleteType::None;
     m_iDeleteParamIndex = -1;
@@ -279,6 +311,34 @@ void CAnimatorControllerEditorBox::RenderInspector()
 {
     ImGui::Text("Inspector");
     ImGui::Separator();
+
+    if (m_eSelectType == ESelectType::Transition &&
+        m_iSelectedTransitionIndex >= 0 &&
+        m_iSelectedTransitionIndex < (int)m_transitions.size())
+    {
+        const Transition& tr = m_transitions[m_iSelectedTransitionIndex];
+        const char* fromLabel = tr.isAny ? "AnyState" : tr.from.c_str();
+
+        ImGui::Text("Transition");
+        ImGui::Separator();
+        ImGui::Text("From: %s", fromLabel);
+        ImGui::Text("To: %s", tr.to.c_str());
+        ImGui::Text("Blend: %.2f", tr.blend);
+        ImGui::Text("ExitTime: %s", tr.hasExitTime ? "true" : "false");
+        ImGui::Text("ExitTime (float): %.3f", tr.exitTime);
+        ImGui::Text("FixedDuration: %s", tr.fixedDuration ? "true" : "false");
+        ImGui::Text("TransitionDuration: %.3f", tr.transitionDuration);
+        ImGui::Text("TransitionOffset: %.3f", tr.transitionOffset);
+
+        if (!tr.cond.empty())
+        {
+            ImGui::Separator();
+            ImGui::Text("Conditions");
+            ImGui::TextWrapped("%s", tr.cond.c_str());
+        }
+
+        return;
+    }
 
     // =========================
     // Parameter Inspector
@@ -542,26 +602,48 @@ void CAnimatorControllerEditorBox::RenderGraph()
 
     auto rectCenter = [](ImVec2 p, ImVec2 s) { return ImVec2(p.x + s.x * 0.5f, p.y + s.y * 0.5f); };
     auto rectRightMid = [](ImVec2 p, ImVec2 s) { return ImVec2(p.x + s.x, p.y + s.y * 0.5f); };
+    auto drawArrowLine = [&](const ImVec2& a, const ImVec2& b, ImU32 col, float thickness)
+        {
+            dl->AddLine(a, b, col, thickness);
+            ImVec2 dir = ImVec2(b.x - a.x, b.y - a.y);
+            float len = sqrtf(dir.x * dir.x + dir.y * dir.y);
+            if (len > 0.0001f)
+            {
+                dir.x /= len;
+                dir.y /= len;
+                ImVec2 perp = ImVec2(-dir.y, dir.x);
+                const float arrowSize = 8.f;
+                ImVec2 tip = b;
+                ImVec2 left = ImVec2(b.x - dir.x * arrowSize + perp.x * (arrowSize * 0.5f),
+                    b.y - dir.y * arrowSize + perp.y * (arrowSize * 0.5f));
+                ImVec2 right = ImVec2(b.x - dir.x * arrowSize - perp.x * (arrowSize * 0.5f),
+                    b.y - dir.y * arrowSize - perp.y * (arrowSize * 0.5f));
+                dl->AddTriangleFilled(tip, left, right, col);
+            }
+        };
 
     const ImVec2 anyFrom = rectCenter(anyPos, anySize);       // AnyState 전이 시작점(센터)
     const ImVec2 entryFrom = rectRightMid(entryPos, entrySize); // Entry -> State 시작점(오른쪽 중간)
 
     // ===== Transition lines first =====
-    for (const auto& tr : m_transitions)
+    _int clickedTransition = -1;
+    const ImVec2 mousePos = ImGui::GetIO().MousePos;
+    for (_int i = 0; i < (_int)m_transitions.size(); ++i)
     {
+        const auto& tr = m_transitions[i];
         if (tr.isAny)
         {
             auto itTo = m_states.find(tr.to);
             if (itTo == m_states.end()) continue;
 
             ImVec2 to = getNodeCenter(itTo->second);
+            drawArrowLine(anyFrom, to, IM_COL32(255, 200, 0, 200), 2.0f);
 
-            dl->AddBezierCubic(
-                anyFrom,
-                ImVec2(anyFrom.x + 80.f, anyFrom.y),
-                ImVec2(to.x - 80.f, to.y),
-                to,
-                IM_COL32(255, 200, 0, 200), 2.0f);
+            if (DistancePointToSegment(mousePos, anyFrom, to) <= 6.f &&
+                ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+            {
+                clickedTransition = i;
+            }
 
             continue;
         }
@@ -574,12 +656,19 @@ void CAnimatorControllerEditorBox::RenderGraph()
         ImVec2 from = getNodeCenter(itFrom->second);
         ImVec2 to = getNodeCenter(itTo->second);
 
-        dl->AddBezierCubic(
-            from,
-            ImVec2(from.x + 80.f, from.y),
-            ImVec2(to.x - 80.f, to.y),
-            to,
-            IM_COL32(120, 200, 255, 200), 2.0f);
+        drawArrowLine(from, to, IM_COL32(120, 200, 255, 200), 2.0f);
+
+        if (DistancePointToSegment(mousePos, from, to) <= 6.f &&
+            ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        {
+            clickedTransition = i;
+        }
+    }
+
+    if (clickedTransition >= 0)
+    {
+        m_eSelectType = ESelectType::Transition;
+        m_iSelectedTransitionIndex = clickedTransition;
     }
 
     // ===== Draw AnyState block =====
@@ -658,12 +747,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
         {
             ImVec2 to = getNodeCenter(itEntry->second);
 
-            dl->AddBezierCubic(
-                entryFrom,
-                ImVec2(entryFrom.x + 80.f, entryFrom.y),
-                ImVec2(to.x - 80.f, to.y),
-                to,
-                IM_COL32(120, 255, 120, 220), 2.5f);
+            drawArrowLine(entryFrom, to, IM_COL32(120, 255, 120, 220), 2.5f);
         }
         else
         {
@@ -697,6 +781,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
         {
             m_eSelectType = ESelectType::State;
             m_selectedState = st.name;
+            m_iSelectedTransitionIndex = -1;
 
             if (ImGui::GetIO().KeyCtrl)
             {
@@ -919,6 +1004,19 @@ void CAnimatorControllerEditorBox::DeleteState(const string& name)
 
     if (m_pendingSourceType == EPendingSource::State && m_pendingTransitionFrom.empty())
         m_pendingSourceType = EPendingSource::None;
+
+    if (m_eSelectType == ESelectType::Transition)
+    {
+        if (m_iSelectedTransitionIndex >= 0 && m_iSelectedTransitionIndex < (int)m_transitions.size())
+        {
+            const auto& tr = m_transitions[m_iSelectedTransitionIndex];
+            if (tr.to == name || (!tr.isAny && tr.from == name))
+            {
+                m_eSelectType = ESelectType::None;
+                m_iSelectedTransitionIndex = -1;
+            }
+        }
+    }
 }
 
 void CAnimatorControllerEditorBox::CleanupTransitionsForDeletedState(const string& name)
@@ -1349,6 +1447,9 @@ void CAnimatorControllerEditorBox::AddTransition(const string& from, const strin
     tr.blend = 0.15f;
     tr.hasExitTime = false;
     tr.exitTime = 1.f;
+    tr.fixedDuration = false;
+    tr.transitionDuration = 0.15f;
+    tr.transitionOffset = 0.f;
     tr.cond.clear();
     tr.isAny = false;
     m_transitions.push_back(tr);
@@ -1368,6 +1469,9 @@ void CAnimatorControllerEditorBox::AddAnyTransition(const string& to)
     tr.blend = 0.15f;
     tr.hasExitTime = false;
     tr.exitTime = 1.f;
+    tr.fixedDuration = false;
+    tr.transitionDuration = 0.15f;
+    tr.transitionOffset = 0.f;
     tr.cond.clear();
     tr.isAny = true;
     m_transitions.push_back(tr);
@@ -1526,6 +1630,9 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
                 buildingTransition = true;
                 curTr = Transition{};
                 curTr.isAny = true;
+                curTr.fixedDuration = false;
+                curTr.transitionDuration = 0.15f;
+                curTr.transitionOffset = 0.f;
                 continue;
             }
 
@@ -1567,6 +1674,9 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
                 curTr.blend = 0.15f;
                 curTr.hasExitTime = false;
                 curTr.exitTime = 1.f;
+                curTr.fixedDuration = false;
+                curTr.transitionDuration = 0.15f;
+                curTr.transitionOffset = 0.f;
                 curTr.cond.clear();
                 continue;
             }
@@ -1661,6 +1771,18 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
                 curTr.hasExitTime = true;
                 curTr.exitTime = (float)atof(v.c_str());
             }
+            else if (k == "fixedDuration")
+            {
+                curTr.fixedDuration = (v == "true" || v == "1");
+            }
+            else if (k == "transitionDuration" || k == "translationDuration")
+            {
+                curTr.transitionDuration = (float)atof(v.c_str());
+            }
+            else if (k == "transitionOffset" || k == "traslationOffset" || k == "translationOffset")
+            {
+                curTr.transitionOffset = (float)atof(v.c_str());
+            }
             else if (k == "cond")
             {
                 curTr.cond = v;
@@ -1718,6 +1840,9 @@ string CAnimatorControllerEditorBox::SerializeText() const
         t += "[any]\n";
         t += "to=" + tr.to + "\n";
         t += "blend=" + to_string(tr.blend) + "\n";
+        t += "fixedDuration=" + string(tr.fixedDuration ? "true" : "false") + "\n";
+        t += "transitionDuration=" + to_string(tr.transitionDuration) + "\n";
+        t += "transitionOffset=" + to_string(tr.transitionOffset) + "\n";
         if (!tr.cond.empty()) t += "cond=" + tr.cond + "\n";
         t += "\n";
     }
@@ -1732,6 +1857,9 @@ string CAnimatorControllerEditorBox::SerializeText() const
             t += "cond=" + tr.cond + "\n";
         if (tr.hasExitTime) 
             t += "exitTime=" + to_string(tr.exitTime) + "\n";
+        t += "fixedDuration=" + string(tr.fixedDuration ? "true" : "false") + "\n";
+        t += "transitionDuration=" + to_string(tr.transitionDuration) + "\n";
+        t += "transitionOffset=" + to_string(tr.transitionOffset) + "\n";
         t += "\n";
     }
 
