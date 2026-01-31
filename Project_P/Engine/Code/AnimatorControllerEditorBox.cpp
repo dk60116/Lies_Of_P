@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <cfloat>
 
 static string ReadAllText(const fs::path& p)
 {
@@ -619,7 +620,24 @@ void CAnimatorControllerEditorBox::RenderGraph()
     const ImVec2 entrySize = ImVec2(120.f, 40.f);
 
     auto rectCenter = [](ImVec2 p, ImVec2 s) { return ImVec2(p.x + s.x * 0.5f, p.y + s.y * 0.5f); };
-    auto rectRightMid = [](ImVec2 p, ImVec2 s) { return ImVec2(p.x + s.x, p.y + s.y * 0.5f); };
+    auto rectEdgePoint = [](ImVec2 p, ImVec2 s, ImVec2 target)
+        {
+            ImVec2 c = ImVec2(p.x + s.x * 0.5f, p.y + s.y * 0.5f);
+            ImVec2 d = ImVec2(target.x - c.x, target.y - c.y);
+
+            float dx = d.x;
+            float dy = d.y;
+            if (fabsf(dx) < 0.0001f && fabsf(dy) < 0.0001f)
+                return c;
+
+            float halfW = s.x * 0.5f;
+            float halfH = s.y * 0.5f;
+            float tX = (fabsf(dx) > 0.0001f) ? (halfW / fabsf(dx)) : FLT_MAX;
+            float tY = (fabsf(dy) > 0.0001f) ? (halfH / fabsf(dy)) : FLT_MAX;
+            float t = std::min(tX, tY);
+
+            return ImVec2(c.x + dx * t, c.y + dy * t);
+        };
     auto drawArrowLine = [&](const ImVec2& a, const ImVec2& b, ImU32 col, float thickness)
         {
             dl->AddLine(a, b, col, thickness);
@@ -640,8 +658,8 @@ void CAnimatorControllerEditorBox::RenderGraph()
             }
         };
 
-    const ImVec2 anyFrom = rectCenter(anyPos, anySize);       // AnyState 전이 시작점(센터)
-    const ImVec2 entryFrom = rectRightMid(entryPos, entrySize); // Entry -> State 시작점(오른쪽 중간)
+    const ImVec2 anyCenter = rectCenter(anyPos, anySize);
+    const ImVec2 entryCenter = rectCenter(entryPos, entrySize);
 
     // ===== Transition lines first =====
     _int clickedTransition = -1;
@@ -660,10 +678,15 @@ void CAnimatorControllerEditorBox::RenderGraph()
             auto itTo = m_states.find(tr.to);
             if (itTo == m_states.end()) continue;
 
-            ImVec2 to = getNodeCenter(itTo->second);
-            drawArrowLine(anyFrom, to, isSelected ? selectedCol : anyCol, 2.0f);
+            ImVec2 toCenter = getNodeCenter(itTo->second);
+            ImVec2 from = rectEdgePoint(anyPos, anySize, toCenter);
+            ImVec2 to = rectEdgePoint(
+                ImVec2(origin.x + itTo->second.pos.x + m_pan.x, origin.y + itTo->second.pos.y + m_pan.y),
+                nodeSize,
+                anyCenter);
+            drawArrowLine(from, to, isSelected ? selectedCol : anyCol, 2.0f);
 
-            if (DistancePointToSegment(mousePos, anyFrom, to) <= 6.f)
+            if (DistancePointToSegment(mousePos, from, to) <= 6.f)
             {
                 if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
                     clickedTransition = i;
@@ -679,15 +702,17 @@ void CAnimatorControllerEditorBox::RenderGraph()
         if (itFrom == m_states.end() || itTo == m_states.end())
             continue;
 
-        ImVec2 from = getNodeCenter(itFrom->second);
-        ImVec2 to = getNodeCenter(itTo->second);
-        ImVec2 drawFrom = from;
-        ImVec2 drawTo = to;
+        ImVec2 fromCenter = getNodeCenter(itFrom->second);
+        ImVec2 toCenter = getNodeCenter(itTo->second);
+        ImVec2 drawFrom = fromCenter;
+        ImVec2 drawTo = toCenter;
 
         const bool hasReverse = TransitionExists(tr.to, tr.from, false);
+        ImVec2 fromRectPos = ImVec2(origin.x + itFrom->second.pos.x + m_pan.x, origin.y + itFrom->second.pos.y + m_pan.y);
+        ImVec2 toRectPos = ImVec2(origin.x + itTo->second.pos.x + m_pan.x, origin.y + itTo->second.pos.y + m_pan.y);
         if (hasReverse)
         {
-            ImVec2 dir = ImVec2(to.x - from.x, to.y - from.y);
+            ImVec2 dir = ImVec2(toCenter.x - fromCenter.x, toCenter.y - fromCenter.y);
             float len = sqrtf(dir.x * dir.x + dir.y * dir.y);
             if (len > 0.0001f)
             {
@@ -696,14 +721,22 @@ void CAnimatorControllerEditorBox::RenderGraph()
                 ImVec2 perp = ImVec2(-dir.y, dir.x);
                 const float sign = (tr.from < tr.to) ? 1.f : -1.f;
                 ImVec2 offset = ImVec2(perp.x * reverseOffset * sign, perp.y * reverseOffset * sign);
-                drawFrom = ImVec2(from.x + offset.x, from.y + offset.y);
-                drawTo = ImVec2(to.x + offset.x, to.y + offset.y);
+                drawFrom = ImVec2(fromCenter.x + offset.x, fromCenter.y + offset.y);
+                drawTo = ImVec2(toCenter.x + offset.x, toCenter.y + offset.y);
             }
         }
+        else
+        {
+            drawFrom = fromCenter;
+            drawTo = toCenter;
+        }
 
-        drawArrowLine(drawFrom, drawTo, isSelected ? selectedCol : stateCol, 2.0f);
+        ImVec2 from = rectEdgePoint(fromRectPos, nodeSize, drawTo);
+        ImVec2 to = rectEdgePoint(toRectPos, nodeSize, drawFrom);
 
-        if (DistancePointToSegment(mousePos, drawFrom, drawTo) <= 6.f)
+        drawArrowLine(from, to, isSelected ? selectedCol : stateCol, 2.0f);
+
+        if (DistancePointToSegment(mousePos, from, to) <= 6.f)
         {
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
                 clickedTransition = i;
@@ -811,9 +844,14 @@ void CAnimatorControllerEditorBox::RenderGraph()
         auto itEntry = m_states.find(entryTarget);
         if (itEntry != m_states.end())
         {
-            ImVec2 to = getNodeCenter(itEntry->second);
+            ImVec2 toCenter = getNodeCenter(itEntry->second);
+            ImVec2 from = rectEdgePoint(entryPos, entrySize, toCenter);
+            ImVec2 to = rectEdgePoint(
+                ImVec2(origin.x + itEntry->second.pos.x + m_pan.x, origin.y + itEntry->second.pos.y + m_pan.y),
+                nodeSize,
+                entryCenter);
 
-            drawArrowLine(entryFrom, to, IM_COL32(120, 255, 120, 220), 2.5f);
+            drawArrowLine(from, to, IM_COL32(120, 255, 120, 220), 2.5f);
         }
         else
         {
@@ -1673,6 +1711,7 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
     Sec sec = Sec::None;
 
     string curState;
+    string firstStateName;
     Transition curTr{};
     _bool buildingTransition = false;
 
@@ -1736,6 +1775,8 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
                     st.pos = ImVec2(100, 100);
                     m_states[curState] = st;
                     m_selectedState = curState;
+                    if (firstStateName.empty())
+                        firstStateName = curState;
                 }
                 continue;
             }
@@ -1886,8 +1927,13 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
         m_controllerName = m_path.stem().string();
 
     // entry가 없으면 첫 state
-    if (m_entryState.empty() && !m_states.empty())
-        m_entryState = m_states.begin()->first;
+    if (m_entryState.empty())
+    {
+        if (!firstStateName.empty())
+            m_entryState = firstStateName;
+        else if (!m_states.empty())
+            m_entryState = m_states.begin()->first;
+    }
 
     return true;
 }
