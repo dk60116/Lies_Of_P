@@ -638,6 +638,30 @@ void CAnimatorControllerEditorBox::RenderGraph()
 
             return ImVec2(c.x + dx * t, c.y + dy * t);
         };
+    auto rectEdgePointOnSide = [](ImVec2 p, ImVec2 s, ImVec2 target, int side)
+        {
+            float left = p.x;
+            float right = p.x + s.x;
+            float top = p.y;
+            float bottom = p.y + s.y;
+
+            float x = std::max(left, std::min(target.x, right));
+            float y = std::max(top, std::min(target.y, bottom));
+
+            switch (side)
+            {
+            case 0: // left
+                return ImVec2(left, y);
+            case 1: // right
+                return ImVec2(right, y);
+            case 2: // top
+                return ImVec2(x, top);
+            case 3: // bottom
+                return ImVec2(x, bottom);
+            default:
+                return ImVec2(x, y);
+            }
+        };
     auto drawArrowLine = [&](const ImVec2& a, const ImVec2& b, ImU32 col, float thickness)
         {
             dl->AddLine(a, b, col, thickness);
@@ -734,6 +758,22 @@ void CAnimatorControllerEditorBox::RenderGraph()
 
         ImVec2 from = rectEdgePoint(fromRectPos, nodeSize, drawTo);
         ImVec2 to = rectEdgePoint(toRectPos, nodeSize, drawFrom);
+        if (hasReverse)
+        {
+            ImVec2 dir = ImVec2(toCenter.x - fromCenter.x, toCenter.y - fromCenter.y);
+            bool horizontal = fabsf(dir.x) >= fabsf(dir.y);
+            const string& minName = (tr.from < tr.to) ? tr.from : tr.to;
+            const float sign = (tr.from == minName) ? 1.f : -1.f;
+            int side = 0;
+
+            if (horizontal)
+                side = (sign > 0.f) ? 2 : 3; // top/bottom
+            else
+                side = (sign > 0.f) ? 0 : 1; // left/right
+
+            from = rectEdgePointOnSide(fromRectPos, nodeSize, drawTo, side);
+            to = rectEdgePointOnSide(toRectPos, nodeSize, drawFrom, side);
+        }
 
         drawArrowLine(from, to, isSelected ? selectedCol : stateCol, 2.0f);
 
