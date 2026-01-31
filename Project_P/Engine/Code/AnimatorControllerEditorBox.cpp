@@ -449,9 +449,21 @@ void CAnimatorControllerEditorBox::RenderInspector()
 
                 if (!newCond.empty())
                 {
-                    if (!tr.cond.empty())
-                        tr.cond += " && ";
-                    tr.cond += newCond;
+                    bool exists = false;
+                    for (const auto& cond : conditions)
+                    {
+                        if (cond == newCond)
+                        {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists)
+                    {
+                        if (!tr.cond.empty())
+                            tr.cond += " && ";
+                        tr.cond += newCond;
+                    }
                 }
             }
         }
