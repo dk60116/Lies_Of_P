@@ -649,7 +649,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
     const ImU32 selectedCol = IM_COL32(255, 165, 0, 230);
     const ImU32 anyCol = IM_COL32(255, 200, 0, 200);
     const ImU32 stateCol = IM_COL32(120, 200, 255, 200);
-    const float reverseOffset = 6.f;
+    const float reverseOffset = 14.f;
     const ImVec2 mousePos = ImGui::GetIO().MousePos;
     for (_int i = 0; i < (_int)m_transitions.size(); ++i)
     {
