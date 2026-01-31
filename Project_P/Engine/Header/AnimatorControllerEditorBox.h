@@ -15,6 +15,7 @@ class ENGINE_DLL CAnimatorControllerEditorBox final : public CEditorBox
 public:
     enum class ESelectType { None, Param, State };
     enum class EDeleteType { None, Param, State };
+    enum class EPendingSource { None, State, AnyState, Entry };
 
 private:
     struct MotionItem
@@ -122,6 +123,7 @@ private:
 private:
     bool TransitionExists(const string& from, const string& to, _bool isAny) const;
     void AddTransition(const string& from, const string& to);
+    void AddAnyTransition(const string& to);
 
 private:
     fs::path m_path;
@@ -137,6 +139,8 @@ private:
     string m_selectedState;
 
     ImVec2 m_pan = ImVec2(0, 0);
+    ImVec2 m_anyStatePos = ImVec2(10.f, 10.f);
+    ImVec2 m_entryPos = ImVec2(10.f, 60.f);
 
 private:
     ESelectType m_eSelectType;
@@ -176,6 +180,7 @@ private:
 
 private:
     string m_pendingTransitionFrom;
+    EPendingSource m_pendingSourceType = EPendingSource::None;
 };
 
 NS_END

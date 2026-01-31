@@ -72,6 +72,8 @@ void CAnimatorControllerEditorBox::OnDestroy()
 
     m_selectedState.clear();
     m_pan = ImVec2(0, 0);
+    m_anyStatePos = ImVec2(10.f, 10.f);
+    m_entryPos = ImVec2(10.f, 60.f);
 
     m_eSelectType = ESelectType::None;
     m_iSelectedParamIndex = -1;
@@ -85,6 +87,7 @@ void CAnimatorControllerEditorBox::OnDestroy()
     m_bMotionOptionsDirty = true;
 
     m_pendingTransitionFrom.clear();
+    m_pendingSourceType = EPendingSource::None;
 }
 
 void CAnimatorControllerEditorBox::Open(const fs::path& path)
@@ -474,9 +477,18 @@ void CAnimatorControllerEditorBox::RenderInspector()
 
 void CAnimatorControllerEditorBox::RenderGraph()
 {
-    ImGui::TextDisabled("Ctrl+Click two states to create a transition.");
-    if (!m_pendingTransitionFrom.empty())
-        ImGui::Text("Pending: %s -> ?", m_pendingTransitionFrom.c_str());
+    ImGui::TextDisabled("Ctrl+Click to connect states (Entry/AnyState supported).");
+    if (m_pendingSourceType != EPendingSource::None)
+    {
+        const char* label = "";
+        if (m_pendingSourceType == EPendingSource::State)
+            label = m_pendingTransitionFrom.c_str();
+        else if (m_pendingSourceType == EPendingSource::AnyState)
+            label = "AnyState";
+        else if (m_pendingSourceType == EPendingSource::Entry)
+            label = "Entry";
+        ImGui::Text("Pending: %s -> ?", label);
+    }
 
     ImGui::Separator();
 
@@ -488,7 +500,10 @@ void CAnimatorControllerEditorBox::RenderGraph()
     }
 
     if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+    {
         m_pendingTransitionFrom.clear();
+        m_pendingSourceType = EPendingSource::None;
+    }
 
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImVec2 origin = ImGui::GetCursorScreenPos();
@@ -519,10 +534,10 @@ void CAnimatorControllerEditorBox::RenderGraph()
         };
 
     // ===== AnyState / Entry Blocks (pos/size) =====
-    const ImVec2 anyPos = ImVec2(origin.x + 10.f + m_pan.x, origin.y + 10.f + m_pan.y);
+    const ImVec2 anyPos = ImVec2(origin.x + m_anyStatePos.x + m_pan.x, origin.y + m_anyStatePos.y + m_pan.y);
     const ImVec2 anySize = ImVec2(120.f, 40.f);
 
-    const ImVec2 entryPos = ImVec2(origin.x + 10.f + m_pan.x, origin.y + 60.f + m_pan.y);
+    const ImVec2 entryPos = ImVec2(origin.x + m_entryPos.x + m_pan.x, origin.y + m_entryPos.y + m_pan.y);
     const ImVec2 entrySize = ImVec2(120.f, 40.f);
 
     auto rectCenter = [](ImVec2 p, ImVec2 s) { return ImVec2(p.x + s.x * 0.5f, p.y + s.y * 0.5f); };
@@ -579,6 +594,58 @@ void CAnimatorControllerEditorBox::RenderGraph()
         dl->AddText(ImVec2(entryPos.x + 10.f, entryPos.y + 12.f), IM_COL32(255, 255, 255, 255), "Entry");
     }
 
+    // ===== AnyState input =====
+    {
+        ImGui::SetCursorScreenPos(anyPos);
+        ImGui::InvisibleButton("any_state_node", anySize);
+
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Left) && ImGui::GetIO().KeyCtrl)
+        {
+            if (m_pendingSourceType == EPendingSource::AnyState)
+            {
+                m_pendingSourceType = EPendingSource::None;
+            }
+            else
+            {
+                m_pendingSourceType = EPendingSource::AnyState;
+                m_pendingTransitionFrom.clear();
+            }
+        }
+
+        if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+        {
+            ImVec2 d = ImGui::GetIO().MouseDelta;
+            m_anyStatePos.x += d.x;
+            m_anyStatePos.y += d.y;
+        }
+    }
+
+    // ===== Entry input =====
+    {
+        ImGui::SetCursorScreenPos(entryPos);
+        ImGui::InvisibleButton("entry_node", entrySize);
+
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Left) && ImGui::GetIO().KeyCtrl)
+        {
+            if (m_pendingSourceType == EPendingSource::Entry)
+            {
+                m_pendingSourceType = EPendingSource::None;
+            }
+            else
+            {
+                m_pendingSourceType = EPendingSource::Entry;
+                m_pendingTransitionFrom.clear();
+            }
+        }
+
+        if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+        {
+            ImVec2 d = ImGui::GetIO().MouseDelta;
+            m_entryPos.x += d.x;
+            m_entryPos.y += d.y;
+        }
+    }
+
     // ===== Entry -> entryState line (single) =====
     {
         // entry 타겟 결정(없으면 첫 state)
@@ -633,18 +700,33 @@ void CAnimatorControllerEditorBox::RenderGraph()
 
             if (ImGui::GetIO().KeyCtrl)
             {
-                if (m_pendingTransitionFrom.empty())
+                if (m_pendingSourceType == EPendingSource::Entry)
                 {
-                    m_pendingTransitionFrom = st.name;
-                }
-                else if (m_pendingTransitionFrom == st.name)
-                {
+                    m_entryState = st.name;
+                    m_pendingSourceType = EPendingSource::None;
                     m_pendingTransitionFrom.clear();
                 }
-                else
+                else if (m_pendingSourceType == EPendingSource::AnyState)
+                {
+                    AddAnyTransition(st.name);
+                    m_pendingSourceType = EPendingSource::None;
+                    m_pendingTransitionFrom.clear();
+                }
+                else if (m_pendingSourceType == EPendingSource::State && m_pendingTransitionFrom == st.name)
+                {
+                    m_pendingSourceType = EPendingSource::None;
+                    m_pendingTransitionFrom.clear();
+                }
+                else if (m_pendingSourceType == EPendingSource::State && !m_pendingTransitionFrom.empty())
                 {
                     AddTransition(m_pendingTransitionFrom, st.name);
+                    m_pendingSourceType = EPendingSource::None;
                     m_pendingTransitionFrom.clear();
+                }
+                else if (m_pendingTransitionFrom.empty())
+                {
+                    m_pendingTransitionFrom = st.name;
+                    m_pendingSourceType = EPendingSource::State;
                 }
             }
         }
@@ -834,6 +916,9 @@ void CAnimatorControllerEditorBox::DeleteState(const string& name)
 
     if (m_pendingTransitionFrom == name)
         m_pendingTransitionFrom.clear();
+
+    if (m_pendingSourceType == EPendingSource::State && m_pendingTransitionFrom.empty())
+        m_pendingSourceType = EPendingSource::None;
 }
 
 void CAnimatorControllerEditorBox::CleanupTransitionsForDeletedState(const string& name)
@@ -1266,6 +1351,25 @@ void CAnimatorControllerEditorBox::AddTransition(const string& from, const strin
     tr.exitTime = 1.f;
     tr.cond.clear();
     tr.isAny = false;
+    m_transitions.push_back(tr);
+}
+
+void CAnimatorControllerEditorBox::AddAnyTransition(const string& to)
+{
+    if (to.empty())
+        return;
+    if (m_states.find(to) == m_states.end())
+        return;
+    if (TransitionExists("", to, true))
+        return;
+
+    Transition tr{};
+    tr.to = to;
+    tr.blend = 0.15f;
+    tr.hasExitTime = false;
+    tr.exitTime = 1.f;
+    tr.cond.clear();
+    tr.isAny = true;
     m_transitions.push_back(tr);
 }
 
