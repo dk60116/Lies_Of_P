@@ -427,42 +427,73 @@ void CAnimatorControllerEditorBox::RenderInspector()
                 ImGui::InputFloat("Value", &floatValue);
             }
 
+            auto conditionExists = [&](const string& cond)
+                {
+                    for (const auto& existing : conditions)
+                    {
+                        if (existing == cond)
+                            return true;
+                    }
+                    return false;
+                };
+
+            auto buildCondition = [&](const Param& targetParam, int op, int boolVal, int intVal, float floatVal)
+                {
+                    if (targetParam.type == "trigger")
+                        return targetParam.name;
+                    if (targetParam.type == "bool")
+                    {
+                        const int opSafe = op % 2;
+                        return targetParam.name + string(opLabels[opSafe]) + (boolVal ? "true" : "false");
+                    }
+                    if (targetParam.type == "int")
+                    {
+                        const int opSafe = op % 6;
+                        return targetParam.name + string(opLabels[opSafe]) + to_string(intVal);
+                    }
+                    if (targetParam.type == "float")
+                    {
+                        const int opSafe = op % 6;
+                        return targetParam.name + string(opLabels[opSafe]) + to_string(floatVal);
+                    }
+                    return string();
+                };
+
+            auto appendCondition = [&](const string& cond)
+                {
+                    if (cond.empty() || conditionExists(cond))
+                        return false;
+                    if (!tr.cond.empty())
+                        tr.cond += " && ";
+                    tr.cond += cond;
+                    return true;
+                };
+
             if (ImGui::Button("Add Condition"))
             {
-                string newCond;
-                if (param.type == "trigger")
+                string newCond = buildCondition(param, opIndex, boolValue, intValue, floatValue);
+                if (!appendCondition(newCond))
                 {
-                    newCond = param.name;
-                }
-                else if (param.type == "bool")
-                {
-                    newCond = param.name + string(opLabels[opIndex]) + (boolValue ? "true" : "false");
-                }
-                else if (param.type == "int")
-                {
-                    newCond = param.name + string(opLabels[opIndex]) + to_string(intValue);
-                }
-                else if (param.type == "float")
-                {
-                    newCond = param.name + string(opLabels[opIndex]) + to_string(floatValue);
-                }
-
-                if (!newCond.empty())
-                {
-                    bool exists = false;
-                    for (const auto& cond : conditions)
+                    const int paramCount = (int)m_params.size();
+                    const int startIndex = paramIndex;
+                    for (int offset = 1; offset <= paramCount; ++offset)
                     {
-                        if (cond == newCond)
+                        const int candidateIndex = (startIndex + offset) % paramCount;
+                        const Param& candidateParam = m_params[candidateIndex];
+                        int candidateOp = 0;
+                        int candidateBool = 0;
+                        int candidateInt = 0;
+                        float candidateFloat = 0.f;
+                        string candidateCond = buildCondition(candidateParam, candidateOp, candidateBool, candidateInt, candidateFloat);
+                        if (appendCondition(candidateCond))
                         {
-                            exists = true;
+                            paramIndex = candidateIndex;
+                            opIndex = candidateOp;
+                            boolValue = candidateBool;
+                            intValue = candidateInt;
+                            floatValue = candidateFloat;
                             break;
                         }
-                    }
-                    if (!exists)
-                    {
-                        if (!tr.cond.empty())
-                            tr.cond += " && ";
-                        tr.cond += newCond;
                     }
                 }
             }
