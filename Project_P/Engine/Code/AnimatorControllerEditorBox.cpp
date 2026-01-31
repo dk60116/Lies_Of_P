@@ -645,8 +645,8 @@ void CAnimatorControllerEditorBox::RenderGraph()
             float top = p.y;
             float bottom = p.y + s.y;
 
-            float x = std::max(left, std::min(target.x, right));
-            float y = std::max(top, std::min(target.y, bottom));
+            float x = max(left, std::min(target.x, right));
+            float y = max(top, std::min(target.y, bottom));
 
             switch (side)
             {
