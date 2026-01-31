@@ -646,17 +646,22 @@ void CAnimatorControllerEditorBox::RenderGraph()
     // ===== Transition lines first =====
     _int clickedTransition = -1;
     _int deleteTransition = -1;
+    const ImU32 selectedCol = IM_COL32(255, 165, 0, 230);
+    const ImU32 anyCol = IM_COL32(255, 200, 0, 200);
+    const ImU32 stateCol = IM_COL32(120, 200, 255, 200);
+    const float reverseOffset = 6.f;
     const ImVec2 mousePos = ImGui::GetIO().MousePos;
     for (_int i = 0; i < (_int)m_transitions.size(); ++i)
     {
         const auto& tr = m_transitions[i];
+        const bool isSelected = (m_eSelectType == ESelectType::Transition && m_iSelectedTransitionIndex == i);
         if (tr.isAny)
         {
             auto itTo = m_states.find(tr.to);
             if (itTo == m_states.end()) continue;
 
             ImVec2 to = getNodeCenter(itTo->second);
-            drawArrowLine(anyFrom, to, IM_COL32(255, 200, 0, 200), 2.0f);
+            drawArrowLine(anyFrom, to, isSelected ? selectedCol : anyCol, 2.0f);
 
             if (DistancePointToSegment(mousePos, anyFrom, to) <= 6.f)
             {
@@ -676,10 +681,29 @@ void CAnimatorControllerEditorBox::RenderGraph()
 
         ImVec2 from = getNodeCenter(itFrom->second);
         ImVec2 to = getNodeCenter(itTo->second);
+        ImVec2 drawFrom = from;
+        ImVec2 drawTo = to;
 
-        drawArrowLine(from, to, IM_COL32(120, 200, 255, 200), 2.0f);
+        const bool hasReverse = TransitionExists(tr.to, tr.from, false);
+        if (hasReverse)
+        {
+            ImVec2 dir = ImVec2(to.x - from.x, to.y - from.y);
+            float len = sqrtf(dir.x * dir.x + dir.y * dir.y);
+            if (len > 0.0001f)
+            {
+                dir.x /= len;
+                dir.y /= len;
+                ImVec2 perp = ImVec2(-dir.y, dir.x);
+                const float sign = (tr.from < tr.to) ? 1.f : -1.f;
+                ImVec2 offset = ImVec2(perp.x * reverseOffset * sign, perp.y * reverseOffset * sign);
+                drawFrom = ImVec2(from.x + offset.x, from.y + offset.y);
+                drawTo = ImVec2(to.x + offset.x, to.y + offset.y);
+            }
+        }
 
-        if (DistancePointToSegment(mousePos, from, to) <= 6.f)
+        drawArrowLine(drawFrom, drawTo, isSelected ? selectedCol : stateCol, 2.0f);
+
+        if (DistancePointToSegment(mousePos, drawFrom, drawTo) <= 6.f)
         {
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
                 clickedTransition = i;
@@ -692,6 +716,15 @@ void CAnimatorControllerEditorBox::RenderGraph()
     {
         m_eSelectType = ESelectType::Transition;
         m_iSelectedTransitionIndex = clickedTransition;
+    }
+    else if (ImGui::IsWindowHovered() &&
+        ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
+        !ImGui::IsAnyItemHovered())
+    {
+        m_eSelectType = ESelectType::None;
+        m_iSelectedTransitionIndex = -1;
+        m_iSelectedParamIndex = -1;
+        m_selectedState.clear();
     }
 
     if (deleteTransition >= 0)
