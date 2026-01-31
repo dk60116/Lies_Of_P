@@ -667,7 +667,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
     const ImU32 selectedCol = IM_COL32(255, 165, 0, 230);
     const ImU32 anyCol = IM_COL32(255, 200, 0, 200);
     const ImU32 stateCol = IM_COL32(120, 200, 255, 200);
-    const float reverseOffset = 14.f;
+    const float reverseOffset = 24.f;
     const ImVec2 mousePos = ImGui::GetIO().MousePos;
     for (_int i = 0; i < (_int)m_transitions.size(); ++i)
     {
@@ -719,7 +719,8 @@ void CAnimatorControllerEditorBox::RenderGraph()
                 dir.x /= len;
                 dir.y /= len;
                 ImVec2 perp = ImVec2(-dir.y, dir.x);
-                const float sign = (tr.from < tr.to) ? 1.f : -1.f;
+                const string& minName = (tr.from < tr.to) ? tr.from : tr.to;
+                const float sign = (tr.from == minName) ? 1.f : -1.f;
                 ImVec2 offset = ImVec2(perp.x * reverseOffset * sign, perp.y * reverseOffset * sign);
                 drawFrom = ImVec2(fromCenter.x + offset.x, fromCenter.y + offset.y);
                 drawTo = ImVec2(toCenter.x + offset.x, toCenter.y + offset.y);
