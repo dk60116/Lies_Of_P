@@ -83,6 +83,8 @@ void CAnimatorControllerEditorBox::OnDestroy()
 
     m_motionOptions.clear();
     m_bMotionOptionsDirty = true;
+
+    m_pendingTransitionFrom.clear();
 }
 
 void CAnimatorControllerEditorBox::Open(const fs::path& path)
@@ -110,7 +112,7 @@ bool CAnimatorControllerEditorBox::LoadFromFile(const fs::path& path)
         return false;
     }
 
-    OnDestroy(); // ±âÁ¸ µ¥ÀÌÅÍ ÃÊ±âÈ­
+    OnDestroy(); // ê¸°ì¡´ ë°ì´í„° ì´ˆê¸°í™”
 
     m_path = path;
 
@@ -120,7 +122,7 @@ bool CAnimatorControllerEditorBox::LoadFromFile(const fs::path& path)
         return false;
     }
 
-    // ±âº» ¼±ÅÃ
+    // ê¸°ë³¸ ì„ íƒ
     if (m_selectedState.empty() && !m_states.empty())
         m_selectedState = m_states.begin()->first;
 
@@ -206,7 +208,7 @@ void CAnimatorControllerEditorBox::RenderLeftPanel()
             RequestDeleteState(m_selectedState);
     }
 
-    // ===== Parameters Header + Add ¹öÆ° =====
+    // ===== Parameters Header + Add ë²„íŠ¼ =====
     ImGui::Text("Parameters");
     ImGui::SameLine();
     if (ImGui::SmallButton("+##AddParam"))
@@ -241,7 +243,7 @@ void CAnimatorControllerEditorBox::RenderLeftPanel()
 
     ImGui::Spacing();
 
-    // ===== States Header + Add ¹öÆ° =====
+    // ===== States Header + Add ë²„íŠ¼ =====
     ImGui::Text("States");
     ImGui::SameLine();
     if (ImGui::SmallButton("+##AddState"))
@@ -284,7 +286,7 @@ void CAnimatorControllerEditorBox::RenderInspector()
     {
         Param& p = m_params[m_iSelectedParamIndex];
 
-        // (Áß¿ä) rename ÀÔ·Â ¹öÆÛ¸¦ ¼±ÅÃµÈ ÀÎµ¦½º¿¡ ¹ÙÀÎµù (¸â¹ö ¹öÆÛ)
+        // (ì¤‘ìš”) rename ì…ë ¥ ë²„í¼ë¥¼ ì„ íƒëœ ì¸ë±ìŠ¤ì— ë°”ì¸ë”© (ë©¤ë²„ ë²„í¼)
         BindParamRenameBuffer(m_iSelectedParamIndex);
 
         ImGui::Text("Parameter");
@@ -311,7 +313,7 @@ void CAnimatorControllerEditorBox::RenderInspector()
             else
             {
                 m_strRenameError.clear();
-                // Á¤±ÔÈ­µÈ ÀÌ¸§À¸·Î ´Ù½Ã ¼¼ÆÃ
+                // ì •ê·œí™”ëœ ì´ë¦„ìœ¼ë¡œ ë‹¤ì‹œ ì„¸íŒ…
                 strcpy_s(m_editParamNameBuf.data(), m_editParamNameBuf.size(),
                     m_params[m_iSelectedParamIndex].name.c_str());
             }
@@ -322,7 +324,7 @@ void CAnimatorControllerEditorBox::RenderInspector()
             ImGui::TextColored(ImVec4(1, 0.3f, 0.3f, 1), "%s", m_strRenameError.c_str());
         }
 
-        // ---- Value ---- (trigger´Â value ¾øÀ½)
+        // ---- Value ---- (triggerëŠ” value ì—†ìŒ)
         if (p.type != "trigger")
         {
             std::array<char, 128> valBuf{};
@@ -354,8 +356,8 @@ void CAnimatorControllerEditorBox::RenderInspector()
         return;
     }
 
-    // (Áß¿ä) st ÂüÁ¶´Â rename¿¡¼­ map re-key°¡ ¹ß»ıÇÏ¸é ¹«È¿È­µÉ ¼ö ÀÖÀ¸´Ï
-    // rename Ã³¸® ÈÄ¿¡´Â ´Ù½Ã find ÇØ¼­ st¸¦ °»½ÅÇÑ´Ù.
+    // (ì¤‘ìš”) st ì°¸ì¡°ëŠ” renameì—ì„œ map re-keyê°€ ë°œìƒí•˜ë©´ ë¬´íš¨í™”ë  ìˆ˜ ìˆìœ¼ë‹ˆ
+    // rename ì²˜ë¦¬ í›„ì—ëŠ” ë‹¤ì‹œ find í•´ì„œ stë¥¼ ê°±ì‹ í•œë‹¤.
     {
         const std::string currentName = it->second.name;
         BindStateRenameBuffer(currentName);
@@ -378,17 +380,17 @@ void CAnimatorControllerEditorBox::RenderInspector()
             if (!RenameState(currentName, m_editStateNameBuf.data(), &err))
             {
                 m_strRenameError = err;
-                // ½ÇÆĞ ½Ã ¹öÆÛ¸¦ ¿øº¹
+                // ì‹¤íŒ¨ ì‹œ ë²„í¼ë¥¼ ì›ë³µ
                 strcpy_s(m_editStateNameBuf.data(), m_editStateNameBuf.size(), currentName.c_str());
             }
             else
             {
                 m_strRenameError.clear();
-                // rename ¼º°ø ½Ã m_selectedStateµµ ¹Ù²î¾î ÀÖÀ» ¼ö ÀÖÀ¸´Ï ¹öÆÛ/ÀÌÅÍ·¹ÀÌÅÍ Àç¹ÙÀÎµù
+                // rename ì„±ê³µ ì‹œ m_selectedStateë„ ë°”ë€Œì–´ ìˆì„ ìˆ˜ ìˆìœ¼ë‹ˆ ë²„í¼/ì´í„°ë ˆì´í„° ì¬ë°”ì¸ë”©
                 BindStateRenameBuffer(m_selectedState);
             }
 
-            // mapÀÌ ¹Ù²î¾úÀ» ¼ö ÀÖÀ¸´Ï ¾ÈÀüÇÏ°Ô ´Ù½Ã Ã£°í ÁøÇà
+            // mapì´ ë°”ë€Œì—ˆì„ ìˆ˜ ìˆìœ¼ë‹ˆ ì•ˆì „í•˜ê²Œ ë‹¤ì‹œ ì°¾ê³  ì§„í–‰
             it = m_states.find(m_selectedState);
             if (it == m_states.end())
                 return;
@@ -472,12 +474,21 @@ void CAnimatorControllerEditorBox::RenderInspector()
 
 void CAnimatorControllerEditorBox::RenderGraph()
 {
+    ImGui::TextDisabled("Ctrl+Click two states to create a transition.");
+    if (!m_pendingTransitionFrom.empty())
+        ImGui::Text("Pending: %s -> ?", m_pendingTransitionFrom.c_str());
+
+    ImGui::Separator();
+
     if (ImGui::IsWindowHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
     {
         ImVec2 d = ImGui::GetIO().MouseDelta;
         m_pan.x += d.x;
         m_pan.y += d.y;
     }
+
+    if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+        m_pendingTransitionFrom.clear();
 
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImVec2 origin = ImGui::GetCursorScreenPos();
@@ -517,8 +528,8 @@ void CAnimatorControllerEditorBox::RenderGraph()
     auto rectCenter = [](ImVec2 p, ImVec2 s) { return ImVec2(p.x + s.x * 0.5f, p.y + s.y * 0.5f); };
     auto rectRightMid = [](ImVec2 p, ImVec2 s) { return ImVec2(p.x + s.x, p.y + s.y * 0.5f); };
 
-    const ImVec2 anyFrom = rectCenter(anyPos, anySize);       // AnyState ÀüÀÌ ½ÃÀÛÁ¡(¼¾ÅÍ)
-    const ImVec2 entryFrom = rectRightMid(entryPos, entrySize); // Entry -> State ½ÃÀÛÁ¡(¿À¸¥ÂÊ Áß°£)
+    const ImVec2 anyFrom = rectCenter(anyPos, anySize);       // AnyState ì „ì´ ì‹œì‘ì (ì„¼í„°)
+    const ImVec2 entryFrom = rectRightMid(entryPos, entrySize); // Entry -> State ì‹œì‘ì (ì˜¤ë¥¸ìª½ ì¤‘ê°„)
 
     // ===== Transition lines first =====
     for (const auto& tr : m_transitions)
@@ -570,7 +581,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
 
     // ===== Entry -> entryState line (single) =====
     {
-        // entry Å¸°Ù °áÁ¤(¾øÀ¸¸é Ã¹ state)
+        // entry íƒ€ê²Ÿ ê²°ì •(ì—†ìœ¼ë©´ ì²« state)
         std::string entryTarget = m_entryState;
         if (entryTarget.empty() && !m_states.empty())
             entryTarget = m_states.begin()->first;
@@ -589,7 +600,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
         }
         else
         {
-            // entry°¡ ±úÁ³À» ¶§ Ç¥½Ã(¼±ÅÃ)
+            // entryê°€ ê¹¨ì¡Œì„ ë•Œ í‘œì‹œ(ì„ íƒ)
             dl->AddText(ImVec2(entryPos.x + 55.f, entryPos.y + 12.f), IM_COL32(255, 100, 100, 255), "!");
         }
     }
@@ -619,6 +630,23 @@ void CAnimatorControllerEditorBox::RenderGraph()
         {
             m_eSelectType = ESelectType::State;
             m_selectedState = st.name;
+
+            if (ImGui::GetIO().KeyCtrl)
+            {
+                if (m_pendingTransitionFrom.empty())
+                {
+                    m_pendingTransitionFrom = st.name;
+                }
+                else if (m_pendingTransitionFrom == st.name)
+                {
+                    m_pendingTransitionFrom.clear();
+                }
+                else
+                {
+                    AddTransition(m_pendingTransitionFrom, st.name);
+                    m_pendingTransitionFrom.clear();
+                }
+            }
         }
 
         if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
@@ -766,7 +794,7 @@ void CAnimatorControllerEditorBox::DeleteParam(int idx)
 
     m_params.erase(m_params.begin() + idx);
 
-    // selection º¸Á¤
+    // selection ë³´ì •
     if (m_eSelectType == ESelectType::Param)
     {
         if (m_params.empty())
@@ -787,22 +815,25 @@ void CAnimatorControllerEditorBox::DeleteState(const string& name)
     if (it == m_states.end())
         return;
 
-    // 1) »óÅÂ »èÁ¦
+    // 1) ìƒíƒœ ì‚­ì œ
     m_states.erase(it);
 
-    // 2) °ü·Ã ÀüÀÌ Á¤¸®
+    // 2) ê´€ë ¨ ì „ì´ ì •ë¦¬
     CleanupTransitionsForDeletedState(name);
 
-    // 3) entry º¸Á¤
+    // 3) entry ë³´ì •
     if (m_entryState == name)
         m_entryState = m_states.empty() ? "" : m_states.begin()->first;
 
-    // 4) ¼±ÅÃ º¸Á¤
+    // 4) ì„ íƒ ë³´ì •
     if (m_selectedState == name)
         m_selectedState = m_states.empty() ? "" : m_states.begin()->first;
 
     if (m_states.empty())
         m_eSelectType = ESelectType::None;
+
+    if (m_pendingTransitionFrom == name)
+        m_pendingTransitionFrom.clear();
 }
 
 void CAnimatorControllerEditorBox::CleanupTransitionsForDeletedState(const string& name)
@@ -951,7 +982,7 @@ void CAnimatorControllerEditorBox::RenderAddStatePopup()
 
         ImGui::InputText("Name", m_newStateName.data(), m_newStateName.size());
 
-        // ---- Motion ¼±ÅÃ (ÄŞº¸) ----
+        // ---- Motion ì„ íƒ (ì½¤ë³´) ----
         EnsureMotionOptionsLoaded();
 
         ImGui::Text("Motion");
@@ -1006,7 +1037,7 @@ void CAnimatorControllerEditorBox::RenderAddStatePopup()
             else
             {
                 string uniq = MakeUniqueStateName(name);
-                string motion = Trim(m_newStateMotion.data()); // ÄŞº¸¿¡¼­ ¼±ÅÃµÈ °ª
+                string motion = Trim(m_newStateMotion.data()); // ì½¤ë³´ì—ì„œ ì„ íƒëœ ê°’
                 AddState(uniq, motion, m_newStateSpeedMul);
                 ImGui::CloseCurrentPopup();
             }
@@ -1042,7 +1073,7 @@ void CAnimatorControllerEditorBox::AddState(const string& name, const string& mo
     st.motion = motion;
     st.speedMul = speedMul;
 
-    // °ãÄ¡Áö ¾Ê°Ô ¹èÄ¡(°£´Ü ±×¸®µå)
+    // ê²¹ì¹˜ì§€ ì•Šê²Œ ë°°ì¹˜(ê°„ë‹¨ ê·¸ë¦¬ë“œ)
     const int col = 4;
     int x = (m_iStateSpawnIndex % col);
     int y = (m_iStateSpawnIndex / col);
@@ -1051,7 +1082,7 @@ void CAnimatorControllerEditorBox::AddState(const string& name, const string& mo
 
     m_states[name] = st;
 
-    // entry°¡ ºñ¾îÀÖÀ¸¸é Ã¹ state·Î ÁöÁ¤
+    // entryê°€ ë¹„ì–´ìˆìœ¼ë©´ ì²« stateë¡œ ì§€ì •
     if (m_entryState.empty())
         m_entryState = name;
 
@@ -1111,7 +1142,7 @@ void CAnimatorControllerEditorBox::RefreshMotionOptions()
     m_motionOptions.clear();
     m_bMotionOptionsDirty = false;
 
-    // ¿¹: fs::path sceneDir = CPath::GetInstance().Get_ProjectRoot() / "Assets" / "Scenes";
+    // ì˜ˆ: fs::path sceneDir = CPath::GetInstance().Get_ProjectRoot() / "Assets" / "Scenes";
     fs::path sceneDir = fs::path("../Assets") / "Scenes";
 
     error_code ec;
@@ -1206,6 +1237,38 @@ void CAnimatorControllerEditorBox::BindStateRenameBuffer(const std::string& stat
     m_strRenameError.clear();
 }
 
+bool CAnimatorControllerEditorBox::TransitionExists(const string& from, const string& to, _bool isAny) const
+{
+    for (const auto& tr : m_transitions)
+    {
+        if (tr.isAny != isAny)
+            continue;
+        if (tr.from == from && tr.to == to)
+            return true;
+    }
+    return false;
+}
+
+void CAnimatorControllerEditorBox::AddTransition(const string& from, const string& to)
+{
+    if (from.empty() || to.empty() || from == to)
+        return;
+    if (m_states.find(from) == m_states.end() || m_states.find(to) == m_states.end())
+        return;
+    if (TransitionExists(from, to, false))
+        return;
+
+    Transition tr{};
+    tr.from = from;
+    tr.to = to;
+    tr.blend = 0.15f;
+    tr.hasExitTime = false;
+    tr.exitTime = 1.f;
+    tr.cond.clear();
+    tr.isAny = false;
+    m_transitions.push_back(tr);
+}
+
 bool CAnimatorControllerEditorBox::ParamNameExistsExcept(const string& name, int exceptIdx) const
 {
     for (int i = 0; i < (int)m_params.size(); ++i)
@@ -1273,13 +1336,13 @@ bool CAnimatorControllerEditorBox::RenameState(const string& oldNameIn, const st
         return false;
     }
 
-    // 1) key º¯°æ
+    // 1) key ë³€ê²½
     State st = it->second;
     m_states.erase(it);
     st.name = newName;
     m_states.emplace(newName, st);
 
-    // 2) transitions µ¿±âÈ­
+    // 2) transitions ë™ê¸°í™”
     for (auto& tr : m_transitions)
     {
         if (tr.isAny)
@@ -1293,11 +1356,11 @@ bool CAnimatorControllerEditorBox::RenameState(const string& oldNameIn, const st
         }
     }
 
-    // 3) entry/selection µ¿±âÈ­
+    // 3) entry/selection ë™ê¸°í™”
     if (m_entryState == oldName)    m_entryState = newName;
     if (m_selectedState == oldName) m_selectedState = newName;
 
-    // 4) delete ´ë»óµµ µ¿±âÈ­(¾ÈÀü)
+    // 4) delete ëŒ€ìƒë„ ë™ê¸°í™”(ì•ˆì „)
     if (m_strDeleteStateName == oldName) m_strDeleteStateName = newName;
 
     return true;
@@ -1505,11 +1568,11 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
 
     flushTransition();
 
-    // ±âº»°ª: controllerName ¾øÀ¸¸é ÆÄÀÏ¸í¿¡¼­
+    // ê¸°ë³¸ê°’: controllerName ì—†ìœ¼ë©´ íŒŒì¼ëª…ì—ì„œ
     if (m_controllerName.empty() && !m_path.empty())
         m_controllerName = m_path.stem().string();
 
-    // entry°¡ ¾øÀ¸¸é Ã¹ state
+    // entryê°€ ì—†ìœ¼ë©´ ì²« state
     if (m_entryState.empty() && !m_states.empty())
         m_entryState = m_states.begin()->first;
 
@@ -1534,7 +1597,7 @@ string CAnimatorControllerEditorBox::SerializeText() const
     t += "\n";
 
     // states
-    // (Ãâ·Â ¼ø¼­ °íÁ¤ ¿øÇÏ¸é vector·Î Á¤·ÄÇÏ¼¼¿ä)
+    // (ì¶œë ¥ ìˆœì„œ ê³ ì • ì›í•˜ë©´ vectorë¡œ ì •ë ¬í•˜ì„¸ìš”)
     for (const auto& kv : m_states)
     {
         const auto& st = kv.second;
@@ -1544,7 +1607,7 @@ string CAnimatorControllerEditorBox::SerializeText() const
         t += "pos=" + to_string((int)st.pos.x) + "," + to_string((int)st.pos.y) + "\n\n";
     }
 
-    // transitions (any ¸ÕÀú)
+    // transitions (any ë¨¼ì €)
     for (const auto& tr : m_transitions)
     {
         if (!tr.isAny) continue;

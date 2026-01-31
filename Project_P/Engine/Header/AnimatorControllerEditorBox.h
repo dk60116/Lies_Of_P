@@ -120,6 +120,10 @@ private:
     bool RenameState(const string& oldName, const string& newName, string* outError = nullptr);
 
 private:
+    bool TransitionExists(const string& from, const string& to, _bool isAny) const;
+    void AddTransition(const string& from, const string& to);
+
+private:
     fs::path m_path;
     _bool m_bOpen, m_bLoaded;
 
@@ -169,6 +173,9 @@ private:
     _int m_boundParamIndex = -1;
     string m_boundStateName;
     string m_strRenameError;
+
+private:
+    string m_pendingTransitionFrom;
 };
 
 NS_END
