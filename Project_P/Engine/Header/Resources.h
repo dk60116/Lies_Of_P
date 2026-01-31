@@ -162,7 +162,10 @@ inline T* CResources::LoadOnGame(const wstring& _name)
     auto iter = m_mGameResourceList.find(_name);
 
     if (iter == m_mGameResourceList.end())
+    {
+        CDebug::LogError(L"Failed LoadOnGame: " + _name);
         return nullptr;
+    }
 
     T* resultResource = dynamic_cast<T*>(iter->second);
 
@@ -175,9 +178,12 @@ inline T* CResources::CloneOnGame(const wstring& _name)
     T* proto = LoadOnGame<T>(_name);
 
     T* clone = T::Clone(*proto);
-    
+
     if (CSceneManager::GetInstance().Get_CrtScene())
         CSceneManager::GetInstance().Get_CrtScene()->Add_CloneResourece(clone);
+
+    if (!clone)
+        CDebug::LogError(L"Failed CloneOnGame: " + _name);
 
     return clone;
 }
@@ -195,7 +201,10 @@ inline T* CResources::LoadOnScene(const wstring& _name)
     if (!r)
     {
         if (!CSceneManager::GetInstance().Get_TempScene())
+        {
+            CDebug::LogError(L"Failed LoadOnScene: " + _name);
             return nullptr;
+        }
 
         CEngineResource* r = CSceneManager::GetInstance().Get_TempScene()->Find_Resource(_name);
 
@@ -220,6 +229,9 @@ inline T* CResources::CloneOnScene(const wstring& _name)
 
     if (CSceneManager::GetInstance().Get_CrtScene())
         CSceneManager::GetInstance().Get_CrtScene()->Add_CloneResourece(clone);
+
+    if (!clone)
+        CDebug::LogError(L"Failed CloneOnScene: " + _name);
 
     return clone;
 }

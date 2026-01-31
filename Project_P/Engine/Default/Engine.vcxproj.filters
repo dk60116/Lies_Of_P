@@ -41,16 +41,16 @@
       <Filter>Management\GameObject</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\EngineTime.h">
-      <Filter>System\Time</Filter>
+      <Filter>Resource\MeshBuffer\System\Time</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\Timer.h">
-      <Filter>System\Time</Filter>
+      <Filter>Resource\MeshBuffer\System\Time</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\EngineDebug.h">
-      <Filter>System\Debug</Filter>
+      <Filter>Resource\MeshBuffer\System\Debug</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\Input.h">
-      <Filter>System\Input</Filter>
+      <Filter>Resource\MeshBuffer\System\Input</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\Display.h">
       <Filter>Window</Filter>
@@ -113,7 +113,7 @@
       <Filter>Components\Animator</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\EngineString.h">
-      <Filter>System\String</Filter>
+      <Filter>Resource\MeshBuffer\System\String</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\HierachyBox.h">
       <Filter>Editor\EditorBox</Filter>
@@ -134,7 +134,7 @@
       <Filter>Resource\Shader</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\UIManager.h">
-      <Filter>System\UI</Filter>
+      <Filter>Resource\MeshBuffer\System\UI</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\Canvas.h">
       <Filter>Components\UI</Filter>
@@ -173,7 +173,7 @@
       <Filter>Components\Render\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\Random.h">
-      <Filter>System\Random</Filter>
+      <Filter>Resource\MeshBuffer\System\Random</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\RenderTarget.h">
       <Filter>Render</Filter>
@@ -201,18 +201,6 @@
     <Filter Include="Management\GameObject">
       <UniqueIdentifier>{2462ffd7-d509-42f6-9db9-f19741d1f5f3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="System">
-      <UniqueIdentifier>{807548a6-0619-49e1-9596-d242c3ea8cd8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="System\Time">
-      <UniqueIdentifier>{ced00dd4-455f-41c3-a236-b74444636d5d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="System\Debug">
-      <UniqueIdentifier>{9a632704-5282-40e4-bb28-7f2094c49021}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="System\Input">
-      <UniqueIdentifier>{16f8070f-cb75-4847-a40c-c847b1fecdca}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Window">
       <UniqueIdentifier>{1c6d9619-5592-42af-9755-fd84bb861c52}</UniqueIdentifier>
     </Filter>
@@ -221,9 +209,6 @@
     </Filter>
     <Filter Include="Engine\DirectX">
       <UniqueIdentifier>{fe65441d-7fe3-4aa3-a77a-1f1db4aed0a0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="System\Imgui">
-      <UniqueIdentifier>{10c0315d-eae9-4b06-8f65-f1a60836357b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Editor">
       <UniqueIdentifier>{e57ee9b9-e587-45a2-bd09-b2a4ea8966e8}</UniqueIdentifier>
@@ -236,9 +221,6 @@
     </Filter>
     <Filter Include="Resource\Material">
       <UniqueIdentifier>{ff070008-c856-4498-a70c-0964b8f68cb0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="System\String">
-      <UniqueIdentifier>{b05e896d-c74b-4eb9-9b77-a362801a3f2e}</UniqueIdentifier>
     </Filter>
     <Filter Include="Editor\EditorBox">
       <UniqueIdentifier>{f02dcc36-a2b2-44de-9d7a-69c582d63e81}</UniqueIdentifier>
@@ -267,9 +249,6 @@
     <Filter Include="Components\Animator">
       <UniqueIdentifier>{9b13f646-b322-48f1-b39e-7cc784eb49b5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="System\UI">
-      <UniqueIdentifier>{86549875-3b27-40ce-9dd6-219ee1be20e9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Components\UI">
       <UniqueIdentifier>{511ad8be-e748-43ab-a669-e924d53b9e63}</UniqueIdentifier>
     </Filter>
@@ -285,11 +264,32 @@
     <Filter Include="Resource\Font">
       <UniqueIdentifier>{ef41f489-6b55-4d53-8ed8-0f6bdce52f19}</UniqueIdentifier>
     </Filter>
-    <Filter Include="System\Random">
-      <UniqueIdentifier>{71d9ef5a-ecf0-4d3a-8ff6-8bae57cf54fa}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Render">
       <UniqueIdentifier>{06aaef00-f80b-4eeb-afe7-71bad4cbe70a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\MeshBuffer\System">
+      <UniqueIdentifier>{807548a6-0619-49e1-9596-d242c3ea8cd8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\MeshBuffer\System\Time">
+      <UniqueIdentifier>{ced00dd4-455f-41c3-a236-b74444636d5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\MeshBuffer\System\Debug">
+      <UniqueIdentifier>{9a632704-5282-40e4-bb28-7f2094c49021}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\MeshBuffer\System\Input">
+      <UniqueIdentifier>{16f8070f-cb75-4847-a40c-c847b1fecdca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\MeshBuffer\System\Imgui">
+      <UniqueIdentifier>{10c0315d-eae9-4b06-8f65-f1a60836357b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\MeshBuffer\System\String">
+      <UniqueIdentifier>{b05e896d-c74b-4eb9-9b77-a362801a3f2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\MeshBuffer\System\UI">
+      <UniqueIdentifier>{86549875-3b27-40ce-9dd6-219ee1be20e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\MeshBuffer\System\Random">
+      <UniqueIdentifier>{71d9ef5a-ecf0-4d3a-8ff6-8bae57cf54fa}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -312,16 +312,16 @@
       <Filter>Management\GameObject</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\EngineTime.cpp">
-      <Filter>System\Time</Filter>
+      <Filter>Resource\MeshBuffer\System\Time</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\Timer.cpp">
-      <Filter>System\Time</Filter>
+      <Filter>Resource\MeshBuffer\System\Time</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\EngineDebug.cpp">
-      <Filter>System\Debug</Filter>
+      <Filter>Resource\MeshBuffer\System\Debug</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\Input.cpp">
-      <Filter>System\Input</Filter>
+      <Filter>Resource\MeshBuffer\System\Input</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\Display.cpp">
       <Filter>Window</Filter>
@@ -360,25 +360,25 @@
       <Filter>Editor</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\imgui.cpp">
-      <Filter>System\Imgui</Filter>
+      <Filter>Resource\MeshBuffer\System\Imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\imgui_demo.cpp">
-      <Filter>System\Imgui</Filter>
+      <Filter>Resource\MeshBuffer\System\Imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\imgui_draw.cpp">
-      <Filter>System\Imgui</Filter>
+      <Filter>Resource\MeshBuffer\System\Imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\imgui_impl_dx11.cpp">
-      <Filter>System\Imgui</Filter>
+      <Filter>Resource\MeshBuffer\System\Imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\imgui_impl_win32.cpp">
-      <Filter>System\Imgui</Filter>
+      <Filter>Resource\MeshBuffer\System\Imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\imgui_tables.cpp">
-      <Filter>System\Imgui</Filter>
+      <Filter>Resource\MeshBuffer\System\Imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\imgui_widgets.cpp">
-      <Filter>System\Imgui</Filter>
+      <Filter>Resource\MeshBuffer\System\Imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\EditorCamera.cpp">
       <Filter>Components\Camera</Filter>
@@ -411,7 +411,7 @@
       <Filter>Components\Animator</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\EngineString.cpp">
-      <Filter>System\String</Filter>
+      <Filter>Resource\MeshBuffer\System\String</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\HierachyBox.cpp">
       <Filter>Editor\EditorBox</Filter>
@@ -426,19 +426,19 @@
       <Filter>Editor\EditorBox</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\ImGuizmo.cpp">
-      <Filter>System\Imgui</Filter>
+      <Filter>Resource\MeshBuffer\System\Imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\TopToolBar.cpp">
       <Filter>Editor\EditorBox</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\imgui_stdlib.cpp">
-      <Filter>System\Imgui</Filter>
+      <Filter>Resource\MeshBuffer\System\Imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\Shader.cpp">
       <Filter>Resource\Shader</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\UIManager.cpp">
-      <Filter>System\UI</Filter>
+      <Filter>Resource\MeshBuffer\System\UI</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\Canvas.cpp">
       <Filter>Components\UI</Filter>
@@ -474,7 +474,7 @@
       <Filter>Resource\MeshBuffer</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\Random.cpp">
-      <Filter>System\Random</Filter>
+      <Filter>Resource\MeshBuffer\System\Random</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\RenderTarget.cpp">
       <Filter>Render</Filter>

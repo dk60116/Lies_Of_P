@@ -21,7 +21,7 @@ void CBehaviour_Tracking::Enter()
 {
 	__super::Enter();
 
-	m_pMonster->Get_Animator()->SetLoop(true);
+	//m_pMonster->Get_Animator()->SetLoop(true);
 	m_pMonster->Get_Animator()->Play(L"Run", 0.25f);
 }
 

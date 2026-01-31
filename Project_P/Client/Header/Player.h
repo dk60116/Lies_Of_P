@@ -47,17 +47,10 @@ public:
 
 private:
 	void PlayerControle();
-	void PlayerControle_NoneLockOn();
-	void PlayerControle_LockOn();
-	void PlayerControle_AttackCombo();
-
-	void PlayIdleAnimation(const _float _blending = 0.1f);
-	void PlayMoveAnimation(const _float _blending = 0.1f);
-	void PlayJumpAnimation(const _float _blending = 0.1f);
-	
-	void PlaySwordAnimation();
 
 private:
+	CGameObject* m_pHeadObj, *m_pHairObj;
+
 	CSkinnedMeshRenderer* m_pSkinnedMeshRenderer;
 	CAnimator* m_pAnimator;
 
@@ -86,6 +79,6 @@ private:
 
 	CTransform* m_pFocusTransform;
 
-	vector<CSkinnedMeshRenderer*> m_vBodySuits;
+	vector<CSkinnedMeshRenderer*> m_vBodySuits, m_vFaces, m_vHairs;
 };
 

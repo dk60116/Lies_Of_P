@@ -2,7 +2,9 @@
 #include "Player.h"
 
 CPlayer::CPlayer()
-	: m_pSkinnedMeshRenderer(nullptr)
+	: m_pHeadObj(nullptr)
+	, m_pHairObj(nullptr)
+	, m_pSkinnedMeshRenderer(nullptr)
 	, m_pAnimator(nullptr)
 	, m_pEquipWeapon(nullptr)
 	, m_sPlayerStatus({})
@@ -27,6 +29,8 @@ CPlayer::CPlayer()
 	, m_bIsPrevJump(false)
 	, m_pFocusTransform(nullptr)
 	, m_vBodySuits({})
+	, m_vFaces({})
+	, m_vHairs({})
 {
 	m_strName = L"Player";
 }
@@ -100,30 +104,34 @@ HRESULT CPlayer::Initialize()
 	m_vBodySuits[5]->Get_Material()->Set_Texture(frill_NormalTex, 1);
 	m_vBodySuits[5]->Get_Material()->Set_Texture(frill_ORMTex, 2);
 
-	//m_pAnimator = m_pGameObject->AddComponent<CAnimator>();
-	//m_pAnimator->Add_Animation(L"Idle", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_Idle (Animation)"));
-	//m_pAnimator->Add_Animation(L"Walk", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_Walk (Animation)"));
-	//m_pAnimator->Add_Animation(L"LeftWalk", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_LeftWalk (Animation)"));
-	//m_pAnimator->Add_Animation(L"RightWalk", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_RightWalk (Animation)"));
-	//m_pAnimator->Add_Animation(L"BackWalk", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_BackWalk (Animation)"));
-	//m_pAnimator->Add_Animation(L"CombatBackWalk", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_CombatBackWalk (Animation)"));
-	//m_pAnimator->Add_Animation(L"Run", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_Run (Animation)"));
-	//m_pAnimator->Add_Animation(L"CombatRun", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_CombatRun (Animation)"));
-	//m_pAnimator->Add_Animation(L"CombatIdle", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_CombatIdle (Animation)"));
-	//m_pAnimator->Add_Animation(L"Jump", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_Jump (Animation)"));
-	//m_pAnimator->Add_Animation(L"SwordAttack1", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_SwordAttack1 (Animation)"));
-	//m_pAnimator->Add_Animation(L"SwordCombo", CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Link_AttackCombo (Animation)"));
+	m_pHeadObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Eve_Head");
+	m_vFaces = m_pHeadObj->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveHead_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveHead_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
 
-	//m_pAnimator->SetLoop(true);
+	CTexture* faceBase = CResources::GetInstance().LoadOnScene<CTexture>(L"EveFace_Base (Texture)");
+	CTexture* faceNormal = CResources::GetInstance().LoadOnScene<CTexture>(L"EveFace_Normal (Texture)");
+	CTexture* faceORM = CResources::GetInstance().LoadOnScene<CTexture>(L"EveFace_ORM (Texture)");
 
-	//CGameObject* swordObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Wooden Sword");
-	//swordObj->CreateMeshHierachy(CResources::GetInstance().LoadMeshBuffersOnScene(L"WoodenSword (MeshBuffer)"), 150.f);
+	m_vFaces[2]->Get_Material()->Set_Texture(faceBase);
+	m_vFaces[2]->Get_Material()->Set_Texture(faceNormal, 1);
+	//m_vFaces[2]->Get_Material()->Set_Texture(faceORM, 2);
 
-	//swordObj->Get_Transform()->SetParent(Get_Transform()->Find_ChildRecursive(L"RightHand"));
-	//
-	//m_fSwordActionEndFrames[0] = 1.f;
-	//m_fSwordActionEndFrames[1] = 2.f;
-	//m_fSwordActionEndFrames[2] = 3.f;
+	m_pHairObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Eve_Hear");
+	m_vHairs = m_pHairObj->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveHairMain_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveHairMain_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
+
+	for (TRAVERSAL_ITER(m_vHairs, it))
+	{
+		(*it)->Get_Material()->Set_BaseColor(ColorValue::black().f4Color());
+		(*it)->Get_Material()->Set_FloatValue(L"gRoughness", 0.3f);
+		(*it)->Get_Material()->Set_FloatValue(L"gMetallic", 0.5f);
+	}
+
+	m_pAnimator = m_pGameObject->AddComponent<CAnimator>();
+	CAnimationClip* idle = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Idle (Animation)");
+	idle->SetLoop(true);
+	CAnimationClip* run_during = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Run_During (Animation)");
+	run_during->SetLoop(true);
+	m_pAnimator->Add_Animation(L"Idle", idle);
+	m_pAnimator->Add_Animation(L"Run_During", run_during);
 
 	CGameManager::GetInstance().Set_Player(this);
 
@@ -141,6 +149,11 @@ HRESULT CPlayer::Initialize()
 void CPlayer::Awake()
 {
 	Get_Transform()->Set_PositionY(-2.864f);
+	m_pHeadObj->Get_Transform()->Set_PositionY(-2.864f);
+	CTransform* headSlot = Get_Transform()->Find_ChildRecursive(L"Bip001-Head");
+	m_pHeadObj->Get_Transform()->SetParent(headSlot);
+	m_pHairObj->Get_Transform()->Set_PositionY(0.155f);
+	m_pHairObj->Get_Transform()->SetParent(m_pHeadObj->Get_Transform());
 	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp;
 
 	m_vBodySuits[4]->Get_GameObject()->SetActive(false);
@@ -149,6 +162,8 @@ void CPlayer::Awake()
 void CPlayer::Start()
 {
 	CGameManager::GetInstance().Get_PlayerHUD()->Update_Heart(m_sPlayerStatus.crtHp, m_sPlayerStatus.maxHp);
+
+	m_pAnimator->Play(L"Run_During");
 }
 
 void CPlayer::Update()
@@ -200,30 +215,6 @@ void CPlayer::PlayerControle()
 	m_bIsAttack = CInput::GetInstance().GetMouseButtonDown(0);
 	m_bIsJump = CInput::GetInstance().GetKeyDown(SPACE);
 
-	//if (m_bIsJump && !m_bIsPrevJump)
-	//{
-	//	PlayJumpAnimation();
-	//}
-
-	//if (m_bIsAttack && !m_bIsPrevAttack)
-	//{
-	//	PlaySwordAnimation();
-	//	m_bSwordActionDuring = true;
-	//	m_fAttackComboNT = 0.f;
-	//	return;
-	//}
-
-	//if (m_bSwordActionDuring)
-	//	PlayerControle_AttackCombo();
-
-	//if (m_bLockOnMode != m_bPrevLockOnMode)
-	//{
-	//	if (m_vMoveDirection == vector3::zero())
-	//		PlayIdleAnimation();
-	//	else
-	//		PlayMoveAnimation();
-	//}
-
 	m_vMoveDirection = vector3::zero();
 	m_fRotateDirection = 0.f;
 
@@ -236,45 +227,12 @@ void CPlayer::PlayerControle()
 		m_vMoveDirection += vector3::back();
 	}
 
-	//if ((m_vMoveDirection.z != m_vPrevMoveDirectoin.z && m_vMoveDirection != vector3::zero()))
-	//{
-	//	PlayMoveAnimation();
-	//	m_pAnimator->Pause();
-	//}
-
-	if (!m_bLockOnMode)
-		PlayerControle_NoneLockOn();
-	else
-		PlayerControle_LockOn();
-
-	//if (m_vMoveDirection != m_vPrevMoveDirectoin && m_vMoveDirection == vector3::zero())
-	//{
-	//	PlayIdleAnimation();
-	//}
-
 	m_bBackMove = m_vMoveDirection.z < 0.f;
 
 	if (m_bBackMove)
 		m_fCrtMoveSpeed = m_sPlayerStatus.moveSpeed * m_sPlayerStatus.backWalkRatio;
 	else
 		m_fCrtMoveSpeed = m_sPlayerStatus.moveSpeed;
-
-	//if (m_bSwordActionDuring)
-	//	m_fCrtMoveSpeed = m_sPlayerStatus.moveSpeed * 0.3f;
-
-	//if (m_vMoveDirection != m_vPrevMoveDirectoin)
-	//{
-	//	PlayMoveAnimation();
-	//}
-
-	//if (m_bLockOnMode != m_bPrevLockOnMode)
-	//{
-	//	if (!CInput::GetInstance().GetKey(SHIFT))
-	//	{
-	//		if (m_fRotateDirection != 0.f)
-	//			PlayMoveAnimation();
-	//	}
-	//}
 
 	if (m_vMoveDirection != vector3::zero())
 	{
@@ -289,184 +247,4 @@ void CPlayer::PlayerControle()
 	m_vPrevMoveDirectoin = m_vMoveDirection;
 	m_bPrevLockOnMode = m_bLockOnMode;
 	m_bIsPrevJump = m_bIsJump;
-}
-
-void CPlayer::PlayerControle_NoneLockOn()
-{
-	if (CInput::GetInstance().GetKey(A))
-	{
-		m_fRotateDirection -= 1.f;
-	}
-	if (CInput::GetInstance().GetKey(D))
-	{
-		m_fRotateDirection += 1.f;
-	}
-
-	if (m_fRotateDirection != 0.f)
-	{
-		if (m_fRotateDirection != 0.f) 
-			Get_Transform()->Add_EulerAnglesY(m_fRotateDirection * m_sPlayerStatus.turnSpeed * DELTA_TIME);
-	}
-
-	if (m_fRotateDirection != m_fPrevRotateDirection && m_vMoveDirection == vector3::zero())
-	{
-		if (m_fRotateDirection != 0.f)
-		{
-			PlayMoveAnimation();
-			m_bNotMoveTurning = true;
-		}
-		else
-			m_bNotMoveTurning = false;
-	}
-	else
-		m_bNotMoveTurning = false;
-
-	if (m_fRotateDirection != m_fPrevRotateDirection && m_vMoveDirection == vector3::zero())
-	{
-		if (!CInput::GetInstance().GetKey(A) == !CInput::GetInstance().GetKey(D))
-		{
-			if (m_pAnimator)
-			{
-				PlayIdleAnimation();
-			}
-		}
-	}
-
-	m_fPrevRotateDirection = m_fRotateDirection;
-}
-
-void CPlayer::PlayerControle_LockOn()
-{
-	if (m_pFocusTransform)
-	{
-		if (vector3::Distance(m_pFocusTransform->Get_Position(), Get_Transform()->Get_Position()) > 1.5f)
-		{
-			quaternion targetQ = Get_Transform()->LookQuaternion(m_pFocusTransform->Get_Position(), CTransform::X | CTransform::Z);
-			Get_Transform()->Set_Quaternion(targetQ.Slerp(Get_Transform()->Get_Quaternion(), targetQ, DELTA_TIME * m_sPlayerStatus.focusTurnRatio));
-		}
-	}
-
-	if (CInput::GetInstance().GetKey(A))
-	{
-		m_vMoveDirection.x -= 1.f;
-	}
-	if (CInput::GetInstance().GetKey(D))
-	{
-		m_vMoveDirection.x += 1.f;
-	}
-
-	if (m_vMoveDirection.x != m_vPrevMoveDirectoin.x)
-	{
-		if (m_vMoveDirection.z <= 0.f)
-		{
-			PlayMoveAnimation();
-		}
-	}
-}
-
-void CPlayer::PlayerControle_AttackCombo()
-{
-	m_fAttackComboNT += DELTA_TIME;
-
-	_float dest = 0.f;
-
-	dest = m_fSwordActionEndFrames[m_iAttackComboDest];
-
-	if (m_fAttackComboNT > dest)
-	{
-		m_fAttackComboNT = 0.f;
-		m_bSwordActionDuring = false;
-
-		if (m_vMoveDirection == vector3::zero())
-			PlayIdleAnimation(0.25f);
-		else
-			PlayMoveAnimation(0.25f);
-	}
-}
-
-void CPlayer::PlayIdleAnimation(const _float _blending)
-{
-	if (m_bIsJump || m_bSwordActionDuring)
-		return;
-
-	if (m_pAnimator)
-	{
-		if (!m_bLockOnMode)
-		{
-			m_pAnimator->Play(L"Idle", _blending);
-		}
-		else
-		{
-			m_pAnimator->Play(L"CombatIdle", _blending);
-		}
-	}
-
-	//CDebug::Log("Idle");
-}
-
-void CPlayer::PlayMoveAnimation(const _float _blending)
-{
-	if (m_bIsJump || m_bSwordActionDuring)
-		return;
-
-	if (m_pAnimator)
-	{
-		m_pAnimator->SetLoop(true);
-
-		if (!m_bLockOnMode)
-		{
-			if (m_vMoveDirection.z > 0.f)
-				m_pAnimator->Play(L"Run", _blending);
-			else if (m_vMoveDirection.z < 0.f)
-				m_pAnimator->Play(L"BackWalk", _blending);
-			else if (m_fRotateDirection != 0)
-				m_pAnimator->Play(L"Walk", _blending);
-		}
-		else
-		{
-			if (m_vMoveDirection.z > 0.f)
-				m_pAnimator->Play(L"CombatRun", _blending);
-			else
-			{
-				if (m_vMoveDirection.x < 0.f)
-					m_pAnimator->Play(L"LeftWalk", _blending);
-				else if (m_vMoveDirection.x > 0.f)
-					m_pAnimator->Play(L"RightWalk", _blending);
-				else if (m_vMoveDirection.z < 0.f)
-					m_pAnimator->Play(L"CombatBackWalk", _blending);
-				else
-					PlayIdleAnimation(_blending);
-			}
-		}
-	}
-
-	//CDebug::Log("CombatRun");
-}
-
-void CPlayer::PlayJumpAnimation(const _float _blending)
-{
-	if (m_bSwordActionDuring)
-		return;
-
-	if (m_pAnimator)
-	{
-		m_pAnimator->SetLoop(false);
-		m_pAnimator->Play(L"Jump", _blending);
-	}
-
-	//CDebug::Log("Jump");
-}
-
-void CPlayer::PlaySwordAnimation()
-{
-	if (m_bIsJump || m_bSwordActionDuring)
-		return;
-
-	if (m_pAnimator)
-	{
-		m_pAnimator->SetLoop(true);
-		m_pAnimator->Play(L"SwordCombo", 0.1f);
-	}
-
-	//CDebug::Log("SwordCombo");
 }

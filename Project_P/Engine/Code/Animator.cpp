@@ -220,7 +220,10 @@ void CAnimator::Play()
 	}
 
 	if (m_pCrtAnimation)
+	{
+		m_bLoop = m_pCrtAnimation->IsLoop();
 		m_bIsPlaying = true;
+	}
 }
 
 void CAnimator::Play(const wstring& _animName, const _float _blendDuration)
@@ -275,16 +278,6 @@ void CAnimator::Stop()
 	m_fCurrentTime = 0.f;
 	Update();
 	m_bIsPlaying = false;
-}
-
-void CAnimator::SetLoop(const _bool _loop)
-{
-	m_bLoop = _loop;
-}
-
-void CAnimator::SetSpeed(const _float _value)
-{
-	m_fPlaybackSpeed = _value;
 }
 
 unordered_map<wstring, CAnimationClip*>& CAnimator::Get_AnimationClipList()

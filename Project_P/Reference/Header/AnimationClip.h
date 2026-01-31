@@ -54,6 +54,7 @@ public:
 public:
 	_int Sample(_float _timeSec, unordered_map<wstring, BoneTransform>& _out) const;
 	const _bool IsLoop() const;
+	void SetLoop(const _bool _loop);
 	const _float Get_Duration() const;
 	const _float Get_TickPerSecons() const;
 

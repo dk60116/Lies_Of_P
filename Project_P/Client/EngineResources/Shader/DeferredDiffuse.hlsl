@@ -22,10 +22,10 @@ cbuffer PerObject : register(b0)
 
 cbuffer PerCamera : register(b1)
 {
-    float3 camPos; 
+    float3 camPos;
     float cpadding;
-    float4x4 view; 
-    float4x4 proj; 
+    float4x4 view;
+    float4x4 proj;
 };
 
 #pragma pack_matrix(row_major)
@@ -159,6 +159,8 @@ float4 PSMain(VSOut i) : SV_Target
     float3 Lo = 0;
 
     int lightCount = (int) gLight[0][3][3];
+    
+    int dirLightCount = 0;
 
     [loop]
     for (int li = 0; li < lightCount; ++li)
@@ -181,6 +183,8 @@ float4 PSMain(VSOut i) : SV_Target
         {
             L = normalize(-lightDir);
             att = 1.0f;
+            
+            ++dirLightCount;
         }
         else if (lightType == LIGHT_TYPE_POINT)
         {
@@ -216,7 +220,7 @@ float4 PSMain(VSOut i) : SV_Target
         float VdotH = saturate(dot(V, H));
 
         // Radiance
-        float3 radiance = lightCol * (intensity * att) * PI;
+        float3 radiance = lightCol * (intensity * att);
 
         // Cook-Torrance BRDF
         float D = DistributionGGX(NdotH, roughness);
@@ -229,15 +233,16 @@ float4 PSMain(VSOut i) : SV_Target
         float3 kS = F;
         float3 kD = (1.0f - kS) * (1.0f - metallic);
 
-        float3 diffuse = (kD * albedo);
+        float3 diffuse = kD * (albedo);
 
         Lo += (diffuse + spec) * radiance * NdotL;
     }
+    
+    float ambient = dirLightCount ? 0.5f : 0.2f;
+    
+    float3 ambientV = ambient * albedo * (1.0f - (metallic * 0.7f));
 
-    // (간단) 글로벌 앰비언트: IBL 없을 때 임시
-    float3 ambient = 0.2f * albedo * (1.0f - metallic);
-
-    float3 color = ambient + Lo;
+    float3 color = ambientV + Lo;
     color = saturate(color);
 
     return float4(color, 1);

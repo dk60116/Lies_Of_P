@@ -1,10 +1,3 @@
-// DeferredSpecular_PBR.hlsl
-// t0: Albedo (rgb)
-// t1: Normal (encoded 0~1)
-// t2: Depth  (float)
-// t3: Material (r=smoothness, g=metallic)
-// b5: gInvViewProj
-
 #define PI 3.14159265359
 #define MAX_LIGHTS 64
 
@@ -77,11 +70,12 @@ float3 ReconstructWorldPos(float2 uvScreen, float depth01)
     return w.xyz / max(w.w, 1e-6f);
 }
 
-// ---- GGX / Smith / Schlick ----
 float DistributionGGX(float NdotH, float roughness)
 {
-    float a = roughness * roughness;
+    float a = pow(saturate(roughness), 1.5f);
+    a = max(a, 1e-4f);
     float a2 = a * a;
+
     float d = (NdotH * NdotH) * (a2 - 1.0f) + 1.0f;
     return a2 / max(PI * d * d, 1e-6f);
 }
@@ -89,7 +83,7 @@ float DistributionGGX(float NdotH, float roughness)
 float GeometrySchlickGGX(float NdotX, float roughness)
 {
     float r = roughness + 1.0f;
-    float k = (r * r) / 8.0f; // UE4 스타일
+    float k = (r * r) / 8.0f;
     return NdotX / max(NdotX * (1.0f - k) + k, 1e-6f);
 }
 
@@ -122,6 +116,8 @@ float4 PSMain(VSOut i) : SV_Target
     float occulusion = saturate(mat.r);
     float roughness = saturate(mat.g);
     float metallic = saturate(mat.b);
+    
+    roughness = roughness * (1.f + metallic * 0.5f);
 
     float3 posW = ReconstructWorldPos(uvScreen, depth01);
     float3 V = normalize(camPos - posW);
@@ -130,7 +126,6 @@ float4 PSMain(VSOut i) : SV_Target
     if (NdotV <= 1e-6f)
         return float4(0, 0, 0, 1);
 
-    // 금속: F0 = albedo(착색 반사), 비금속: F0 = 0.04
     float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallic);
 
     float3 specSum = 0;
@@ -171,7 +166,6 @@ float4 PSMain(VSOut i) : SV_Target
             float dist = sqrt(distSq);
             L = toL / max(dist, 1e-6f);
 
-            // (당신 Diffuse PBR 패스와 동일한 감쇠로 맞춤)
             float falloff = saturate(1.0f - dist / range);
             falloff *= falloff;
 
@@ -201,10 +195,8 @@ float4 PSMain(VSOut i) : SV_Target
 
         float3 spec = (D * G * F) / max(4.0f * NdotV * NdotL, 1e-6f);
 
-        // spec-only 누적
         specSum += spec * radiance * NdotL;
     }
 
-    // HDR 유지 권장: 여기서 saturate 하지 마세요.
     return float4(specSum, 1);
 }

@@ -100,6 +100,11 @@ const _bool CAnimationClip::IsLoop() const
 	return m_bLoopTime;
 }
 
+void CAnimationClip::SetLoop(const _bool _loop)
+{
+	m_bLoopTime = _loop;
+}
+
 const _float CAnimationClip::Get_Duration() const
 {
 	return m_fDuration / m_fTicksPerSecond;

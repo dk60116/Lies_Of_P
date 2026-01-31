@@ -44,15 +44,17 @@ float4 PSMain(VSOut input) : SV_Target
 {
     float2 uv = input.uv;
     uv.y = 1.0f - uv.y;
-
+    
     float4 albedo = gAlbedo.Sample(gSampler, uv);
     float depth = gDepth.SampleLevel(gSampler, uv, 0);
+    if (depth >= 0.999999f)
+        return albedo;
     float shadowF = gShadow.Sample(gSampler, uv);
     float4 diffuse = gShading.Sample(gSampler, uv);
     float4 specualr = gSpecular.Sample(gSampler, uv);
     
-    if (depth >= 0.999999f)
-        return albedo;
+    if (shadowF < 0.3f)
+        shadowF = 0.f;
     
     float shadowValue = (1.f - shadowF) * 0.2f;
     float4 shadow = float4(shadowValue, shadowValue, shadowValue, 0.f);

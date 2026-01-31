@@ -38,7 +38,6 @@ public:
     void Pause();
     void Stop();
 
-    void SetLoop(const _bool _loop);
     void SetSpeed(const _float _value);
 
 public:
