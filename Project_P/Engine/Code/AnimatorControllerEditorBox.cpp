@@ -1410,8 +1410,8 @@ void CAnimatorControllerEditorBox::AddState(const string& name, const string& mo
 
     m_states[name] = st;
 
-    // entry가 비어있으면 첫 state로 지정
-    if (m_entryState.empty())
+    // entry가 비어있거나 유효하지 않으면 첫 state로 지정
+    if (m_entryState.empty() || m_states.find(m_entryState) == m_states.end())
         m_entryState = name;
 
     m_eSelectType = ESelectType::State;
