@@ -157,7 +157,9 @@ call copy.bat</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\Header\AnimationClip.h" />
+    <ClInclude Include="..\Header\AnimatorController.h" />
     <ClInclude Include="..\Header\Animator.h" />
+    <ClInclude Include="..\Header\AnimatorControllerEditorBox.h" />
     <ClInclude Include="..\Header\Camera.h" />
     <ClInclude Include="..\Header\Canvas.h" />
     <ClInclude Include="..\Header\Component.h" />
@@ -219,10 +221,12 @@ call copy.bat</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Code\AnimationClip.cpp" />
+    <ClCompile Include="..\Code\AnimatorController.cpp" />
     <ClCompile Include="..\Code\Animator.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\Code\AnimatorControllerEditorBox.cpp" />
     <ClCompile Include="..\Code\Camera.cpp" />
     <ClCompile Include="..\Code\Canvas.cpp" />
     <ClCompile Include="..\Code\Component.cpp" />

@@ -16,6 +16,8 @@ class ENGINE_DLL CResources final
 {
     SINGLETONCLASS(CResources);
 
+    friend class CAnimator;
+
 public:
     HRESULT Initialize();
 

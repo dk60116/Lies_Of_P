@@ -1,17 +1,66 @@
 #include "cpch.h"
 #include "PlayerCamera.h"
+#include "PlayerController.h" // CPlayer 헤더가 필요하다면 포함
+#include "GameManager.h"      // GameManager, Display, Input 등 포함 가정
+
 #include <algorithm>
 #include <cmath>
 
 namespace
 {
-    constexpr _float PI = 3.14159265358979323846f;
+    constexpr _float PI = 3.141592f;
+
     inline _float Deg2Rad(_float deg) { return deg * (PI / 180.f); }
+
+    // 각도를 0 ~ 360으로 정규화
     inline _float WrapDeg(_float deg)
     {
         while (deg >= 360.f) deg -= 360.f;
-        while (deg < 0.f)   deg += 360.f;
+        while (deg < 0.f)    deg += 360.f;
         return deg;
+    }
+
+    // --- Win32 Helper Functions (기존과 동일) ---
+    inline POINT GetClientCenterScreen(HWND hWnd)
+    {
+        RECT rc = {};
+        GetClientRect(hWnd, &rc);
+        POINT c{};
+        c.x = (rc.left + rc.right) / 2;
+        c.y = (rc.top + rc.bottom) / 2;
+        ClientToScreen(hWnd, &c);
+        return c;
+    }
+
+    inline RECT GetClientRectScreen(HWND hWnd)
+    {
+        RECT rc = {};
+        GetClientRect(hWnd, &rc);
+        POINT lt{ rc.left, rc.top };
+        POINT rb{ rc.right, rc.bottom };
+        ClientToScreen(hWnd, &lt);
+        ClientToScreen(hWnd, &rb);
+        return RECT{ lt.x, lt.y, rb.x, rb.y };
+    }
+
+    inline HWND GetRootWindow(HWND hWnd)
+    {
+        if (!hWnd) return nullptr;
+        return GetAncestor(hWnd, GA_ROOT);
+    }
+
+    inline bool IsOurWindowActive(HWND hWnd)
+    {
+        if (!hWnd) return false;
+        HWND fg = GetForegroundWindow();
+        if (!fg) return false;
+        return GetRootWindow(hWnd) == GetRootWindow(fg);
+    }
+
+    inline void LockCursorToClient(HWND hWnd)
+    {
+        RECT clip = GetClientRectScreen(hWnd);
+        ClipCursor(&clip);
     }
 }
 
@@ -20,12 +69,17 @@ CPlayerCamera::CPlayerCamera()
     , m_sOptions({})
     , m_fBackOffset(6.f)
     , m_fZoomSensor(0.f)
+    , m_bMouseLocked(true)
+    , m_bIgnoreNextDelta(true)
+    , m_fTargetYaw(0.f)
+    , m_fTargetPitch(15.f)
+    , m_fCurYaw(0.f)
+    , m_fCurPitch(15.f)
 {
 }
 
 CPlayerCamera::~CPlayerCamera()
 {
-    m_strName = L"PlayerCamera";
 }
 
 CPlayerCamera* CPlayerCamera::Create()
@@ -35,8 +89,7 @@ CPlayerCamera* CPlayerCamera::Create()
 
 CComponent* CPlayerCamera::Clone() const
 {
-    CPlayerCamera* clone = new CPlayerCamera();
-    return clone;
+    return new CPlayerCamera(); // 복사 로직 필요 시 수정
 }
 
 HRESULT CPlayerCamera::Initialize()
@@ -46,18 +99,23 @@ HRESULT CPlayerCamera::Initialize()
 
     m_pGameObject->AddComponent<CCamera>();
 
-    // 줌 속도(기존 firstZoomSensor를 zoomSpeed로 쓰거나 그대로 써도 됨)
     m_fZoomSensor = m_sOptions.firstZoomSensor;
 
-    // 초기 각도(원하면 옵션으로 빼세요)
-    m_fYawDeg = 0.f;
-    m_fPitchDeg = 15.f;
+    // 초기 각도 설정
+    m_fTargetYaw = 0.f;
+    m_fTargetPitch = 15.f;
+
+    // 현재 각도를 타겟과 일치시켜 시작 시 튀는 현상 방지
+    m_fCurYaw = m_fTargetYaw;
+    m_fCurPitch = m_fTargetPitch;
 
     return S_OK;
 }
 
 void CPlayerCamera::Awake()
 {
+    // 싱글톤 접근 방식은 프로젝트 구조에 맞게 유지
+    CGameManager::GetInstance().Set_PlayerCamera(this);
     m_pPlayer = CGameManager::GetInstance().Get_Player();
 }
 
@@ -65,64 +123,28 @@ void CPlayerCamera::Start()
 {
 }
 
-namespace
-{
-    inline POINT GetClientCenterScreen(HWND hWnd)
-    {
-        RECT rc{};
-        GetClientRect(hWnd, &rc);
-
-        POINT c{};
-        c.x = (rc.left + rc.right) / 2;
-        c.y = (rc.top + rc.bottom) / 2;
-
-        ClientToScreen(hWnd, &c);
-        return c;
-    }
-
-    inline RECT GetClientRectScreen(HWND hWnd)
-    {
-        RECT rc{};
-        GetClientRect(hWnd, &rc);
-
-        POINT lt{ rc.left, rc.top };
-        POINT rb{ rc.right, rc.bottom };
-        ClientToScreen(hWnd, &lt);
-        ClientToScreen(hWnd, &rb);
-
-        RECT out{ lt.x, lt.y, rb.x, rb.y };
-        return out;
-    }
-}
-
 void CPlayerCamera::Update()
 {
-    HWND hWnd = CDisplay::GetInstance().Get_GameWindow(); 
+    HWND hWnd = CDisplay::GetInstance().Get_GameWindow();
+    if (!hWnd) return;
 
-    if (!hWnd || GetForegroundWindow() != hWnd)
+    if (!IsOurWindowActive(hWnd))
     {
         ClipCursor(nullptr);
         m_bIgnoreNextDelta = true;
         return;
     }
 
-    //// 1) 커서를 창 내부로 제한(선택사항이지만 추천)
-    //if (m_bMouseLocked)
-    //{
-    //    RECT clip = GetClientRectScreen(hWnd);
-    //    ClipCursor(&clip);
-    //}
-    //else
-    //{
-    //    ClipCursor(nullptr);
-    //}
+    if (m_bMouseLocked)
+        LockCursorToClient(hWnd);
+    else
+        ClipCursor(nullptr);
 
-    // 2) 중앙 기준 델타 계산 + 중앙으로 워프
     _float dx = 0.f, dy = 0.f;
+
     if (m_bMouseLocked)
     {
-        POINT center = GetClientCenterScreen(hWnd);
-
+        const POINT center = GetClientCenterScreen(hWnd);
         POINT cur{};
         GetCursorPos(&cur);
 
@@ -137,20 +159,36 @@ void CPlayerCamera::Update()
             m_bIgnoreNextDelta = false;
         }
 
-        // 3) 회전 적용 (픽셀 델타는 dt를 곱하지 않는 게 보통 가장 안정적)
+        // 안전 장치: 너무 큰 델타 무시
+        const _float hugeDelta = 20000.f;
+        dx = std::clamp(dx, -hugeDelta, hugeDelta);
+        dy = std::clamp(dy, -hugeDelta, hugeDelta);
+
         const _float sens = (m_sOptions.lookSensitivity > 0.f) ? m_sOptions.lookSensitivity : 0.15f;
 
-        m_fYawDeg += dx * sens;
-        m_fPitchDeg -= dy * sens;
+        // 프레임당 회전량 제한 (sin/cos 겹침 방지용 안전장치)
+        const _float maxStep = 100.f;
+        _float yawStep = std::clamp(dx * sens, -maxStep, maxStep);
+        _float pitchStep = std::clamp(-dy * sens, -maxStep, maxStep);
 
-        m_fYawDeg = WrapDeg(m_fYawDeg);
+        // 1. 입력을 Target 변수에 누적 (Wrap은 나중에 처리)
+        m_fTargetYaw += yawStep;
+        m_fTargetPitch += pitchStep;
 
-        const _float pitchMin = (m_sOptions.pitchMin != 0.f) ? m_sOptions.pitchMin : -35.f;
-        const _float pitchMax = (m_sOptions.pitchMax != 0.f) ? m_sOptions.pitchMax : 70.f;
-        m_fPitchDeg = std::clamp(m_fPitchDeg, pitchMin, pitchMax);
+        // Pitch Clamp
+        const _float pMin = (m_sOptions.pitchMin != 0.f) ? m_sOptions.pitchMin : -35.f;
+        const _float pMax = (m_sOptions.pitchMax != 0.f) ? m_sOptions.pitchMax : 70.f;
+        m_fTargetPitch = std::clamp(m_fTargetPitch, pMin, pMax);
+
+        // Yaw Wrap (선택 사항이나, 숫자가 무한히 커지는 것 방지)
+        m_fTargetYaw = WrapDeg(m_fTargetYaw);
+    }
+    else
+    {
+        m_bIgnoreNextDelta = true;
     }
 
-    // 4) 줌(휠) - 휠은 보통 dt 곱 안 해도 됩니다만, 현재 구조 유지해도 OK
+    // 줌 처리
     _float wheel = CInput::GetInstance().GetAxis(L"Mouse ScrollWheel");
     if (wheel != 0.f)
     {
@@ -159,47 +197,82 @@ void CPlayerCamera::Update()
     }
 }
 
+// [핵심] 최단 각도 보간 함수
+_float CPlayerCamera::LerpAngle(_float current, _float target, _float t)
+{
+    _float diff = target - current;
+
+    // -180 ~ 180도로 보정 (예: 350도에서 10도로 갈 때 -340도가 아니라 +20도로 계산)
+    while (diff >= 180.f) diff -= 360.f;
+    while (diff < -180.f) diff += 360.f;
+
+    return current + diff * t;
+}
+
 void CPlayerCamera::LateUpdate()
 {
-    if (!m_pPlayer)
-        return;
+    if (!m_pPlayer) return;
 
     CTransform* tf = Get_Transform();
     CTransform* playerTf = m_pPlayer->Get_Transform();
 
+    // Pivot 계산
     const vector3 playerPos = playerTf->Get_Position();
-
-    // 피벗(카메라가 바라보고 공전하는 중심점)
-    // 기존 lookHeightOffset을 그대로 “피벗 높이”로 쓰는 게 자연스럽습니다.
     const vector3 pivot = playerPos + vector3::up() * m_sOptions.lookHeightOffset;
 
-    // yaw/pitch -> 방향 벡터(카메라가 pivot을 향해 보는 forward)
-    const _float yawRad = Deg2Rad(m_fYawDeg);
-    const _float pitchRad = Deg2Rad(m_fPitchDeg);
+    // 1. 각도(Angle) 보간
+    // trackingSpeed가 클수록 Target에 빨리 도달. 
+    // 기존 벡터 Lerp보다 반응이 느릴 수 있으므로 trackingSpeed를 2.0 -> 5.0~10.0 정도로 높이는 것 추천
+    const _float t = std::clamp(m_sOptions.trackingSpeed * DELTA_TIME, 0.f, 1.f);
+
+    m_fCurYaw = LerpAngle(m_fCurYaw, m_fTargetYaw, t);
+    m_fCurPitch = LerpAngle(m_fCurPitch, m_fTargetPitch, t);
+
+    // 2. 보간된 각도로 카메라 위치 계산 (구면 좌표계)
+    const _float yawRad = Deg2Rad(m_fCurYaw);
+    const _float pitchRad = Deg2Rad(m_fCurPitch);
 
     const _float cy = std::cos(yawRad);
     const _float sy = std::sin(yawRad);
     const _float cp = std::cos(pitchRad);
     const _float sp = std::sin(pitchRad);
 
-    // (x,z) 평면에서 yaw, y축으로 pitch
-    // 기본 전제: +Z가 forward인 좌표계(지금 코드 스타일상 대체로 이 케이스)
     vector3 camForward;
     camForward.x = cp * sy;
     camForward.y = sp;
     camForward.z = cp * cy;
 
-    // 목표 카메라 위치: pivot 뒤로 distance만큼
-    const vector3 desiredPos = pivot - camForward * m_fBackOffset;
+    // 3. 최종 위치 적용 (Vector Lerp 없이 직접 설정)
+    // 각도가 부드럽게 변하므로 위치는 항상 Pivot을 중심으로 한 구면 위를 부드럽게 움직임
+    const vector3 finalPos = pivot - camForward * m_fBackOffset;
 
-    // 추적 스무딩
-    const _float followT = std::clamp(m_sOptions.trackingSpeed * DELTA_TIME, 0.f, 1.f);
-    tf->Set_Position(vector3::Lerp(tf->Get_Position(), desiredPos, followT));
-
-    // 바라보는 지점(소울라이크는 보통 pivot을 본다)
+    tf->Set_Position(finalPos);
     tf->LookAt(pivot);
 }
 
 void CPlayerCamera::OnDestroy()
 {
+    ClipCursor(nullptr);
+}
+
+const vector3 CPlayerCamera::Get_ForwardVector()
+{
+    // 현재 카메라가 바라보는 방향 (Y축 제외)
+    vector3 forward = Get_Transform()->Get_Directions().forward;
+    forward.y = 0.f;
+    return forward.normalized();
+}
+
+const float CPlayerCamera::Get_ForwardAngle()
+{
+    vector3 f = Get_ForwardVector(); // 위에서 만든 함수 재활용
+
+    const _float len2 = f.x * f.x + f.z * f.z;
+    if (len2 < 1e-6f) return 0.f;
+
+    // atan2로 각도 산출
+    const _float yawRad = std::atan2(f.x, f.z);
+    _float yawDeg = yawRad * (180.f / PI);
+
+    return yawDeg;
 }

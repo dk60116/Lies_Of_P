@@ -17,9 +17,9 @@ public:
 	{
 		_int maxHp = 6;
 		_int crtHp = 0;
-		_float moveSpeed = 4.f;
+		_float moveSpeed = 6.f;
 		_float backWalkRatio = 0.7f;
-		_float turnSpeed = 180.f;
+		_float turnSpeed = 280.f;
 		_float focusTurnRatio = 8.f;
 		_int attackPower = 1;
 	};
@@ -41,14 +41,15 @@ public:
 	void OnDestroy() override;
 
 public:
+	class CPlayerController* Get_Controller();
+
+public:
 	void Set_Focus(CTransform* _transform);
 	void RecoverHp(const _uint _value);
 	void GetDamage(const _uint _damage);
 
 private:
-	void PlayerControle();
-
-private:
+	class CPlayerController* m_pController;
 	CGameObject* m_pHeadObj, *m_pHairObj;
 
 	CSkinnedMeshRenderer* m_pSkinnedMeshRenderer;
@@ -58,17 +59,6 @@ private:
 
 	PlayerStatus m_sPlayerStatus;
 	PlayerAnimationStatus m_eAnimationStatus;
-
-	_float m_fCrtMoveSpeed;
-
-	vector3 m_vMoveDirection, m_vPrevMoveDirectoin;
-	_float m_fRotateDirection, m_fPrevRotateDirection;
-
-	_bool m_bNotMoveTurning, m_bBackMove;
-	_bool m_bLockOnMode, m_bIsCombatMode;
-	_bool m_bPrevLockOnMode;
-	_bool m_bIsAttack, m_bIsPrevAttack;
-	_bool m_bSwordActionDuring;
 
 	_float m_fSwordActionEndFrames[3];
 

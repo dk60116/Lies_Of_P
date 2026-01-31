@@ -5,6 +5,9 @@ CProjectBox::CProjectBox()
 	: m_strCurrentSelectedFilePath("")
 	, m_strPendingDeletePath("")
 	, m_bRequestDelete(false)
+	, m_createTargetDir("")
+	, m_bRequestCreateAC(false)
+	, m_newACName({})
 {
 }
 
@@ -69,7 +72,7 @@ void CProjectBox::Render()
 	if (m_bRequestDelete)
 	{
 		ImGui::OpenPopup("ConfirmDeletePopup");
-		m_bRequestDelete = false; // 한 번만 요청
+		m_bRequestDelete = false;
 	}
 
 	if (ImGui::BeginPopupModal("ConfirmDeletePopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
@@ -79,9 +82,13 @@ void CProjectBox::Render()
 
 		if (ImGui::Button("Yes", ImVec2(120, 0)))
 		{
-			fs::remove(m_strPendingDeletePath);
-			m_strPendingDeletePath.clear();
-			ImGui::CloseCurrentPopup();
+            error_code ec;
+            fs::remove(m_strPendingDeletePath, ec);
+            if (ec)
+                CDebug::LogError(L"Delete failed: " + m_strPendingDeletePath.wstring());
+
+            m_strPendingDeletePath.clear();
+            ImGui::CloseCurrentPopup();
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("No", ImVec2(120, 0)))
@@ -92,6 +99,8 @@ void CProjectBox::Render()
 
 		ImGui::EndPopup();
 	}
+
+    RenderCreateAnimatorControllerPopup();
 
 	ImGui::End();
 }
@@ -116,79 +125,260 @@ void CProjectBox::RenderBinaryFoldersHierarchy()
 
 void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 {
-	string folderName = _dirPath.filename().string();
+    string folderName = _dirPath.filename().string();
+    string folderLabel = folderName + "##" + _dirPath.string();
 
-	if (ImGui::TreeNode(folderName.c_str()))
-	{
-		for (const auto& entry : fs::directory_iterator(_dirPath))
-		{
-			if (entry.is_directory())
-			{
-				RenderDirectoryRecursive(entry.path());
-			}
-			else if (entry.is_regular_file())
-			{
-				string filename = entry.path().filename().string();
-				string buttonId = filename + "##" + entry.path().string();
+    _bool opened = ImGui::TreeNode(folderLabel.c_str());
 
-				if (ImGui::Button(buttonId.c_str()))
-				{
-					m_strCurrentSelectedFilePath = entry.path();
-				}
+    if (ImGui::BeginPopupContextItem(("FolderCtx##" + _dirPath.string()).c_str()))
+    {
+        if (ImGui::BeginMenu("Create"))
+        {
+            if (ImGui::MenuItem("AnimatorController"))
+            {
+                m_createTargetDir = _dirPath;
+                m_bRequestCreateAC = true;
+            }
+            ImGui::EndMenu();
+        }
 
-				if (ImGui::BeginPopupContextItem(buttonId.c_str()))
-				{
-					auto splitName = CEngineString::Split(filename, ".");
+        ImGui::EndPopup();
+    }
 
-					const string path = entry.path().string();
-					const string fileName = splitName[0];
-					const string extension = splitName.size() > 1 ? splitName[1] : "";
+    if (opened)
+    {
+        for (const auto& entry : fs::directory_iterator(_dirPath))
+        {
+            if (entry.is_directory())
+            {
+                RenderDirectoryRecursive(entry.path());
+            }
+            else if (entry.is_regular_file())
+            {
+                string filename = entry.path().filename().string();
+                string buttonId = filename + "##" + entry.path().string();
 
-					if (ImGui::Selectable("Log info"))
-					{
-						uintmax_t sizeInBytes = fs::file_size(entry.path());
-						double sizeKB = sizeInBytes / 1024.0;
+                if (ImGui::Button(buttonId.c_str()))
+                {
+                    m_strCurrentSelectedFilePath = entry.path().string();
+                }
 
-						CDebug::Log("Name: " + fileName);
-						CDebug::Log("Type: " + extension);
-						CDebug::Log("Path: " + path);
-						CDebug::Log("Size: " + to_string(sizeKB) + "kb");
-					}
+                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                {
+                    CEditor::GetInstance().OpenAsset(entry.path());
+                }
 
-					if (extension == "fbx")
-					{
-						wstring path = CEngineString::Erase(entry.path().wstring(), L"../Assets\\");
-						path = CEngineString::Replace(path, L"\\", L"/");
+                if (ImGui::BeginPopupContextItem(buttonId.c_str()))
+                {
+                    auto splitName = CEngineString::Split(filename, ".");
+                    const string path = entry.path().string();
+                    const string fileName = splitName[0];
+                    const string extension = splitName.size() > 1 ? splitName[1] : "";
 
-						if (ImGui::Selectable("Create Mesh Data"))
-							CResources::GetInstance().ConvertFBXToMeshBufferData(path);
+                    if (ImGui::Selectable("Log info"))
+                    {
+                        uintmax_t sizeInBytes = fs::file_size(entry.path());
+                        double sizeKB = sizeInBytes / 1024.0;
 
-						if (ImGui::Selectable("Create Skinned Data"))
-							CResources::GetInstance().ConvertFBXToSkinnedBufferData(path);
+                        CDebug::Log("Name: " + fileName);
+                        CDebug::Log("Type: " + extension);
+                        CDebug::Log("Path: " + path);
+                        CDebug::Log("Size: " + to_string(sizeKB) + "kb");
+                    }
 
-						if (ImGui::Selectable("Create Animation Data"))
-							CResources::GetInstance().ConvertFBXToAnimationClipData(path);
-					}
+                    if (extension == "animatorcontroller")
+                    {
+                        if (ImGui::Selectable("Open"))
+                        {
+                            CEditor::GetInstance().OpenAnimatorController(entry.path());
+                        }
 
-					if (extension == "ttf" || extension == "otf")
-					{
-						wstring path = entry.path().wstring();
+                        if (ImGui::Selectable("Build Binary"))
+                        {
+                            // Assets 상대경로로 변환해서 Convert 호출 (다른 Convert와 동일 패턴)
+                            wstring rel = entry.path().wstring();
+                            rel = CEngineString::Erase(rel, L"../Assets\\");
+                            rel = CEngineString::Replace(rel, L"\\", L"/");
 
-						if (ImGui::Selectable("Create Font Data"))
-							CResources::GetInstance().ConvertOTFTTFToSpriteFont(path);
-					}
+                            // TODO: 리소스 컴파일러 함수 추가
+                            // CResources::GetInstance().ConvertAnimatorControllerToBinary(rel);
+                        }
+                    }
 
-					if (ImGui::Selectable("Delete"))
-					{
-						m_strPendingDeletePath = entry.path().string();
-						m_bRequestDelete = true;
-					}
+                    // 기존 fbx/ttf 변환 메뉴...
+                    if (extension == "fbx")
+                    {
+                        wstring rel = entry.path().wstring();
+                        rel = CEngineString::Erase(rel, L"../Assets\\");
+                        rel = CEngineString::Replace(rel, L"\\", L"/");
 
-					ImGui::EndPopup();
-				}
-			}
-		}
+                        if (ImGui::Selectable("Create Mesh Data"))
+                            CResources::GetInstance().ConvertFBXToMeshBufferData(rel);
 
-		ImGui::TreePop();
-	}
+                        if (ImGui::Selectable("Create Skinned Data"))
+                            CResources::GetInstance().ConvertFBXToSkinnedBufferData(rel);
+
+                        if (ImGui::Selectable("Create Animation Data"))
+                            CResources::GetInstance().ConvertFBXToAnimationClipData(rel);
+                    }
+
+                    if (extension == "ttf" || extension == "otf")
+                    {
+                        wstring pathW = entry.path().wstring();
+                        if (ImGui::Selectable("Create Font Data"))
+                            CResources::GetInstance().ConvertOTFTTFToSpriteFont(pathW);
+                    }
+
+                    if (ImGui::Selectable("Delete"))
+                    {
+                        m_strPendingDeletePath = entry.path().string();
+                        m_bRequestDelete = true;
+                    }
+
+                    ImGui::EndPopup();
+                }
+            }
+        }
+
+        ImGui::TreePop();
+    }
+}
+
+void CProjectBox::RenderCreateAnimatorControllerPopup()
+{
+    if (m_bRequestCreateAC)
+    {
+        ImGui::OpenPopup("CreateAnimatorControllerPopup");
+        m_bRequestCreateAC = false;
+    }
+
+    if (ImGui::BeginPopupModal("CreateAnimatorControllerPopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Create AnimatorController");
+        ImGui::Separator();
+
+        ImGui::Text("Folder:");
+        ImGui::SameLine();
+        ImGui::Text("%s", m_createTargetDir.string().c_str());
+
+        ImGui::InputText("Name", m_newACName.data(), m_newACName.size());
+
+        ImGui::Separator();
+
+        if (ImGui::Button("Create", ImVec2(120, 0)))
+        {
+            CreateAnimatorControllerFile(m_createTargetDir, m_newACName.data());
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
+static string SanitizeFileName(const string& name)
+{
+    string n = name;
+
+    if (n.empty()) n = "NewAnimatorController";
+    for (char& c : n)
+    {
+        if (c == '/' || c == '\\' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|')
+            c = '_';
+    }
+    return n;
+}
+
+void CProjectBox::CreateAnimatorControllerFile(const fs::path& dir, const string& name)
+{
+    string safeName = SanitizeFileName(name);
+
+    fs::path outPath = dir / (safeName + ".animatorcontroller");
+
+    if (fs::exists(outPath))
+    {
+        CDebug::LogError(L"AnimatorController create failed - file exists: " + outPath.wstring());
+        return;
+    }
+
+    // 폴더 보장
+    fs::create_directories(outPath.parent_path());
+
+    string text = MakeAnimatorControllerTemplateText(safeName);
+
+    ofstream ofs(outPath, ios::binary);
+    if (!ofs.is_open())
+    {
+        CDebug::LogError(L"AnimatorController create failed - cannot open: " + outPath.wstring());
+        return;
+    }
+
+    ofs.write(text.data(), (streamsize)text.size());
+    ofs.close();
+
+    m_strCurrentSelectedFilePath = outPath.string();
+
+    CDebug::Log("Created AnimatorController: " + outPath.string());
+}
+
+string CProjectBox::MakeAnimatorControllerTemplateText(const string& controllerName)
+{
+    string t;
+    t += "# AnimatorController v1\n";
+    t += "name=" + controllerName + "\n";
+    t += "entry=Idle\n";
+    t += "\n";
+
+    t += "[parameters]\n";
+    t += "float speed=0\n";
+    t += "trigger attack\n";
+    t += "bool isDead=false\n";
+    t += "\n";
+
+    t += "[state Idle]\n";
+    t += "motion=Idle_Clip\n";
+    t += "speedMul=1\n";
+    t += "pos=100,100\n";
+    t += "\n";
+
+    t += "[state Run]\n";
+    t += "motion=Run_Clip\n";
+    t += "speedMul=1\n";
+    t += "pos=320,100\n";
+    t += "\n";
+
+    t += "[transition Idle->Run]\n";
+    t += "blend=0.15\n";
+    t += "cond=speed>0.1\n";
+    t += "\n";
+
+    t += "[transition Run->Idle]\n";
+    t += "blend=0.15\n";
+    t += "cond=speed<=0.1\n";
+    t += "\n";
+
+    t += "[any]\n";
+    t += "to=Attack\n";
+    t += "blend=0.08\n";
+    t += "cond=attack\n";
+    t += "\n";
+
+    t += "[state Attack]\n";
+    t += "motion=Attack_Clip\n";
+    t += "speedMul=1\n";
+    t += "pos=220,260\n";
+    t += "\n";
+
+    t += "[transition Attack->Idle]\n";
+    t += "blend=0.12\n";
+    t += "exitTime=0.9\n";
+    t += "\n";
+
+    return t;
 }

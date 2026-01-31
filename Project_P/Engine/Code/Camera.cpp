@@ -495,6 +495,9 @@ void CCamera::RenderDisplay()
 
 void CCamera::RenderRTDebugDisplay()
 {
+	if (CEditor::GetInstance().Get_SelectedGameObject() != m_pGameObject)
+		return;
+
 	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
 
 	if (!context || m_mRTDebugDisplays.empty())

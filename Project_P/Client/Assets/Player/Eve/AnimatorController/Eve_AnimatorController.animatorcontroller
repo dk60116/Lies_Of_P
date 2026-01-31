@@ -1,0 +1,9 @@
+# AnimatorController v1
+name=Eve_AnimatorController
+entry=Idle
+
+[parameters]
+float speed=0
+trigger attack
+bool isDead=false
+

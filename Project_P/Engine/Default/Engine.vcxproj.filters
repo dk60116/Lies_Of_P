@@ -181,6 +181,12 @@
     <ClInclude Include="..\Header\RenderTargetManager.h">
       <Filter>Render</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\AnimatorController.h">
+      <Filter>Resource\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\AnimatorControllerEditorBox.h">
+      <Filter>Editor\EditorBox</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Engine">
@@ -481,6 +487,12 @@
     </ClCompile>
     <ClCompile Include="..\Code\RenderTargetManager.cpp">
       <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\AnimatorController.cpp">
+      <Filter>Resource\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\AnimatorControllerEditorBox.cpp">
+      <Filter>Editor\EditorBox</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

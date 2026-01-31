@@ -111,6 +111,9 @@
     <ClInclude Include="..\Header\Behaviour_Find.h">
       <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\PlayerController.h">
+      <Filter>Scripts\Object\Player</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Code\MainScene.cpp">
@@ -172,6 +175,9 @@
     </ClCompile>
     <ClCompile Include="..\Code\Behaviour_Find.cpp">
       <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerController.cpp">
+      <Filter>Scripts\Object\Player</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -17,6 +17,7 @@ CAnimator::CAnimator()
 	, m_vFinalBoneMatrix({})
 	, m_mBlendStartPose({})
 	, m_sStateInfo({})
+	, m_pController(nullptr)
 {
 	m_strName = L"Animator";
 }
@@ -46,6 +47,10 @@ CComponent* CAnimator::Clone() const
 	clone->m_mBlendStartPose = this->m_mBlendStartPose;
 	clone->m_sStateInfo = this->m_sStateInfo;
 
+	clone->m_pController = this->m_pController;
+	if (clone->m_pController)
+		clone->m_pController->AddRef();
+
 	for (TRAVERSAL_ITER(this->m_mAnimationList, it))
 		clone->Add_Animation((*it).first, (*it).second);
 
@@ -59,10 +64,17 @@ HRESULT CAnimator::Initialize()
 
 	if (!m_pSkinnedRenderer)
 	{
-		m_pSkinnedRenderer = m_pGameObject->Get_Transform()->Get_Child(0)->Get_GameObject()->GetComponent<CSkinnedMeshRenderer>();
+		m_pSkinnedRenderer = m_pGameObject->Get_Transform()
+			->Get_Child(0)->Get_GameObject()
+			->GetComponent<CSkinnedMeshRenderer>();
 
 		if (m_pSkinnedRenderer)
 			m_pSkinnedRenderer->AddRef();
+	}
+
+	if (m_pController)
+	{
+		m_ControllerInst.Initialize(m_pController, this, true);
 	}
 
 	return S_OK;
@@ -74,29 +86,60 @@ void CAnimator::Awake()
 
 void CAnimator::Update()
 {
-	if (!m_bIsPlaying || !m_pSkinnedRenderer || !m_pCrtAnimation)
+	if (!m_pSkinnedRenderer)
 		return;
 
-	m_fCurrentTime += DELTA_TIME * m_fPlaybackSpeed;
+	if (m_bIsPlaying && m_pCrtAnimation)
+	{
+		m_fCurrentTime += DELTA_TIME * m_fPlaybackSpeed;
+
+		const _float duration = m_pCrtAnimation->Get_Duration();
+		m_sStateInfo.length = duration;
+
+		if (duration > 0.f)
+		{
+			if (m_bLoop)
+				m_fCurrentTime = fmodf(m_fCurrentTime, duration);
+			else if (m_fCurrentTime >= duration)
+			{
+				m_fCurrentTime = duration;
+				m_bIsPlaying = false;
+			}
+
+			m_sStateInfo.normalizeTime = m_fCurrentTime / duration;
+		}
+		else
+		{
+			m_sStateInfo.normalizeTime = 0.f;
+		}
+	}
+
+	if (m_pController)
+		m_ControllerInst.Update(this, DELTA_TIME);
+
+	if (!m_bIsPlaying || !m_pCrtAnimation)
+		return;
 
 	if (m_bBlending)
 	{
 		m_fBlendTime += DELTA_TIME;
 
-		_float t = m_fBlendTime / m_fBlendDuration;
+		_float denom = (m_fBlendDuration > 0.f) ? m_fBlendDuration : 0.0001f;
+		_float t = m_fBlendTime / denom;
 
 		if (t >= 1.f)
 		{
-			// 블렌딩 완료
 			m_pCrtAnimation = m_pNextAnimation;
 			m_pNextAnimation = nullptr;
 			m_fCurrentTime = 0.f;
 			m_bBlending = false;
-			t = 1.f;
+
+			if (m_pCrtAnimation && m_pCrtAnimation->Get_Duration() > 0.f)
+				m_sStateInfo.normalizeTime = 0.f;
+
 			return;
 		}
 
-		// 현재/다음 애니메이션 각각 샘플링
 		unordered_map<wstring, CAnimationClip::BoneTransform> sampledNext;
 		m_pNextAnimation->Sample(0.f, sampledNext);
 
@@ -105,13 +148,11 @@ void CAnimator::Update()
 		{
 			CTransform* bone = m_pSkinnedRenderer->Get_BoneTransform(i);
 			const wstring& name = m_pSkinnedRenderer->Get_BoneName(i);
-
-			if (!bone)
+			if (!bone) 
 				continue;
 
 			if (!m_pSkinnedRenderer->m_bApplyRootMotion && name == m_pSkinnedRenderer->Get_RootBoneName())
 				continue;
-
 			if (bone->Get_GameObject()->Get_ObjectName() == L"root")
 				continue;
 
@@ -123,7 +164,6 @@ void CAnimator::Update()
 				const auto& btStart = startIt->second;
 				const auto& btNext = nextIt->second;
 
-				// 선형 보간 (Lerp)
 				vector3 pos = vector3::Lerp(btStart.pos, btNext.pos, t);
 				vector3 scale = vector3::Lerp(btStart.scale, btNext.scale, t);
 				quaternion rot = quaternion::Slerp(btStart.rot, btNext.rot, t);
@@ -136,61 +176,48 @@ void CAnimator::Update()
 		return;
 	}
 
-	const _float duration = m_pCrtAnimation->Get_Duration();
-	m_sStateInfo.length = duration;
-
-	if (m_bLoop)
-		m_fCurrentTime = fmodf(m_fCurrentTime, duration);
-	else if (m_fCurrentTime >= duration)
-	{
-		m_fCurrentTime = duration;
-		m_bIsPlaying = false;
-	}
-
-	// 현재 시각의 키프레임 샘플링
 	unordered_map<wstring, CAnimationClip::BoneTransform> sampled;
 	m_pCrtAnimation->Sample(m_fCurrentTime, sampled);
 
-	// 각 본 CTransform 갱신
 	const _uint boneCount = m_pSkinnedRenderer->Get_BoneCount();
-
 	for (_uint i = 0; i < boneCount; ++i)
 	{
 		CTransform* bone = m_pSkinnedRenderer->Get_BoneTransform(i);
-		if (!bone)
-			continue;
+		if (!bone) continue;
 
 		const wstring& name = m_pSkinnedRenderer->Get_BoneName(i);
 
 		if (!m_pSkinnedRenderer->m_bApplyRootMotion && name == m_pSkinnedRenderer->Get_RootBoneName())
 			continue;
-
 		if (bone->Get_GameObject()->Get_ObjectName() == L"root")
 			continue;
 
 		auto it = sampled.find(name);
-		
 		if (it == sampled.end())
 			continue;
 
 		const auto& bt = it->second;
-
 		bone->Set_LocalPosition(bt.pos);
 		bone->Set_LocalQuaternion(bt.rot);
 		bone->Set_LocalScale(bt.scale);
 	}
-
-	m_sStateInfo.normalizeTime = m_fCurrentTime / duration;
 }
 
 void CAnimator::OnDestroy()
 {
 	for (TRAVERSAL_ITER(m_mAnimationList, it))
 		Safe_Release((*it).second);
-
 	m_mAnimationList.clear();
 
+	m_ControllerInst.OnDestroy();
+	Safe_Release(m_pController);
+
 	Safe_Release(m_pSkinnedRenderer);
+}
+
+const _bool CAnimator::IsLoop() const
+{
+	return m_bLoop;
 }
 
 void CAnimator::Add_Animation(const wstring& _animName, CAnimationClip* _anim)
@@ -251,6 +278,7 @@ void CAnimator::Play(const wstring& _animName, const _float _blendDuration)
 		m_fCurrentTime = 0.f;
 		m_bIsPlaying = true;
 		m_bBlending = false;
+		m_bLoop = m_pCrtAnimation->IsLoop();
 		return;
 	}
 
@@ -293,4 +321,46 @@ CAnimationClip* CAnimator::Get_CurrentAnimation()
 CAnimator:: AnimatorStateInfo& CAnimator::Get_StateInfo()
 {
 	return m_sStateInfo;
+}
+
+void CAnimator::Set_Controller(CAnimatorController* _controller, const _bool _playEntry)
+{
+	if (m_pController == _controller)
+		return;
+
+	m_ControllerInst.OnDestroy();
+	Safe_Release(m_pController);
+
+	m_pController = _controller;
+
+	if (m_pController)
+	{
+		m_pController->AddRef();
+		m_ControllerInst.Initialize(m_pController, this, _playEntry);
+	}
+}
+
+void CAnimator::SetBool(const wstring& n, _bool v)
+{
+	m_ControllerInst.SetBool(n, v);
+}
+
+void CAnimator::SetInt(const wstring& n, _int v)
+{
+	m_ControllerInst.SetInt(n, v);
+}
+
+void CAnimator::SetFloat(const wstring& n, _float v)
+{
+	m_ControllerInst.SetFloat(n, v);
+}
+
+void CAnimator::SetTrigger(const wstring& n)
+{
+	m_ControllerInst.SetTrigger(n);
+}
+
+void CAnimator::ResetTrigger(const wstring& n)
+{
+	m_ControllerInst.ResetTrigger(n);
 }

@@ -1,27 +1,16 @@
 #include "cpch.h"
 #include "Player.h"
+#include "PlayerController.h"
 
 CPlayer::CPlayer()
-	: m_pHeadObj(nullptr)
+	: m_pController(nullptr)
+	, m_pHeadObj(nullptr)
 	, m_pHairObj(nullptr)
 	, m_pSkinnedMeshRenderer(nullptr)
 	, m_pAnimator(nullptr)
 	, m_pEquipWeapon(nullptr)
 	, m_sPlayerStatus({})
 	, m_eAnimationStatus(Idle)
-	, m_fCrtMoveSpeed(0.f)
-	, m_vMoveDirection({})
-	, m_vPrevMoveDirectoin({})
-	, m_fRotateDirection(0.f)
-	, m_fPrevRotateDirection(0.f)
-	, m_bNotMoveTurning(false)
-	, m_bBackMove(false)
-	, m_bLockOnMode(false)
-	, m_bIsCombatMode(false)
-	, m_bPrevLockOnMode(false)
-	, m_bIsAttack(false)
-	, m_bIsPrevAttack(false)
-	, m_bSwordActionDuring(false)
 	, m_fSwordActionEndFrames()
 	, m_fAttackComboNT(0.f)
 	, m_iAttackComboDest(0)
@@ -56,7 +45,9 @@ HRESULT CPlayer::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
-	//CTexture* tex = CResources::GetInstance().LoadOnScene<CTexture>(L"Link_Texture (Texture)");
+	m_pController = m_pGameObject->AddComponent<CPlayerController>();
+	m_pController->Set_Player(this);
+
 	CTexture* suit_BaseTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Suit_Base (Texture)");
 	CTexture* suit_NormalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Suit_Normal (Texture)");
 	CTexture* suit_ORMTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Suit_ORM (Texture)");
@@ -76,7 +67,6 @@ HRESULT CPlayer::Initialize()
 	CTexture* frill_NormalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Frill_Normal (Texture)");
 	CTexture* frill_ORMTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Frill_ORM (Texture)");
 
-	//m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"Link_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"Link_Model (MeshBuffer)"), 0.01f, vector3::up() * 180.f);
 	m_vBodySuits = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveBody_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveBody_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
 
 	m_vBodySuits[0]->Get_Material()->Set_Texture(suit_BaseTex);
@@ -121,8 +111,8 @@ HRESULT CPlayer::Initialize()
 	for (TRAVERSAL_ITER(m_vHairs, it))
 	{
 		(*it)->Get_Material()->Set_BaseColor(ColorValue::black().f4Color());
-		(*it)->Get_Material()->Set_FloatValue(L"gRoughness", 0.3f);
-		(*it)->Get_Material()->Set_FloatValue(L"gMetallic", 0.5f);
+		(*it)->Get_Material()->Set_FloatValue(L"gRoughness", 0.8f);
+		(*it)->Get_Material()->Set_FloatValue(L"gMetallic", 0.2f);
 	}
 
 	m_pAnimator = m_pGameObject->AddComponent<CAnimator>();
@@ -135,28 +125,20 @@ HRESULT CPlayer::Initialize()
 
 	CGameManager::GetInstance().Set_Player(this);
 
-	//Get_Transform()->Get_Child(0)->Set_LocalScale(0.01f);
-	//Get_Transform()->Get_Child(1)->Set_LocalScale(0.01f);
-	//Get_Transform()->Get_Child(0)->Set_LocalEulerAnglesY(180.f);
-	//Get_Transform()->Get_Child(1)->Set_LocalEulerAnglesY(180.f);
-
-	//m_pAnimator->Set_PlaybackSpeed(0.1f);
-	//m_pAnimator->Play(L"Run");
-
 	return S_OK;
 }
 
 void CPlayer::Awake()
 {
 	Get_Transform()->Set_PositionY(-2.864f);
-	m_pHeadObj->Get_Transform()->Set_PositionY(-2.864f);
+	m_pHeadObj->Get_Transform()->Set_PositionY(-2.875f);
 	CTransform* headSlot = Get_Transform()->Find_ChildRecursive(L"Bip001-Head");
 	m_pHeadObj->Get_Transform()->SetParent(headSlot);
 	m_pHairObj->Get_Transform()->Set_PositionY(0.155f);
 	m_pHairObj->Get_Transform()->SetParent(m_pHeadObj->Get_Transform());
 	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp;
 
-	m_vBodySuits[4]->Get_GameObject()->SetActive(false);
+	//m_vBodySuits[4]->Get_GameObject()->SetActive(false);
 }
 
 void CPlayer::Start()
@@ -168,8 +150,6 @@ void CPlayer::Start()
 
 void CPlayer::Update()
 {
-	PlayerControle();
-
 	if (CInput::GetInstance().GetKeyDown(Y))
 	{
 		GetDamage(1);
@@ -190,6 +170,11 @@ void CPlayer::OnDestroy()
 {
 }
 
+CPlayerController* CPlayer::Get_Controller()
+{
+	return m_pController;
+}
+
 void CPlayer::Set_Focus(CTransform* _transform)
 {
 	m_pFocusTransform = _transform;
@@ -207,44 +192,4 @@ void CPlayer::GetDamage(const _uint _damage)
 	m_sPlayerStatus.crtHp -= _damage;
 	m_sPlayerStatus.crtHp = max(m_sPlayerStatus.crtHp, 0);
 	CGameManager::GetInstance().Get_PlayerHUD()->Update_Heart(m_sPlayerStatus.crtHp, m_sPlayerStatus.maxHp);
-}
-
-void CPlayer::PlayerControle()
-{
-	m_bLockOnMode = CInput::GetInstance().GetKey(SHIFT);
-	m_bIsAttack = CInput::GetInstance().GetMouseButtonDown(0);
-	m_bIsJump = CInput::GetInstance().GetKeyDown(SPACE);
-
-	m_vMoveDirection = vector3::zero();
-	m_fRotateDirection = 0.f;
-
-	if (CInput::GetInstance().GetKey(W))
-	{
-		m_vMoveDirection += vector3::forward();
-	}
-	if (CInput::GetInstance().GetKey(S))
-	{
-		m_vMoveDirection += vector3::back();
-	}
-
-	m_bBackMove = m_vMoveDirection.z < 0.f;
-
-	if (m_bBackMove)
-		m_fCrtMoveSpeed = m_sPlayerStatus.moveSpeed * m_sPlayerStatus.backWalkRatio;
-	else
-		m_fCrtMoveSpeed = m_sPlayerStatus.moveSpeed;
-
-	if (m_vMoveDirection != vector3::zero())
-	{
-		vector3 moveDir = m_vMoveDirection.normalized();
-		Get_Transform()->Add_Position(Get_Transform()->Get_Directions().forward * moveDir.z * m_fCrtMoveSpeed * DELTA_TIME);
-		Get_Transform()->Add_Position(Get_Transform()->Get_Directions().right * moveDir.x * m_fCrtMoveSpeed * DELTA_TIME);
-
-		if (m_pAnimator)
-			m_pAnimator->Play();
-	}
-
-	m_vPrevMoveDirectoin = m_vMoveDirection;
-	m_bPrevLockOnMode = m_bLockOnMode;
-	m_bIsPrevJump = m_bIsJump;
 }

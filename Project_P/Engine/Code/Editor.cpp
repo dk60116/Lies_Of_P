@@ -3,6 +3,7 @@
 #include "ProjectBox.h"
 #include "HierachyBox.h"
 #include "InspectorBox.h"
+#include "AnimatorControllerEditorBox.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -23,6 +24,7 @@ CEditor::CEditor()
 	, m_fCameraMoveProgress(0.f)
 	, m_hEditorWindowIcon_Default(nullptr)
 	, m_hEditorWindoIcon_Small(nullptr)
+	, m_pAnimatorControllerBox(nullptr)
 {
 }
 
@@ -330,4 +332,118 @@ void CEditor::MoveTo_SelectedGameObject(CGameObject* _target)
 CGameObject* CEditor::Get_SelectedGameObject() const
 {
 	return m_pSelectedGameObject;
+}
+
+void CEditor::OpenAsset(const fs::path& path)
+{
+	std::error_code ec;
+	if (path.empty())
+		return;
+
+	if (!fs::exists(path, ec) || ec)
+	{
+		CDebug::LogError(L"OpenAsset failed - not exists: " + path.wstring());
+		return;
+	}
+
+	// 폴더면 탐색기 열기 같은 걸 하고 싶다면 여기서 처리
+	if (fs::is_directory(path, ec) && !ec)
+	{
+		OpenAssetExternal(path);
+		return;
+	}
+
+	// 확장자
+	string ext = path.extension().string();
+	ext = ToLowerCopy(ext);
+
+	if (ext == ".animatorcontroller")
+	{
+		OpenAnimatorController(path);
+		return;
+	}
+
+	// 예: 텍스트/설정 파일은 기본 텍스트 에디터 박스로 열고 싶다면
+	// if (ext == ".txt" || ext == ".ini" || ext == ".json" || ext == ".hlsl")
+	// {
+	//     OpenTextAsset(path); // TODO
+	//     return;
+	// }
+
+	// 예: 이미지(텍스처) 프리뷰 박스
+	// if (ext == ".png" || ext == ".jpg" || ext == ".tga" || ext == ".dds")
+	// {
+	//     OpenTextureViewer(path); // TODO
+	//     return;
+	// }
+
+	// 모르는 확장자는 외부 프로그램으로
+	OpenAssetExternal(path);
+}
+
+void CEditor::OpenAnimatorController(const fs::path& path)
+{
+#ifdef _CLIENT_BUILD
+	return;
+#endif
+
+	error_code ec;
+	if (!fs::exists(path, ec) || ec)
+	{
+		CDebug::LogError(L"OpenAnimatorController failed - file not exists: " + path.wstring());
+		return;
+	}
+
+	const wstring key = L"S_AnimatorController:" + path.wstring();
+
+	CAnimatorControllerEditorBox* box = nullptr;
+
+	auto it = m_mBoxList.find(key);
+	if (it != m_mBoxList.end())
+	{
+		box = dynamic_cast<CAnimatorControllerEditorBox*>(it->second);
+		if (!box)
+		{
+			CDebug::LogError(L"OpenAnimatorController failed - box type mismatch: " + key);
+			return;
+		}
+
+		box->Open(path);
+		return;
+	}
+
+	// 3) 없으면 생성해서 리스트에 등록
+	box = CAnimatorControllerEditorBox::Create();
+	if (!box)
+	{
+		CDebug::LogError(L"OpenAnimatorController failed - Create() returned nullptr");
+		return;
+	}
+
+	m_mBoxList.emplace(key, box);
+	box->AddRef();
+
+	box->Open(path);
+}
+
+void CEditor::OpenAssetExternal(const fs::path& path)
+{
+#ifdef _WIN32
+	// 폴더/파일 모두 ShellExecuteW 가능
+	HINSTANCE r = ShellExecuteW(
+		nullptr,
+		L"open",
+		path.wstring().c_str(),
+		nullptr,
+		nullptr,
+		SW_SHOWNORMAL
+	);
+
+	if ((INT_PTR)r <= 32)
+	{
+		CDebug::LogError(L"OpenAssetExternal failed: " + path.wstring());
+	}
+#else
+	CDebug::LogError(L"OpenAssetExternal is not implemented on this platform.");
+#endif
 }

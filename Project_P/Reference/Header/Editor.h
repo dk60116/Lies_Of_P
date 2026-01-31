@@ -4,6 +4,8 @@
 
 NS_BEGIN(Engine)
 
+namespace fs = std::filesystem;
+
 class ENGINE_DLL CEditor final
 {
 public:
@@ -47,6 +49,22 @@ public:
 	void MoveTo_SelectedGameObject(class CGameObject* _target);
 	CGameObject* Get_SelectedGameObject() const;
 
+public:
+	void OpenAsset(const fs::path& path);
+	void OpenAnimatorController(const fs::path& path);
+
+	void OpenAssetExternal(const fs::path& path);
+
+	static string ToLowerCopy(string s)
+	{
+		transform(s.begin(), s.end(), s.begin(),
+			[](unsigned char c) 
+			{ 
+				return (char)std::tolower(c); 
+			});
+		return s;
+	}
+
 private:
 	HWND m_hEditorWindow;
 
@@ -68,6 +86,7 @@ private:
 
 private:
 	map<wstring, class CEditorBox*> m_mBoxList;
+	class CAnimatorControllerEditorBox* m_pAnimatorControllerBox;
 
 private:
 	EDITORWINOPTION m_sOptions;

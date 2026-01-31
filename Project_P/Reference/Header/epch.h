@@ -37,6 +37,7 @@
 #include "SkinnedMeshRenderer.h"
 #include "Physics.h"
 #include "Animator.h"
+#include "AnimatorController.h"
 #include "SkyBox.h"
 #include "UIManager.h"
 #include "UI.h"
