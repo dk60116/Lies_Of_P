@@ -317,25 +317,165 @@ void CAnimatorControllerEditorBox::RenderInspector()
         m_iSelectedTransitionIndex >= 0 &&
         m_iSelectedTransitionIndex < (int)m_transitions.size())
     {
-        const Transition& tr = m_transitions[m_iSelectedTransitionIndex];
+        Transition& tr = m_transitions[m_iSelectedTransitionIndex];
         const char* fromLabel = tr.isAny ? "AnyState" : tr.from.c_str();
 
         ImGui::Text("Transition");
         ImGui::Separator();
         ImGui::Text("From: %s", fromLabel);
         ImGui::Text("To: %s", tr.to.c_str());
-        ImGui::Text("Blend: %.2f", tr.blend);
-        ImGui::Text("ExitTime: %s", tr.hasExitTime ? "true" : "false");
-        ImGui::Text("ExitTime (float): %.3f", tr.exitTime);
-        ImGui::Text("FixedDuration: %s", tr.fixedDuration ? "true" : "false");
-        ImGui::Text("TransitionDuration: %.3f", tr.transitionDuration);
-        ImGui::Text("TransitionOffset: %.3f", tr.transitionOffset);
+        ImGui::DragFloat("Blend", &tr.blend, 0.01f, 0.0f, 5.0f);
+        ImGui::Checkbox("Has Exit Time", &tr.hasExitTime);
+        if (tr.hasExitTime)
+            ImGui::DragFloat("Exit Time", &tr.exitTime, 0.01f, 0.0f, 1.0f);
+        ImGui::Checkbox("Fixed Duration", &tr.fixedDuration);
+        ImGui::DragFloat("Transition Duration", &tr.transitionDuration, 0.01f, 0.0f, 5.0f);
+        ImGui::DragFloat("Transition Offset", &tr.transitionOffset, 0.01f, 0.0f, 1.0f);
 
-        if (!tr.cond.empty())
+        ImGui::Separator();
+        ImGui::Text("Conditions");
+
+        auto splitConditions = [&](const string& s)
+            {
+                vector<string> out;
+                if (s.empty())
+                    return out;
+                string normalized = s;
+                size_t pos = 0;
+                while ((pos = normalized.find("&&")) != string::npos)
+                    normalized.replace(pos, 2, ";");
+                auto parts = Split(normalized, ';');
+                for (auto& part : parts)
+                {
+                    string t = Trim(part);
+                    if (!t.empty())
+                        out.push_back(t);
+                }
+                return out;
+            };
+
+        static int lastTransitionIndex = -1;
+        static int selectedCondIndex = -1;
+        static int paramIndex = 0;
+        static int opIndex = 0;
+        static int boolValue = 0;
+        static int intValue = 0;
+        static float floatValue = 0.f;
+
+        if (lastTransitionIndex != m_iSelectedTransitionIndex)
         {
-            ImGui::Separator();
-            ImGui::Text("Conditions");
-            ImGui::TextWrapped("%s", tr.cond.c_str());
+            lastTransitionIndex = m_iSelectedTransitionIndex;
+            selectedCondIndex = -1;
+            paramIndex = 0;
+            opIndex = 0;
+            boolValue = 0;
+            intValue = 0;
+            floatValue = 0.f;
+        }
+
+        vector<string> conditions = splitConditions(tr.cond);
+        if (!conditions.empty())
+        {
+            if (ImGui::BeginListBox("##ConditionList", ImVec2(-FLT_MIN, 80.f)))
+            {
+                for (int i = 0; i < (int)conditions.size(); ++i)
+                {
+                    const bool isSelected = (selectedCondIndex == i);
+                    if (ImGui::Selectable(conditions[i].c_str(), isSelected))
+                        selectedCondIndex = i;
+                    if (isSelected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndListBox();
+            }
+        }
+        else
+        {
+            ImGui::TextDisabled("No conditions yet.");
+        }
+
+        if (!m_params.empty())
+        {
+            vector<const char*> paramNames;
+            paramNames.reserve(m_params.size());
+            for (const auto& p : m_params)
+                paramNames.push_back(p.name.c_str());
+
+            paramIndex = std::min(paramIndex, (int)paramNames.size() - 1);
+            ImGui::Combo("Parameter", &paramIndex, paramNames.data(), (int)paramNames.size());
+
+            const Param& param = m_params[paramIndex];
+            static const char* opLabels[] = { "==", "!=", ">", ">=", "<", "<=" };
+
+            if (param.type == "trigger")
+            {
+                ImGui::TextDisabled("Trigger condition uses parameter name only.");
+            }
+            else if (param.type == "bool")
+            {
+                ImGui::Combo("Operator", &opIndex, opLabels, 2);
+                ImGui::Combo("Value", &boolValue, "false\0true\0");
+            }
+            else if (param.type == "int")
+            {
+                ImGui::Combo("Operator", &opIndex, opLabels, 6);
+                ImGui::InputInt("Value", &intValue);
+            }
+            else if (param.type == "float")
+            {
+                ImGui::Combo("Operator", &opIndex, opLabels, 6);
+                ImGui::InputFloat("Value", &floatValue);
+            }
+
+            if (ImGui::Button("Add Condition"))
+            {
+                string newCond;
+                if (param.type == "trigger")
+                {
+                    newCond = param.name;
+                }
+                else if (param.type == "bool")
+                {
+                    newCond = param.name + string(opLabels[opIndex]) + (boolValue ? "true" : "false");
+                }
+                else if (param.type == "int")
+                {
+                    newCond = param.name + string(opLabels[opIndex]) + to_string(intValue);
+                }
+                else if (param.type == "float")
+                {
+                    newCond = param.name + string(opLabels[opIndex]) + to_string(floatValue);
+                }
+
+                if (!newCond.empty())
+                {
+                    if (!tr.cond.empty())
+                        tr.cond += " && ";
+                    tr.cond += newCond;
+                }
+            }
+        }
+        else
+        {
+            ImGui::TextDisabled("No parameters available for conditions.");
+        }
+
+        if (selectedCondIndex >= 0 && selectedCondIndex < (int)conditions.size())
+        {
+            ImGui::SameLine();
+            if (ImGui::Button("Remove Condition"))
+            {
+                conditions.erase(conditions.begin() + selectedCondIndex);
+                selectedCondIndex = -1;
+
+                tr.cond.clear();
+                for (size_t i = 0; i < conditions.size(); ++i)
+                {
+                    if (i > 0)
+                        tr.cond += " && ";
+                    tr.cond += conditions[i];
+                }
+            }
         }
 
         ImGui::Separator();
