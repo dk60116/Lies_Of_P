@@ -127,6 +127,7 @@ private:
     bool TransitionExists(const string& from, const string& to, _bool isAny) const;
     void AddTransition(const string& from, const string& to);
     void AddAnyTransition(const string& to);
+    void DeleteTransition(_int index);
 
 private:
     fs::path m_path;

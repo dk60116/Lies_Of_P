@@ -337,6 +337,24 @@ void CAnimatorControllerEditorBox::RenderInspector()
             ImGui::TextWrapped("%s", tr.cond.c_str());
         }
 
+        ImGui::Separator();
+        if (!tr.isAny)
+        {
+            if (ImGui::Button("Add Reverse Transition"))
+            {
+                AddTransition(tr.to, tr.from);
+            }
+        }
+        else
+        {
+            ImGui::TextDisabled("Reverse transition is not supported for AnyState.");
+        }
+
+        if (ImGui::Button("Delete Transition"))
+        {
+            DeleteTransition(m_iSelectedTransitionIndex);
+        }
+
         return;
     }
 
@@ -627,6 +645,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
 
     // ===== Transition lines first =====
     _int clickedTransition = -1;
+    _int deleteTransition = -1;
     const ImVec2 mousePos = ImGui::GetIO().MousePos;
     for (_int i = 0; i < (_int)m_transitions.size(); ++i)
     {
@@ -639,10 +658,12 @@ void CAnimatorControllerEditorBox::RenderGraph()
             ImVec2 to = getNodeCenter(itTo->second);
             drawArrowLine(anyFrom, to, IM_COL32(255, 200, 0, 200), 2.0f);
 
-            if (DistancePointToSegment(mousePos, anyFrom, to) <= 6.f &&
-                ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+            if (DistancePointToSegment(mousePos, anyFrom, to) <= 6.f)
             {
-                clickedTransition = i;
+                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+                    clickedTransition = i;
+                if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+                    deleteTransition = i;
             }
 
             continue;
@@ -658,10 +679,12 @@ void CAnimatorControllerEditorBox::RenderGraph()
 
         drawArrowLine(from, to, IM_COL32(120, 200, 255, 200), 2.0f);
 
-        if (DistancePointToSegment(mousePos, from, to) <= 6.f &&
-            ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        if (DistancePointToSegment(mousePos, from, to) <= 6.f)
         {
-            clickedTransition = i;
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+                clickedTransition = i;
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+                deleteTransition = i;
         }
     }
 
@@ -669,6 +692,16 @@ void CAnimatorControllerEditorBox::RenderGraph()
     {
         m_eSelectType = ESelectType::Transition;
         m_iSelectedTransitionIndex = clickedTransition;
+    }
+
+    if (deleteTransition >= 0)
+        DeleteTransition(deleteTransition);
+
+    if (m_eSelectType == ESelectType::Transition &&
+        ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
+        ImGui::IsKeyPressed(ImGuiKey_Delete, false))
+    {
+        DeleteTransition(m_iSelectedTransitionIndex);
     }
 
     // ===== Draw AnyState block =====
@@ -1475,6 +1508,27 @@ void CAnimatorControllerEditorBox::AddAnyTransition(const string& to)
     tr.cond.clear();
     tr.isAny = true;
     m_transitions.push_back(tr);
+}
+
+void CAnimatorControllerEditorBox::DeleteTransition(_int index)
+{
+    if (index < 0 || index >= (_int)m_transitions.size())
+        return;
+
+    m_transitions.erase(m_transitions.begin() + index);
+
+    if (m_eSelectType == ESelectType::Transition)
+    {
+        if (m_transitions.empty())
+        {
+            m_iSelectedTransitionIndex = -1;
+            m_eSelectType = ESelectType::None;
+        }
+        else
+        {
+            m_iSelectedTransitionIndex = std::min(index, (_int)m_transitions.size() - 1);
+        }
+    }
 }
 
 bool CAnimatorControllerEditorBox::ParamNameExistsExcept(const string& name, int exceptIdx) const
