@@ -77,6 +77,7 @@ public:
 	T* GetComponent();
 
 	const _bool IsActive() const;
+	const _bool IsActive_Origin() const;
 	void SetActive(const _bool _active);
 
 	list<CComponent*>& Get_ComponentList();
@@ -117,7 +118,7 @@ private:
 private:
 	_uint m_iUniqueID;
 	wstring m_strGameObjectName;
-	_bool m_bActive, m_bPrevActive, m_bRecursiveActive;
+	_bool m_bActive, m_bActive_Origin, m_bPrevActive, m_bRecursiveActive;
 
 	list<CComponent*> m_lComponentList;
 

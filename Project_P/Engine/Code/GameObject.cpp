@@ -5,6 +5,7 @@ CGameObject::CGameObject(const wstring _name, ID3D11Device* _pDevice, ID3D11Devi
 	: m_iUniqueID(999999)
 	, m_strGameObjectName(L"")
 	, m_bActive(true)
+	, m_bActive_Origin(true)
 	, m_bPrevActive(true)
 	, m_bRecursiveActive(true)
 	, m_lComponentList({})
@@ -286,9 +287,15 @@ const _bool CGameObject::IsActive() const
 	return m_bActive;
 }
 
+const _bool CGameObject::IsActive_Origin() const
+{
+	return m_bActive_Origin;
+}
+
 void CGameObject::SetActive(const _bool _active)
 {
 	m_bActive = _active;
+	m_bActive_Origin = _active;
 }
 
 list<CComponent*>& CGameObject::Get_ComponentList()

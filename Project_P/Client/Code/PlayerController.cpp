@@ -131,7 +131,10 @@ void CPlayerController::Update_Move()
 		tr->Set_EulerAngles(e.x, newYaw, e.z);
 
 		if (abs(tr->Get_EulerAngles().y - targetYaw) < 1.f)
+		{
+			tr->Set_EulerAngles(e.x, targetYaw, e.z);
 			m_bTurning = false;
+		}
 	}
 
 	m_pPlayer->Get_Animator()->SetFloat(L"speed", m_bRunning ? 1.f : 0.f);

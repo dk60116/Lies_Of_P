@@ -43,6 +43,9 @@
     <Filter Include="Scripts\Object\Monster\Controller\Behaviours">
       <UniqueIdentifier>{d175a37c-e52c-446d-ad25-93b13ecb8e90}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Scripts\Object\Player\FSM">
+      <UniqueIdentifier>{dd9702fa-5a14-46b1-88dd-d0e3fd657784}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Header\MainScene.h">
@@ -114,6 +117,9 @@
     <ClInclude Include="..\Header\PlayerController.h">
       <Filter>Scripts\Object\Player</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\PlayerState.h">
+      <Filter>Scripts\Object\Player\FSM</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Code\MainScene.cpp">
@@ -178,6 +184,9 @@
     </ClCompile>
     <ClCompile Include="..\Code\PlayerController.cpp">
       <Filter>Scripts\Object\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerState.cpp">
+      <Filter>Scripts\Object\Player\FSM</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

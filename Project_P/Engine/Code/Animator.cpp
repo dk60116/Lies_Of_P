@@ -158,6 +158,8 @@ void CAnimator::Update()
 				continue;
 			if (bone->Get_GameObject()->Get_ObjectName() == L"root")
 				continue;
+			if (bone->Get_GameObject()->Get_ObjectName() == L"Root")
+				continue;
 
 			const auto& startIt = m_mBlendStartPose.find(name);
 			const auto& nextIt = sampledNext.find(name);
@@ -193,6 +195,8 @@ void CAnimator::Update()
 		if (!m_pSkinnedRenderer->m_bApplyRootMotion && name == m_pSkinnedRenderer->Get_RootBoneName())
 			continue;
 		if (bone->Get_GameObject()->Get_ObjectName() == L"root")
+			continue;
+		if (bone->Get_GameObject()->Get_ObjectName() == L"Root")
 			continue;
 
 		auto it = sampled.find(name);
