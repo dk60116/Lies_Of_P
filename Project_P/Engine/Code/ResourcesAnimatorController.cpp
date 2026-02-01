@@ -186,6 +186,7 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
         wstring from;
         CAnimatorController::Transition tr{};
         _bool isAny = false;
+        _bool isEntry = false;
     };
     PendingTransition pending{};
     _bool buildingTransition = false;
@@ -195,7 +196,11 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
             if (!buildingTransition)
                 return;
 
-            if (pending.isAny)
+            if (pending.isEntry)
+            {
+                info.entryStateTransitions.push_back(pending.tr);
+            }
+            else if (pending.isAny)
             {
                 info.anyStateTransitions.push_back(pending.tr);
             }
@@ -230,6 +235,18 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
             if (secName == "parameters")
             {
                 sec = Sec::Params;
+                continue;
+            }
+
+            if (secName == "entry")
+            {
+                sec = Sec::Any;
+                buildingTransition = true;
+                pending = PendingTransition{};
+                pending.isEntry = true;
+                pending.tr.blendDuration = 0.15f;
+                pending.tr.hasExitTime = false;
+                pending.tr.exitTimeNormalized = 1.f;
                 continue;
             }
 
@@ -475,7 +492,7 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
                 out.write(reinterpret_cast<const char*>(ws.data()), sizeof(wchar_t) * len);
         };
 
-    const _uint magic = 0x41434232; // "ACB2"
+    const _uint magic = 0x41434233; // "ACB3"
     out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 
     writeWString(info.controllerName);
@@ -530,6 +547,28 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
     _uint anyCount = static_cast<_uint>(info.anyStateTransitions.size());
     out.write(reinterpret_cast<const char*>(&anyCount), sizeof(_uint));
     for (const auto& tr : info.anyStateTransitions)
+    {
+        writeWString(tr.toState);
+        out.write(reinterpret_cast<const char*>(&tr.blendDuration), sizeof(_float));
+        out.write(reinterpret_cast<const char*>(&tr.hasExitTime), sizeof(_bool));
+        out.write(reinterpret_cast<const char*>(&tr.exitTimeNormalized), sizeof(_float));
+
+        _uint condCount = static_cast<_uint>(tr.conditions.size());
+        out.write(reinterpret_cast<const char*>(&condCount), sizeof(_uint));
+        for (const auto& c : tr.conditions)
+        {
+            writeWString(c.paramName);
+            _uint op = static_cast<_uint>(c.op);
+            out.write(reinterpret_cast<const char*>(&op), sizeof(_uint));
+            out.write(reinterpret_cast<const char*>(&c.b), sizeof(_bool));
+            out.write(reinterpret_cast<const char*>(&c.i), sizeof(_int));
+            out.write(reinterpret_cast<const char*>(&c.f), sizeof(_float));
+        }
+    }
+
+    _uint entryCount = static_cast<_uint>(info.entryStateTransitions.size());
+    out.write(reinterpret_cast<const char*>(&entryCount), sizeof(_uint));
+    for (const auto& tr : info.entryStateTransitions)
     {
         writeWString(tr.toState);
         out.write(reinterpret_cast<const char*>(&tr.blendDuration), sizeof(_float));

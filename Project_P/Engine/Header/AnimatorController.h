@@ -86,6 +86,7 @@ public:
 		vector<State> states = {};
 
 		vector<Transition> anyStateTransitions = {};
+		vector<Transition> entryStateTransitions = {};
 	};
 
 protected:
@@ -109,6 +110,7 @@ public:
 	const unordered_map<wstring, State>& Get_StateMap() const { return m_mStates; }
 	const unordered_map<wstring, ParameterDesc>& Get_ParamMap() const { return m_mParams; }
 	const vector<Transition>& Get_AnyStateTransitions() const { return m_vAnyStateTransitions; }
+	const vector<Transition>& Get_EntryStateTransitions() const { return m_vEntryStateTransitions; }
 
 private:
 	wstring m_strEntryState = L"";
@@ -116,6 +118,7 @@ private:
 	unordered_map<wstring, ParameterDesc> m_mParams;
 	unordered_map<wstring, State>         m_mStates;
 	vector<Transition>                    m_vAnyStateTransitions;
+	vector<Transition>                    m_vEntryStateTransitions;
 };
 
 NS_END

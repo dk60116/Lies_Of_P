@@ -31,6 +31,7 @@ void CAnimatorController::OnDestroy()
 	m_mParams.clear();
 	m_mStates.clear();
 	m_vAnyStateTransitions.clear();
+	m_vEntryStateTransitions.clear();
 
 	__super::OnDestroy();
 }
@@ -43,6 +44,7 @@ HRESULT CAnimatorController::Initiailize_Custom(const AnimatorControllerInitInfo
 	m_mParams.clear();
 	m_mStates.clear();
 	m_vAnyStateTransitions = _info.anyStateTransitions;
+	m_vEntryStateTransitions = _info.entryStateTransitions;
 
 	for (const auto& p : _info.parameters)
 	{
@@ -108,7 +110,7 @@ HRESULT CAnimatorControllerInstance::Initialize(CAnimatorController* _controller
 	m_pController = _controller;
 	m_pController->AddRef();
 
-	// ·±Å¸ÀÓ ÆÄ¶ó¹ÌÅÍ ÃÊ±âÈ­(µðÆúÆ® Àû¿ë)
+	// ëŸ°íƒ€ìž„ íŒŒë¼ë¯¸í„° ì´ˆê¸°í™”(ë””í´íŠ¸ ì ìš©)
 	for (const auto& kv : m_pController->Get_ParamMap())
 	{
 		const auto& desc = kv.second;
@@ -123,8 +125,28 @@ HRESULT CAnimatorControllerInstance::Initialize(CAnimatorController* _controller
 		m_mRuntimeParams[desc.name] = v;
 	}
 
-	// entry state ¼¼ÆÃ
-	m_strCurrentState = m_pController->Get_EntryState();
+	// entry state ì„¸íŒ…
+	if (_playEntry)
+	{
+		for (const auto& tr : m_pController->Get_EntryStateTransitions())
+		{
+			if (tr.toState.empty()) continue;
+			if (!Evaluate_Transition(tr, _animator)) continue;
+
+			const auto* nextState = m_pController->Find_State(tr.toState);
+			if (!nextState) continue;
+
+			Consume_TriggersUsedBy(tr);
+
+			m_strCurrentState = nextState->name;
+			_animator->Set_PlaybackSpeed(nextState->speedMul);
+			_animator->Play(nextState->motionName, tr.blendDuration);
+			break;
+		}
+	}
+
+	if (m_strCurrentState.empty())
+		m_strCurrentState = m_pController->Get_EntryState();
 
 	if (_playEntry && !m_strCurrentState.empty())
 	{
@@ -200,7 +222,7 @@ _bool CAnimatorControllerInstance::Evaluate_Condition(const CAnimatorController:
 	switch (pv.type)
 	{
 	case PT::TRIGGER:
-		// Æ®¸®°Å´Â "¹ßµ¿µÆ´Â°¡"¸¸ ÆÇ´Ü (op ¹«½Ã)
+		// íŠ¸ë¦¬ê±°ëŠ” "ë°œë™ëëŠ”ê°€"ë§Œ íŒë‹¨ (op ë¬´ì‹œ)
 		return pv.trigger;
 
 	case PT::BOOL:
@@ -208,7 +230,7 @@ _bool CAnimatorControllerInstance::Evaluate_Condition(const CAnimatorController:
 		{
 		case OP::EQUAL:     return pv.b == _c.b;
 		case OP::NOT_EQUAL: return pv.b != _c.b;
-		default:            return false; // bool¿¡´Â ´ë¼Ò ºñ±³ ÀÇ¹Ì ¾øÀ½
+		default:            return false; // boolì—ëŠ” ëŒ€ì†Œ ë¹„êµ ì˜ë¯¸ ì—†ìŒ
 		}
 
 	case PT::INT:
@@ -241,16 +263,16 @@ _bool CAnimatorControllerInstance::Evaluate_Condition(const CAnimatorController:
 
 _bool CAnimatorControllerInstance::Evaluate_Transition(const CAnimatorController::Transition& _tr, CAnimator* _animator) const
 {
-	// ExitTime °Ë»ç
+	// ExitTime ê²€ì‚¬
 	if (_tr.hasExitTime)
 	{
-		// normalizeTimeÀº 0~1 (·çÇÁ¸é mod Ã³¸®µÈ °ª)ÀÌ¶ó°í °¡Á¤
+		// normalizeTimeì€ 0~1 (ë£¨í”„ë©´ mod ì²˜ë¦¬ëœ ê°’)ì´ë¼ê³  ê°€ì •
 		const _float nt = _animator->Get_StateInfo().normalizeTime;
 		if (nt < _tr.exitTimeNormalized)
 			return false;
 	}
 
-	// Á¶°Ç ¸®½ºÆ® ¸ðµÎ true¿©¾ß Åë°ú(AND)
+	// ì¡°ê±´ ë¦¬ìŠ¤íŠ¸ ëª¨ë‘ trueì—¬ì•¼ í†µê³¼(AND)
 	for (const auto& c : _tr.conditions)
 	{
 		if (!Evaluate_Condition(c))
@@ -277,15 +299,34 @@ void CAnimatorControllerInstance::Update(CAnimator* _animator, const _float _dt)
 	if (!m_pController || !_animator)
 		return;
 
-	// ÇöÀç »óÅÂ ¾øÀ¸¸é entry·Î °­Á¦
+	// í˜„ìž¬ ìƒíƒœ ì—†ìœ¼ë©´ entry ì „ì´/ìƒíƒœ ì ìš©
 	if (m_strCurrentState.empty())
+	{
+		for (const auto& tr : m_pController->Get_EntryStateTransitions())
+		{
+			if (tr.toState.empty()) continue;
+			if (!Evaluate_Transition(tr, _animator)) continue;
+
+			const auto* nextState = m_pController->Find_State(tr.toState);
+			if (!nextState) continue;
+
+			Consume_TriggersUsedBy(tr);
+
+			m_strCurrentState = nextState->name;
+
+			_animator->Set_PlaybackSpeed(nextState->speedMul);
+			_animator->Play(nextState->motionName, tr.blendDuration);
+			return;
+		}
+
 		m_strCurrentState = m_pController->Get_EntryState();
+	}
 
 	const auto* curState = m_pController->Find_State(m_strCurrentState);
 	if (!curState)
 		return;
 
-	// 1) AnyState ÀüÀÌ ¿ì¼± Æò°¡(À¯´ÏÆ¼ ´À³¦)
+	// 1) AnyState ì „ì´ ìš°ì„  í‰ê°€(ìœ ë‹ˆí‹° ëŠë‚Œ)
 	for (const auto& tr : m_pController->Get_AnyStateTransitions())
 	{
 		if (tr.toState.empty()) continue;
@@ -303,7 +344,7 @@ void CAnimatorControllerInstance::Update(CAnimator* _animator, const _float _dt)
 		return;
 	}
 
-	// 2) ÇöÀç »óÅÂ ÀüÀÌ Æò°¡
+	// 2) í˜„ìž¬ ìƒíƒœ ì „ì´ í‰ê°€
 	for (const auto& tr : curState->transitions)
 	{
 		if (tr.toState.empty()) continue;

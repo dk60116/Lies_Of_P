@@ -1277,7 +1277,8 @@ CAnimatorController::AnimatorControllerInitInfo CResources::ReadAnimatorControll
 
 	_uint magic = 0;
 	in.read(reinterpret_cast<char*>(&magic), sizeof(_uint));
-	const _bool hasGraphData = (magic == 0x41434232);
+	const _bool hasGraphData = (magic == 0x41434232 || magic == 0x41434233);
+	const _bool hasEntryTransitions = (magic == 0x41434233);
 	if (magic != 0x41434231 && !hasGraphData)
 	{
 		CDebug::LogError(L"ReadAnimationAnimatoinControllerBufferInfos failed - invalid magic: " + _binFileName);
@@ -1406,6 +1407,43 @@ CAnimatorController::AnimatorControllerInitInfo CResources::ReadAnimatorControll
 		}
 
 		info.anyStateTransitions.emplace_back(move(tr));
+	}
+
+	if (hasEntryTransitions)
+	{
+		_uint entryCount = 0;
+		in.read(reinterpret_cast<char*>(&entryCount), sizeof(_uint));
+		info.entryStateTransitions.reserve(entryCount);
+		for (_uint a = 0; a < entryCount; ++a)
+		{
+			CAnimatorController::Transition tr{};
+			tr.toState = readWString();
+
+			in.read(reinterpret_cast<char*>(&tr.blendDuration), sizeof(_float));
+			in.read(reinterpret_cast<char*>(&tr.hasExitTime), sizeof(_bool));
+			in.read(reinterpret_cast<char*>(&tr.exitTimeNormalized), sizeof(_float));
+
+			_uint condCount = 0;
+			in.read(reinterpret_cast<char*>(&condCount), sizeof(_uint));
+			tr.conditions.reserve(condCount);
+			for (_uint c = 0; c < condCount; ++c)
+			{
+				CAnimatorController::Condition cond{};
+				cond.paramName = readWString();
+
+				_uint op = 0;
+				in.read(reinterpret_cast<char*>(&op), sizeof(_uint));
+				cond.op = static_cast<CAnimatorController::COMPARE_OP>(op);
+
+				in.read(reinterpret_cast<char*>(&cond.b), sizeof(_bool));
+				in.read(reinterpret_cast<char*>(&cond.i), sizeof(_int));
+				in.read(reinterpret_cast<char*>(&cond.f), sizeof(_float));
+
+				tr.conditions.emplace_back(move(cond));
+			}
+
+			info.entryStateTransitions.emplace_back(move(tr));
+		}
 	}
 
 	in.close();
