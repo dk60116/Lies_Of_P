@@ -2050,6 +2050,10 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
                     m_controllerName = v;
                 else if (k == "entry")
                     m_entryState = v;
+                else if (k == "EntryStateTranslation" || k == "entryPos")
+                    TryParseVec2(v, m_entryPos);
+                else if (k == "Any_stateTranslation" || k == "anyStatePos")
+                    TryParseVec2(v, m_anyStatePos);
             }
             continue;
         }
@@ -2168,6 +2172,8 @@ string CAnimatorControllerEditorBox::SerializeText() const
     t += "# AnimatorController v1\n";
     t += "name=" + m_controllerName + "\n";
     t += "entry=" + (m_entryState.empty() ? "Idle" : m_entryState) + "\n\n";
+    t += "EntryStateTranslation=" + to_string((int)m_entryPos.x) + "," + to_string((int)m_entryPos.y) + "\n";
+    t += "Any_stateTranslation=" + to_string((int)m_anyStatePos.x) + "," + to_string((int)m_anyStatePos.y) + "\n\n";
 
     t += "[parameters]\n";
     for (const auto& p : m_params)
