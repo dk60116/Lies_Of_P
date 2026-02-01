@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <cfloat>
+#include <algorithm>
 
 static string ReadAllText(const fs::path& p)
 {
@@ -104,6 +105,7 @@ void CAnimatorControllerEditorBox::OnDestroy()
 
     m_selectedState.clear();
     m_pan = ImVec2(0, 0);
+    m_zoom = 1.f;
     m_anyStatePos = ImVec2(10.f, 10.f);
     m_entryPos = ImVec2(10.f, 60.f);
 
@@ -757,8 +759,8 @@ void CAnimatorControllerEditorBox::RenderGraph()
     if (ImGui::IsWindowHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
     {
         ImVec2 d = ImGui::GetIO().MouseDelta;
-        m_pan.x += d.x;
-        m_pan.y += d.y;
+        m_pan.x += d.x / m_zoom;
+        m_pan.y += d.y / m_zoom;
     }
 
     if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
@@ -770,37 +772,57 @@ void CAnimatorControllerEditorBox::RenderGraph()
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImVec2 origin = ImGui::GetCursorScreenPos();
 
+    if (ImGui::IsWindowHovered())
+    {
+        float wheel = ImGui::GetIO().MouseWheel;
+        if (wheel != 0.0f)
+        {
+            const float oldZoom = m_zoom;
+            m_zoom = std::clamp(m_zoom + wheel * 0.1f, 0.5f, 2.0f);
+            if (m_zoom != oldZoom)
+            {
+                ImVec2 mouse = ImGui::GetIO().MousePos;
+                ImVec2 world;
+                world.x = (mouse.x - origin.x) / oldZoom - m_pan.x;
+                world.y = (mouse.y - origin.y) / oldZoom - m_pan.y;
+                m_pan.x = (mouse.x - origin.x) / m_zoom - world.x;
+                m_pan.y = (mouse.y - origin.y) / m_zoom - world.y;
+            }
+        }
+    }
+
     // ===== Grid =====
     {
         ImVec2 size = ImGui::GetContentRegionAvail();
         const float gridStep = 32.f;
         ImU32 col = IM_COL32(255, 255, 255, 20);
 
-        float x0 = fmodf(m_pan.x, gridStep);
-        float y0 = fmodf(m_pan.y, gridStep);
+        const float scaledStep = gridStep * m_zoom;
+        float x0 = fmodf(m_pan.x * m_zoom, scaledStep);
+        float y0 = fmodf(m_pan.y * m_zoom, scaledStep);
 
-        for (float x = x0; x < size.x; x += gridStep)
+        for (float x = x0; x < size.x; x += scaledStep)
             dl->AddLine(ImVec2(origin.x + x, origin.y), ImVec2(origin.x + x, origin.y + size.y), col);
 
-        for (float y = y0; y < size.y; y += gridStep)
+        for (float y = y0; y < size.y; y += scaledStep)
             dl->AddLine(ImVec2(origin.x, origin.y + y), ImVec2(origin.x + size.x, origin.y + y), col);
     }
 
     // ===== Node constants =====
-    const ImVec2 nodeSize(160, 70);
+    const ImVec2 nodeSize(160.f * m_zoom, 70.f * m_zoom);
 
     auto getNodeCenter = [&](const State& st) -> ImVec2
         {
-            ImVec2 p = ImVec2(origin.x + st.pos.x + m_pan.x, origin.y + st.pos.y + m_pan.y);
+            ImVec2 p = ImVec2(origin.x + (st.pos.x + m_pan.x) * m_zoom, origin.y + (st.pos.y + m_pan.y) * m_zoom);
             return ImVec2(p.x + nodeSize.x * 0.5f, p.y + nodeSize.y * 0.5f);
         };
 
     // ===== AnyState / Entry Blocks (pos/size) =====
-    const ImVec2 anyPos = ImVec2(origin.x + m_anyStatePos.x + m_pan.x, origin.y + m_anyStatePos.y + m_pan.y);
-    const ImVec2 anySize = ImVec2(120.f, 40.f);
+    const ImVec2 anyPos = ImVec2(origin.x + (m_anyStatePos.x + m_pan.x) * m_zoom, origin.y + (m_anyStatePos.y + m_pan.y) * m_zoom);
+    const ImVec2 anySize = ImVec2(120.f * m_zoom, 40.f * m_zoom);
 
-    const ImVec2 entryPos = ImVec2(origin.x + m_entryPos.x + m_pan.x, origin.y + m_entryPos.y + m_pan.y);
-    const ImVec2 entrySize = ImVec2(120.f, 40.f);
+    const ImVec2 entryPos = ImVec2(origin.x + (m_entryPos.x + m_pan.x) * m_zoom, origin.y + (m_entryPos.y + m_pan.y) * m_zoom);
+    const ImVec2 entrySize = ImVec2(120.f * m_zoom, 40.f * m_zoom);
 
     auto rectCenter = [](ImVec2 p, ImVec2 s) { return ImVec2(p.x + s.x * 0.5f, p.y + s.y * 0.5f); };
     auto rectEdgePoint = [](ImVec2 p, ImVec2 s, ImVec2 target)
@@ -997,13 +1019,13 @@ void CAnimatorControllerEditorBox::RenderGraph()
     // ===== Draw AnyState block =====
     {
         dl->AddRectFilled(anyPos, ImVec2(anyPos.x + anySize.x, anyPos.y + anySize.y), IM_COL32(70, 70, 70, 220), 6.f);
-        dl->AddText(ImVec2(anyPos.x + 10.f, anyPos.y + 12.f), IM_COL32(255, 255, 255, 255), "AnyState");
+        dl->AddText(ImVec2(anyPos.x + 10.f * m_zoom, anyPos.y + 12.f * m_zoom), IM_COL32(255, 255, 255, 255), "AnyState");
     }
 
     // ===== Draw Entry block =====
     {
         dl->AddRectFilled(entryPos, ImVec2(entryPos.x + entrySize.x, entryPos.y + entrySize.y), IM_COL32(70, 70, 70, 220), 6.f);
-        dl->AddText(ImVec2(entryPos.x + 10.f, entryPos.y + 12.f), IM_COL32(255, 255, 255, 255), "Entry");
+        dl->AddText(ImVec2(entryPos.x + 10.f * m_zoom, entryPos.y + 12.f * m_zoom), IM_COL32(255, 255, 255, 255), "Entry");
     }
 
     // ===== AnyState input =====
@@ -1027,8 +1049,8 @@ void CAnimatorControllerEditorBox::RenderGraph()
         if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
         {
             ImVec2 d = ImGui::GetIO().MouseDelta;
-            m_anyStatePos.x += d.x;
-            m_anyStatePos.y += d.y;
+            m_anyStatePos.x += d.x / m_zoom;
+            m_anyStatePos.y += d.y / m_zoom;
         }
     }
 
@@ -1053,8 +1075,8 @@ void CAnimatorControllerEditorBox::RenderGraph()
         if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
         {
             ImVec2 d = ImGui::GetIO().MouseDelta;
-            m_entryPos.x += d.x;
-            m_entryPos.y += d.y;
+            m_entryPos.x += d.x / m_zoom;
+            m_entryPos.y += d.y / m_zoom;
         }
     }
 
@@ -1071,7 +1093,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
             ImVec2 toCenter = getNodeCenter(itEntry->second);
             ImVec2 from = rectEdgePoint(entryPos, entrySize, toCenter);
             ImVec2 to = rectEdgePoint(
-                ImVec2(origin.x + itEntry->second.pos.x + m_pan.x, origin.y + itEntry->second.pos.y + m_pan.y),
+                ImVec2(origin.x + (itEntry->second.pos.x + m_pan.x) * m_zoom, origin.y + (itEntry->second.pos.y + m_pan.y) * m_zoom),
                 nodeSize,
                 entryCenter);
 
@@ -1080,7 +1102,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
         else
         {
             // entry가 깨졌을 때 표시(선택)
-            dl->AddText(ImVec2(entryPos.x + 55.f, entryPos.y + 12.f), IM_COL32(255, 100, 100, 255), "!");
+            dl->AddText(ImVec2(entryPos.x + 55.f * m_zoom, entryPos.y + 12.f * m_zoom), IM_COL32(255, 100, 100, 255), "!");
         }
     }
 
@@ -1089,7 +1111,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
     {
         State& st = kv.second;
 
-        ImVec2 p = ImVec2(origin.x + st.pos.x + m_pan.x, origin.y + st.pos.y + m_pan.y);
+        ImVec2 p = ImVec2(origin.x + (st.pos.x + m_pan.x) * m_zoom, origin.y + (st.pos.y + m_pan.y) * m_zoom);
 
         bool selected = (m_selectedState == st.name);
 
@@ -1099,8 +1121,8 @@ void CAnimatorControllerEditorBox::RenderGraph()
         dl->AddRectFilled(p, ImVec2(p.x + nodeSize.x, p.y + nodeSize.y), bg, 8.f);
         dl->AddRect(p, ImVec2(p.x + nodeSize.x, p.y + nodeSize.y), bd, 8.f, 0, 2.f);
 
-        dl->AddText(ImVec2(p.x + 10, p.y + 10), IM_COL32(255, 255, 255, 255), st.name.c_str());
-        dl->AddText(ImVec2(p.x + 10, p.y + 32), IM_COL32(200, 200, 200, 255), st.motion.c_str());
+        dl->AddText(ImVec2(p.x + 10.f * m_zoom, p.y + 10.f * m_zoom), IM_COL32(255, 255, 255, 255), st.name.c_str());
+        dl->AddText(ImVec2(p.x + 10.f * m_zoom, p.y + 32.f * m_zoom), IM_COL32(200, 200, 200, 255), st.motion.c_str());
 
         ImGui::SetCursorScreenPos(p);
         ImGui::InvisibleButton(("node##" + st.name).c_str(), nodeSize);
@@ -1147,8 +1169,8 @@ void CAnimatorControllerEditorBox::RenderGraph()
         if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
         {
             ImVec2 d = ImGui::GetIO().MouseDelta;
-            st.pos.x += d.x;
-            st.pos.y += d.y;
+            st.pos.x += d.x / m_zoom;
+            st.pos.y += d.y / m_zoom;
         }
     }
 }
