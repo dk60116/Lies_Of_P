@@ -1,11 +1,483 @@
 #include "epch.h"
 #include "Resources.h"
+#include "AnimatorController.h"
 
 #include <shlobj.h> 
 #include <shlwapi.h> 
 #include <tchar.h>
 
 #pragma comment(lib, "Shlwapi.lib")
+
+namespace
+{
+    struct ParsedAnimatorParam
+    {
+        string type;
+        string name;
+        string value;
+    };
+
+    struct ParsedAnimatorState
+    {
+        string name;
+        string motion;
+        _float speedMul = 1.f;
+    };
+
+    struct ParsedAnimatorTransition
+    {
+        string from;
+        string to;
+        _float blend = 0.15f;
+        _bool hasExitTime = false;
+        _float exitTime = 1.f;
+        string cond;
+        _bool isAny = false;
+    };
+
+    static string TrimCopy(const string& s)
+    {
+        if (s.empty())
+            return s;
+        size_t start = s.find_first_not_of(" \t\r\n");
+        if (start == string::npos)
+            return "";
+        size_t end = s.find_last_not_of(" \t\r\n");
+        return s.substr(start, end - start + 1);
+    }
+
+    static _bool StartsWith(const string& s, const char* prefix)
+    {
+        if (!prefix)
+            return false;
+        size_t len = strlen(prefix);
+        if (s.size() < len)
+            return false;
+        return s.compare(0, len, prefix) == 0;
+    }
+
+    static vector<string> Split(const string& s, char delim)
+    {
+        vector<string> parts;
+        string cur;
+        for (char c : s)
+        {
+            if (c == delim)
+            {
+                parts.push_back(cur);
+                cur.clear();
+            }
+            else
+            {
+                cur.push_back(c);
+            }
+        }
+        parts.push_back(cur);
+        return parts;
+    }
+
+    static vector<string> SplitConditions(const string& s)
+    {
+        vector<string> out;
+        if (s.empty())
+            return out;
+        string normalized = s;
+        size_t pos = 0;
+        while ((pos = normalized.find("&&")) != string::npos)
+            normalized.replace(pos, 2, ";");
+        auto parts = Split(normalized, ';');
+        for (auto& part : parts)
+        {
+            string t = TrimCopy(part);
+            if (!t.empty())
+                out.push_back(t);
+        }
+        return out;
+    }
+
+    static string ToLowerCopy(string s)
+    {
+        for (char& c : s)
+            c = static_cast<char>(tolower(c));
+        return s;
+    }
+
+    static _bool TryParseBool(const string& s, _bool& out)
+    {
+        string v = ToLowerCopy(TrimCopy(s));
+        if (v == "true" || v == "1")
+        {
+            out = true;
+            return true;
+        }
+        if (v == "false" || v == "0")
+        {
+            out = false;
+            return true;
+        }
+        return false;
+    }
+
+    static _bool TryParseInt(const string& s, _int& out)
+    {
+        char* end = nullptr;
+        long value = strtol(s.c_str(), &end, 10);
+        if (end == s.c_str())
+            return false;
+        out = static_cast<_int>(value);
+        return true;
+    }
+
+    static _bool TryParseFloat(const string& s, _float& out)
+    {
+        char* end = nullptr;
+        float value = strtof(s.c_str(), &end);
+        if (end == s.c_str())
+            return false;
+        out = static_cast<_float>(value);
+        return true;
+    }
+
+    static void WriteWString(ofstream& out, const wstring& value)
+    {
+        _uint len = static_cast<_uint>(value.size());
+        out.write(reinterpret_cast<const char*>(&len), sizeof(_uint));
+        if (len > 0)
+        {
+            out.write(reinterpret_cast<const char*>(value.data()),
+                sizeof(wchar_t) * len);
+        }
+    }
+
+    static _bool ParseAnimatorControllerText(
+        const string& text,
+        const fs::path& sourcePath,
+        string& outName,
+        string& outEntry,
+        vector<ParsedAnimatorParam>& outParams,
+        unordered_map<string, ParsedAnimatorState>& outStates,
+        vector<ParsedAnimatorTransition>& outTransitions)
+    {
+        outName.clear();
+        outEntry.clear();
+        outParams.clear();
+        outStates.clear();
+        outTransitions.clear();
+
+        enum class Sec { None, Params, State, Transition, Any };
+        Sec sec = Sec::None;
+        string curState;
+        string firstStateName;
+        ParsedAnimatorTransition curTr{};
+        _bool buildingTransition = false;
+
+        istringstream iss(text);
+        string line;
+
+        auto flushTransition = [&]()
+            {
+                if (buildingTransition)
+                {
+                    outTransitions.push_back(curTr);
+                    buildingTransition = false;
+                    curTr = ParsedAnimatorTransition{};
+                }
+            };
+
+        while (getline(iss, line))
+        {
+            line = TrimCopy(line);
+            if (line.empty())
+                continue;
+            if (StartsWith(line, "#"))
+                continue;
+
+            if (line.front() == '[' && line.back() == ']')
+            {
+                flushTransition();
+
+                string secName = line.substr(1, line.size() - 2);
+                secName = TrimCopy(secName);
+
+                if (secName == "parameters")
+                {
+                    sec = Sec::Params;
+                    continue;
+                }
+
+                if (secName == "any")
+                {
+                    sec = Sec::Any;
+                    buildingTransition = true;
+                    curTr = ParsedAnimatorTransition{};
+                    curTr.isAny = true;
+                    curTr.blend = 0.15f;
+                    curTr.exitTime = 1.f;
+                    curTr.hasExitTime = false;
+                    continue;
+                }
+
+                if (StartsWith(secName, "state "))
+                {
+                    sec = Sec::State;
+                    curState = TrimCopy(secName.substr(6));
+                    if (!curState.empty())
+                    {
+                        ParsedAnimatorState st{};
+                        st.name = curState;
+                        st.motion.clear();
+                        st.speedMul = 1.f;
+                        outStates[curState] = st;
+                        if (firstStateName.empty())
+                            firstStateName = curState;
+                    }
+                    continue;
+                }
+
+                if (StartsWith(secName, "transition "))
+                {
+                    sec = Sec::Transition;
+                    string trName = TrimCopy(secName.substr(11));
+                    auto arrow = trName.find("->");
+                    if (arrow == string::npos)
+                        continue;
+
+                    string from = TrimCopy(trName.substr(0, arrow));
+                    string to = TrimCopy(trName.substr(arrow + 2));
+
+                    buildingTransition = true;
+                    curTr = ParsedAnimatorTransition{};
+                    curTr.from = from;
+                    curTr.to = to;
+                    curTr.isAny = false;
+                    curTr.blend = 0.15f;
+                    curTr.exitTime = 1.f;
+                    curTr.hasExitTime = false;
+                    curTr.cond.clear();
+                    continue;
+                }
+
+                sec = Sec::None;
+                continue;
+            }
+
+            auto eq = line.find('=');
+
+            if (sec == Sec::None)
+            {
+                if (eq != string::npos)
+                {
+                    string k = TrimCopy(line.substr(0, eq));
+                    string v = TrimCopy(line.substr(eq + 1));
+                    if (k == "name")
+                        outName = v;
+                    else if (k == "entry")
+                        outEntry = v;
+                }
+                continue;
+            }
+
+            if (sec == Sec::Params)
+            {
+                auto parts = Split(line, ' ');
+                if (parts.size() >= 2)
+                {
+                    ParsedAnimatorParam p{};
+                    p.type = TrimCopy(parts[0]);
+                    string rest = TrimCopy(line.substr(p.type.size() + 1));
+
+                    auto eq2 = rest.find('=');
+                    if (eq2 == string::npos)
+                    {
+                        p.name = TrimCopy(rest);
+                        p.value.clear();
+                    }
+                    else
+                    {
+                        p.name = TrimCopy(rest.substr(0, eq2));
+                        p.value = TrimCopy(rest.substr(eq2 + 1));
+                    }
+                    outParams.push_back(p);
+                }
+                continue;
+            }
+
+            if (sec == Sec::State)
+            {
+                if (curState.empty())
+                    continue;
+
+                auto it = outStates.find(curState);
+                if (it == outStates.end())
+                    continue;
+
+                if (eq != string::npos)
+                {
+                    string k = TrimCopy(line.substr(0, eq));
+                    string v = TrimCopy(line.substr(eq + 1));
+                    if (k == "motion")
+                        it->second.motion = v;
+                    else if (k == "speedMul")
+                        it->second.speedMul = (_float)atof(v.c_str());
+                }
+                continue;
+            }
+
+            if ((sec == Sec::Transition || sec == Sec::Any) && buildingTransition)
+            {
+                if (eq == string::npos)
+                    continue;
+
+                string k = TrimCopy(line.substr(0, eq));
+                string v = TrimCopy(line.substr(eq + 1));
+
+                if (k == "to")
+                    curTr.to = v;
+                else if (k == "blend")
+                    curTr.blend = (_float)atof(v.c_str());
+                else if (k == "exitTime")
+                {
+                    curTr.hasExitTime = true;
+                    curTr.exitTime = (_float)atof(v.c_str());
+                }
+                else if (k == "cond")
+                    curTr.cond = v;
+                continue;
+            }
+        }
+
+        flushTransition();
+
+        if (outName.empty() && !sourcePath.empty())
+            outName = sourcePath.stem().string();
+
+        if (outEntry.empty())
+        {
+            if (!firstStateName.empty())
+                outEntry = firstStateName;
+            else if (!outStates.empty())
+                outEntry = outStates.begin()->first;
+        }
+
+        return true;
+    }
+
+    static _bool TryBuildCondition(
+        const string& condText,
+        const unordered_map<string, CAnimatorController::PARAM_TYPE>& paramTypes,
+        CAnimatorController::Condition& outCondition)
+    {
+        string cond = TrimCopy(condText);
+        if (cond.empty())
+            return false;
+
+        static const pair<string, CAnimatorController::COMPARE_OP> ops[] =
+        {
+            {"==", CAnimatorController::COMPARE_OP::EQUAL},
+            {"!=", CAnimatorController::COMPARE_OP::NOT_EQUAL},
+            {">=", CAnimatorController::COMPARE_OP::GREATER_EQUAL},
+            {"<=", CAnimatorController::COMPARE_OP::LESS_EQUAL},
+            {">", CAnimatorController::COMPARE_OP::GREATER},
+            {"<", CAnimatorController::COMPARE_OP::LESS},
+        };
+
+        string name;
+        string value;
+        _bool hasOp = false;
+        CAnimatorController::COMPARE_OP op = CAnimatorController::COMPARE_OP::EQUAL;
+
+        for (const auto& kv : ops)
+        {
+            auto pos = cond.find(kv.first);
+            if (pos != string::npos)
+            {
+                name = TrimCopy(cond.substr(0, pos));
+                value = TrimCopy(cond.substr(pos + kv.first.size()));
+                op = kv.second;
+                hasOp = true;
+                break;
+            }
+        }
+
+        if (!hasOp)
+            name = TrimCopy(cond);
+
+        if (name.empty())
+            return false;
+
+        auto itType = paramTypes.find(name);
+        if (itType == paramTypes.end())
+        {
+            CDebug::LogError("AnimatorController condition param not found: " + name);
+            return false;
+        }
+
+        outCondition.paramName = CEngineString::StringToWString(name);
+        outCondition.op = op;
+
+        switch (itType->second)
+        {
+        case CAnimatorController::PARAM_TYPE::TRIGGER:
+            if (hasOp)
+            {
+                CDebug::LogError("AnimatorController trigger condition should not have operator: " + name);
+                return false;
+            }
+            return true;
+        case CAnimatorController::PARAM_TYPE::BOOL:
+        {
+            if (!hasOp)
+            {
+                CDebug::LogError("AnimatorController bool condition missing operator: " + name);
+                return false;
+            }
+            _bool b = false;
+            if (!TryParseBool(value, b))
+            {
+                CDebug::LogError("AnimatorController bool condition invalid value: " + value);
+                return false;
+            }
+            if (op != CAnimatorController::COMPARE_OP::EQUAL &&
+                op != CAnimatorController::COMPARE_OP::NOT_EQUAL)
+            {
+                CDebug::LogError("AnimatorController bool condition invalid operator: " + cond);
+                return false;
+            }
+            outCondition.b = b;
+            return true;
+        }
+        case CAnimatorController::PARAM_TYPE::INT:
+        {
+            if (!hasOp)
+                return false;
+            _int i = 0;
+            if (!TryParseInt(value, i))
+            {
+                CDebug::LogError("AnimatorController int condition invalid value: " + value);
+                return false;
+            }
+            outCondition.i = i;
+            return true;
+        }
+        case CAnimatorController::PARAM_TYPE::FLOAT:
+        {
+            if (!hasOp)
+                return false;
+            _float f = 0.f;
+            if (!TryParseFloat(value, f))
+            {
+                CDebug::LogError("AnimatorController float condition invalid value: " + value);
+                return false;
+            }
+            outCondition.f = f;
+            return true;
+        }
+        }
+
+        return false;
+    }
+}
+
 
 CResources::CResources()
 	: m_strDefaultAssetPath(L"../Assets/")
@@ -38,6 +510,8 @@ HRESULT CResources::Initialize()
 		fs::create_directories("BinaryAssets/SkinnedMeshData");
 	if (!fs::exists("BinaryAssets/AnimationClipData"))
 		fs::create_directories("BinaryAssets/AnimationClipData");
+	if (!fs::exists("BinaryAssets/AnimatorControllerData"))
+		fs::create_directories("BinaryAssets/AnimatorControllerData");
 	if (!fs::exists("BinaryAssets/FontData"))
 		fs::create_directories("BinaryAssets/FontData");
 
@@ -219,7 +693,7 @@ HRESULT CResources::ConvertFBXToMeshBufferData(const wstring _filePath)
 	vector<CSkinnedMeshBuffer::SKINNEDSKELETAL> skeletalHierarchy;
 	unordered_map<aiNode*, _uint> nodeToIdMap;
 
-	// ∏µÁ ≥ÎµÂø° ¥Î«ÿ transformation/childsId/meshsId/numChild/numMeshes∏¶ √§øÏ¥¬ DFS
+	// Î™®Îì† ÎÖ∏ÎìúÏóê ÎåÄÌï¥ transformation/childsId/meshsId/numChild/numMeshesÎ•º Ï±ÑÏö∞Îäî DFS
 	function<void(aiNode*, const _int, vector<CSkinnedMeshBuffer::SKINNEDSKELETAL>&)> TraverseSkeleton =
 		[&](aiNode* node, const _int parentId, vector<CSkinnedMeshBuffer::SKINNEDSKELETAL>& out)
 		{
@@ -228,7 +702,7 @@ HRESULT CResources::ConvertFBXToMeshBufferData(const wstring _filePath)
 			n.parentId = parentId;
 			n.name = CEngineString::StringToWString(node->mName.C_Str());
 
-			// ∑Œƒ√ ∆Æ∑£Ω∫∆˚ ∫πªÁ
+			// Î°úÏª¨ Ìä∏ÎûúÏä§Ìèº Î≥µÏÇ¨
 			const aiMatrix4x4& m = node->mTransformation;
 			_float4x4 t = _float4x4
 			(
@@ -239,20 +713,20 @@ HRESULT CResources::ConvertFBXToMeshBufferData(const wstring _filePath)
 			);
 			n.transformation = t;
 
-			// ¿Ã ≥ÎµÂø° ø¨∞·µ» ∏ﬁΩ√ ¿Œµ¶Ω∫
+			// Ïù¥ ÎÖ∏ÎìúÏóê Ïó∞Í≤∞Îêú Î©îÏãú Ïù∏Îç±Ïä§
 			n.numMeshes = (_uint)node->mNumMeshes;
 			n.meshsId.reserve(node->mNumMeshes);
 			for (_uint mi = 0; mi < node->mNumMeshes; ++mi)
 				n.meshsId.push_back(node->mMeshes[mi]);
 
-			// øÏº± «™Ω√«— µ⁄ ¿⁄Ωƒ ¿Á±Õ
+			// Ïö∞ÏÑ† Ìë∏ÏãúÌïú Îí§ ÏûêÏãù Ïû¨Í∑Ä
 			out.push_back(n);
 			nodeToIdMap[node] = (_uint)n.nodeId;
 
 			for (_uint ci = 0; ci < node->mNumChildren; ++ci)
 				TraverseSkeleton(node->mChildren[ci], n.nodeId, out);
 
-			// ¿⁄Ωƒ id ∏Ò∑œ/∞≥ºˆ √§øÏ±‚
+			// ÏûêÏãù id Î™©Î°ù/Í∞úÏàò Ï±ÑÏö∞Í∏∞
 			out[n.nodeId].childsId.reserve(node->mNumChildren);
 			for (_uint ci = 0; ci < node->mNumChildren; ++ci)
 			{
@@ -581,14 +1055,245 @@ HRESULT CResources::ConvertFBXToAnimationClipData(const wstring _filePath)
 	return S_OK;
 }
 
+
+HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
+{
+	fs::path fullPath = m_strDefaultAssetPath + _filePath;
+	if (!fs::exists(fullPath))
+	{
+		CDebug::LogError(L"AnimatorController binary convert failed - not exists: " + fullPath.wstring());
+		return E_FAIL;
+	}
+
+	ifstream in(fullPath, ios::binary);
+	if (!in.is_open())
+	{
+		CDebug::LogError(L"AnimatorController binary convert failed - cannot open: " + fullPath.wstring());
+		return E_FAIL;
+	}
+
+	string text((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
+	in.close();
+	if (text.empty())
+	{
+		CDebug::LogError(L"AnimatorController binary convert failed - empty file: " + fullPath.wstring());
+		return E_FAIL;
+	}
+
+	string controllerName;
+	string entryState;
+	vector<ParsedAnimatorParam> parsedParams;
+	unordered_map<string, ParsedAnimatorState> parsedStates;
+	vector<ParsedAnimatorTransition> parsedTransitions;
+
+	if (!ParseAnimatorControllerText(text, fullPath, controllerName, entryState, parsedParams, parsedStates, parsedTransitions))
+	{
+		CDebug::LogError(L"AnimatorController binary convert failed - parse error: " + fullPath.wstring());
+		return E_FAIL;
+	}
+
+	CAnimatorController::AnimatorControllerInitInfo info{};
+	info.controllerName = CEngineString::StringToWString(controllerName);
+	info.entryState = CEngineString::StringToWString(entryState);
+
+	unordered_map<string, CAnimatorController::PARAM_TYPE> paramTypeMap;
+	info.parameters.reserve(parsedParams.size());
+	for (const auto& p : parsedParams)
+	{
+		CAnimatorController::ParameterDesc desc{};
+		desc.name = CEngineString::StringToWString(p.name);
+		string typeLower = ToLowerCopy(p.type);
+
+		if (typeLower == "bool")
+			desc.type = CAnimatorController::PARAM_TYPE::BOOL;
+		else if (typeLower == "int")
+			desc.type = CAnimatorController::PARAM_TYPE::INT;
+		else if (typeLower == "float")
+			desc.type = CAnimatorController::PARAM_TYPE::FLOAT;
+		else if (typeLower == "trigger")
+			desc.type = CAnimatorController::PARAM_TYPE::TRIGGER;
+		else
+		{
+			CDebug::LogError("AnimatorController param type unknown: " + p.type);
+			continue;
+		}
+
+		paramTypeMap[p.name] = desc.type;
+
+		if (!p.value.empty())
+		{
+			if (desc.type == CAnimatorController::PARAM_TYPE::BOOL)
+			{
+				_bool b = false;
+				if (TryParseBool(p.value, b))
+					desc.defaultBool = b;
+			}
+			else if (desc.type == CAnimatorController::PARAM_TYPE::INT)
+			{
+				_int i = 0;
+				if (TryParseInt(p.value, i))
+					desc.defaultInt = i;
+			}
+			else if (desc.type == CAnimatorController::PARAM_TYPE::FLOAT)
+			{
+				_float f = 0.f;
+				if (TryParseFloat(p.value, f))
+					desc.defaultFloat = f;
+			}
+		}
+
+		info.parameters.push_back(desc);
+	}
+
+	info.states.reserve(parsedStates.size());
+	unordered_map<string, size_t> stateIndex;
+	for (const auto& kv : parsedStates)
+	{
+		const ParsedAnimatorState& st = kv.second;
+		CAnimatorController::State state{};
+		state.name = CEngineString::StringToWString(st.name);
+		state.motionName = CEngineString::StringToWString(st.motion);
+		state.speedMul = st.speedMul;
+		stateIndex[st.name] = info.states.size();
+		info.states.push_back(state);
+	}
+
+	for (const auto& tr : parsedTransitions)
+	{
+		CAnimatorController::Transition transition{};
+		transition.toState = CEngineString::StringToWString(tr.to);
+		transition.blendDuration = tr.blend;
+		transition.hasExitTime = tr.hasExitTime;
+		transition.exitTimeNormalized = tr.exitTime;
+
+		vector<string> conds = SplitConditions(tr.cond);
+		for (const auto& condText : conds)
+		{
+			CAnimatorController::Condition cond{};
+			if (TryBuildCondition(condText, paramTypeMap, cond))
+				transition.conditions.push_back(cond);
+		}
+
+		if (tr.isAny)
+		{
+			if (!transition.toState.empty())
+				info.anyStateTransitions.push_back(transition);
+			continue;
+		}
+
+		auto itState = stateIndex.find(tr.from);
+		if (itState == stateIndex.end())
+		{
+			CDebug::LogError("AnimatorController transition from state not found: " + tr.from);
+			continue;
+		}
+		info.states[itState->second].transitions.push_back(transition);
+	}
+
+	auto splitPath = CEngineString::Split(_filePath, L"/");
+	if (splitPath.size() < 2)
+	{
+		CDebug::LogError(L"AnimatorController binary convert failed - invalid path: " + _filePath);
+		return E_FAIL;
+	}
+
+	wstring fileFolder = splitPath[splitPath.size() - 2];
+	wstring fileNameExt = splitPath[splitPath.size() - 1];
+	auto pureName = CEngineString::Split(fileNameExt, L".")[0];
+	wstring saveName = fileFolder + L"_" + pureName;
+	wstring savePath = L"BinaryAssets/AnimatorControllerData/" + saveName + L".animcontrollerdata";
+
+	ofstream out(savePath, ios::binary);
+	if (!out.is_open())
+	{
+		CDebug::LogError(L"AnimatorController binary convert failed - cannot save: " + savePath);
+		return E_FAIL;
+	}
+
+	_uint version = 1;
+	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
+	WriteWString(out, info.controllerName);
+	WriteWString(out, info.entryState);
+
+	_uint paramCount = static_cast<_uint>(info.parameters.size());
+	out.write(reinterpret_cast<const char*>(&paramCount), sizeof(_uint));
+	for (const auto& p : info.parameters)
+	{
+		WriteWString(out, p.name);
+		_uint type = static_cast<_uint>(p.type);
+		out.write(reinterpret_cast<const char*>(&type), sizeof(_uint));
+		out.write(reinterpret_cast<const char*>(&p.defaultBool), sizeof(_bool));
+		out.write(reinterpret_cast<const char*>(&p.defaultInt), sizeof(_int));
+		out.write(reinterpret_cast<const char*>(&p.defaultFloat), sizeof(_float));
+	}
+
+	_uint stateCount = static_cast<_uint>(info.states.size());
+	out.write(reinterpret_cast<const char*>(&stateCount), sizeof(_uint));
+	for (const auto& st : info.states)
+	{
+		WriteWString(out, st.name);
+		WriteWString(out, st.motionName);
+		out.write(reinterpret_cast<const char*>(&st.speedMul), sizeof(_float));
+
+		_uint transitionCount = static_cast<_uint>(st.transitions.size());
+		out.write(reinterpret_cast<const char*>(&transitionCount), sizeof(_uint));
+		for (const auto& tr : st.transitions)
+		{
+			WriteWString(out, tr.toState);
+			out.write(reinterpret_cast<const char*>(&tr.blendDuration), sizeof(_float));
+			out.write(reinterpret_cast<const char*>(&tr.hasExitTime), sizeof(_bool));
+			out.write(reinterpret_cast<const char*>(&tr.exitTimeNormalized), sizeof(_float));
+
+			_uint condCount = static_cast<_uint>(tr.conditions.size());
+			out.write(reinterpret_cast<const char*>(&condCount), sizeof(_uint));
+			for (const auto& c : tr.conditions)
+			{
+				WriteWString(out, c.paramName);
+				_uint op = static_cast<_uint>(c.op);
+				out.write(reinterpret_cast<const char*>(&op), sizeof(_uint));
+				out.write(reinterpret_cast<const char*>(&c.b), sizeof(_bool));
+				out.write(reinterpret_cast<const char*>(&c.i), sizeof(_int));
+				out.write(reinterpret_cast<const char*>(&c.f), sizeof(_float));
+			}
+		}
+	}
+
+	_uint anyCount = static_cast<_uint>(info.anyStateTransitions.size());
+	out.write(reinterpret_cast<const char*>(&anyCount), sizeof(_uint));
+	for (const auto& tr : info.anyStateTransitions)
+	{
+		WriteWString(out, tr.toState);
+		out.write(reinterpret_cast<const char*>(&tr.blendDuration), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&tr.hasExitTime), sizeof(_bool));
+		out.write(reinterpret_cast<const char*>(&tr.exitTimeNormalized), sizeof(_float));
+
+		_uint condCount = static_cast<_uint>(tr.conditions.size());
+		out.write(reinterpret_cast<const char*>(&condCount), sizeof(_uint));
+		for (const auto& c : tr.conditions)
+		{
+			WriteWString(out, c.paramName);
+			_uint op = static_cast<_uint>(c.op);
+			out.write(reinterpret_cast<const char*>(&op), sizeof(_uint));
+			out.write(reinterpret_cast<const char*>(&c.b), sizeof(_bool));
+			out.write(reinterpret_cast<const char*>(&c.i), sizeof(_int));
+			out.write(reinterpret_cast<const char*>(&c.f), sizeof(_float));
+		}
+	}
+
+	out.close();
+	CDebug::Log(L"Complete create AnimatorController binary: " + savePath);
+
+	return S_OK;
+}
+
 HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 {
-	// 1. Ω««‡∆ƒ¿œ ¿ßƒ° æÚ±‚
+	// 1. Ïã§ÌñâÌååÏùº ÏúÑÏπò ÏñªÍ∏∞
 	wchar_t exeDir[MAX_PATH] = {};
 	GetModuleFileNameW(NULL, exeDir, MAX_PATH);
 	PathRemoveFileSpecW(exeDir);
 
-	// 2. ªÛ¥Î∞Ê∑Œ∏¶ ¿˝¥Î∞Ê∑Œ∑Œ ∫Ø»Ø
+	// 2. ÏÉÅÎåÄÍ≤ΩÎ°úÎ•º Ï†àÎåÄÍ≤ΩÎ°úÎ°ú Î≥ÄÌôò
 	wchar_t fullFontPath[MAX_PATH] = {};
 	wcscpy_s(fullFontPath, exeDir);
 	PathAppendW(fullFontPath, _filePath.c_str());
@@ -600,7 +1305,7 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 		return E_FAIL;
 	}
 
-	// 3. %WINDIR%\Fonts ∆˙¥ı∑Œ ∫πªÁ
+	// 3. %WINDIR%\Fonts Ìè¥ÎçîÎ°ú Î≥µÏÇ¨
 	wchar_t fontsDir[MAX_PATH] = {};
 	GetWindowsDirectoryW(fontsDir, MAX_PATH);
 	PathAppendW(fontsDir, L"Fonts");
@@ -615,7 +1320,7 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 		return E_FAIL;
 	}
 
-	// 4. ∆˘∆Æ µÓ∑œ
+	// 4. Ìè∞Ìä∏ Îì±Î°ù
 	if (AddFontResourceExW(installedFontPath, FR_NOT_ENUM, 0) == 0)
 	{
 		CDebug::LogError("AddFontResourceExW failed");
@@ -632,7 +1337,7 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 
 	CDebug::Log(L"OutFilePath: " + outfilePath);
 
-	// 5. √‚∑¬ ∆ƒ¿œ ∞Ê∑Œ (øπΩ√∑Œ µø¿œ ¿ßƒ°ø° ¿˙¿Â)
+	// 5. Ï∂úÎ†• ÌååÏùº Í≤ΩÎ°ú (ÏòàÏãúÎ°ú ÎèôÏùº ÏúÑÏπòÏóê Ï†ÄÏû•)
 	wchar_t spriteOutput[MAX_PATH] = {};
 	wcscpy_s(spriteOutput, exeDir);
 	PathAppendW(spriteOutput, outfilePath.c_str());
@@ -640,11 +1345,11 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 	wchar_t outputFullPath[MAX_PATH] = {};
 	GetFullPathNameW(spriteOutput, MAX_PATH, outputFullPath, nullptr);
 
-	// 6. MakeSpriteFont.exe Ω««‡ (∆˘∆Æ ¿Ã∏ß¿∏∑Œ »£√‚«ÿæﬂ «‘)
+	// 6. MakeSpriteFont.exe Ïã§Ìñâ (Ìè∞Ìä∏ Ïù¥Î¶ÑÏúºÎ°ú Ìò∏Ï∂úÌï¥Ïïº Ìï®)
 	wstring cmdLine = L"\"";
 	cmdLine += exeDir;
 	cmdLine += L"\\..\\..\\Engine\\Tools\\MakeSpriteFont.exe\" /FontSize:32 /FontStyle:Regular ";
-	cmdLine += L"\"Liberation Sans\" ";  // Ω«¡¶ ∆˘∆Æ ∆–π–∏Æ ¿Ã∏ß
+	cmdLine += L"\"Liberation Sans\" ";  // Ïã§Ï†ú Ìè∞Ìä∏ Ìå®Î∞ÄÎ¶¨ Ïù¥Î¶Ñ
 	cmdLine += L"\"" + wstring(outputFullPath) + L"\"";
 
 	CDebug::Log(L"[RUNNING]: " + cmdLine);
@@ -668,7 +1373,7 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
 
-	// 7. ∆˘∆Æ ¡¶∞≈ π◊ ∆ƒ¿œ ªË¡¶
+	// 7. Ìè∞Ìä∏ Ï†úÍ±∞ Î∞è ÌååÏùº ÏÇ≠Ï†ú
 	RemoveFontResourceExW(installedFontPath, FR_NOT_ENUM, 0);
 	SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
 	DeleteFileW(installedFontPath);
@@ -1580,14 +2285,14 @@ void CResources::TraverseSkeleton(aiNode* _node, _int _parentId, vector<CSkinned
 	for (_uint i = 0; i < _node->mNumMeshes; ++i)
 		nodeInfo.meshsId.push_back(_node->mMeshes[i]);
 
-	// πÃ∏Æ push «ÿº≠ ¿⁄Ωƒ¿Ã parentId ¬¸∞Ì ∞°¥…
+	// ÎØ∏Î¶¨ push Ìï¥ÏÑú ÏûêÏãùÏù¥ parentId Ï∞∏Í≥† Í∞ÄÎä•
 	_outList.push_back(nodeInfo);
 	_int currentId = nodeInfo.nodeId;
 
-	// ¿⁄Ωƒ ≥ÎµÂµÈ º¯»∏
+	// ÏûêÏãù ÎÖ∏ÎìúÎì§ ÏàúÌöå
 	for (_uint i = 0; i < _node->mNumChildren; ++i)
 	{
-		// ¿Á±Õ ¿Ã¿¸ø° outList size∏¶ æÚæÓ ¿⁄Ωƒ ID √ﬂ¡§
+		// Ïû¨Í∑Ä Ïù¥Ï†ÑÏóê outList sizeÎ•º ÏñªÏñ¥ ÏûêÏãù ID Ï∂îÏ†ï
 		_int childId = static_cast<_int>(_outList.size());
 		_outList[currentId].childsId.push_back(childId);
 		_outList[currentId].numChild++;
