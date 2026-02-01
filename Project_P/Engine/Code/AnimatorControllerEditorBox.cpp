@@ -2197,6 +2197,13 @@ string CAnimatorControllerEditorBox::SerializeText() const
     }
 
     // transitions (any 먼저)
+    if (!m_entryState.empty())
+    {
+        t += "[entry]\n";
+        t += "to=" + m_entryState + "\n";
+        t += "blend=0.15\n\n";
+    }
+
     for (const auto& tr : m_transitions)
     {
         if (!tr.isAny) continue;
