@@ -1,9 +1,41 @@
 # AnimatorController v1
 name=Eve_AnimatorController
-entry=Idle
+entry=NewState
 
 [parameters]
-float speed=0
-trigger attack
-bool isDead=false
+float MoveDirectionX=0
+float MoveDirectionY=0
+
+[state NewState]
+motion=Eve_Idle
+speedMul=1.000000
+pos=206,143
+
+[state NewState_1]
+motion=Eve_Run_During
+speedMul=1.000000
+pos=460,141
+
+[state NewState_2]
+motion=
+speedMul=1.000000
+pos=737,137
+
+[transition NewState->NewState_1]
+blend=0.150000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition NewState_1->NewState_2]
+blend=0.150000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition NewState_2->NewState_1]
+blend=0.150000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
 

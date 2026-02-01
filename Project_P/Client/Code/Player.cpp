@@ -118,10 +118,10 @@ HRESULT CPlayer::Initialize()
 	m_pAnimator = m_pGameObject->AddComponent<CAnimator>();
 	CAnimationClip* idle = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Idle (Animation)");
 	idle->SetLoop(true);
-	CAnimationClip* run_during = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Run_During (Animation)");
+	CAnimationClip* run_during = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Run_Forward_During (Animation)");
 	run_during->SetLoop(true);
 	m_pAnimator->Add_Animation(L"Idle", idle);
-	m_pAnimator->Add_Animation(L"Run_During", run_during);
+	m_pAnimator->Add_Animation(L"Run_Forward_During", run_during);
 
 	CGameManager::GetInstance().Set_Player(this);
 
@@ -145,7 +145,7 @@ void CPlayer::Start()
 {
 	CGameManager::GetInstance().Get_PlayerHUD()->Update_Heart(m_sPlayerStatus.crtHp, m_sPlayerStatus.maxHp);
 
-	m_pAnimator->Play(L"Run_During");
+	m_pAnimator->Play(L"Run_Forward_During");
 }
 
 void CPlayer::Update()
@@ -173,6 +173,11 @@ void CPlayer::OnDestroy()
 CPlayerController* CPlayer::Get_Controller()
 {
 	return m_pController;
+}
+
+const CPlayer::PlayerStatus& CPlayer::Get_PlayerStatus()
+{
+	return m_sPlayerStatus;
 }
 
 void CPlayer::Set_Focus(CTransform* _transform)

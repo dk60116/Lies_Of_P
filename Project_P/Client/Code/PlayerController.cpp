@@ -8,6 +8,7 @@ CPlayerController::CPlayerController()
 	, m_bRunning(nullptr)
 	, m_mKeyHold({})
 	, m_vMoveDirection({})
+	, m_fTargetYaw(0.f)
 {
 }
 
@@ -82,46 +83,32 @@ void CPlayerController::Update_Key()
 	m_mKeyHold[Right] = CInput::GetInstance().GetKey(D);
 }
 
-const _float CPlayerController::WrapDeg(_float deg) const
-{
-	while (deg >= 360.f) 
-		deg -= 360.f;
-	while (deg < 0.f)    
-		deg += 360.f;
-	return deg;
-}
-
-const _float CPlayerController::DeltaAngleDeg(_float current, _float target) const
-{
-	_float delta = fmodf(target - current, 360.f);
-	if (delta > 180.f)  
-		delta -= 360.f;
-	if (delta < -180.f) 
-		delta += 360.f;
-	return delta;
-}
-
 void CPlayerController::Update_Move()
 {
 	m_bRunning = m_mKeyHold[Forward] || m_mKeyHold[Back] || m_mKeyHold[Left] || m_mKeyHold[Right];
 
+	auto tr = m_pPlayer->Get_Transform();
+
 	vector3 camForward = m_pPlayerCam->Get_ForwardVector();
-	_float  targetYaw = m_pPlayerCam->Get_ForwardAngle(); // (°¡Á¤) degree
+	m_fTargetYaw = m_pPlayerCam->Get_ForwardAngle();
+
+	auto& status = m_pPlayer->Get_PlayerStatus();
+
+	vector3 e;
 
 	if (m_bRunning)
 	{
-		m_pPlayer->Get_Transform()->Add_Position(camForward * 6.f * DELTA_TIME);
+		m_pPlayer->Get_Transform()->Add_Position(camForward * status.moveSpeed * DELTA_TIME);
+		e = tr->Get_EulerAngles();
+		m_fCrtYaw = e.y;
 
-		auto tr = m_pPlayer->Get_Transform();
-
-		vector3 e = tr->Get_EulerAngles();
-		_float curYaw = e.y;
-
-		const _float yawSmooth = 12.f; 
-		_float t = 1.f - expf(-yawSmooth * DELTA_TIME);
-
-		_float newYaw = WrapDeg(curYaw + DeltaAngleDeg(curYaw, targetYaw) * t);
-
-		tr->Set_EulerAngles(e.x, newYaw, e.z);
+		m_bRotate = true;
 	}
+
+	if (m_bRotate && abs(m_fCrtYaw - m_fTargetYaw) > 0.1f)
+		m_fCrtYaw = Lerp(m_fCrtYaw, m_fTargetYaw, status.turnSpeed * DELTA_TIME);
+	else
+		m_bRotate = false;
+
+	tr->Set_EulerAngles(e.x, m_fCrtYaw, e.z);
 }

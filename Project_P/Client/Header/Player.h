@@ -19,7 +19,7 @@ public:
 		_int crtHp = 0;
 		_float moveSpeed = 6.f;
 		_float backWalkRatio = 0.7f;
-		_float turnSpeed = 280.f;
+		_float turnSpeed = 15.f;
 		_float focusTurnRatio = 8.f;
 		_int attackPower = 1;
 	};
@@ -44,6 +44,7 @@ public:
 	class CPlayerController* Get_Controller();
 
 public:
+	const PlayerStatus& Get_PlayerStatus();
 	void Set_Focus(CTransform* _transform);
 	void RecoverHp(const _uint _value);
 	void GetDamage(const _uint _damage);
