@@ -150,6 +150,8 @@ public:
 
 	void Update(CAnimator* _animator, const _float _dt);
 
+	void EnterEntry(CAnimator* _animator);
+
 public:
 	void SetBool(const wstring& _name, const _bool _v);
 	void SetInt(const wstring& _name, const _int _v);
@@ -167,10 +169,12 @@ private:
 	void Consume_TriggersUsedBy(const CAnimatorController::Transition& _tr);
 
 private:
-	CAnimatorController* m_pController = nullptr;
+	CAnimatorController* m_pController;
 	unordered_map<wstring, ParamValue> m_mRuntimeParams;
 
 	wstring m_strCurrentState;
+
+	_bool m_bEntered;
 };
 
 NS_END

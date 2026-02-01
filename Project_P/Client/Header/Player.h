@@ -42,6 +42,7 @@ public:
 
 public:
 	class CPlayerController* Get_Controller();
+	CAnimator* Get_Animator();
 
 public:
 	const PlayerStatus& Get_PlayerStatus();

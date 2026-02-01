@@ -34,3 +34,11 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
+[transition Idle->Run]
+blend=0.150000
+cond=speed>0.100000
+exitTime=1.000000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+

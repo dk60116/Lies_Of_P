@@ -178,6 +178,11 @@ CPlayerController* CPlayer::Get_Controller()
 	return m_pController;
 }
 
+CAnimator* CPlayer::Get_Animator()
+{
+	return m_pAnimator;
+}
+
 const CPlayer::PlayerStatus& CPlayer::Get_PlayerStatus()
 {
 	return m_sPlayerStatus;

@@ -109,11 +109,13 @@ void CPlayerController::Update_Move()
 	vector3 camForward = m_pPlayerCam->Get_ForwardVector();
 	float targetYaw = m_pPlayerCam->Get_ForwardAngle();
 
+	auto& stat = m_pPlayer->Get_PlayerStatus();
 	auto tr = m_pPlayer->Get_Transform();
 
 	if (m_bRunning)
 	{
-		m_pPlayer->Get_Transform()->Add_Position(camForward * 6.f * DELTA_TIME);
+		m_pPlayer->Get_Transform()->Add_Position(camForward * stat.moveSpeed * DELTA_TIME);
+		m_pPlayer->Get_Animator()->SetFloat(L"speed", 1.f);
 
 		m_bTurning = true;
 	}

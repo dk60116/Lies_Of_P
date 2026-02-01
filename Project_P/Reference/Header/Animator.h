@@ -42,10 +42,18 @@ public:
     void Stop();
 
 public:
+    void SetBool(const wstring& n, _bool v);
+    void SetInt(const wstring& n, _int v);
+    void SetFloat(const wstring& n, _float v);
+    void SetTrigger(const wstring& n);
+    void ResetTrigger(const wstring& n);
+
+public:
     unordered_map<wstring, CAnimationClip*>& Get_AnimationClipList();
     CAnimationClip* Get_CurrentAnimation();
     AnimatorStateInfo& Get_StateInfo();
 
+public:
     void Set_Controller(CAnimatorController* _controller, const _bool _playEntry = true);
 
 private:
@@ -63,12 +71,6 @@ private:
 private:
     class CAnimatorController* m_pController;
     CAnimatorControllerInstance m_ControllerInst;
-
-    void SetBool(const wstring& n, _bool v);
-    void SetInt(const wstring& n, _int v);
-    void SetFloat(const wstring& n, _float v);
-    void SetTrigger(const wstring& n);
-    void ResetTrigger(const wstring& n);
 
     BEGIN_SERIALIZEFIELD
         SERIALIZEFIELD(m_pSkinnedRenderer)
