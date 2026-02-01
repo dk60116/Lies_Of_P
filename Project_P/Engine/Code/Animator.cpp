@@ -82,6 +82,8 @@ HRESULT CAnimator::Initialize()
 
 void CAnimator::Awake()
 {
+	if (m_pController)
+		m_ControllerInst.Initialize(m_pController, this, true);
 }
 
 void CAnimator::Update()
@@ -325,6 +327,7 @@ CAnimator:: AnimatorStateInfo& CAnimator::Get_StateInfo()
 
 void CAnimator::Set_Controller(CAnimatorController* _controller, const _bool _playEntry)
 {
+	(void)_playEntry;
 	if (m_pController == _controller)
 		return;
 
@@ -336,7 +339,7 @@ void CAnimator::Set_Controller(CAnimatorController* _controller, const _bool _pl
 	if (m_pController)
 	{
 		m_pController->AddRef();
-		m_ControllerInst.Initialize(m_pController, this, _playEntry);
+		m_ControllerInst.Initialize(m_pController, this, true);
 	}
 }
 
