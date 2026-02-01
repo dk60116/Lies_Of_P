@@ -1277,7 +1277,8 @@ CAnimatorController::AnimatorControllerInitInfo CResources::ReadAnimatorControll
 
 	_uint magic = 0;
 	in.read(reinterpret_cast<char*>(&magic), sizeof(_uint));
-	if (magic != 0x41434231)
+	const _bool hasGraphData = (magic == 0x41434232);
+	if (magic != 0x41434231 && !hasGraphData)
 	{
 		CDebug::LogError(L"ReadAnimationAnimatoinControllerBufferInfos failed - invalid magic: " + _binFileName);
 		return {};
@@ -1298,6 +1299,11 @@ CAnimatorController::AnimatorControllerInitInfo CResources::ReadAnimatorControll
 
 	info.controllerName = readWString();
 	info.entryState = readWString();
+	if (hasGraphData)
+	{
+		in.read(reinterpret_cast<char*>(&info.entryPos), sizeof(_float2));
+		in.read(reinterpret_cast<char*>(&info.anyStatePos), sizeof(_float2));
+	}
 
 	_uint paramCount = 0;
 	in.read(reinterpret_cast<char*>(&paramCount), sizeof(_uint));
@@ -1328,6 +1334,8 @@ CAnimatorController::AnimatorControllerInitInfo CResources::ReadAnimatorControll
 		st.motionName = readWString();
 
 		in.read(reinterpret_cast<char*>(&st.speedMul), sizeof(_float));
+		if (hasGraphData)
+			in.read(reinterpret_cast<char*>(&st.pos), sizeof(_float2));
 
 		_uint trCount = 0;
 		in.read(reinterpret_cast<char*>(&trCount), sizeof(_uint));

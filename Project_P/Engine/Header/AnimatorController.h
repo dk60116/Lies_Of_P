@@ -70,6 +70,7 @@ public:
 		wstring motionName = L""; 
 
 		_float  speedMul = 1.f;
+		_float2 pos = {};
 
 		vector<Transition> transitions = {};
 	};
@@ -78,6 +79,8 @@ public:
 	{
 		wstring controllerName = L"";
 		wstring entryState = L"";
+		_float2 entryPos = {};
+		_float2 anyStatePos = {};
 
 		vector<ParameterDesc> parameters = {};
 		vector<State> states = {};
@@ -132,7 +135,7 @@ public:
 		_int   i = 0;
 		_float f = 0.f;
 
-		_bool  trigger = false; // TRIGGER¿ë
+		_bool  trigger = false; // TRIGGERìš©
 	};
 
 public:
