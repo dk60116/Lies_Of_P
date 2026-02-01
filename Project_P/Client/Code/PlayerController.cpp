@@ -115,8 +115,6 @@ void CPlayerController::Update_Move()
 	if (m_bRunning)
 	{
 		m_pPlayer->Get_Transform()->Add_Position(camForward * stat.moveSpeed * DELTA_TIME);
-		m_pPlayer->Get_Animator()->SetFloat(L"speed", 1.f);
-
 		m_bTurning = true;
 	}
 
@@ -135,4 +133,6 @@ void CPlayerController::Update_Move()
 		if (abs(tr->Get_EulerAngles().y - targetYaw) < 1.f)
 			m_bTurning = false;
 	}
+
+	m_pPlayer->Get_Animator()->SetFloat(L"speed", m_bRunning ? 1.f : 0.f);
 }

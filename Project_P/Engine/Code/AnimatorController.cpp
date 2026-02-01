@@ -230,10 +230,11 @@ _bool CAnimatorControllerInstance::Evaluate_Condition(
     return false;
 }
 
-_bool CAnimatorControllerInstance::Evaluate_Transition(
-    const CAnimatorController::Transition& _tr,
-    CAnimator* _animator) const
+_bool CAnimatorControllerInstance::Evaluate_Transition(const CAnimatorController::Transition& _tr, CAnimator* _animator) const
 {
+    if (!_tr.hasExitTime && _tr.conditions.empty())
+        return false;
+
     if (_tr.hasExitTime)
     {
         const _float nt = _animator->Get_StateInfo().normalizeTime;
@@ -242,10 +243,8 @@ _bool CAnimatorControllerInstance::Evaluate_Transition(
     }
 
     for (const auto& c : _tr.conditions)
-    {
         if (!Evaluate_Condition(c))
             return false;
-    }
 
     return true;
 }
@@ -265,17 +264,21 @@ void CAnimatorControllerInstance::Consume_TriggersUsedBy(
 
 void CAnimatorControllerInstance::EnterEntry(CAnimator* _animator)
 {
+    CDebug::Log("[AC] EnterEntry called");
+
     if (m_bEntered || !_animator || !m_pController)
         return;
 
-    // Entry Transitions 우선
     for (const auto& tr : m_pController->Get_EntryStateTransitions())
     {
-        if (tr.toState.empty()) continue;
-        if (!Evaluate_Transition(tr, _animator)) continue;
+        if (tr.toState.empty())
+            continue;
+        if (!Evaluate_Transition(tr, _animator)) 
+            continue;
 
         const auto* st = m_pController->Find_State(tr.toState);
-        if (!st) continue;
+        if (!st)
+            continue;
 
         Consume_TriggersUsedBy(tr);
 
@@ -312,14 +315,16 @@ void CAnimatorControllerInstance::Update(CAnimator* _animator, const _float _dt)
     if (!curState)
         return;
 
-    // 1) AnyState
     for (const auto& tr : m_pController->Get_AnyStateTransitions())
     {
-        if (tr.toState.empty()) continue;
-        if (!Evaluate_Transition(tr, _animator)) continue;
+        if (tr.toState.empty()) 
+            continue;
+        if (!Evaluate_Transition(tr, _animator)) 
+            continue;
 
         const auto* nextState = m_pController->Find_State(tr.toState);
-        if (!nextState) continue;
+        if (!nextState)
+            continue;
 
         Consume_TriggersUsedBy(tr);
 
@@ -329,18 +334,21 @@ void CAnimatorControllerInstance::Update(CAnimator* _animator, const _float _dt)
         return;
     }
 
-    // 2) Current State
     for (const auto& tr : curState->transitions)
     {
-        if (tr.toState.empty()) continue;
-        if (!Evaluate_Transition(tr, _animator)) continue;
+        if (tr.toState.empty())
+            continue;
+        if (!Evaluate_Transition(tr, _animator))
+            continue;
 
         const auto* nextState = m_pController->Find_State(tr.toState);
-        if (!nextState) continue;
+        if (!nextState)
+            continue;
 
         Consume_TriggersUsedBy(tr);
 
         m_strCurrentState = nextState->name;
+
         _animator->Set_PlaybackSpeed(nextState->speedMul);
         _animator->Play(nextState->motionName, tr.blendDuration);
         return;

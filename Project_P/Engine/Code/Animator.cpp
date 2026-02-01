@@ -117,6 +117,9 @@ void CAnimator::Update()
 		}
 	}
 
+	if (m_pController)
+		m_ControllerInst.Update(this, DELTA_TIME);
+
 	if (!m_bIsPlaying || !m_pCrtAnimation)
 		return;
 
@@ -281,8 +284,6 @@ void CAnimator::Play(const wstring& _animName, const _float _blendDuration)
 		m_bLoop = m_pCrtAnimation->IsLoop();
 		return;
 	}
-
-	CDebug::LogError(L"Play: " + m_pCrtAnimation->Get_ResourceName());
 
 	m_pNextAnimation = nextAnim;
 	m_fBlendTime = 0.f;

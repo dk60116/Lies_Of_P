@@ -47,9 +47,7 @@ namespace
         return true;
     }
 
-    bool TryParseCondition(const string& token,
-        const unordered_map<wstring, CAnimatorController::PARAM_TYPE>& paramTypes,
-        CAnimatorController::Condition& out)
+    bool TryParseCondition(const string& token, const unordered_map<wstring, CAnimatorController::PARAM_TYPE>& paramTypes, CAnimatorController::Condition& out)
     {
         string trimmed = TrimString(token);
         if (trimmed.empty())
@@ -329,54 +327,58 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
 
         if (sec == Sec::Params)
         {
-            auto parts = SplitString(line, " ");
-            if (parts.size() >= 2)
+            istringstream ls(line);
+
+            string typeStr;
+            ls >> typeStr;       
+            if (typeStr.empty())
+                continue;
+
+            string rest;
+            getline(ls, rest);    
+            rest = TrimString(rest);
+            if (rest.empty())
+                continue;
+
+            string nameStr;
+            string valueStr;
+
+            auto eq2 = rest.find('=');
+            if (eq2 == string::npos)
             {
-                string typeStr = TrimString(parts[0]);
-                string rest = TrimString(line.substr(typeStr.size() + 1));
-
-                string nameStr;
-                string valueStr;
-                auto eq2 = rest.find('=');
-                if (eq2 == string::npos)
-                {
-                    nameStr = TrimString(rest);
-                }
-                else
-                {
-                    nameStr = TrimString(rest.substr(0, eq2));
-                    valueStr = TrimString(rest.substr(eq2 + 1));
-                }
-
-                if (!nameStr.empty())
-                {
-                    CAnimatorController::ParameterDesc p{};
-                    p.name = CEngineString::StringToWString(nameStr);
-                    if (typeStr == "bool")
-                        p.type = CAnimatorController::PARAM_TYPE::BOOL;
-                    else if (typeStr == "int")
-                        p.type = CAnimatorController::PARAM_TYPE::INT;
-                    else if (typeStr == "float")
-                        p.type = CAnimatorController::PARAM_TYPE::FLOAT;
-                    else if (typeStr == "trigger")
-                        p.type = CAnimatorController::PARAM_TYPE::TRIGGER;
-                    else
-                        p.type = CAnimatorController::PARAM_TYPE::BOOL;
-
-                    if (!valueStr.empty())
-                    {
-                        if (p.type == CAnimatorController::PARAM_TYPE::BOOL)
-                            ParseBoolValue(valueStr, p.defaultBool);
-                        else if (p.type == CAnimatorController::PARAM_TYPE::INT)
-                            p.defaultInt = static_cast<_int>(atoi(valueStr.c_str()));
-                        else if (p.type == CAnimatorController::PARAM_TYPE::FLOAT)
-                            p.defaultFloat = static_cast<_float>(atof(valueStr.c_str()));
-                    }
-
-                    info.parameters.push_back(p);
-                    paramTypes[p.name] = p.type;
-                }
+                nameStr = TrimString(rest);
             }
+            else
+            {
+                nameStr = TrimString(rest.substr(0, eq2));
+                valueStr = TrimString(rest.substr(eq2 + 1));
+            }
+
+            if (nameStr.empty())
+                continue;
+
+            CAnimatorController::ParameterDesc p{};
+            p.name = CEngineString::StringToWString(nameStr);
+
+            if (typeStr == "bool")        p.type = CAnimatorController::PARAM_TYPE::BOOL;
+            else if (typeStr == "int")    p.type = CAnimatorController::PARAM_TYPE::INT;
+            else if (typeStr == "float")  p.type = CAnimatorController::PARAM_TYPE::FLOAT;
+            else if (typeStr == "trigger")p.type = CAnimatorController::PARAM_TYPE::TRIGGER;
+            else                          p.type = CAnimatorController::PARAM_TYPE::BOOL;
+
+            if (!valueStr.empty())
+            {
+                if (p.type == CAnimatorController::PARAM_TYPE::BOOL)
+                    ParseBoolValue(valueStr, p.defaultBool);
+                else if (p.type == CAnimatorController::PARAM_TYPE::INT)
+                    p.defaultInt = static_cast<_int>(atoi(valueStr.c_str()));
+                else if (p.type == CAnimatorController::PARAM_TYPE::FLOAT)
+                    p.defaultFloat = static_cast<_float>(atof(valueStr.c_str()));
+            }
+
+            info.parameters.push_back(p);
+            paramTypes[p.name] = p.type;
+
             continue;
         }
 
@@ -427,14 +429,27 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
             {
                 string conds = CEngineString::Replace(v, "&&", ",");
                 auto condParts = SplitString(conds, ",");
+
+                if (condParts.empty())
+                    condParts.push_back(conds);
+
+                for (auto it = condParts.begin(); it != condParts.end(); )
+                {
+                    *it = TrimString(*it);
+                    if (it->empty()) it = condParts.erase(it);
+                    else ++it;
+                }
+
                 for (const auto& cond : condParts)
                 {
                     CAnimatorController::Condition condition{};
                     if (TryParseCondition(cond, paramTypes, condition))
                         pending.tr.conditions.push_back(condition);
+                    else
+                        CDebug::LogError(L"[AC-PARSE] TryParseCondition FAILED: "
+                            + CEngineString::StringToWString(cond));
                 }
             }
-            continue;
         }
     }
 
