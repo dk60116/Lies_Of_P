@@ -184,28 +184,25 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                         CDebug::Log("Type: " + extension);
                         CDebug::Log("Path: " + path);
                         CDebug::Log("Size: " + to_string(sizeKB) + "kb");
-                    }
 
                     if (extension == "animatorcontroller")
                     {
-                        if (ImGui::Selectable("Open"))
-                        {
-                            CEditor::GetInstance().OpenAnimatorController(entry.path());
-                        }
+                    	if (ImGui::Selectable("Open"))
+                    	{
+                    		CEditor::GetInstance().OpenAnimatorController(entry.path());
+                    	}
 
-                        if (ImGui::Selectable("Build Binary"))
-                        {
-                            // Assets ªÛ¥Î∞Ê∑Œ∑Œ ∫Ø»Ø«ÿº≠ Convert »£√‚ (¥Ÿ∏• ConvertøÕ µø¿œ ∆–≈œ)
-                            wstring rel = entry.path().wstring();
-                            rel = CEngineString::Erase(rel, L"../Assets\\");
-                            rel = CEngineString::Replace(rel, L"\\", L"/");
+                    	if (ImGui::Selectable("Build Binary"))
+                    	{
+                    		// Assets Î¨∏ÏûêÏó¥Î°ú Î≥ÄÌôòÌï¥ÏÑú Convert Ìò∏Ï∂ú (Îã§Î•∏ ConvertÎ•º Ï∞∏Í≥† ÌïòÏÑ∏Ïöî)
+                    		wstring rel = entry.path().wstring();
+                    		rel = CEngineString::Erase(rel, L"../Assets\\");
+                    		rel = CEngineString::Replace(rel, L"\\", L"/");
 
-                            // TODO: ∏Æº“Ω∫ ƒƒ∆ƒ¿œ∑Ø «‘ºˆ √ﬂ∞°
-                            // CResources::GetInstance().ConvertAnimatorControllerToBinary(rel);
-                        }
+                    		CResources::GetInstance().ConvertAnimatorControllerToBinary(rel);
+                    	}
                     }
 
-                    // ±‚¡∏ fbx/ttf ∫Ø»Ø ∏ﬁ¥∫...
                     if (extension == "fbx")
                     {
                         wstring rel = entry.path().wstring();
@@ -307,7 +304,7 @@ void CProjectBox::CreateAnimatorControllerFile(const fs::path& dir, const string
         return;
     }
 
-    // ∆˙¥ı ∫∏¿Â
+    // Ìè¥Îçî Î≥¥Ïû•
     fs::create_directories(outPath.parent_path());
 
     string text = MakeAnimatorControllerTemplateText(safeName);

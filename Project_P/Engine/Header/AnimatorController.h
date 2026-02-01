@@ -84,6 +84,31 @@ public:
 		vector<Transition> anyStateTransitions = {};
 	};
 
+	struct VisualNodeInfo
+	{
+		_int id = -1;
+		wstring type = L"";
+		wstring label = L"";
+		_float2 pos = _float2(0.f, 0.f);
+		vector<wstring> inputs = {};
+		vector<wstring> outputs = {};
+	};
+
+	struct VisualLinkInfo
+	{
+		_int fromNodeId = -1;
+		_int toNodeId = -1;
+		wstring fromPin = L"";
+		wstring toPin = L"";
+	};
+
+	struct AnimatorControllerVisualScriptInfo
+	{
+		wstring graphName = L"";
+		vector<VisualNodeInfo> nodes = {};
+		vector<VisualLinkInfo> links = {};
+	};
+
 protected:
 	CAnimatorController();
 	~CAnimatorController();
@@ -131,7 +156,7 @@ public:
 		_int   i = 0;
 		_float f = 0.f;
 
-		_bool  trigger = false; // TRIGGER¿ë
+		_bool  trigger = false; // TRIGGERÂ¿Ã«
 	};
 
 public:
