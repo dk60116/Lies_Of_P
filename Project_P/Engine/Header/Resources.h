@@ -6,6 +6,7 @@
 #include "Texture.h"
 #include "SkinnedMeshBuffer.h"
 #include "AnimationClip.h"
+#include "AnimatorController.h"
 
 #include <filesystem>
 namespace fs = filesystem;
@@ -48,6 +49,7 @@ public:
     CSkinnedMeshBuffer::SkinnedBuffer ReadSkinnedBufferInfos(const wstring _binFileName);
     HRESULT SaveAnimationClipBufferInfos(const wstring _filePath, vector<CAnimationClip::AnimationClipInitInfo> _infoList);
     vector<CAnimationClip::AnimationClipInitInfo> ReadAnimationClipBufferInfos(const wstring _binFileName);
+    CAnimatorController::AnimatorControllerInitInfo ReadAnimationAnimatoinControllerBufferInfos(const wstring _binFileName);
 
     static CEngineResource* AddSceneResource(const wstring& _name, CEngineResource* _resource, const _bool _tempScene);
 public:

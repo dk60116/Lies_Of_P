@@ -219,7 +219,7 @@ HRESULT CResources::ConvertFBXToMeshBufferData(const wstring _filePath)
 	vector<CSkinnedMeshBuffer::SKINNEDSKELETAL> skeletalHierarchy;
 	unordered_map<aiNode*, _uint> nodeToIdMap;
 
-	// ¸ğµç ³ëµå¿¡ ´ëÇØ transformation/childsId/meshsId/numChild/numMeshes¸¦ Ã¤¿ì´Â DFS
+	// ëª¨ë“  ë…¸ë“œì— ëŒ€í•´ transformation/childsId/meshsId/numChild/numMeshesë¥¼ ì±„ìš°ëŠ” DFS
 	function<void(aiNode*, const _int, vector<CSkinnedMeshBuffer::SKINNEDSKELETAL>&)> TraverseSkeleton =
 		[&](aiNode* node, const _int parentId, vector<CSkinnedMeshBuffer::SKINNEDSKELETAL>& out)
 		{
@@ -228,7 +228,7 @@ HRESULT CResources::ConvertFBXToMeshBufferData(const wstring _filePath)
 			n.parentId = parentId;
 			n.name = CEngineString::StringToWString(node->mName.C_Str());
 
-			// ·ÎÄÃ Æ®·£½ºÆû º¹»ç
+			// ë¡œì»¬ íŠ¸ëœìŠ¤í¼ ë³µì‚¬
 			const aiMatrix4x4& m = node->mTransformation;
 			_float4x4 t = _float4x4
 			(
@@ -239,20 +239,20 @@ HRESULT CResources::ConvertFBXToMeshBufferData(const wstring _filePath)
 			);
 			n.transformation = t;
 
-			// ÀÌ ³ëµå¿¡ ¿¬°áµÈ ¸Ş½Ã ÀÎµ¦½º
+			// ì´ ë…¸ë“œì— ì—°ê²°ëœ ë©”ì‹œ ì¸ë±ìŠ¤
 			n.numMeshes = (_uint)node->mNumMeshes;
 			n.meshsId.reserve(node->mNumMeshes);
 			for (_uint mi = 0; mi < node->mNumMeshes; ++mi)
 				n.meshsId.push_back(node->mMeshes[mi]);
 
-			// ¿ì¼± Çª½ÃÇÑ µÚ ÀÚ½Ä Àç±Í
+			// ìš°ì„  í‘¸ì‹œí•œ ë’¤ ìì‹ ì¬ê·€
 			out.push_back(n);
 			nodeToIdMap[node] = (_uint)n.nodeId;
 
 			for (_uint ci = 0; ci < node->mNumChildren; ++ci)
 				TraverseSkeleton(node->mChildren[ci], n.nodeId, out);
 
-			// ÀÚ½Ä id ¸ñ·Ï/°³¼ö Ã¤¿ì±â
+			// ìì‹ id ëª©ë¡/ê°œìˆ˜ ì±„ìš°ê¸°
 			out[n.nodeId].childsId.reserve(node->mNumChildren);
 			for (_uint ci = 0; ci < node->mNumChildren; ++ci)
 			{
@@ -583,12 +583,12 @@ HRESULT CResources::ConvertFBXToAnimationClipData(const wstring _filePath)
 
 HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 {
-	// 1. ½ÇÇàÆÄÀÏ À§Ä¡ ¾ò±â
+	// 1. ì‹¤í–‰íŒŒì¼ ìœ„ì¹˜ ì–»ê¸°
 	wchar_t exeDir[MAX_PATH] = {};
 	GetModuleFileNameW(NULL, exeDir, MAX_PATH);
 	PathRemoveFileSpecW(exeDir);
 
-	// 2. »ó´ë°æ·Î¸¦ Àı´ë°æ·Î·Î º¯È¯
+	// 2. ìƒëŒ€ê²½ë¡œë¥¼ ì ˆëŒ€ê²½ë¡œë¡œ ë³€í™˜
 	wchar_t fullFontPath[MAX_PATH] = {};
 	wcscpy_s(fullFontPath, exeDir);
 	PathAppendW(fullFontPath, _filePath.c_str());
@@ -600,7 +600,7 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 		return E_FAIL;
 	}
 
-	// 3. %WINDIR%\Fonts Æú´õ·Î º¹»ç
+	// 3. %WINDIR%\Fonts í´ë”ë¡œ ë³µì‚¬
 	wchar_t fontsDir[MAX_PATH] = {};
 	GetWindowsDirectoryW(fontsDir, MAX_PATH);
 	PathAppendW(fontsDir, L"Fonts");
@@ -615,7 +615,7 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 		return E_FAIL;
 	}
 
-	// 4. ÆùÆ® µî·Ï
+	// 4. í°íŠ¸ ë“±ë¡
 	if (AddFontResourceExW(installedFontPath, FR_NOT_ENUM, 0) == 0)
 	{
 		CDebug::LogError("AddFontResourceExW failed");
@@ -632,7 +632,7 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 
 	CDebug::Log(L"OutFilePath: " + outfilePath);
 
-	// 5. Ãâ·Â ÆÄÀÏ °æ·Î (¿¹½Ã·Î µ¿ÀÏ À§Ä¡¿¡ ÀúÀå)
+	// 5. ì¶œë ¥ íŒŒì¼ ê²½ë¡œ (ì˜ˆì‹œë¡œ ë™ì¼ ìœ„ì¹˜ì— ì €ì¥)
 	wchar_t spriteOutput[MAX_PATH] = {};
 	wcscpy_s(spriteOutput, exeDir);
 	PathAppendW(spriteOutput, outfilePath.c_str());
@@ -640,11 +640,11 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 	wchar_t outputFullPath[MAX_PATH] = {};
 	GetFullPathNameW(spriteOutput, MAX_PATH, outputFullPath, nullptr);
 
-	// 6. MakeSpriteFont.exe ½ÇÇà (ÆùÆ® ÀÌ¸§À¸·Î È£ÃâÇØ¾ß ÇÔ)
+	// 6. MakeSpriteFont.exe ì‹¤í–‰ (í°íŠ¸ ì´ë¦„ìœ¼ë¡œ í˜¸ì¶œí•´ì•¼ í•¨)
 	wstring cmdLine = L"\"";
 	cmdLine += exeDir;
 	cmdLine += L"\\..\\..\\Engine\\Tools\\MakeSpriteFont.exe\" /FontSize:32 /FontStyle:Regular ";
-	cmdLine += L"\"Liberation Sans\" ";  // ½ÇÁ¦ ÆùÆ® ÆĞ¹Ğ¸® ÀÌ¸§
+	cmdLine += L"\"Liberation Sans\" ";  // ì‹¤ì œ í°íŠ¸ íŒ¨ë°€ë¦¬ ì´ë¦„
 	cmdLine += L"\"" + wstring(outputFullPath) + L"\"";
 
 	CDebug::Log(L"[RUNNING]: " + cmdLine);
@@ -668,7 +668,7 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
 
-	// 7. ÆùÆ® Á¦°Å ¹× ÆÄÀÏ »èÁ¦
+	// 7. í°íŠ¸ ì œê±° ë° íŒŒì¼ ì‚­ì œ
 	RemoveFontResourceExW(installedFontPath, FR_NOT_ENUM, 0);
 	SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
 	DeleteFileW(installedFontPath);
@@ -1262,6 +1262,149 @@ vector<CAnimationClip::AnimationClipInitInfo> CResources::ReadAnimationClipBuffe
 	return clips;
 }
 
+
+CAnimatorController::AnimatorControllerInitInfo CResources::ReadAnimationAnimatoinControllerBufferInfos(const wstring _binFileName)
+{
+	using namespace std;
+	CAnimatorController::AnimatorControllerInitInfo info{};
+
+	ifstream in(L"BinaryAssets/AnimatorControllerData/" + _binFileName, ios::binary);
+	if (!in.is_open())
+	{
+		CDebug::LogError(L"ReadAnimationAnimatoinControllerBufferInfos failed - can not open: " + _binFileName);
+		return {};
+	}
+
+	_uint magic = 0;
+	in.read(reinterpret_cast<char*>(&magic), sizeof(_uint));
+	if (magic != 0x41434231)
+	{
+		CDebug::LogError(L"ReadAnimationAnimatoinControllerBufferInfos failed - invalid magic: " + _binFileName);
+		return {};
+	}
+
+	auto readWString = [&in]()
+		{
+			wstring ws;
+			_uint len = 0;
+			in.read(reinterpret_cast<char*>(&len), sizeof(_uint));
+			if (len)
+			{
+				ws.resize(len);
+				in.read(reinterpret_cast<char*>(ws.data()), sizeof(wchar_t) * len);
+			}
+			return ws;
+		};
+
+	info.controllerName = readWString();
+	info.entryState = readWString();
+
+	_uint paramCount = 0;
+	in.read(reinterpret_cast<char*>(&paramCount), sizeof(_uint));
+	info.parameters.reserve(paramCount);
+	for (_uint i = 0; i < paramCount; ++i)
+	{
+		CAnimatorController::ParameterDesc p{};
+		p.name = readWString();
+
+		_uint type = 0;
+		in.read(reinterpret_cast<char*>(&type), sizeof(_uint));
+		p.type = static_cast<CAnimatorController::PARAM_TYPE>(type);
+
+		in.read(reinterpret_cast<char*>(&p.defaultBool), sizeof(_bool));
+		in.read(reinterpret_cast<char*>(&p.defaultInt), sizeof(_int));
+		in.read(reinterpret_cast<char*>(&p.defaultFloat), sizeof(_float));
+
+		info.parameters.emplace_back(move(p));
+	}
+
+	_uint stateCount = 0;
+	in.read(reinterpret_cast<char*>(&stateCount), sizeof(_uint));
+	info.states.reserve(stateCount);
+	for (_uint s = 0; s < stateCount; ++s)
+	{
+		CAnimatorController::State st{};
+		st.name = readWString();
+		st.motionName = readWString();
+
+		in.read(reinterpret_cast<char*>(&st.speedMul), sizeof(_float));
+
+		_uint trCount = 0;
+		in.read(reinterpret_cast<char*>(&trCount), sizeof(_uint));
+		st.transitions.reserve(trCount);
+		for (_uint t = 0; t < trCount; ++t)
+		{
+			CAnimatorController::Transition tr{};
+			tr.toState = readWString();
+
+			in.read(reinterpret_cast<char*>(&tr.blendDuration), sizeof(_float));
+			in.read(reinterpret_cast<char*>(&tr.hasExitTime), sizeof(_bool));
+			in.read(reinterpret_cast<char*>(&tr.exitTimeNormalized), sizeof(_float));
+
+			_uint condCount = 0;
+			in.read(reinterpret_cast<char*>(&condCount), sizeof(_uint));
+			tr.conditions.reserve(condCount);
+			for (_uint c = 0; c < condCount; ++c)
+			{
+				CAnimatorController::Condition cond{};
+				cond.paramName = readWString();
+
+				_uint op = 0;
+				in.read(reinterpret_cast<char*>(&op), sizeof(_uint));
+				cond.op = static_cast<CAnimatorController::COMPARE_OP>(op);
+
+				in.read(reinterpret_cast<char*>(&cond.b), sizeof(_bool));
+				in.read(reinterpret_cast<char*>(&cond.i), sizeof(_int));
+				in.read(reinterpret_cast<char*>(&cond.f), sizeof(_float));
+
+				tr.conditions.emplace_back(move(cond));
+			}
+
+			st.transitions.emplace_back(move(tr));
+		}
+
+		info.states.emplace_back(move(st));
+	}
+
+	_uint anyCount = 0;
+	in.read(reinterpret_cast<char*>(&anyCount), sizeof(_uint));
+	info.anyStateTransitions.reserve(anyCount);
+	for (_uint a = 0; a < anyCount; ++a)
+	{
+		CAnimatorController::Transition tr{};
+		tr.toState = readWString();
+
+		in.read(reinterpret_cast<char*>(&tr.blendDuration), sizeof(_float));
+		in.read(reinterpret_cast<char*>(&tr.hasExitTime), sizeof(_bool));
+		in.read(reinterpret_cast<char*>(&tr.exitTimeNormalized), sizeof(_float));
+
+		_uint condCount = 0;
+		in.read(reinterpret_cast<char*>(&condCount), sizeof(_uint));
+		tr.conditions.reserve(condCount);
+		for (_uint c = 0; c < condCount; ++c)
+		{
+			CAnimatorController::Condition cond{};
+			cond.paramName = readWString();
+
+			_uint op = 0;
+			in.read(reinterpret_cast<char*>(&op), sizeof(_uint));
+			cond.op = static_cast<CAnimatorController::COMPARE_OP>(op);
+
+			in.read(reinterpret_cast<char*>(&cond.b), sizeof(_bool));
+			in.read(reinterpret_cast<char*>(&cond.i), sizeof(_int));
+			in.read(reinterpret_cast<char*>(&cond.f), sizeof(_float));
+
+			tr.conditions.emplace_back(move(cond));
+		}
+
+		info.anyStateTransitions.emplace_back(move(tr));
+	}
+
+	in.close();
+
+	return info;
+}
+
 CEngineResource* CResources::AddSceneResource(const wstring& _name, CEngineResource* _resource, const _bool _tempScene)
 {
 	CScene* targetScene = _tempScene ? CSceneManager::GetInstance().Get_TempScene() :
@@ -1580,14 +1723,14 @@ void CResources::TraverseSkeleton(aiNode* _node, _int _parentId, vector<CSkinned
 	for (_uint i = 0; i < _node->mNumMeshes; ++i)
 		nodeInfo.meshsId.push_back(_node->mMeshes[i]);
 
-	// ¹Ì¸® push ÇØ¼­ ÀÚ½ÄÀÌ parentId Âü°í °¡´É
+	// ë¯¸ë¦¬ push í•´ì„œ ìì‹ì´ parentId ì°¸ê³  ê°€ëŠ¥
 	_outList.push_back(nodeInfo);
 	_int currentId = nodeInfo.nodeId;
 
-	// ÀÚ½Ä ³ëµåµé ¼øÈ¸
+	// ìì‹ ë…¸ë“œë“¤ ìˆœíšŒ
 	for (_uint i = 0; i < _node->mNumChildren; ++i)
 	{
-		// Àç±Í ÀÌÀü¿¡ outList size¸¦ ¾ò¾î ÀÚ½Ä ID ÃßÁ¤
+		// ì¬ê·€ ì´ì „ì— outList sizeë¥¼ ì–»ì–´ ìì‹ ID ì¶”ì •
 		_int childId = static_cast<_int>(_outList.size());
 		_outList[currentId].childsId.push_back(childId);
 		_outList[currentId].numChild++;
