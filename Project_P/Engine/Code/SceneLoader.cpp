@@ -161,6 +161,9 @@ void CSceneLoader::ThreadLoadingLoop()
 
 					CAnimationClip* newClip = CResources::GetInstance().LoadResourceComplete_Scene<CAnimationClip>(wName + L" (Animation)", wFile, nullptr, true);
 
+					if (CEngineString::Contains(wFormat, L"[Loop]"))
+						newClip->SetLoop(true);
+
 					if (animaitonInfoList.size() > 0)
 						newClip->Initiailize_Custom(animaitonInfoList[0], nullptr);
 				}
@@ -182,7 +185,7 @@ void CSceneLoader::ThreadLoadingLoop()
 
 					acResource->Initiailize_Custom(acInfo);
 
-					CDebug::LogError(L"Name: " + acDataName);
+					CResources::AddSceneResource(acDataName + L" (Animator Controller)", acResource, true);
 				}
 			}
 			else if (CEngineString::Contains(wFile, L".mp3") || CEngineString::Contains(wFile, L".wav") || CEngineString::Contains(wFile, L".ogg"))

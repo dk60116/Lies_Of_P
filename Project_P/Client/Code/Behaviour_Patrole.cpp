@@ -25,7 +25,7 @@ void CBehaviour_Patrole::Enter()
 
 	m_fChangeRandomTime = CRandom::GetInstance().Range(5.f, 7.f);
 	//m_pMonster->Get_Animator()->SetLoop(true);
-	m_pMonster->Get_Animator()->Play(L"Walk", 0.1f);
+	//m_pMonster->Get_Animator()->Play(L"Walk", 0.1f);
 }
 
 void CBehaviour_Patrole::During()
@@ -36,7 +36,7 @@ void CBehaviour_Patrole::During()
 	{
 		m_bLookAround = true;
 		//m_pMonster->Get_Animator()->SetLoop(false);
-		m_pMonster->Get_Animator()->Play(L"LookAround", 0.25f);
+		//m_pMonster->Get_Animator()->Play(L"LookAround", 0.25f);
 		m_fPassedTime = 0.f;
 		m_fChangeRandomTime = CRandom::GetInstance().Range(5.f, 7.f);
 	}
@@ -47,7 +47,7 @@ void CBehaviour_Patrole::During()
 		{
 			m_bLookAround = false;
 			//m_pMonster->Get_Animator()->SetLoop(true);
-			m_pMonster->Get_Animator()->Play(L"Walk", 0.25f);
+			//m_pMonster->Get_Animator()->Play(L"Walk", 0.25f);
 		}
 	}
 

@@ -22,7 +22,7 @@ void CBehaviour_Combat::Enter()
 	__super::Enter();
 
 	//m_pMonster->Get_Animator()->SetLoop(false);
-	m_pMonster->Get_Animator()->Play(L"Attack01", 0.1f);
+	//m_pMonster->Get_Animator()->Play(L"Attack01", 0.1f);
 }
 
 void CBehaviour_Combat::During()

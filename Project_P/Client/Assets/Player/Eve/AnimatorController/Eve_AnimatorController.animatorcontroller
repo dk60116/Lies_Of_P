@@ -11,24 +11,14 @@ trigger attack
 bool isDead=false
 
 [state Idle]
-motion=Idle_Clip
+motion=Eve_Idle
 speedMul=1.000000
 pos=250,158
 
 [state Run]
-motion=Run_Clip
+motion=Eve_Run_Forward_During
 speedMul=1.000000
 pos=546,158
-
-[state NewState]
-motion=
-speedMul=1.000000
-pos=-86,-125
-
-[state Attack]
-motion=Attack_Clip
-speedMul=1.000000
-pos=204,-85
 
 [entry]
 to=Idle
@@ -37,45 +27,9 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[any]
-to=Attack
-blend=0.080000
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-cond=attack
-
-[any]
-to=NewState
-blend=0.150000
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition Idle->Run]
-blend=0.150000
-cond=speed>0.1
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
 [transition Run->Idle]
 blend=0.150000
 cond=speed<=0.1
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition Attack->Idle]
-blend=0.120000
-exitTime=0.900000
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition Idle->Attack]
-blend=0.150000
-cond=speed==0.000000 && attack
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

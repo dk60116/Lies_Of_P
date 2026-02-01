@@ -24,7 +24,7 @@ void CBehaviour_Idle::Enter()
 
 	m_fChangeRandomTime = CRandom::GetInstance().Range(2.f, 3.f);
 	//m_pMonster->Get_Animator()->SetLoop(true);
-	m_pMonster->Get_Animator()->Play(L"Idle", 0.1f);
+	//m_pMonster->Get_Animator()->Play(L"Idle", 0.1f);
 }
 
 void CBehaviour_Idle::During()

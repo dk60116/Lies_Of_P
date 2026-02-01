@@ -46,7 +46,7 @@ public:
     CAnimationClip* Get_CurrentAnimation();
     AnimatorStateInfo& Get_StateInfo();
 
-    void Set_Controller(CAnimatorController* _controller, const _bool _playEntry);
+    void Set_Controller(CAnimatorController* _controller, const _bool _playEntry = true);
 
 private:
     class CSkinnedMeshRenderer* m_pSkinnedRenderer;

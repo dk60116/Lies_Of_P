@@ -22,7 +22,7 @@ void CBehaviour_Find::Enter()
 	__super::Enter();
 
 	//m_pMonster->Get_Animator()->SetLoop(false);
-	m_pMonster->Get_Animator()->Play(L"Find", 0.1f);
+	//m_pMonster->Get_Animator()->Play(L"Find", 0.1f);
 }
 
 void CBehaviour_Find::During()
