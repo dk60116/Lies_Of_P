@@ -257,6 +257,7 @@ call copy.bat</Command>
     <ClCompile Include="..\Code\Renderer.cpp" />
     <ClCompile Include="..\Code\RenderTargetManager.cpp" />
     <ClCompile Include="..\Code\Resources.cpp" />
+    <ClCompile Include="..\Code\ResourcesAnimatorController.cpp" />
     <ClCompile Include="..\Code\GameObject.cpp" />
     <ClCompile Include="..\Code\imgui.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
