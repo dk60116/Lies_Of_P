@@ -1,6 +1,7 @@
 #include "epch.h"
 #include "Animator.h"
 #include "SkinnedMeshRenderer.h"
+#include "Resources.h"
 
 CAnimator::CAnimator()
 	: m_pSkinnedRenderer(nullptr)
@@ -339,6 +340,19 @@ void CAnimator::Set_Controller(CAnimatorController* _controller, const _bool _pl
 	if (m_pController)
 	{
 		m_pController->AddRef();
+		for (const auto& statePair : m_pController->Get_StateMap())
+		{
+			const auto& state = statePair.second;
+			if (state.motionName.empty())
+				continue;
+			if (m_mAnimationList.find(state.motionName) != m_mAnimationList.end())
+				continue;
+
+			wstring clipName = state.motionName + L" (Animation)";
+			CAnimationClip* clip = CResources::GetInstance().LoadOnScene<CAnimationClip>(clipName);
+			if (clip)
+				Add_Animation(state.motionName, clip);
+		}
 		m_ControllerInst.Initialize(m_pController, this, true);
 	}
 }
