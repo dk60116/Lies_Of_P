@@ -1,40 +1,81 @@
 # AnimatorController v1
 name=Eve_AnimatorController
-entry=NewState
+entry=Idle
+
+EntryStateTranslation=10,60
+Any_stateTranslation=10,10
 
 [parameters]
-float MoveDirectionX=0
-float MoveDirectionY=0
+float speed=0
+trigger attack
+bool isDead=false
+
+[state Idle]
+motion=Idle_Clip
+speedMul=1.000000
+pos=250,158
+
+[state Run]
+motion=Run_Clip
+speedMul=1.000000
+pos=546,158
 
 [state NewState]
-motion=Eve_Idle
-speedMul=1.000000
-pos=206,143
-
-[state NewState_1]
-motion=Eve_Run_During
-speedMul=1.000000
-pos=460,141
-
-[state NewState_2]
 motion=
 speedMul=1.000000
-pos=737,137
+pos=-86,-125
 
-[transition NewState->NewState_1]
+[state Attack]
+motion=Attack_Clip
+speedMul=1.000000
+pos=204,-85
+
+[entry]
+to=Idle
 blend=0.150000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition NewState_1->NewState_2]
+[any]
+to=Attack
+blend=0.080000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+cond=attack
+
+[any]
+to=NewState
 blend=0.150000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition NewState_2->NewState_1]
+[transition Idle->Run]
 blend=0.150000
+cond=speed>0.1
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run->Idle]
+blend=0.150000
+cond=speed<=0.1
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack->Idle]
+blend=0.120000
+exitTime=0.900000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Idle->Attack]
+blend=0.150000
+cond=speed==0.000000 && attack
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
