@@ -896,7 +896,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
     const ImU32 selectedCol = IM_COL32(255, 165, 0, 230);
     const ImU32 anyCol = IM_COL32(255, 200, 0, 200);
     const ImU32 stateCol = IM_COL32(120, 200, 255, 200);
-    const float reverseOffset = 24.f;
+    const float reverseOffset = 24.f * m_zoom;
     const ImVec2 mousePos = ImGui::GetIO().MousePos;
     for (_int i = 0; i < (_int)m_transitions.size(); ++i)
     {
@@ -910,7 +910,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
             ImVec2 toCenter = getNodeCenter(itTo->second);
             ImVec2 from = rectEdgePoint(anyPos, anySize, toCenter);
             ImVec2 to = rectEdgePoint(
-                ImVec2(origin.x + itTo->second.pos.x + m_pan.x, origin.y + itTo->second.pos.y + m_pan.y),
+                ImVec2(origin.x + (itTo->second.pos.x + m_pan.x) * m_zoom, origin.y + (itTo->second.pos.y + m_pan.y) * m_zoom),
                 nodeSize,
                 anyCenter);
             drawArrowLine(from, to, isSelected ? selectedCol : anyCol, 2.0f);
@@ -937,8 +937,8 @@ void CAnimatorControllerEditorBox::RenderGraph()
         ImVec2 drawTo = toCenter;
 
         const bool hasReverse = TransitionExists(tr.to, tr.from, false);
-        ImVec2 fromRectPos = ImVec2(origin.x + itFrom->second.pos.x + m_pan.x, origin.y + itFrom->second.pos.y + m_pan.y);
-        ImVec2 toRectPos = ImVec2(origin.x + itTo->second.pos.x + m_pan.x, origin.y + itTo->second.pos.y + m_pan.y);
+        ImVec2 fromRectPos = ImVec2(origin.x + (itFrom->second.pos.x + m_pan.x) * m_zoom, origin.y + (itFrom->second.pos.y + m_pan.y) * m_zoom);
+        ImVec2 toRectPos = ImVec2(origin.x + (itTo->second.pos.x + m_pan.x) * m_zoom, origin.y + (itTo->second.pos.y + m_pan.y) * m_zoom);
         if (hasReverse)
         {
             ImVec2 dir = ImVec2(toCenter.x - fromCenter.x, toCenter.y - fromCenter.y);
