@@ -37,6 +37,16 @@ namespace
         return false;
     }
 
+    bool TryParseFloat2(const string& s, _float2& out)
+    {
+        auto parts = SplitString(TrimString(s), ",");
+        if (parts.size() < 2)
+            return false;
+        out.x = static_cast<_float>(atof(TrimString(parts[0]).c_str()));
+        out.y = static_cast<_float>(atof(TrimString(parts[1]).c_str()));
+        return true;
+    }
+
     bool TryParseCondition(const string& token,
         const unordered_map<wstring, CAnimatorController::PARAM_TYPE>& paramTypes,
         CAnimatorController::Condition& out)
@@ -176,6 +186,7 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
         wstring from;
         CAnimatorController::Transition tr{};
         _bool isAny = false;
+        _bool isEntry = false;
     };
     PendingTransition pending{};
     _bool buildingTransition = false;
@@ -185,7 +196,11 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
             if (!buildingTransition)
                 return;
 
-            if (pending.isAny)
+            if (pending.isEntry)
+            {
+                info.entryStateTransitions.push_back(pending.tr);
+            }
+            else if (pending.isAny)
             {
                 info.anyStateTransitions.push_back(pending.tr);
             }
@@ -220,6 +235,18 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
             if (secName == "parameters")
             {
                 sec = Sec::Params;
+                continue;
+            }
+
+            if (secName == "entry")
+            {
+                sec = Sec::Any;
+                buildingTransition = true;
+                pending = PendingTransition{};
+                pending.isEntry = true;
+                pending.tr.blendDuration = 0.15f;
+                pending.tr.hasExitTime = false;
+                pending.tr.exitTimeNormalized = 1.f;
                 continue;
             }
 
@@ -292,6 +319,10 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
                     info.controllerName = CEngineString::StringToWString(v);
                 else if (k == "entry")
                     info.entryState = CEngineString::StringToWString(v);
+                else if (k == "EntryStateTranslation" || k == "entryPos")
+                    TryParseFloat2(v, info.entryPos);
+                else if (k == "Any_stateTranslation" || k == "anyStatePos")
+                    TryParseFloat2(v, info.anyStatePos);
             }
             continue;
         }
@@ -365,6 +396,8 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
                     it->second.motionName = CEngineString::StringToWString(v);
                 else if (k == "speedMul")
                     it->second.speedMul = static_cast<_float>(atof(v.c_str()));
+                else if (k == "pos")
+                    TryParseFloat2(v, it->second.pos);
             }
             continue;
         }
@@ -459,11 +492,13 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
                 out.write(reinterpret_cast<const char*>(ws.data()), sizeof(wchar_t) * len);
         };
 
-    const _uint magic = 0x41434231; // "ACB1"
+    const _uint magic = 0x41434233; // "ACB3"
     out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 
     writeWString(info.controllerName);
     writeWString(info.entryState);
+    out.write(reinterpret_cast<const char*>(&info.entryPos), sizeof(_float2));
+    out.write(reinterpret_cast<const char*>(&info.anyStatePos), sizeof(_float2));
 
     _uint paramCount = static_cast<_uint>(info.parameters.size());
     out.write(reinterpret_cast<const char*>(&paramCount), sizeof(_uint));
@@ -484,6 +519,7 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
         writeWString(st.name);
         writeWString(st.motionName);
         out.write(reinterpret_cast<const char*>(&st.speedMul), sizeof(_float));
+        out.write(reinterpret_cast<const char*>(&st.pos), sizeof(_float2));
 
         _uint trCount = static_cast<_uint>(st.transitions.size());
         out.write(reinterpret_cast<const char*>(&trCount), sizeof(_uint));
@@ -511,6 +547,28 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
     _uint anyCount = static_cast<_uint>(info.anyStateTransitions.size());
     out.write(reinterpret_cast<const char*>(&anyCount), sizeof(_uint));
     for (const auto& tr : info.anyStateTransitions)
+    {
+        writeWString(tr.toState);
+        out.write(reinterpret_cast<const char*>(&tr.blendDuration), sizeof(_float));
+        out.write(reinterpret_cast<const char*>(&tr.hasExitTime), sizeof(_bool));
+        out.write(reinterpret_cast<const char*>(&tr.exitTimeNormalized), sizeof(_float));
+
+        _uint condCount = static_cast<_uint>(tr.conditions.size());
+        out.write(reinterpret_cast<const char*>(&condCount), sizeof(_uint));
+        for (const auto& c : tr.conditions)
+        {
+            writeWString(c.paramName);
+            _uint op = static_cast<_uint>(c.op);
+            out.write(reinterpret_cast<const char*>(&op), sizeof(_uint));
+            out.write(reinterpret_cast<const char*>(&c.b), sizeof(_bool));
+            out.write(reinterpret_cast<const char*>(&c.i), sizeof(_int));
+            out.write(reinterpret_cast<const char*>(&c.f), sizeof(_float));
+        }
+    }
+
+    _uint entryCount = static_cast<_uint>(info.entryStateTransitions.size());
+    out.write(reinterpret_cast<const char*>(&entryCount), sizeof(_uint));
+    for (const auto& tr : info.entryStateTransitions)
     {
         writeWString(tr.toState);
         out.write(reinterpret_cast<const char*>(&tr.blendDuration), sizeof(_float));

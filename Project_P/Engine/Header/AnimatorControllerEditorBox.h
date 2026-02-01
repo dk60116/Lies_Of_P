@@ -139,10 +139,12 @@ private:
     vector<Param> m_params;
     unordered_map<string, State> m_states;
     vector<Transition> m_transitions;
+    vector<Transition> m_entryTransitions;
 
     string m_selectedState;
 
     ImVec2 m_pan = ImVec2(0, 0);
+    _float m_zoom = 1.f;
     ImVec2 m_anyStatePos = ImVec2(10.f, 10.f);
     ImVec2 m_entryPos = ImVec2(10.f, 60.f);
 
