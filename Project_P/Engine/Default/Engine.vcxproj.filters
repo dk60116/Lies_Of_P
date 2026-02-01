@@ -353,6 +353,9 @@
     <ClCompile Include="..\Code\Resources.cpp">
       <Filter>Resource</Filter>
     </ClCompile>
+    <ClCompile Include="..\Code\ResourcesAnimatorController.cpp">
+      <Filter>Resource</Filter>
+    </ClCompile>
     <ClCompile Include="..\Code\RectTransform.cpp">
       <Filter>Components\Transform</Filter>
     </ClCompile>

@@ -195,17 +195,16 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 
                         if (ImGui::Selectable("Build Binary"))
                         {
-                            // Assets »ó´ë°æ·Î·Î º¯È¯ÇØ¼­ Convert È£Ãâ (´Ù¸¥ Convert¿Í µ¿ÀÏ ÆĞÅÏ)
+                            // Assets ìƒëŒ€ê²½ë¡œë¡œ ë³€í™˜í•´ì„œ Convert í˜¸ì¶œ (ë‹¤ë¥¸ Convertì™€ ë™ì¼ íŒ¨í„´)
                             wstring rel = entry.path().wstring();
                             rel = CEngineString::Erase(rel, L"../Assets\\");
                             rel = CEngineString::Replace(rel, L"\\", L"/");
 
-                            // TODO: ¸®¼Ò½º ÄÄÆÄÀÏ·¯ ÇÔ¼ö Ãß°¡
-                            // CResources::GetInstance().ConvertAnimatorControllerToBinary(rel);
+                            CResources::GetInstance().ConvertAnimatorControllerToBinary(rel);
                         }
                     }
 
-                    // ±âÁ¸ fbx/ttf º¯È¯ ¸Ş´º...
+                    // ê¸°ì¡´ fbx/ttf ë³€í™˜ ë©”ë‰´...
                     if (extension == "fbx")
                     {
                         wstring rel = entry.path().wstring();
@@ -307,7 +306,7 @@ void CProjectBox::CreateAnimatorControllerFile(const fs::path& dir, const string
         return;
     }
 
-    // Æú´õ º¸Àå
+    // í´ë” ë³´ì¥
     fs::create_directories(outPath.parent_path());
 
     string text = MakeAnimatorControllerTemplateText(safeName);
