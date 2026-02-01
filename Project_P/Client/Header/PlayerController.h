@@ -36,18 +36,19 @@ private:
 	void Update_Move();
 
 private:
+	const _float WrapDeg(_float deg) const;
+
+	const _float DeltaAngleDeg(_float current, _float target) const;
+
+private:
 	CPlayer* m_pPlayer;
 	CPlayerCamera* m_pPlayerCam;
 
 private:
-	_bool m_bRunning;
+	_bool m_bRunning, m_bTurning;
 
 private:
 	unordered_map<KeyMapping, _bool> m_mKeyHold;
 
 	vector3 m_vMoveDirection;
-
-	_float m_fTargetYaw, m_fCrtYaw;
-	_bool m_bRotate;
 };
-
