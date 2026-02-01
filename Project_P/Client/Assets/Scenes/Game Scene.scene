@@ -28,6 +28,8 @@ EveFace_ORM : Player/Eve/Texture/EveFace_ORMMap.png : [Texture]
 // Eve Animations
 Eve_Idle : Player/Eve/Animations/Eve_Idle.fbx :  [Animation Clip]
 Eve_Run_Forward_During : Player/Eve/Animations/Eve_Run_Forward_During.fbx :  [Animation Clip]
+// Eve Animator Controller
+EVE_AnimatorController : Player/Eve/AnimatorController/Eve_AnimatorController.animatorcontroller : [Animator Controller]
 // Space
 //Sample_Terrain : Terrain : [1, 300, 300, 2.0, 50.0, Map/TerrainHeight.png]
 Terrain_MainTex : Map/Grass.png : [Texture]

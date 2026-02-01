@@ -1263,7 +1263,7 @@ vector<CAnimationClip::AnimationClipInitInfo> CResources::ReadAnimationClipBuffe
 }
 
 
-CAnimatorController::AnimatorControllerInitInfo CResources::ReadAnimationAnimatoinControllerBufferInfos(const wstring _binFileName)
+CAnimatorController::AnimatorControllerInitInfo CResources::ReadAnimatorControllerBufferInfos(const wstring _binFileName)
 {
 	using namespace std;
 	CAnimatorController::AnimatorControllerInitInfo info{};

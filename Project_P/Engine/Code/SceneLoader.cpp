@@ -165,6 +165,26 @@ void CSceneLoader::ThreadLoadingLoop()
 						newClip->Initiailize_Custom(animaitonInfoList[0], nullptr);
 				}
 			}
+			else if (CEngineString::Contains(wFile, L".animatorcontroller"))
+			{
+				if (CEngineString::Contains(wFormat, L"[Animator Controller]"))
+				{
+					auto animatorControllerDataSplit = CEngineString::Split(wFile, L"/");
+					const wstring acDataFolder = animatorControllerDataSplit[animatorControllerDataSplit.size() - 2];
+					const wstring acDataTail = animatorControllerDataSplit[animatorControllerDataSplit.size() - 1];
+					const wstring acDataName = CEngineString::Split(acDataTail, L".")[0];
+
+					const wstring acDataPath = acDataFolder + L"_" + acDataName + L".acdata";
+
+					auto acInfo = CResources::GetInstance().ReadAnimatorControllerBufferInfos(acDataPath);
+
+					auto acResource = CResources::GetInstance().CreateSceneResource<CAnimatorController>(acDataName, acDataPath, nullptr, true);
+
+					acResource->Initiailize_Custom(acInfo);
+
+					CDebug::LogError(L"Name: " + acDataName);
+				}
+			}
 			else if (CEngineString::Contains(wFile, L".mp3") || CEngineString::Contains(wFile, L".wav") || CEngineString::Contains(wFile, L".ogg"))
 			{
 				if (CEngineString::Contains(wFormat, L"[Audio Clip]"))

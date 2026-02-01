@@ -6,6 +6,7 @@
 #include "Texture.h"
 #include "SkinnedMeshBuffer.h"
 #include "AnimationClip.h"
+#include "AnimatorController.h"
 
 #include <filesystem>
 namespace fs = filesystem;
@@ -34,6 +35,7 @@ public:
     HRESULT ConvertFBXToMeshBufferData(const wstring _filePath);
     HRESULT ConvertFBXToSkinnedBufferData(const wstring _filePath);
     HRESULT ConvertFBXToAnimationClipData(const wstring _filePath);
+    HRESULT ConvertAnimatorControllerToBinary(const wstring _filePath);
 
     HRESULT ConvertOTFTTFToSpriteFont(const wstring _filePath);
 
@@ -47,6 +49,7 @@ public:
     CSkinnedMeshBuffer::SkinnedBuffer ReadSkinnedBufferInfos(const wstring _binFileName);
     HRESULT SaveAnimationClipBufferInfos(const wstring _filePath, vector<CAnimationClip::AnimationClipInitInfo> _infoList);
     vector<CAnimationClip::AnimationClipInitInfo> ReadAnimationClipBufferInfos(const wstring _binFileName);
+    CAnimatorController::AnimatorControllerInitInfo ReadAnimatorControllerBufferInfos(const wstring _binFileName);
 
     static CEngineResource* AddSceneResource(const wstring& _name, CEngineResource* _resource, const _bool _tempScene);
 public:

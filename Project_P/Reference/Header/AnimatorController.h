@@ -10,6 +10,7 @@ NS_BEGIN(Engine)
 
 class ENGINE_DLL CAnimatorController final : public CEngineResource
 {
+	friend class CResources;
 	friend class CAnimator;
 
 public:
@@ -94,7 +95,7 @@ protected:
 	void OnDestroy() override;
 
 public:
-	HRESULT Initiailize_Custom(const AnimatorControllerInitInfo& _info, void* _desc);
+	HRESULT Initiailize_Custom(const AnimatorControllerInitInfo& _info);
 
 public:
 	const wstring& Get_EntryState() const { return m_strEntryState; }

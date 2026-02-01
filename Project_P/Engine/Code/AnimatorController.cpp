@@ -35,7 +35,7 @@ void CAnimatorController::OnDestroy()
 	__super::OnDestroy();
 }
 
-HRESULT CAnimatorController::Initiailize_Custom(const AnimatorControllerInitInfo& _info, void* _desc)
+HRESULT CAnimatorController::Initiailize_Custom(const AnimatorControllerInitInfo& _info)
 {
 	m_strResourceName = _info.controllerName;
 	m_strEntryState = _info.entryState;
