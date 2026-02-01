@@ -139,6 +139,7 @@ private:
     vector<Param> m_params;
     unordered_map<string, State> m_states;
     vector<Transition> m_transitions;
+    vector<Transition> m_entryTransitions;
 
     string m_selectedState;
 

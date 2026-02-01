@@ -102,6 +102,7 @@ void CAnimatorControllerEditorBox::OnDestroy()
     m_params.clear();
     m_states.clear();
     m_transitions.clear();
+    m_entryTransitions.clear();
 
     m_selectedState.clear();
     m_pan = ImVec2(0, 0);
@@ -1953,13 +1954,14 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
     m_states.clear();
     m_transitions.clear();
 
-    enum class Sec { None, Params, State, Transition, Any };
+    enum class Sec { None, Params, State, Transition, Any, Entry };
     Sec sec = Sec::None;
 
     string curState;
     string firstStateName;
     Transition curTr{};
     _bool buildingTransition = false;
+    _bool buildingEntry = false;
 
     istringstream iss(text);
     string line;
@@ -1968,8 +1970,12 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
         {
             if (buildingTransition)
             {
-                m_transitions.push_back(curTr);
+                if (buildingEntry)
+                    m_entryTransitions.push_back(curTr);
+                else
+                    m_transitions.push_back(curTr);
                 buildingTransition = false;
+                buildingEntry = false;
                 curTr = Transition{};
             }
         };
@@ -1992,6 +1998,24 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
             if (secName == "parameters")
             {
                 sec = Sec::Params;
+                continue;
+            }
+
+            if (secName == "entry")
+            {
+                sec = Sec::Entry;
+
+                buildingTransition = true;
+                buildingEntry = true;
+                curTr = Transition{};
+                curTr.isAny = false;
+                curTr.blend = 0.15f;
+                curTr.hasExitTime = false;
+                curTr.exitTime = 1.f;
+                curTr.fixedDuration = false;
+                curTr.transitionDuration = 0.15f;
+                curTr.transitionOffset = 0.f;
+                curTr.cond.clear();
                 continue;
             }
 
@@ -2128,7 +2152,7 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
         }
 
         // Transition / Any
-        if ((sec == Sec::Transition || sec == Sec::Any) && buildingTransition)
+        if ((sec == Sec::Transition || sec == Sec::Any || sec == Sec::Entry) && buildingTransition)
         {
             if (eq == string::npos)
                 continue;
@@ -2219,7 +2243,23 @@ string CAnimatorControllerEditorBox::SerializeText() const
     }
 
     // transitions (any 먼저)
-    if (!m_entryState.empty())
+    if (!m_entryTransitions.empty())
+    {
+        for (const auto& tr : m_entryTransitions)
+        {
+            t += "[entry]\n";
+            t += "to=" + tr.to + "\n";
+            t += "blend=" + to_string(tr.blend) + "\n";
+            if (!tr.cond.empty()) t += "cond=" + tr.cond + "\n";
+            if (tr.hasExitTime)
+                t += "exitTime=" + to_string(tr.exitTime) + "\n";
+            t += "fixedDuration=" + string(tr.fixedDuration ? "true" : "false") + "\n";
+            t += "transitionDuration=" + to_string(tr.transitionDuration) + "\n";
+            t += "transitionOffset=" + to_string(tr.transitionOffset) + "\n";
+            t += "\n";
+        }
+    }
+    else if (!m_entryState.empty())
     {
         t += "[entry]\n";
         t += "to=" + m_entryState + "\n";
