@@ -13,8 +13,9 @@ class ENGINE_DLL CAnimatorControllerEditorBox final : public CEditorBox
     friend class CEditor;
 
 public:
-    enum class ESelectType { None, Param, State };
+    enum class ESelectType { None, Param, State, Transition };
     enum class EDeleteType { None, Param, State };
+    enum class EPendingSource { None, State, AnyState, Entry };
 
 private:
     struct MotionItem
@@ -60,6 +61,9 @@ private:
         _float blend = 0.15f;
         _bool hasExitTime = false;
         _float exitTime = 1.f;
+        _bool fixedDuration = false;
+        _float transitionDuration = 0.15f;
+        _float transitionOffset = 0.f;
         string cond;
         _bool isAny = false;
     };
@@ -115,9 +119,15 @@ private:
     void BindParamRenameBuffer(int idx);
     void BindStateRenameBuffer(const std::string& stateName);
     
-    bool ParamNameExistsExcept(const string& name, int exceptIdx) const;
-    bool RenameParam(int idx, const string& newName, string* outError = nullptr);
-    bool RenameState(const string& oldName, const string& newName, string* outError = nullptr);
+    _bool ParamNameExistsExcept(const string& name, int exceptIdx) const;
+    _bool RenameParam(int idx, const string& newName, string* outError = nullptr);
+    _bool RenameState(const string& oldName, const string& newName, string* outError = nullptr);
+
+private:
+    bool TransitionExists(const string& from, const string& to, _bool isAny) const;
+    void AddTransition(const string& from, const string& to);
+    void AddAnyTransition(const string& to);
+    void DeleteTransition(_int index);
 
 private:
     fs::path m_path;
@@ -133,10 +143,13 @@ private:
     string m_selectedState;
 
     ImVec2 m_pan = ImVec2(0, 0);
+    ImVec2 m_anyStatePos = ImVec2(10.f, 10.f);
+    ImVec2 m_entryPos = ImVec2(10.f, 60.f);
 
 private:
     ESelectType m_eSelectType;
     _int m_iSelectedParamIndex;
+    _int m_iSelectedTransitionIndex = -1;
 
     EDeleteType m_eDeleteType;
     _int m_iDeleteParamIndex;
@@ -169,6 +182,10 @@ private:
     _int m_boundParamIndex = -1;
     string m_boundStateName;
     string m_strRenameError;
+
+private:
+    string m_pendingTransitionFrom;
+    EPendingSource m_pendingSourceType = EPendingSource::None;
 };
 
 NS_END

@@ -119,9 +119,9 @@ private:
     void BindParamRenameBuffer(int idx);
     void BindStateRenameBuffer(const std::string& stateName);
     
-    bool ParamNameExistsExcept(const string& name, int exceptIdx) const;
-    bool RenameParam(int idx, const string& newName, string* outError = nullptr);
-    bool RenameState(const string& oldName, const string& newName, string* outError = nullptr);
+    _bool ParamNameExistsExcept(const string& name, int exceptIdx) const;
+    _bool RenameParam(int idx, const string& newName, string* outError = nullptr);
+    _bool RenameState(const string& oldName, const string& newName, string* outError = nullptr);
 
 private:
     bool TransitionExists(const string& from, const string& to, _bool isAny) const;
