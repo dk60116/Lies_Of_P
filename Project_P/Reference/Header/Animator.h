@@ -42,19 +42,23 @@ public:
     void Stop();
 
 public:
+    void Set_Controller(CAnimatorController* _controller, const _bool _playEntry = true);
+
+public:
     void SetBool(const wstring& n, _bool v);
     void SetInt(const wstring& n, _int v);
     void SetFloat(const wstring& n, _float v);
     void SetTrigger(const wstring& n);
     void ResetTrigger(const wstring& n);
 
+    const _bool GetBool(const wstring& n, _bool& out) const;
+    const _bool GetInt(const wstring& n, _bool& out) const;
+    const _bool GetFloat(const wstring& n, _float& out) const;
+
 public:
     unordered_map<wstring, CAnimationClip*>& Get_AnimationClipList();
     CAnimationClip* Get_CurrentAnimation();
     AnimatorStateInfo& Get_StateInfo();
-
-public:
-    void Set_Controller(CAnimatorController* _controller, const _bool _playEntry = true);
 
 private:
     class CSkinnedMeshRenderer* m_pSkinnedRenderer;

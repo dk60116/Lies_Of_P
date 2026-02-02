@@ -3,16 +3,19 @@
 
 void CPlayerState_Move::Enter(CPlayerControllerContext& _ctx)
 {
-    _ctx.SetAnimSpeed(1.f);
+    _ctx.SetAnimSpeed(0.2f);
 }
 
 void CPlayerState_Move::Update(CPlayerControllerContext& _ctx)
 {
+    __super::Update(_ctx);
+
     const vector3& dir = _ctx.GetMoveWorldDir();
     const _float speed = _ctx.PlayerStat().moveSpeed;
     _ctx.AddPosition(dir * speed * DELTA_TIME);
 
     _ctx.BeginTurnTo(_ctx.GetDesiredYawDeg());
 
-    _ctx.SetAnimSpeed(1.f);
+    if (m_fPassedTime >= 0.5f)
+        _ctx.SetAnimSpeed(1.f);
 }

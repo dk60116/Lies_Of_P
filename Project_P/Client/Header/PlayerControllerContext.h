@@ -31,6 +31,7 @@ public:
 
 public:
 	void SetMoveWorldDir(const vector3& _dir);
+	void SetAnimTurn(const _float _value);
 	const vector3& GetMoveWorldDir() const;
 	_float WrapDeg(_float _deg) const;
 	_float DeltaAngleDeg(_float _current, _float _target) const;

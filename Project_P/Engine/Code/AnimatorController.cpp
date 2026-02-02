@@ -77,11 +77,6 @@ CAnimatorController::Find_Parameter(const wstring& _paramName) const
     return (it == m_mParams.end()) ? nullptr : &it->second;
 }
 
-
-// =======================
-// CAnimatorControllerInstance
-// =======================
-
 static constexpr _float FLOAT_EPS = 1e-5f;
 
 CAnimatorControllerInstance::CAnimatorControllerInstance()
@@ -143,7 +138,8 @@ void CAnimatorControllerInstance::OnDestroy()
 void CAnimatorControllerInstance::SetBool(const wstring& _name, const _bool _v)
 {
     auto it = m_mRuntimeParams.find(_name);
-    if (it == m_mRuntimeParams.end()) return;
+    if (it == m_mRuntimeParams.end()) 
+        return;
     if (it->second.type != CAnimatorController::PARAM_TYPE::BOOL) return;
     it->second.b = _v;
 }
@@ -151,7 +147,8 @@ void CAnimatorControllerInstance::SetBool(const wstring& _name, const _bool _v)
 void CAnimatorControllerInstance::SetInt(const wstring& _name, const _int _v)
 {
     auto it = m_mRuntimeParams.find(_name);
-    if (it == m_mRuntimeParams.end()) return;
+    if (it == m_mRuntimeParams.end())
+        return;
     if (it->second.type != CAnimatorController::PARAM_TYPE::INT) return;
     it->second.i = _v;
 }
@@ -159,7 +156,8 @@ void CAnimatorControllerInstance::SetInt(const wstring& _name, const _int _v)
 void CAnimatorControllerInstance::SetFloat(const wstring& _name, const _float _v)
 {
     auto it = m_mRuntimeParams.find(_name);
-    if (it == m_mRuntimeParams.end()) return;
+    if (it == m_mRuntimeParams.end())
+        return;
     if (it->second.type != CAnimatorController::PARAM_TYPE::FLOAT) return;
     it->second.f = _v;
 }
@@ -167,7 +165,8 @@ void CAnimatorControllerInstance::SetFloat(const wstring& _name, const _float _v
 void CAnimatorControllerInstance::SetTrigger(const wstring& _name)
 {
     auto it = m_mRuntimeParams.find(_name);
-    if (it == m_mRuntimeParams.end()) return;
+    if (it == m_mRuntimeParams.end())
+        return;
     if (it->second.type != CAnimatorController::PARAM_TYPE::TRIGGER) return;
     it->second.trigger = true;
 }
@@ -175,13 +174,47 @@ void CAnimatorControllerInstance::SetTrigger(const wstring& _name)
 void CAnimatorControllerInstance::ResetTrigger(const wstring& _name)
 {
     auto it = m_mRuntimeParams.find(_name);
-    if (it == m_mRuntimeParams.end()) return;
-    if (it->second.type != CAnimatorController::PARAM_TYPE::TRIGGER) return;
+    if (it == m_mRuntimeParams.end())
+        return;
+    if (it->second.type != CAnimatorController::PARAM_TYPE::TRIGGER)
+        return;
     it->second.trigger = false;
 }
 
-_bool CAnimatorControllerInstance::Evaluate_Condition(
-    const CAnimatorController::Condition& _c) const
+const _bool CAnimatorControllerInstance::GetBool(const wstring& n, _bool& out) const
+{
+    auto it = m_mRuntimeParams.find(n);
+    if (it == m_mRuntimeParams.end())
+        return false;
+
+    out = (*it).second.b;
+
+    return true;
+}
+
+const _bool CAnimatorControllerInstance::GetInt(const wstring& n, _bool& out) const
+{
+    auto it = m_mRuntimeParams.find(n);
+    if (it == m_mRuntimeParams.end())
+        return false;
+
+    out = (*it).second.i;
+
+    return true;
+}
+
+const _bool CAnimatorControllerInstance::GetFloat(const wstring& n, _float& out) const
+{
+    auto it = m_mRuntimeParams.find(n);
+    if (it == m_mRuntimeParams.end())
+        return false;
+
+    out = (*it).second.f;
+
+    return true;
+}
+
+_bool CAnimatorControllerInstance::Evaluate_Condition(const CAnimatorController::Condition& _c) const
 {
     auto it = m_mRuntimeParams.find(_c.paramName);
     if (it == m_mRuntimeParams.end())

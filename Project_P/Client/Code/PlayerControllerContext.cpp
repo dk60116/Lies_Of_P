@@ -66,22 +66,40 @@ _float CPlayerControllerContext::DeltaAngleDeg(float _current, _float _target)
 
 void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 {
-	if (!m_bTurning || !m_pPlayer) return;
+	if (!m_pPlayer) return;
+
+	if (!m_bTurning)
+	{
+		SetAnimTurn(0.f);
+		return;
+	}
 
 	auto tr = m_pPlayer->Get_Transform();
 	vector3 e = tr->Get_EulerAngles();
 	_float curYaw = e.y;
 
-	_float t = 1.f - expf(-_yawSmooth * DELTA_TIME);
+	_float delta = DeltaAngleDeg(curYaw, m_targetYaw);
 
-	_float newYaw = WrapDeg(curYaw + DeltaAngleDeg(curYaw, m_targetYaw) * t);
+	_float turnDir = 0.f;
+	if (fabsf(delta) >= stopEpsDeg)
+		turnDir = (delta > 0.f) ? 1.f : -1.f;
+
+	SetAnimTurn(turnDir);
+
+	_float t = 1.f - expf(-_yawSmooth * DELTA_TIME);
+	_float newYaw = WrapDeg(curYaw + delta * t);
 	tr->Set_EulerAngles(e.x, newYaw, e.z);
 
 	if (fabsf(DeltaAngleDeg(tr->Get_EulerAngles().y, m_targetYaw)) < stopEpsDeg)
 	{
 		tr->Set_EulerAngles(e.x, m_targetYaw, e.z);
 		m_bTurning = false;
+		SetAnimTurn(0.f);
 	}
+
+	_float v = 0;
+	if (m_pPlayer->Get_Animator()->GetFloat(L"turn", v))
+		CDebug::LogError(v);
 }
 
 const CPlayer::PlayerStatus& CPlayerControllerContext::PlayerStat()
@@ -108,6 +126,17 @@ bool CPlayerControllerContext::IsTurning() const
 void CPlayerControllerContext::SetMoveWorldDir(const vector3& _dir)
 {
 	m_vMoveWorldDir = _dir;
+}
+
+void CPlayerControllerContext::SetAnimTurn(const _float _value)
+{
+	if (!m_pPlayer)
+		return;
+	auto anim = m_pPlayer->Get_Animator();
+	if (!anim)
+		return;
+
+	anim->SetFloat(L"turn", _value);
 }
 
 const vector3& CPlayerControllerContext::GetMoveWorldDir() const

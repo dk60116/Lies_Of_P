@@ -368,21 +368,6 @@ void CAnimator::Stop()
 	m_bIsPlaying = false;
 }
 
-unordered_map<wstring, CAnimationClip*>& CAnimator::Get_AnimationClipList()
-{
-	return m_mAnimationList;
-}
-
-CAnimationClip* CAnimator::Get_CurrentAnimation()
-{
-	return m_pCrtAnimation;
-}
-
-CAnimator:: AnimatorStateInfo& CAnimator::Get_StateInfo()
-{
-	return m_sStateInfo;
-}
-
 void CAnimator::Set_Controller(CAnimatorController* _controller, const _bool _playEntry)
 {
 	(void)_playEntry;
@@ -414,14 +399,24 @@ void CAnimator::Set_Controller(CAnimatorController* _controller, const _bool _pl
 	}
 }
 
+unordered_map<wstring, CAnimationClip*>& CAnimator::Get_AnimationClipList()
+{
+	return m_mAnimationList;
+}
+
+CAnimationClip* CAnimator::Get_CurrentAnimation()
+{
+	return m_pCrtAnimation;
+}
+
+CAnimator:: AnimatorStateInfo& CAnimator::Get_StateInfo()
+{
+	return m_sStateInfo;
+}
+
 void CAnimator::SetBool(const wstring& n, _bool v)
 {
 	m_ControllerInst.SetBool(n, v);
-}
-
-void CAnimator::SetInt(const wstring& n, _int v)
-{
-	m_ControllerInst.SetInt(n, v);
 }
 
 void CAnimator::SetFloat(const wstring& n, _float v)
@@ -437,4 +432,19 @@ void CAnimator::SetTrigger(const wstring& n)
 void CAnimator::ResetTrigger(const wstring& n)
 {
 	m_ControllerInst.ResetTrigger(n);
+}
+
+const _bool CAnimator::GetBool(const wstring& n, _bool& out) const
+{
+	return m_ControllerInst.GetBool(n, out);
+}
+
+const _bool CAnimator::GetInt(const wstring& n, _bool& out) const
+{
+	return m_ControllerInst.GetInt(n, out);
+}
+
+const _bool CAnimator::GetFloat(const wstring& n, _float& out) const
+{
+	return m_ControllerInst.GetFloat(n, out);
 }

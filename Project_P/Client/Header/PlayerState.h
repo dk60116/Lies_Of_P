@@ -8,10 +8,14 @@ class CPlayerControllerContext;
 class CPlayerState : public UObject
 {
 public:
-    virtual ~CPlayerState() = default;
+    CPlayerState();
+    ~CPlayerState();
 
     virtual void Enter(CPlayerControllerContext&);
     virtual void Exit(CPlayerControllerContext&);
     virtual void Update(CPlayerControllerContext&) PURE;
+
+protected:
+    _float m_fPassedTime;
 };
 

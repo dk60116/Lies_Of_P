@@ -9,6 +9,7 @@ Any_stateTranslation=10,10
 float speed=0
 trigger attack
 bool isDead=false
+float turn=0
 
 [state Idle]
 motion=Eve_Idle
@@ -46,6 +47,7 @@ transitionOffset=0.000000
 
 [transition Run_Forward_Start->Run_Forward]
 blend=0.150000
+cond=speed>0.100000
 exitTime=0.800000
 fixedDuration=true
 transitionDuration=0.150000
