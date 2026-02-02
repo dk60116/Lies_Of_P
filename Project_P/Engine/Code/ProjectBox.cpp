@@ -28,6 +28,43 @@ static void ShowInExplorer(const fs::path& path, const _bool selectItem)
 #endif
 }
 
+static string ToLowerCopy(const string& s)
+{
+    string out = s;
+    std::transform(out.begin(), out.end(), out.begin(),
+        [](unsigned char c) { return static_cast<char>(tolower(c)); });
+    return out;
+}
+
+static _bool ContainsCaseInsensitive(const string& haystack, const string& needle)
+{
+    if (needle.empty())
+        return true;
+    const string h = ToLowerCopy(haystack);
+    const string n = ToLowerCopy(needle);
+    return h.find(n) != string::npos;
+}
+
+static _bool DirectoryMatchesQuery(const fs::path& dir, const string& query)
+{
+    if (query.empty())
+        return true;
+
+    error_code ec;
+    if (ContainsCaseInsensitive(dir.filename().string(), query))
+        return true;
+
+    for (const auto& entry : fs::recursive_directory_iterator(dir, ec))
+    {
+        if (ec)
+            break;
+        if (ContainsCaseInsensitive(entry.path().filename().string(), query))
+            return true;
+    }
+
+    return false;
+}
+
 CProjectBox::CProjectBox()
 	: m_strCurrentSelectedFilePath("")
 	, m_strPendingDeletePath("")
@@ -91,6 +128,11 @@ void CProjectBox::Render()
 
 	ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.f);
 
+    ImGui::Text("Search");
+    ImGui::SameLine();
+    ImGui::InputTextWithHint("##ProjectSearch", "Type to filter...", m_searchBuffer.data(), m_searchBuffer.size());
+    ImGui::Separator();
+
 	RenderAssetFoldersHierarchy();
 	RenderBinaryFoldersHierarchy();
 
@@ -152,6 +194,10 @@ void CProjectBox::RenderBinaryFoldersHierarchy()
 
 void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 {
+    const string query = m_searchBuffer.data();
+    if (!DirectoryMatchesQuery(_dirPath, query))
+        return;
+
     string folderName = _dirPath.filename().string();
     string folderLabel = folderName + "##" + _dirPath.string();
 
@@ -186,6 +232,8 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
             else if (entry.is_regular_file())
             {
                 string filename = entry.path().filename().string();
+                if (!ContainsCaseInsensitive(filename, query))
+                    continue;
                 string buttonId = filename + "##" + entry.path().string();
 
                 if (ImGui::Button(buttonId.c_str()))
