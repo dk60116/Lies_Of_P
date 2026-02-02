@@ -11,6 +11,7 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_targetYaw(0.f)
 	, m_bBigTurnLatched(false)
 	, m_fBigTurnDeg(100.f)
+	, m_turnDir(0.f)
 {
 	m_strName = L"PlayerControllerContext";
 }
@@ -55,6 +56,16 @@ void CPlayerControllerContext::AddPosition(const vector3& delta)
 void CPlayerControllerContext::BeginTurnTo(_float _targetYawDeg)
 {
 	m_targetYaw = WrapDeg(_targetYawDeg);
+	if (!m_bTurning && m_pPlayer)
+	{
+		const _float curYaw = m_pPlayer->Get_Transform()->Get_EulerAngles().y;
+		const _float delta = DeltaAngleDeg(curYaw, m_targetYaw);
+		if (fabsf(delta) >= 1e-4f)
+			m_turnDir = (delta > 0.f) ? 1.f : -1.f;
+		else
+			m_turnDir = 0.f;
+	}
+
 	m_bTurning = true;
 }
 
@@ -76,6 +87,7 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 	{
 		SetAnimTurn(0.f);
 		m_bBigTurnLatched = false;
+		m_turnDir = 0.f;
 		return;
 	}
 
@@ -86,18 +98,17 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 	_float delta = DeltaAngleDeg(curYaw, m_targetYaw);
 	_float absDelta = fabsf(delta);
 
-	_float dirThisFrame = 0.f;
-	if (absDelta >= stopEpsDeg)
-		dirThisFrame = (delta > 0.f) ? 1.f : -1.f;
+	if (m_turnDir == 0.f && absDelta >= stopEpsDeg)
+		m_turnDir = (delta > 0.f) ? 1.f : -1.f;
 
 	if (!m_bBigTurnLatched && absDelta >= m_fBigTurnDeg)
 	{  
-		SetAnimTurn(dirThisFrame);
+		SetAnimTurn(m_turnDir);
 		m_pPlayer->Get_Animator()->SetTrigger(L"turn");
 		m_bBigTurnLatched = true;
 	}
 
-	// ½º¹«µù
+	// 
 	_float t = 1.f - expf(-_yawSmooth * DELTA_TIME);
 	t = std::clamp(t, 0.f, 1.f);
 
@@ -111,6 +122,7 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 		SetAnimTurn(0.f);
 
 		m_bBigTurnLatched = false;
+		m_turnDir = 0.f;
 	}
 }
 

@@ -73,5 +73,5 @@ private:
 
 	_bool  m_bTurning;
 	_float m_targetYaw;
+	_float m_turnDir;
 };
-
