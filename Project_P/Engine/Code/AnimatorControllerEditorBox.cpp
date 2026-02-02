@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "AnimatorControllerEditorBox.h"
+#include "Resources.h"
 
 #include <fstream>
 #include <sstream>
@@ -59,6 +60,25 @@ static float DistancePointToSegment(const ImVec2& p, const ImVec2& a, const ImVe
     const float dx = p.x - px;
     const float dy = p.y - py;
     return sqrtf(dx * dx + dy * dy);
+}
+
+static wstring MakeAssetsRelativePath(const fs::path& p)
+{
+    fs::path rel;
+    _bool found = false;
+    for (const auto& part : p)
+    {
+        if (found)
+        {
+            rel /= part;
+            continue;
+        }
+
+        if (part == "Assets")
+            found = true;
+    }
+
+    return found ? rel.wstring() : wstring();
 }
 
 CAnimatorControllerEditorBox::CAnimatorControllerEditorBox()
@@ -225,6 +245,27 @@ void CAnimatorControllerEditorBox::RenderToolbar()
     ImGui::SameLine();
     if (ImGui::Button("Save"))
         SaveToFile();
+
+    ImGui::SameLine();
+    if (ImGui::Button("Build Binary"))
+    {
+        if (!SaveToFile())
+        {
+            CDebug::LogError(L"AnimatorController build failed - save failed: " + m_path.wstring());
+        }
+        else
+        {
+            const wstring relPath = MakeAssetsRelativePath(m_path);
+            if (relPath.empty())
+            {
+                CDebug::LogError(L"AnimatorController build failed - not under Assets: " + m_path.wstring());
+            }
+            else
+            {
+                CResources::GetInstance().ConvertAnimatorControllerToBinary(relPath);
+            }
+        }
+    }
 
     ImGui::SameLine();
     if (ImGui::Button("Close"))
@@ -1869,6 +1910,7 @@ bool CAnimatorControllerEditorBox::RenameParam(int idx, const string& newNameIn,
         return false;
     }
 
+    const string oldName = m_params[idx].name;
     string sanitized = SanitizeIdentifier(Trim(newNameIn));
     if (sanitized.empty())
     {
@@ -1881,6 +1923,58 @@ bool CAnimatorControllerEditorBox::RenameParam(int idx, const string& newNameIn,
         if (outError) *outError = "Parameter name already exists.";
         return false;
     }
+
+    if (oldName == sanitized)
+        return true;
+
+    auto updateConditionString = [&](string& cond)
+        {
+            if (cond.empty())
+                return;
+
+            string normalized = cond;
+            size_t pos = 0;
+            while ((pos = normalized.find("&&")) != string::npos)
+                normalized.replace(pos, 2, ";");
+
+            auto parts = Split(normalized, ';');
+            vector<string> updated;
+            updated.reserve(parts.size());
+
+            for (auto& part : parts)
+            {
+                string trimmed = Trim(part);
+                if (trimmed.empty())
+                    continue;
+
+                if (trimmed.rfind(oldName, 0) == 0)
+                {
+                    const size_t nextPos = oldName.size();
+                    const _bool hasBoundary = trimmed.size() == nextPos ||
+                        trimmed[nextPos] == '=' ||
+                        trimmed[nextPos] == '!' ||
+                        trimmed[nextPos] == '>' ||
+                        trimmed[nextPos] == '<';
+                    if (hasBoundary)
+                        trimmed = sanitized + trimmed.substr(oldName.size());
+                }
+
+                updated.push_back(trimmed);
+            }
+
+            cond.clear();
+            for (size_t i = 0; i < updated.size(); ++i)
+            {
+                if (i > 0)
+                    cond += " && ";
+                cond += updated[i];
+            }
+        };
+
+    for (auto& tr : m_transitions)
+        updateConditionString(tr.cond);
+    for (auto& tr : m_entryTransitions)
+        updateConditionString(tr.cond);
 
     m_params[idx].name = sanitized;
     return true;
