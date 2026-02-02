@@ -4,16 +4,8 @@
 CPlayerControllerContext::CPlayerControllerContext()
 	: m_pPlayer(nullptr)
 	, m_pCam(nullptr)
-	, m_bMovePressed(false)
-	, m_fMove01(0.f)
-	, m_vMoveWorldDir({})
-	, m_fDesiredYaw(0.f)
-	, m_bTurning(false)
-	, m_targetYaw(0.f)
-	, m_bBigTurnLatched(false)
-	, m_fBigTurnDeg(100.f)
-	, m_turnDir(0.f)
-	, m_fMoveLockTimer(0.f)
+	, m_Cv_Move({})
+	, m_Cv_Battle({})
 {
 	m_strName = L"PlayerControllerContext";
 }
@@ -30,12 +22,12 @@ void CPlayerControllerContext::Bind(CPlayer* _player, CPlayerCamera* _cam)
 
 void CPlayerControllerContext::SetMovePressed(_bool pressed)
 {
-	m_bMovePressed = pressed;
+	m_Cv_Move.m_bMovePressed = pressed;
 }
 
 _bool CPlayerControllerContext::IsMovePressed() const
 {
-	return m_bMovePressed;
+	return m_Cv_Move.m_bMovePressed;
 }
 
 vector3 CPlayerControllerContext::CameraForward() const
@@ -50,7 +42,7 @@ _float CPlayerControllerContext::CameraYawDeg() const
 
 void CPlayerControllerContext::StartMoveLock(_float _sec)
 {
-	m_fMoveLockTimer = max(m_fMoveLockTimer, _sec);
+	m_Cv_Move.m_fMoveLockTimer = max(m_Cv_Move.m_fMoveLockTimer, _sec);
 }
 
 void CPlayerControllerContext::AddPosition(const vector3& delta)
@@ -62,18 +54,18 @@ void CPlayerControllerContext::AddPosition(const vector3& delta)
 
 void CPlayerControllerContext::BeginTurnTo(_float _targetYawDeg)
 {
-	m_targetYaw = WrapDeg(_targetYawDeg);
-	if (!m_bTurning && m_pPlayer)
+	m_Cv_Move.m_targetYaw = WrapDeg(_targetYawDeg);
+	if (!m_Cv_Move.m_bTurning && m_pPlayer)
 	{
 		const _float curYaw = m_pPlayer->Get_Transform()->Get_EulerAngles().y;
-		const _float delta = DeltaAngleDeg(curYaw, m_targetYaw);
+		const _float delta = DeltaAngleDeg(curYaw, m_Cv_Move.m_targetYaw);
 		if (fabsf(delta) >= 1e-4f)
-			m_turnDir = (delta > 0.f) ? 1.f : -1.f;
+			m_Cv_Move.m_turnDir = (delta > 0.f) ? 1.f : -1.f;
 		else
-			m_turnDir = 0.f;
+			m_Cv_Move.m_turnDir = 0.f;
 	}
 
-	m_bTurning = true;
+	m_Cv_Move.m_bTurning = true;
 }
 
 _float CPlayerControllerContext::DeltaAngleDeg(float _current, _float _target)
@@ -102,21 +94,21 @@ void CPlayerControllerContext::TickMove()
 	if (dt > 1.f) dt *= 0.001f;               
 	dt = std::clamp(dt, 0.f, 0.05f);
 
-	if (m_fMoveLockTimer > 0.f)
+	if (m_Cv_Move.m_fMoveLockTimer > 0.f)
 	{
-		m_fMoveLockTimer -= dt;
+		m_Cv_Move.m_fMoveLockTimer -= dt;
 
-		m_fMove01 = 0.f;
+		m_Cv_Move.m_fMove01 = 0.f;
 		return;
 	}
 
-	const _float target01 = m_bMovePressed ? 1.f : 0.f;
-	const _float rate = (target01 > m_fMove01) ? PlayerStat().moveAccelRate : PlayerStat().moveDecelRat;
+	const _float target01 = m_Cv_Move.m_bMovePressed ? 1.f : 0.f;
+	const _float rate = (target01 > m_Cv_Move.m_fMove01) ? PlayerStat().moveAccelRate : PlayerStat().moveDecelRat;
 	const _float maxDelta = rate * dt;
 
-	m_fMove01 = MoveTowards1D(m_fMove01, target01, maxDelta);
+	m_Cv_Move.m_fMove01 = MoveTowards1D(m_Cv_Move.m_fMove01, target01, maxDelta);
 
-	vector3 dir = m_vMoveWorldDir;
+	vector3 dir = m_Cv_Move.m_vMoveWorldDir;
 	dir.y = 0.f;
 
 	const _float len = sqrtf(dir.x * dir.x + dir.z * dir.z);
@@ -129,10 +121,10 @@ void CPlayerControllerContext::TickMove()
 		dir = vector3(0.f, 0.f, 0.f); 
 	}
 
-	const _float curSpeed = PlayerStat().moveSpeed * m_fMove01;
+	const _float curSpeed = PlayerStat().moveSpeed * m_Cv_Move.m_fMove01;
 	AddPosition(dir * curSpeed * dt);
 
-	SetAnimSpeed(m_fMove01);
+	SetAnimSpeed(m_Cv_Move.m_fMove01);
 }
 
 void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
@@ -140,11 +132,11 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 	if (!m_pPlayer) 
 		return;
 
-	if (!m_bTurning)
+	if (!m_Cv_Move.m_bTurning)
 	{
 		SetAnimTurn(0.f);
-		m_bBigTurnLatched = false;
-		m_turnDir = 0.f;
+		m_Cv_Move.m_bBigTurnLatched = false;
+		m_Cv_Move.m_turnDir = 0.f;
 		return;
 	}
 
@@ -152,20 +144,20 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 	vector3 e = tr->Get_EulerAngles();
 	_float curYaw = e.y;
 
-	_float delta = DeltaAngleDeg(curYaw, m_targetYaw);
+	_float delta = DeltaAngleDeg(curYaw, m_Cv_Move.m_targetYaw);
 	_float absDelta = fabsf(delta);
 
-	if (m_turnDir == 0.f && absDelta >= stopEpsDeg)
-		m_turnDir = (delta > 0.f) ? 1.f : -1.f;
+	if (m_Cv_Move.m_turnDir == 0.f && absDelta >= stopEpsDeg)
+		m_Cv_Move.m_turnDir = (delta > 0.f) ? 1.f : -1.f;
 
-	if (!m_bBigTurnLatched && absDelta >= m_fBigTurnDeg && m_bMovePressed)
+	if (!m_Cv_Move.m_bBigTurnLatched && absDelta >= m_Cv_Move.m_fBigTurnDeg && m_Cv_Move.m_bMovePressed)
 	{  
-		SetAnimTurn(m_turnDir);
+		SetAnimTurn(m_Cv_Move.m_turnDir);
 		m_pPlayer->Get_Animator()->SetTrigger(L"turn");
 
 		StartMoveLock(PlayerStat().bigTurnStopSec);
 
-		m_bBigTurnLatched = true;
+		m_Cv_Move.m_bBigTurnLatched = true;
 	}
 
 	_float t = 1.f - expf(-_yawSmooth * DELTA_TIME);
@@ -174,14 +166,14 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 	_float newYaw = WrapDeg(curYaw + delta * t);
 	tr->Set_EulerAngles(e.x, newYaw, e.z);
 
-	if (fabsf(DeltaAngleDeg(tr->Get_EulerAngles().y, m_targetYaw)) < stopEpsDeg)
+	if (fabsf(DeltaAngleDeg(tr->Get_EulerAngles().y, m_Cv_Move.m_targetYaw)) < stopEpsDeg)
 	{
-		tr->Set_EulerAngles(e.x, m_targetYaw, e.z);
-		m_bTurning = false;
+		tr->Set_EulerAngles(e.x, m_Cv_Move.m_targetYaw, e.z);
+		m_Cv_Move.m_bTurning = false;
 		SetAnimTurn(0.f);
 
-		m_bBigTurnLatched = false;
-		m_turnDir = 0.f;
+		m_Cv_Move.m_bBigTurnLatched = false;
+		m_Cv_Move.m_turnDir = 0.f;
 	}
 }
 
@@ -203,12 +195,12 @@ void CPlayerControllerContext::SetAnimSpeed(_float _v)
 
 bool CPlayerControllerContext::IsTurning() const
 {
-	return m_bTurning;
+	return m_Cv_Move.m_bTurning;
 }
 
 void CPlayerControllerContext::SetMoveWorldDir(const vector3& _dir)
 {
-	m_vMoveWorldDir = _dir;
+	m_Cv_Move.m_vMoveWorldDir = _dir;
 }
 
 void CPlayerControllerContext::SetAnimTurn(const _float _value)
@@ -224,7 +216,7 @@ void CPlayerControllerContext::SetAnimTurn(const _float _value)
 
 const vector3& CPlayerControllerContext::GetMoveWorldDir() const
 {
-	return m_vMoveWorldDir;
+	return m_Cv_Move.m_vMoveWorldDir;
 }
 
 _float CPlayerControllerContext::WrapDeg(_float _deg) const
@@ -248,10 +240,10 @@ _float CPlayerControllerContext::DeltaAngleDeg(_float _current, _float _target) 
 
 void CPlayerControllerContext::SetDesiredYawDeg(_float _yaw)
 {
-	m_fDesiredYaw = _yaw;
+	m_Cv_Move.m_fDesiredYaw = _yaw;
 }
 
 _float CPlayerControllerContext::GetDesiredYawDeg() const
 {
-	return m_fDesiredYaw;
+	return m_Cv_Move.m_fDesiredYaw;
 }

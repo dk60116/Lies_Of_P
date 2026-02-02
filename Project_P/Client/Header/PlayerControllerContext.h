@@ -4,6 +4,30 @@
 
 class CPlayerControllerContext final : public UObject
 {
+private:
+	typedef struct ContextValue_Move 
+	{
+		_bool  m_bMovePressed = false;
+		_float m_fMove01 = 0.f;
+		vector3 m_vMoveWorldDir = {};
+		_bool m_bBigTurnLatched = false;
+		_float m_fBigTurnDeg = 120.f;
+		_float m_fMoveLockTimer = 0.f;
+
+		_float m_fDesiredYaw = 0.f;
+		_bool  m_bTurning = false;
+		_float m_targetYaw = 0.f;
+		_float m_turnDir = 0.f;
+	}CV_MOVE;
+
+	typedef struct ContextValue_Battle
+	{
+		_bool  m_bAttackActive = false;
+		_bool  m_bAttackBuffered = false;
+		_float m_fAttackBufferT = 0.f;
+		_float m_fAttackBufferLife = 0.25f;
+	}CV_BATTLE;
+
 public:
 	CPlayerControllerContext();
 	~CPlayerControllerContext();
@@ -67,17 +91,7 @@ private:
 	CPlayer* m_pPlayer;
 	CPlayerCamera* m_pCam;
 
-	_bool  m_bMovePressed;
-
-	_float m_fMove01;
-
-	vector3 m_vMoveWorldDir;
-	_float m_fDesiredYaw;
-	_bool m_bBigTurnLatched;
-	_float m_fBigTurnDeg;
-	_float m_fMoveLockTimer;
-
-	_bool  m_bTurning;
-	_float m_targetYaw;
-	_float m_turnDir;
+private:
+	CV_MOVE m_Cv_Move;
+	CV_BATTLE m_Cv_Battle;
 };

@@ -125,6 +125,9 @@ void CPlayerController::Update()
 	m_bRunning = hasInput;
 
 	m_pRoot->Update(m_ctx);
+
+	if (m_mKeyDown[Attack])
+		m_pPlayer->Get_Animator()->SetTrigger(L"Attack");
 }
 
 void CPlayerController::LateUpdate()
@@ -175,18 +178,24 @@ void CPlayerController::Update_Key()
 	KEY_CODE key_L = KEY_CODE::A;
 	KEY_CODE key_R = KEY_CODE::D;
 
-	auto UpdateOne = [&](KeyMapping k, KEY_CODE key)
-		{
-			const _bool prev = m_mKeyHold[k];
-			const _bool now = CInput::GetInstance().GetKey(key);
+	_uint mouse0 = 0;
 
-			m_mKeyHold[k] = now;
-			m_mKeyDown[k] = (now && !prev);
-			m_mKeyUp[k] = (!now && prev);
-		};
+	m_mKeyHold[Forward] = CInput::GetInstance().GetKey(key_F);
+	m_mKeyHold[Back] = CInput::GetInstance().GetKey(key_B);
+	m_mKeyHold[Left] = CInput::GetInstance().GetKey(key_L);
+	m_mKeyHold[Right] = CInput::GetInstance().GetKey(key_R);
 
-	UpdateOne(Forward, key_F);
-	UpdateOne(Back, key_B);
-	UpdateOne(Left, key_L);
-	UpdateOne(Right, key_R);
+	m_mKeyDown[Forward] = CInput::GetInstance().GetKeyDown(key_F);
+	m_mKeyDown[Back] = CInput::GetInstance().GetKeyDown(key_B);
+	m_mKeyDown[Left] = CInput::GetInstance().GetKeyDown(key_L);
+	m_mKeyDown[Right] = CInput::GetInstance().GetKeyDown(key_R);
+
+	m_mKeyUp[Forward] = CInput::GetInstance().GetKeyUp(key_F);
+	m_mKeyUp[Back] = CInput::GetInstance().GetKeyUp(key_B);
+	m_mKeyUp[Left] = CInput::GetInstance().GetKeyUp(key_L);
+	m_mKeyUp[Right] = CInput::GetInstance().GetKeyUp(key_R);
+
+	m_mKeyHold[Attack] = CInput::GetInstance().GetMouseButton(mouse0);
+	m_mKeyDown[Attack] = CInput::GetInstance().GetMouseButtonDown(mouse0);
+	m_mKeyUp[Attack] = CInput::GetInstance().GetMouseButtonUp(mouse0);
 }

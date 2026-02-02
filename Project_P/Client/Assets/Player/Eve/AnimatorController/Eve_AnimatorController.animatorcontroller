@@ -10,6 +10,8 @@ float speed=0
 trigger turn
 bool isDead=false
 float turnDir=0
+trigger Attack
+int AttackCombo=0
 
 [state Idle]
 motion=Eve_Idle
@@ -30,6 +32,11 @@ pos=582,372
 motion=Eve_Run_Forward_End
 speedMul=1.000000
 pos=176,376
+
+[state Attack_Light_01]
+motion=Eve_Attack_Light_01
+speedMul=1.000000
+pos=-258,147
 
 [state Run_TurnL]
 motion=Eve_Run_TurnL
@@ -63,6 +70,14 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 cond=turn && turnDir<0.000000
+
+[any]
+to=Attack_Light_01
+blend=0.150000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+cond=Attack && AttackCombo==0
 
 [transition Idle->Run_Forward_Start]
 blend=0.000000
@@ -133,6 +148,13 @@ transitionOffset=0.000000
 blend=0.150000
 cond=speed<=0.000000
 exitTime=0.400000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_Light_01->Idle]
+blend=0.150000
+exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

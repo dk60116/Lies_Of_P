@@ -7,9 +7,9 @@
 class CPlayerController final : public CComponent
 {
 public:
-    enum KeyMapping { Forward, Back, Left, Right };
+    enum KeyMapping { Forward, Back, Left, Right, Attack };
 
-    enum class PlayerState { Locomotion, Idle, Move };
+    enum class PlayerState { Locomotion, Idle, Move, Attack };
 
 protected:
     CPlayerController();

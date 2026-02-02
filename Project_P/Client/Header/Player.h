@@ -22,7 +22,7 @@ public:
 		_float moveAccelRate = 4.f;
 		_float moveDecelRat = 1.5f;
 		_float turnSpeed = 8.f;
-		_float bigTurnStopSec = 0.23f;
+		_float bigTurnStopSec = 0.28f;
 		_float focusTurnRatio = 8.f;
 		_int attackPower = 1;
 	};
