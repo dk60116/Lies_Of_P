@@ -231,7 +231,8 @@ void CAnimator::Update()
 	{
 		CTransform* bone = m_pSkinnedRenderer->Get_BoneTransform(i);
 
-		if (!bone) continue;
+		if (!bone)
+			continue;
 
 		const wstring& name = m_pSkinnedRenderer->Get_BoneName(i);
 
@@ -346,8 +347,6 @@ void CAnimator::Play(const wstring& _animName, const _float _blendDuration)
 
 	m_mBlendStartPose.clear();
 	m_pCrtAnimation->Sample(m_fCurrentTime, m_mBlendStartPose);
-
-	CDebug::LogError(_animName);
 
 	m_bIsPlaying = true;
 }
