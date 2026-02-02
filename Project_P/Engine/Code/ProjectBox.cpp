@@ -4,18 +4,25 @@
 static void ShowInExplorer(const fs::path& path, const _bool selectItem)
 {
 #ifdef _WIN32
-	if (selectItem && fs::is_regular_file(path))
+	error_code ec;
+	fs::path targetPath = fs::weakly_canonical(path, ec);
+	if (ec)
+		targetPath = fs::absolute(path, ec);
+	if (ec)
+		targetPath = path;
+
+	if (selectItem && fs::is_regular_file(targetPath))
 	{
-		wstring args = L"/select,\"" + path.wstring() + L"\"";
+		wstring args = L"/select,\"" + targetPath.wstring() + L"\"";
 		HINSTANCE result = ShellExecuteW(nullptr, L"open", L"explorer.exe", args.c_str(), nullptr, SW_SHOWNORMAL);
 		if ((INT_PTR)result <= 32)
-			CDebug::LogError(L"ShowInExplorer failed: " + path.wstring());
+			CDebug::LogError(L"ShowInExplorer failed: " + targetPath.wstring());
 		return;
 	}
 
-	HINSTANCE result = ShellExecuteW(nullptr, L"open", path.wstring().c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+	HINSTANCE result = ShellExecuteW(nullptr, L"open", targetPath.wstring().c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 	if ((INT_PTR)result <= 32)
-		CDebug::LogError(L"ShowInExplorer failed: " + path.wstring());
+		CDebug::LogError(L"ShowInExplorer failed: " + targetPath.wstring());
 #else
 	CDebug::LogError(L"ShowInExplorer is not implemented on this platform.");
 #endif
