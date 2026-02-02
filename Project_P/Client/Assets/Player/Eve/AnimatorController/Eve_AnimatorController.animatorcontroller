@@ -11,25 +11,25 @@ trigger turn
 bool isDead=false
 float turnDir=0
 
-[state Idle]
-motion=Eve_Idle
-speedMul=1.000000
-pos=250,158
-
 [state Run_Forward_Start]
 motion=Eve_Run_Forward_Start
 speedMul=1.000000
 pos=520,157
 
-[state Run_Forward]
-motion=Eve_Run_Forward_During
+[state Idle]
+motion=Eve_Idle
 speedMul=1.000000
-pos=522,299
+pos=250,158
 
 [state Run_End]
 motion=Eve_Run_Forward_End
 speedMul=1.000000
 pos=249,302
+
+[state Run_Forward]
+motion=Eve_Run_Forward_During
+speedMul=1.000000
+pos=522,299
 
 [state Run_TurnL]
 motion=Eve_Run_TurnL

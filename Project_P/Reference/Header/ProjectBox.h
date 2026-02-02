@@ -36,6 +36,7 @@ private:
 	fs::path m_createTargetDir;
 	_bool m_bRequestCreateAC;
 	array<char, 128> m_newACName;
+	array<char, 128> m_searchBuffer{};
 };
 
 NS_END

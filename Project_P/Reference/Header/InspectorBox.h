@@ -1,8 +1,11 @@
 #pragma once
 
 #include "EditorBox.h"
+#include <filesystem>
 
 NS_BEGIN(Engine)
+
+namespace fs = std::filesystem;
 
 class ENGINE_DLL CInspectorBox final : public CEditorBox
 {
@@ -22,8 +25,10 @@ public:
 private:
 	void ShowTransform(CGameObject* _obj);
 	void ShowRectTransform(CGameObject* _obj);
+	void RenderSelectedAssetPreview(const fs::path& path);
 	_float m_fRXDrag, m_fRYDrag, m_fRZDrag;
+	class CTexture* m_pPreviewTexture;
+	wstring m_previewAssetPath;
 };
 
 NS_END
-
