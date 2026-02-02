@@ -1,54 +1,60 @@
 #pragma once
-
 #include "epch.h"
+
+#include "PlayerControllerContext.h"
+#include "PlayerState.h"
 
 class CPlayerController final : public CComponent
 {
 public:
-	enum KeyMapping { Forward, Back, Left, Right };
+    enum KeyMapping { Forward, Back, Left, Right };
+
+    enum class PlayerState { Locomotion, Idle, Move };
 
 protected:
-	CPlayerController();
-	~CPlayerController();
+    CPlayerController();
+    ~CPlayerController();
 
 public:
-	static CPlayerController* Create();
-	CComponent* Clone() const override;
+    static CPlayerController* Create();
+    CComponent* Clone() const override;
 
 public:
-	HRESULT Initialize() override;
+    HRESULT Initialize() override;
 
-	void Awake() override;
-	void Start() override;
-	void Update() override;
-	void LateUpdate() override;
-	void OnDestroy() override;
-
-public:
-	void Set_Player(CPlayer* _player);
-	void Set_Camera(CPlayerCamera* _cam);
+    void Awake() override;
+    void Start() override;
+    void Update() override;
+    void LateUpdate() override;
+    void OnDestroy() override;
 
 public:
-	const _bool IsRunning() const;
+    CPlayerState* Get_PlayerState(PlayerState _state);
+
+public:
+    void Set_Player(CPlayer* _player);
+    void Set_Camera(CPlayerCamera* _cam);
+
+public:
+    const _bool IsRunning() const;
 
 private:
-	void Update_Key();
-	void Update_Move();
+    void Update_Key();
 
 private:
-	const _float WrapDeg(_float deg) const;
-
-	const _float DeltaAngleDeg(_float current, _float target) const;
-
-private:
-	CPlayer* m_pPlayer;
-	CPlayerCamera* m_pPlayerCam;
+    CPlayer* m_pPlayer = nullptr;
+    CPlayerCamera* m_pPlayerCam = nullptr;
 
 private:
-	_bool m_bRunning, m_bTurning;
+    _bool m_bRunning = false;
+    unordered_map<KeyMapping, _bool> m_mKeyHold;
 
 private:
-	unordered_map<KeyMapping, _bool> m_mKeyHold;
+    bool m_bFSMStarted;
 
-	vector3 m_vMoveDirection;
+    CPlayerControllerContext m_ctx;
+
+    unordered_map<PlayerState, CPlayerState*> m_mStateList;
+
+    CPlayerState* m_pRoot;
 };

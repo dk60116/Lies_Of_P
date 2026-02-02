@@ -232,7 +232,11 @@ _bool CAnimatorControllerInstance::Evaluate_Condition(
 
 _bool CAnimatorControllerInstance::Evaluate_Transition(const CAnimatorController::Transition& _tr, CAnimator* _animator) const
 {
-    if (!_tr.hasExitTime && _tr.conditions.empty())
+
+    if (!_animator)
+        return false;
+
+    if (_tr.conditions.empty() && !_tr.hasExitTime)
         return false;
 
     if (_tr.hasExitTime)
@@ -242,15 +246,19 @@ _bool CAnimatorControllerInstance::Evaluate_Transition(const CAnimatorController
             return false;
     }
 
+    if (_tr.conditions.empty())
+        return true;
+
     for (const auto& c : _tr.conditions)
+    {
         if (!Evaluate_Condition(c))
             return false;
+    }
 
     return true;
 }
 
-void CAnimatorControllerInstance::Consume_TriggersUsedBy(
-    const CAnimatorController::Transition& _tr)
+void CAnimatorControllerInstance::Consume_TriggersUsedBy(const CAnimatorController::Transition& _tr)
 {
     for (const auto& c : _tr.conditions)
     {
@@ -264,8 +272,6 @@ void CAnimatorControllerInstance::Consume_TriggersUsedBy(
 
 void CAnimatorControllerInstance::EnterEntry(CAnimator* _animator)
 {
-    CDebug::Log("[AC] EnterEntry called");
-
     if (m_bEntered || !_animator || !m_pController)
         return;
 
@@ -290,7 +296,6 @@ void CAnimatorControllerInstance::EnterEntry(CAnimator* _animator)
         return;
     }
 
-    // Fallback Entry State
     m_strCurrentState = m_pController->Get_EntryState();
     const auto* st = m_pController->Find_State(m_strCurrentState);
     if (st && !st->motionName.empty())
@@ -304,10 +309,11 @@ void CAnimatorControllerInstance::EnterEntry(CAnimator* _animator)
 
 void CAnimatorControllerInstance::Update(CAnimator* _animator, const _float _dt)
 {
+    (void)_dt;
+
     if (!m_pController || !_animator)
         return;
 
-    // Entry는 Initialize에서 이미 끝나야 함
     if (!m_bEntered)
         return;
 
@@ -315,42 +321,73 @@ void CAnimatorControllerInstance::Update(CAnimator* _animator, const _float _dt)
     if (!curState)
         return;
 
+    auto TryFire = [&](const CAnimatorController::Transition& tr) -> bool
+        {
+            if (tr.toState.empty())
+                return false;
+
+            if (!Evaluate_Transition(tr, _animator))
+                return false;
+
+            const auto* nextState = m_pController->Find_State(tr.toState);
+            if (!nextState)
+                return false;
+
+            if (nextState->name == m_strCurrentState)
+                return false;
+
+            Consume_TriggersUsedBy(tr);
+
+            m_strCurrentState = nextState->name;
+            _animator->Set_PlaybackSpeed(nextState->speedMul);
+            _animator->Play(nextState->motionName, tr.blendDuration);
+
+            return true;
+        };
+
+    auto IsConditional = [](const CAnimatorController::Transition& tr) -> bool
+        {
+            return !tr.conditions.empty();
+        };
+
+    auto IsExitOnly = [](const CAnimatorController::Transition& tr) -> bool
+        {
+            return tr.conditions.empty() && tr.hasExitTime;
+        };
+
     for (const auto& tr : m_pController->Get_AnyStateTransitions())
     {
-        if (tr.toState.empty()) 
-            continue;
-        if (!Evaluate_Transition(tr, _animator)) 
+        if (!IsConditional(tr))
             continue;
 
-        const auto* nextState = m_pController->Find_State(tr.toState);
-        if (!nextState)
-            continue;
-
-        Consume_TriggersUsedBy(tr);
-
-        m_strCurrentState = nextState->name;
-        _animator->Set_PlaybackSpeed(nextState->speedMul);
-        _animator->Play(nextState->motionName, tr.blendDuration);
-        return;
+        if (TryFire(tr))
+            return;
     }
 
     for (const auto& tr : curState->transitions)
     {
-        if (tr.toState.empty())
-            continue;
-        if (!Evaluate_Transition(tr, _animator))
+        if (!IsConditional(tr))
             continue;
 
-        const auto* nextState = m_pController->Find_State(tr.toState);
-        if (!nextState)
+        if (TryFire(tr))
+            return;
+    }
+
+    for (const auto& tr : m_pController->Get_AnyStateTransitions())
+    {
+        if (!IsExitOnly(tr))
             continue;
 
-        Consume_TriggersUsedBy(tr);
+        if (TryFire(tr))
+            return;
+    }
 
-        m_strCurrentState = nextState->name;
+    for (const auto& tr : curState->transitions)
+    {
+        if (!IsExitOnly(tr))
+            continue;
 
-        _animator->Set_PlaybackSpeed(nextState->speedMul);
-        _animator->Play(nextState->motionName, tr.blendDuration);
-        return;
+        if (TryFire(tr))
+            return;
     }
 }

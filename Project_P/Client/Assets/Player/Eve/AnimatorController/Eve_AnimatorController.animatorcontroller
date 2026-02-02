@@ -15,10 +15,20 @@ motion=Eve_Idle
 speedMul=1.000000
 pos=250,158
 
-[state Run]
+[state Run_Forward_Start]
+motion=Eve_Run_Forward_Start
+speedMul=1.000000
+pos=520,157
+
+[state Run_Forward]
 motion=Eve_Run_Forward_During
 speedMul=1.000000
-pos=546,158
+pos=520,313
+
+[state Run_End]
+motion=Eve_Run_Forward_End
+speedMul=1.000000
+pos=250,315
 
 [entry]
 to=Idle
@@ -27,14 +37,42 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Run->Idle]
-blend=0.150000
-cond=speed<=0.1
+[transition Idle->Run_Forward_Start]
+blend=0.000000
+cond=speed>0.100000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Idle->Run]
+[transition Run_Forward_Start->Run_Forward]
+blend=0.150000
+exitTime=0.800000
+fixedDuration=true
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_Forward_Start->Idle]
+blend=0.150000
+cond=speed<=0.000000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_Forward->Run_End]
+blend=0.150000
+cond=speed<=0.000000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_End->Idle]
+blend=0.150000
+exitTime=0.800000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_End->Run_Forward_Start]
 blend=0.150000
 cond=speed>0.100000
 fixedDuration=false

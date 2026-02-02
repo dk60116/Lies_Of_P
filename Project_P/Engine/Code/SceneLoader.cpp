@@ -159,10 +159,12 @@ void CSceneLoader::ThreadLoadingLoop()
 
 					auto animaitonInfoList = CResources::GetInstance().ReadAnimationClipBufferInfos(animationdataPath);
 
-					CAnimationClip* newClip = CResources::GetInstance().LoadResourceComplete_Scene<CAnimationClip>(wName + L" (Animation)", wFile, nullptr, true);
+					CAnimationClip* newClip = CResources::GetInstance().LoadResourceComplete_Scene<CAnimationClip>(wName + L" (Animation Clip)", wFile, nullptr, true);
 
 					if (CEngineString::Contains(wFormat, L"[Loop]"))
 						newClip->SetLoop(true);
+					else
+						newClip->SetLoop(false);
 
 					if (animaitonInfoList.size() > 0)
 						newClip->Initiailize_Custom(animaitonInfoList[0], nullptr);

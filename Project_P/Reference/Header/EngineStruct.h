@@ -561,14 +561,14 @@ namespace Engine
             return vector3(0.f, 0.f, -1.f);
         }
 
-        float length() const
+        _float length() const
         {
             _vector v = XMVectorSet(x, y, z, 0.f);
             _vector len = XMVector3Length(v);
             return XMVectorGetX(len);
         }
 
-        float lengthSq() const
+        _float lengthSq() const
         {
             _vector v = XMVectorSet(x, y, z, 0.f);
             _vector len = XMVector3LengthSq(v);

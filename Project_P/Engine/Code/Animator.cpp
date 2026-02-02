@@ -13,6 +13,7 @@ CAnimator::CAnimator()
 	, m_bLoop(false)
 	, m_fCurrentTime(0.f)
 	, m_fBlendTime(0.f)
+	, m_fNextTime(0.f)
 	, m_fBlendDuration(0.f)
 	, m_fPlaybackSpeed(1.f)
 	, m_vFinalBoneMatrix({})
@@ -102,11 +103,15 @@ void CAnimator::Update()
 		if (duration > 0.f)
 		{
 			if (m_bLoop)
+			{
 				m_fCurrentTime = fmodf(m_fCurrentTime, duration);
+			}
 			else if (m_fCurrentTime >= duration)
 			{
 				m_fCurrentTime = duration;
-				m_bIsPlaying = false;
+
+				if (!m_bBlending)
+					m_bIsPlaying = false;
 			}
 
 			m_sStateInfo.normalizeTime = m_fCurrentTime / duration;
@@ -120,38 +125,78 @@ void CAnimator::Update()
 	if (m_pController)
 		m_ControllerInst.Update(this, DELTA_TIME);
 
-	if (!m_bIsPlaying || !m_pCrtAnimation)
+	if (!m_pCrtAnimation)
+		return;
+	if (!m_bIsPlaying && !m_bBlending)
 		return;
 
 	if (m_bBlending)
 	{
+		if (!m_pNextAnimation)
+		{
+			m_bBlending = false;
+			return;
+		}
+
 		m_fBlendTime += DELTA_TIME;
 
 		_float denom = (m_fBlendDuration > 0.f) ? m_fBlendDuration : 0.0001f;
 		_float t = m_fBlendTime / denom;
 
+		m_fNextTime += DELTA_TIME * m_fPlaybackSpeed;
+
+		const _float nextDur = m_pNextAnimation->Get_Duration();
+		if (nextDur > 0.f)
+		{
+			if (m_pNextAnimation->IsLoop())
+				m_fNextTime = fmodf(m_fNextTime, nextDur);
+			else if (m_fNextTime >= nextDur)
+				m_fNextTime = nextDur;
+		}
+
 		if (t >= 1.f)
 		{
 			m_pCrtAnimation = m_pNextAnimation;
 			m_pNextAnimation = nullptr;
-			m_fCurrentTime = 0.f;
-			m_bBlending = false;
 
-			if (m_pCrtAnimation && m_pCrtAnimation->Get_Duration() > 0.f)
+			m_fCurrentTime = m_fNextTime;
+			m_fNextTime = 0.f;
+
+			m_bBlending = false;
+			m_fBlendTime = 0.f;
+			m_fBlendDuration = 0.f;
+
+			m_bIsPlaying = true;
+			m_bLoop = (m_pCrtAnimation) ? m_pCrtAnimation->IsLoop() : false;
+
+			if (m_pCrtAnimation)
+			{
+				const _float dur = m_pCrtAnimation->Get_Duration();
+				m_sStateInfo.length = dur;
+				m_sStateInfo.normalizeTime = (dur > 0.f) ? (m_fCurrentTime / dur) : 0.f;
+
+				if (!m_bLoop && dur > 0.f && m_fCurrentTime >= dur)
+					m_bIsPlaying = false;
+			}
+			else
+			{
+				m_sStateInfo.length = 0.f;
 				m_sStateInfo.normalizeTime = 0.f;
+				m_bIsPlaying = false;
+			}
 
 			return;
 		}
 
 		unordered_map<wstring, CAnimationClip::BoneTransform> sampledNext;
-		m_pNextAnimation->Sample(0.f, sampledNext);
+		m_pNextAnimation->Sample(m_fNextTime, sampledNext);
 
 		const _uint boneCount = m_pSkinnedRenderer->Get_BoneCount();
 		for (_uint i = 0; i < boneCount; ++i)
 		{
 			CTransform* bone = m_pSkinnedRenderer->Get_BoneTransform(i);
 			const wstring& name = m_pSkinnedRenderer->Get_BoneName(i);
-			if (!bone) 
+			if (!bone)
 				continue;
 
 			if (!m_pSkinnedRenderer->m_bApplyRootMotion && name == m_pSkinnedRenderer->Get_RootBoneName())
@@ -161,8 +206,8 @@ void CAnimator::Update()
 			if (bone->Get_GameObject()->Get_ObjectName() == L"Root")
 				continue;
 
-			const auto& startIt = m_mBlendStartPose.find(name);
-			const auto& nextIt = sampledNext.find(name);
+			const auto startIt = m_mBlendStartPose.find(name);
+			const auto nextIt = sampledNext.find(name);
 
 			if (startIt != m_mBlendStartPose.end() && nextIt != sampledNext.end())
 			{
@@ -282,9 +327,15 @@ void CAnimator::Play(const wstring& _animName, const _float _blendDuration)
 	{
 		m_pCrtAnimation = nextAnim;
 		m_pNextAnimation = nullptr;
+
 		m_fCurrentTime = 0.f;
+		m_fNextTime = 0.f;
+
 		m_bIsPlaying = true;
 		m_bBlending = false;
+		m_fBlendTime = 0.f;
+		m_fBlendDuration = 0.f;
+
 		m_bLoop = m_pCrtAnimation->IsLoop();
 		return;
 	}
@@ -293,6 +344,8 @@ void CAnimator::Play(const wstring& _animName, const _float _blendDuration)
 	m_fBlendTime = 0.f;
 	m_fBlendDuration = _blendDuration;
 	m_bBlending = true;
+
+	m_fNextTime = 0.f;
 
 	if (!m_bIsPlaying)
 		m_fCurrentTime = 0.f;
@@ -352,7 +405,7 @@ void CAnimator::Set_Controller(CAnimatorController* _controller, const _bool _pl
 			if (m_mAnimationList.find(state.motionName) != m_mAnimationList.end())
 				continue;
 
-			wstring clipName = state.motionName + L" (Animation)";
+			wstring clipName = state.motionName + L" (Animation Clip)";
 			CAnimationClip* clip = CResources::GetInstance().LoadOnScene<CAnimationClip>(clipName);
 			if (clip)
 				Add_Animation(state.motionName, clip);

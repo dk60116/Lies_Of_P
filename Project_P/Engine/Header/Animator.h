@@ -61,7 +61,7 @@ private:
     unordered_map<wstring, CAnimationClip*> m_mAnimationList;
     CAnimationClip* m_pCrtAnimation, * m_pNextAnimation;
     _bool m_bIsPlaying, m_bBlending, m_bLoop;
-    _float m_fCurrentTime, m_fBlendTime, m_fBlendDuration;
+    _float m_fCurrentTime, m_fBlendTime, m_fBlendDuration, m_fNextTime;
     _float m_fPlaybackSpeed;
     vector<_matrix> m_vFinalBoneMatrix;
 	AnimatorStateInfo m_sStateInfo;

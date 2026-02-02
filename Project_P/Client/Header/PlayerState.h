@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Object.h"
+#include "cpch.h"
+#include "PlayerControllerContext.h"
 
 class CPlayerControllerContext;
 

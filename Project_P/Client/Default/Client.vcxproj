@@ -147,6 +147,8 @@
     <ClInclude Include="..\Header\Behaviour_Idle.h" />
     <ClInclude Include="..\Header\Behaviour_Patrole.h" />
     <ClInclude Include="..\Header\Behaviour_Tracking.h" />
+    <ClInclude Include="..\Header\PlayerState_Locomotion.h" />
+    <ClInclude Include="..\Header\PlayerState_Move.h" />
     <ClInclude Include="..\Header\GameManager.h" />
     <ClInclude Include="..\Header\GameScene.h" />
     <ClInclude Include="..\Header\LoadingScene.h" />
@@ -157,8 +159,10 @@
     <ClInclude Include="..\Header\Player.h" />
     <ClInclude Include="..\Header\PlayerCamera.h" />
     <ClInclude Include="..\Header\PlayerController.h" />
+    <ClInclude Include="..\Header\PlayerControllerContext.h" />
     <ClInclude Include="..\Header\PlayerHUD.h" />
     <ClInclude Include="..\Header\PlayerState.h" />
+    <ClInclude Include="..\Header\PlayerState_Idle.h" />
     <ClInclude Include="..\Header\Weapon.h" />
     <ClInclude Include="..\Header\Wolf.h" />
     <ClInclude Include="..\Header\WoodenSword.h" />
@@ -183,8 +187,12 @@
     <ClCompile Include="..\Code\Player.cpp" />
     <ClCompile Include="..\Code\PlayerCamera.cpp" />
     <ClCompile Include="..\Code\PlayerController.cpp" />
+    <ClCompile Include="..\Code\PlayerControllerContext.cpp" />
     <ClCompile Include="..\Code\PlayerHUD.cpp" />
     <ClCompile Include="..\Code\PlayerState.cpp" />
+    <ClCompile Include="..\Code\PlayerState_Idle.cpp" />
+    <ClCompile Include="..\Code\PlayerState_Locomotion.cpp" />
+    <ClCompile Include="..\Code\PlayerState_Move.cpp" />
     <ClCompile Include="..\Code\Weapon.cpp" />
     <ClCompile Include="..\Code\Wolf.cpp" />
     <ClCompile Include="..\Code\WoodenSword.cpp" />

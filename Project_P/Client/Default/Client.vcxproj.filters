@@ -120,6 +120,18 @@
     <ClInclude Include="..\Header\PlayerState.h">
       <Filter>Scripts\Object\Player\FSM</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\PlayerControllerContext.h">
+      <Filter>Scripts\Object\Player\FSM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\PlayerState_Idle.h">
+      <Filter>Scripts\Object\Player\FSM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\PlayerState_Move.h">
+      <Filter>Scripts\Object\Player\FSM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\PlayerState_Locomotion.h">
+      <Filter>Scripts\Object\Player\FSM</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Code\MainScene.cpp">
@@ -186,6 +198,18 @@
       <Filter>Scripts\Object\Player</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerState.cpp">
+      <Filter>Scripts\Object\Player\FSM</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerControllerContext.cpp">
+      <Filter>Scripts\Object\Player\FSM</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerState_Idle.cpp">
+      <Filter>Scripts\Object\Player\FSM</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerState_Move.cpp">
+      <Filter>Scripts\Object\Player\FSM</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerState_Locomotion.cpp">
       <Filter>Scripts\Object\Player\FSM</Filter>
     </ClCompile>
   </ItemGroup>
