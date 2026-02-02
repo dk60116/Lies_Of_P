@@ -196,14 +196,11 @@ void CAnimator::Update()
 		{
 			CTransform* bone = m_pSkinnedRenderer->Get_BoneTransform(i);
 			const wstring& name = m_pSkinnedRenderer->Get_BoneName(i);
+
 			if (!bone)
 				continue;
 
 			if (!m_pSkinnedRenderer->m_bApplyRootMotion && name == m_pSkinnedRenderer->Get_RootBoneName())
-				continue;
-			if (bone->Get_GameObject()->Get_ObjectName() == L"root")
-				continue;
-			if (bone->Get_GameObject()->Get_ObjectName() == L"Root")
 				continue;
 
 			const auto startIt = m_mBlendStartPose.find(name);
@@ -233,15 +230,12 @@ void CAnimator::Update()
 	for (_uint i = 0; i < boneCount; ++i)
 	{
 		CTransform* bone = m_pSkinnedRenderer->Get_BoneTransform(i);
+
 		if (!bone) continue;
 
 		const wstring& name = m_pSkinnedRenderer->Get_BoneName(i);
 
 		if (!m_pSkinnedRenderer->m_bApplyRootMotion && name == m_pSkinnedRenderer->Get_RootBoneName())
-			continue;
-		if (bone->Get_GameObject()->Get_ObjectName() == L"root")
-			continue;
-		if (bone->Get_GameObject()->Get_ObjectName() == L"Root")
 			continue;
 
 		auto it = sampled.find(name);
@@ -352,6 +346,8 @@ void CAnimator::Play(const wstring& _animName, const _float _blendDuration)
 
 	m_mBlendStartPose.clear();
 	m_pCrtAnimation->Sample(m_fCurrentTime, m_mBlendStartPose);
+
+	CDebug::LogError(_animName);
 
 	m_bIsPlaying = true;
 }

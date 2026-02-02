@@ -68,6 +68,8 @@ private:
 
 	vector3 m_vMoveWorldDir;
 	_float m_fDesiredYaw;
+	_bool m_bBigTurnLatched;
+	_float m_fBigTurnDeg;
 
 	_bool  m_bTurning;
 	_float m_targetYaw;

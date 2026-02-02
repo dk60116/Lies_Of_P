@@ -419,7 +419,7 @@ vector<CSkinnedMeshRenderer*> CGameObject::CreateSkinnedMeshHierachy(vector<Skin
 		g->m_bIsBoneTransform = true;
 
 		if (_bonesInfo[i].parentId == -1)
-			rootBone = g->Get_Transform()->Get_Transform();
+			rootBone = g->Get_Transform();
 	}
 
 	for (size_t i = 0; i < _bonesInfo.size(); ++i)

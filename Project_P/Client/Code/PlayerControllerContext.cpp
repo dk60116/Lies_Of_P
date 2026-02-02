@@ -9,6 +9,8 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_fDesiredYaw(0.f)
 	, m_bTurning(false)
 	, m_targetYaw(0.f)
+	, m_bBigTurnLatched(false)
+	, m_fBigTurnDeg(120.f)
 {
 	m_strName = L"PlayerControllerContext";
 }
@@ -59,18 +61,22 @@ void CPlayerControllerContext::BeginTurnTo(_float _targetYawDeg)
 _float CPlayerControllerContext::DeltaAngleDeg(float _current, _float _target)
 {
 	float delta = fmodf(_target - _current, 360.f);
-	if (delta > 180.f)  delta -= 360.f;
-	if (delta < -180.f) delta += 360.f;
+	if (delta > 180.f) 
+		delta -= 360.f;
+	if (delta < -180.f)
+		delta += 360.f;
 	return delta;
 }
 
 void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 {
-	if (!m_pPlayer) return;
+	if (!m_pPlayer) 
+		return;
 
 	if (!m_bTurning)
 	{
 		SetAnimTurn(0.f);
+		m_bBigTurnLatched = false;
 		return;
 	}
 
@@ -79,14 +85,24 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 	_float curYaw = e.y;
 
 	_float delta = DeltaAngleDeg(curYaw, m_targetYaw);
+	_float absDelta = fabsf(delta);
+
+	if (!m_bBigTurnLatched && absDelta >= m_fBigTurnDeg)
+	{
+		m_pPlayer->Get_Animator()->SetTrigger(L"turn");
+		m_bBigTurnLatched = true;
+	}
+
+	if (absDelta <= 60.f)
+		m_bBigTurnLatched = false;
 
 	_float turnDir = 0.f;
-	if (fabsf(delta) >= stopEpsDeg)
+	if (absDelta >= stopEpsDeg)
 		turnDir = (delta > 0.f) ? 1.f : -1.f;
-
 	SetAnimTurn(turnDir);
-
 	_float t = 1.f - expf(-_yawSmooth * DELTA_TIME);
+	t = std::clamp(t, 0.f, 1.f);
+
 	_float newYaw = WrapDeg(curYaw + delta * t);
 	tr->Set_EulerAngles(e.x, newYaw, e.z);
 
@@ -96,10 +112,6 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 		m_bTurning = false;
 		SetAnimTurn(0.f);
 	}
-
-	_float v = 0;
-	if (m_pPlayer->Get_Animator()->GetFloat(L"turn", v))
-		CDebug::LogError(v);
 }
 
 const CPlayer::PlayerStatus& CPlayerControllerContext::PlayerStat()
@@ -136,7 +148,7 @@ void CPlayerControllerContext::SetAnimTurn(const _float _value)
 	if (!anim)
 		return;
 
-	anim->SetFloat(L"turn", _value);
+	anim->SetFloat(L"turnDir", _value);
 }
 
 const vector3& CPlayerControllerContext::GetMoveWorldDir() const
