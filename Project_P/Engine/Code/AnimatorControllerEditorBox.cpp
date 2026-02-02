@@ -64,21 +64,22 @@ static float DistancePointToSegment(const ImVec2& p, const ImVec2& a, const ImVe
 
 static wstring MakeAssetsRelativePath(const fs::path& p)
 {
-    fs::path rel;
-    _bool found = false;
-    for (const auto& part : p)
+    const fs::path assetsRoot = fs::path(L"../Assets");
+    error_code ec;
+    fs::path absolutePath = fs::weakly_canonical(p, ec);
+    fs::path absoluteRoot = fs::weakly_canonical(assetsRoot, ec);
+    if (ec)
     {
-        if (found)
-        {
-            rel /= part;
-            continue;
-        }
-
-        if (part == "Assets")
-            found = true;
+        absolutePath = fs::absolute(p, ec);
+        absoluteRoot = fs::absolute(assetsRoot, ec);
     }
 
-    return found ? rel.wstring() : wstring();
+    fs::path relative = absolutePath.lexically_relative(absoluteRoot);
+    if (relative.empty() || relative.native().rfind(L"..", 0) == 0)
+        return wstring();
+
+    wstring rel = relative.wstring();
+    return CEngineString::Replace(rel, L"\\", L"/");
 }
 
 CAnimatorControllerEditorBox::CAnimatorControllerEditorBox()
