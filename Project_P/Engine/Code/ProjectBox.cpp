@@ -241,7 +241,8 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                     continue;
                 string buttonId = filename + "##" + entry.path().string();
 
-                if (ImGui::Button(buttonId.c_str()))
+                _bool isSelected = (m_strCurrentSelectedFilePath == entry.path().string());
+                if (ImGui::Selectable(buttonId.c_str(), isSelected))
                 {
                     m_strCurrentSelectedFilePath = entry.path().string();
                     CEditor::GetInstance().Set_SelectedAssetPath(entry.path());
