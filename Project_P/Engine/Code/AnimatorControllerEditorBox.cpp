@@ -64,6 +64,40 @@ static float DistancePointToSegment(const ImVec2& p, const ImVec2& a, const ImVe
 
 static wstring MakeAssetsRelativePath(const fs::path& p)
 {
+    auto toLowerCopy = [](string s)
+        {
+            transform(s.begin(), s.end(), s.begin(),
+                [](unsigned char c)
+                {
+                    return (char)std::tolower(c);
+                });
+            return s;
+        };
+
+    auto extractRelativeFromAssets = [&](const fs::path& path) -> wstring
+        {
+            fs::path rel;
+            _bool found = false;
+            for (const auto& part : path)
+            {
+                if (found)
+                {
+                    rel /= part;
+                    continue;
+                }
+
+                const string partStr = toLowerCopy(part.string());
+                if (partStr == "assets")
+                    found = true;
+            }
+
+            if (!found || rel.empty())
+                return wstring();
+
+            wstring relStr = rel.wstring();
+            return CEngineString::Replace(relStr, L"\\", L"/");
+        };
+
     const fs::path assetsRoot = fs::path(L"../Assets");
     error_code ec;
     fs::path absolutePath = fs::weakly_canonical(p, ec);
@@ -81,25 +115,11 @@ static wstring MakeAssetsRelativePath(const fs::path& p)
         return CEngineString::Replace(rel, L"\\", L"/");
     }
 
-    fs::path rel;
-    _bool found = false;
-    for (const auto& part : p)
-    {
-        if (found)
-        {
-            rel /= part;
-            continue;
-        }
+    wstring rel = extractRelativeFromAssets(absolutePath);
+    if (!rel.empty())
+        return rel;
 
-        if (part == "Assets")
-            found = true;
-    }
-
-    if (!found || rel.empty())
-        return wstring();
-
-    wstring relStr = rel.wstring();
-    return CEngineString::Replace(relStr, L"\\", L"/");
+    return extractRelativeFromAssets(p);
 }
 
 CAnimatorControllerEditorBox::CAnimatorControllerEditorBox()
