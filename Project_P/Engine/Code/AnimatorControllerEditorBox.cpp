@@ -75,11 +75,31 @@ static wstring MakeAssetsRelativePath(const fs::path& p)
     }
 
     fs::path relative = absolutePath.lexically_relative(absoluteRoot);
-    if (relative.empty() || relative.native().rfind(L"..", 0) == 0)
+    if (!relative.empty() && relative.native().rfind(L"..", 0) != 0)
+    {
+        wstring rel = relative.wstring();
+        return CEngineString::Replace(rel, L"\\", L"/");
+    }
+
+    fs::path rel;
+    _bool found = false;
+    for (const auto& part : p)
+    {
+        if (found)
+        {
+            rel /= part;
+            continue;
+        }
+
+        if (part == "Assets")
+            found = true;
+    }
+
+    if (!found || rel.empty())
         return wstring();
 
-    wstring rel = relative.wstring();
-    return CEngineString::Replace(rel, L"\\", L"/");
+    wstring relStr = rel.wstring();
+    return CEngineString::Replace(relStr, L"\\", L"/");
 }
 
 CAnimatorControllerEditorBox::CAnimatorControllerEditorBox()
