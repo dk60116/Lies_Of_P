@@ -195,7 +195,12 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
-                    CEditor::GetInstance().OpenAsset(entry.path());
+                    const fs::path binaryRoot = fs::path(L"BinaryAssets");
+                    const fs::path relativeToBinary = entry.path().lexically_relative(binaryRoot);
+                    if (!relativeToBinary.empty() && relativeToBinary.native()[0] != L'.')
+                        ShowInExplorer(entry.path(), true);
+                    else
+                        CEditor::GetInstance().OpenAsset(entry.path());
                 }
 
                 if (ImGui::BeginPopupContextItem(buttonId.c_str()))
