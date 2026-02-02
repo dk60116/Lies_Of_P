@@ -244,6 +244,7 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                 if (ImGui::Button(buttonId.c_str()))
                 {
                     m_strCurrentSelectedFilePath = entry.path().string();
+                    CEditor::GetInstance().Set_SelectedAssetPath(entry.path());
                 }
 
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
@@ -413,6 +414,7 @@ void CProjectBox::CreateAnimatorControllerFile(const fs::path& dir, const string
     ofs.close();
 
     m_strCurrentSelectedFilePath = outPath.string();
+    CEditor::GetInstance().Set_SelectedAssetPath(outPath);
 
     CDebug::Log("Created AnimatorController: " + outPath.string());
 }

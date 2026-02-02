@@ -1,10 +1,13 @@
 #include "epch.h"
 #include "InspectorBox.h"
+#include "Resources.h"
 
 CInspectorBox::CInspectorBox()
 	: m_fRXDrag(0.f)
     , m_fRYDrag(0.f)
     , m_fRZDrag(0.f)
+    , m_pPreviewTexture(nullptr)
+    , m_previewAssetPath()
 {
 }
 
@@ -107,6 +110,8 @@ void CInspectorBox::Render()
     }
     else
         ImGui::Text("No object selected.");
+
+    RenderSelectedAssetPreview(editor.Get_SelectedAssetPath());
 
 	ImGui::End();
 }
@@ -469,4 +474,78 @@ void CInspectorBox::ShowRectTransform(CGameObject* _obj)
         prevY = 0.f;
         prevZ = 0.f;
     }
+}
+
+static _bool IsPreviewImageExtension(const fs::path& path)
+{
+    string ext = CEditor::ToLowerCopy(path.extension().string());
+    return ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tif" || ext == ".tiff" || ext == ".gif";
+}
+
+static _bool TryGetAssetsRelativePath(const fs::path& path, wstring& outRel)
+{
+    const fs::path assetsRoot = fs::path(L"../Assets");
+    error_code ec;
+    fs::path absolutePath = fs::weakly_canonical(path, ec);
+    fs::path absoluteRoot = fs::weakly_canonical(assetsRoot, ec);
+    if (ec)
+    {
+        absolutePath = fs::absolute(path, ec);
+        absoluteRoot = fs::absolute(assetsRoot, ec);
+    }
+
+    fs::path relative = absolutePath.lexically_relative(absoluteRoot);
+    if (relative.empty() || relative.native().rfind(L"..", 0) == 0)
+        return false;
+
+    outRel = relative.wstring();
+    outRel = CEngineString::Replace(outRel, L"\\", L"/");
+    return true;
+}
+
+void CInspectorBox::RenderSelectedAssetPreview(const fs::path& path)
+{
+    if (path.empty() || !IsPreviewImageExtension(path))
+        return;
+
+    wstring relPath;
+    if (!TryGetAssetsRelativePath(path, relPath))
+        return;
+
+    const wstring pathKey = path.wstring();
+    if (pathKey != m_previewAssetPath)
+    {
+        const wstring resourceName = L"InspectorPreview:" + pathKey;
+        CResources& resources = CResources::GetInstance();
+        auto found = resources.m_mGameResourceList.find(resourceName);
+        if (found != resources.m_mGameResourceList.end())
+            m_pPreviewTexture = dynamic_cast<CTexture*>(found->second);
+        else
+            m_pPreviewTexture = resources.CreateGameResource<CTexture>(resourceName, relPath);
+
+        m_previewAssetPath = pathKey;
+    }
+
+    if (!m_pPreviewTexture || !m_pPreviewTexture->Get_SRV())
+        return;
+
+    const D3D11_TEXTURE2D_DESC& desc = m_pPreviewTexture->Get_TextureDesc();
+    if (desc.Width == 0 || desc.Height == 0)
+        return;
+
+    ImGui::Separator();
+    ImGui::Text("Preview");
+
+    ImVec2 avail = ImGui::GetContentRegionAvail();
+    if (avail.x <= 0.0f || avail.y <= 0.0f)
+        return;
+
+    float maxWidth = avail.x;
+    float maxHeight = avail.y;
+    float scale = std::min(maxWidth / static_cast<float>(desc.Width), maxHeight / static_cast<float>(desc.Height));
+    scale = std::min(scale, 1.0f);
+
+    ImVec2 size(static_cast<float>(desc.Width) * scale, static_cast<float>(desc.Height) * scale);
+    ImTextureID texId = (ImTextureID)(intptr_t)m_pPreviewTexture->Get_SRV();
+    ImGui::Image(ImTextureRef(texId), size);
 }

@@ -54,6 +54,8 @@ public:
 	void OpenAnimatorController(const fs::path& path);
 
 	void OpenAssetExternal(const fs::path& path);
+	void Set_SelectedAssetPath(const fs::path& path) { m_selectedAssetPath = path; }
+	const fs::path& Get_SelectedAssetPath() const { return m_selectedAssetPath; }
 
 	static string ToLowerCopy(string s)
 	{
@@ -95,10 +97,10 @@ private:
 	TransformControleTool m_eControleTool;
 	CGameObject* m_pSelectedGameObject;
 	CGameObject* m_pMoveTargetGameObject;
+	fs::path m_selectedAssetPath;
 
 private:
 	HICON m_hEditorWindowIcon_Default, m_hEditorWindoIcon_Small;
 };
 
 NS_END
-
