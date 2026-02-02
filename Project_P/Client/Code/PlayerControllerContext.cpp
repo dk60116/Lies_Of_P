@@ -5,6 +5,7 @@ CPlayerControllerContext::CPlayerControllerContext()
 	: m_pPlayer(nullptr)
 	, m_pCam(nullptr)
 	, m_bMovePressed(false)
+	, m_fMove01(0.f)
 	, m_vMoveWorldDir({})
 	, m_fDesiredYaw(0.f)
 	, m_bTurning(false)
@@ -12,6 +13,7 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_bBigTurnLatched(false)
 	, m_fBigTurnDeg(100.f)
 	, m_turnDir(0.f)
+	, m_fMoveLockTimer(0.f)
 {
 	m_strName = L"PlayerControllerContext";
 }
@@ -44,6 +46,11 @@ vector3 CPlayerControllerContext::CameraForward() const
 _float CPlayerControllerContext::CameraYawDeg() const
 {
 	return m_pCam ? m_pCam->Get_ForwardAngle() : 0.f;
+}
+
+void CPlayerControllerContext::StartMoveLock(_float _sec)
+{
+	m_fMoveLockTimer = max(m_fMoveLockTimer, _sec);
 }
 
 void CPlayerControllerContext::AddPosition(const vector3& delta)
@@ -79,6 +86,55 @@ _float CPlayerControllerContext::DeltaAngleDeg(float _current, _float _target)
 	return delta;
 }
 
+static _float MoveTowards1D(_float cur, _float target, _float maxDelta)
+{
+	if (cur < target) return (cur + maxDelta > target) ? target : (cur + maxDelta);
+	if (cur > target) return (cur - maxDelta < target) ? target : (cur - maxDelta);
+	return target;
+}
+
+void CPlayerControllerContext::TickMove()
+{
+	if (!m_pPlayer) 
+		return;
+
+	_float dt = DELTA_TIME;
+	if (dt > 1.f) dt *= 0.001f;               
+	dt = std::clamp(dt, 0.f, 0.05f);
+
+	if (m_fMoveLockTimer > 0.f)
+	{
+		m_fMoveLockTimer -= dt;
+
+		m_fMove01 = 0.f;
+		return;
+	}
+
+	const _float target01 = m_bMovePressed ? 1.f : 0.f;
+	const _float rate = (target01 > m_fMove01) ? PlayerStat().moveAccelRate : PlayerStat().moveDecelRat;
+	const _float maxDelta = rate * dt;
+
+	m_fMove01 = MoveTowards1D(m_fMove01, target01, maxDelta);
+
+	vector3 dir = m_vMoveWorldDir;
+	dir.y = 0.f;
+
+	const _float len = sqrtf(dir.x * dir.x + dir.z * dir.z);
+	if (len > 1e-6f) 
+	{ 
+		dir.x /= len; dir.z /= len; 
+	}
+	else 
+	{
+		dir = vector3(0.f, 0.f, 0.f); 
+	}
+
+	const _float curSpeed = PlayerStat().moveSpeed * m_fMove01;
+	AddPosition(dir * curSpeed * dt);
+
+	SetAnimSpeed(m_fMove01);
+}
+
 void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 {
 	if (!m_pPlayer) 
@@ -102,10 +158,13 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 	if (m_turnDir == 0.f && absDelta >= stopEpsDeg)
 		m_turnDir = (delta > 0.f) ? 1.f : -1.f;
 
-	if (!m_bBigTurnLatched && absDelta >= m_fBigTurnDeg)
+	if (!m_bBigTurnLatched && absDelta >= m_fBigTurnDeg && m_bMovePressed)
 	{  
 		SetAnimTurn(m_turnDir);
 		m_pPlayer->Get_Animator()->SetTrigger(L"turn");
+
+		StartMoveLock(PlayerStat().bigTurnStopSec);
+
 		m_bBigTurnLatched = true;
 	}
 
@@ -124,11 +183,6 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 		m_bBigTurnLatched = false;
 		m_turnDir = 0.f;
 	}
-
-	float v = 0;
-
-	if (m_pPlayer->Get_Animator()->GetFloat(L"speed", v))
-		CDebug::LogError(v);
 }
 
 const CPlayer::PlayerStatus& CPlayerControllerContext::PlayerStat()

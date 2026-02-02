@@ -17,9 +17,12 @@ public:
 	{
 		_int maxHp = 6;
 		_int crtHp = 0;
-		_float moveSpeed = 6.f;
+		_float moveSpeed = 3.f;
 		_float backWalkRatio = 0.7f;
-		_float turnSpeed = 12.f;
+		_float moveAccelRate = 4.f;
+		_float moveDecelRat = 1.5f;
+		_float turnSpeed = 8.f;
+		_float bigTurnStopSec = 0.23f;
 		_float focusTurnRatio = 8.f;
 		_int attackPower = 1;
 	};

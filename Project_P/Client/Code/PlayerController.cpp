@@ -101,54 +101,28 @@ void CPlayerController::Update()
 	vector3 f = m_ctx.NormalizeXZ(m_pPlayerCam->Get_ForwardVector());
 	vector3 r = m_ctx.NormalizeXZ(vector3(f.z, 0.f, -f.x));
 
-	vector3 moveDir(0.f, 0.f, 0.f);
-	_float desiredYaw = m_ctx.WrapDeg(m_pPlayerCam->Get_ForwardAngle());
-
 	if (hasInput)
 	{
-		moveDir = m_ctx.NormalizeXZ(f * (_float)y + r * (_float)x);
+		vector3 moveDir = m_ctx.NormalizeXZ(f * (_float)y + r * (_float)x);
 
+		_float camYaw = m_ctx.WrapDeg(m_pPlayerCam->Get_ForwardAngle());
 		_float offset = atan2f((_float)x, (_float)y) * (180.f / 3.141592f);
-		desiredYaw = m_ctx.WrapDeg(m_pPlayerCam->Get_ForwardAngle() + offset);
+		_float desiredYaw = m_ctx.WrapDeg(camYaw + offset);
 
 		const _bool onlyBack = (y < 0) && (x == 0) && !m_mKeyHold[Forward];
 		if (onlyBack)
 		{
 			moveDir = m_ctx.NormalizeXZ(-f);
-			desiredYaw = m_ctx.WrapDeg(m_pPlayerCam->Get_ForwardAngle() + 180.f);
+
+			desiredYaw = m_ctx.WrapDeg(camYaw + 180.f);
 		}
+
+		m_ctx.SetMoveWorldDir(moveDir);
+		m_ctx.SetDesiredYawDeg(desiredYaw);
 	}
 
-	m_bRunning = (m_ctx.LengthXZ(moveDir) > 1e-6f);
-
-	m_ctx.SetMovePressed(m_bRunning);
-	m_ctx.SetMoveWorldDir(moveDir);
-	m_ctx.SetDesiredYawDeg(desiredYaw);
-
-	const _bool pressedOnce = m_mKeyDown[Forward] || m_mKeyDown[Back] || m_mKeyDown[Left] || m_mKeyDown[Right];
-
-	if (pressedOnce)
-	{
-		if (hasInput)
-		{
-			const _float curYaw = m_pPlayer->Get_Transform()->Get_EulerAngles().y;
-
-			const _float delta = m_ctx.DeltaAngleDeg(curYaw, desiredYaw);
-
-			//if (fabsf(delta) < 1.f)
-			//{
-			//	CDebug::LogError("[Turn] none");
-			//}
-			//else if (delta > 0.f)
-			//{
-			//	CDebug::LogError("[Turn] right");
-			//}
-			//else
-			//{
-			//	CDebug::LogError("[Turn] left");
-			//}
-		}
-	}
+	m_ctx.SetMovePressed(hasInput);
+	m_bRunning = hasInput;
 
 	m_pRoot->Update(m_ctx);
 }

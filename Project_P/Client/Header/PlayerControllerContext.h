@@ -17,11 +17,14 @@ public:
 	vector3 CameraForward() const;
 	_float CameraYawDeg() const;
 
+	void StartMoveLock(_float _sec);
+
 	void AddPosition(const vector3& delta);
 
 	void BeginTurnTo(_float _targetYawDeg);
 	_float DeltaAngleDeg(float _current, _float _target);
-	void TickTurn(_float _yawSmooth = 12.f, _float stopEpsDeg = 1.f);
+	void TickMove();
+	void TickTurn(_float _yawSmooth, _float stopEpsDeg = 1.f);
 
 	const CPlayer::PlayerStatus& PlayerStat();
 
@@ -66,10 +69,13 @@ private:
 
 	_bool  m_bMovePressed;
 
+	_float m_fMove01;
+
 	vector3 m_vMoveWorldDir;
 	_float m_fDesiredYaw;
 	_bool m_bBigTurnLatched;
 	_float m_fBigTurnDeg;
+	_float m_fMoveLockTimer;
 
 	_bool  m_bTurning;
 	_float m_targetYaw;

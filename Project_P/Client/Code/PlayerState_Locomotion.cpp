@@ -20,6 +20,8 @@ void CPlayerState_Locomotion::SetChildren(CPlayerState* _idle, CPlayerState* _mo
 
 void CPlayerState_Locomotion::Enter(CPlayerControllerContext& _ctx)
 {
+	__super::Enter(_ctx);
+
 	m_pChild = m_pIdle;
 	if (m_pChild) 
 		m_pChild->Enter(_ctx);
@@ -27,16 +29,21 @@ void CPlayerState_Locomotion::Enter(CPlayerControllerContext& _ctx)
 
 void CPlayerState_Locomotion::Update(CPlayerControllerContext& _ctx)
 {
+	__super::Update(_ctx);
+
     TransitionTo(_ctx, _ctx.IsMovePressed() ? m_pMove : m_pIdle);
 
     if (m_pChild) 
 		m_pChild->Update(_ctx);
 
-    _ctx.TickTurn(_ctx.PlayerStat().turnSpeed, 1.f);
+    _ctx.TickTurn(_ctx.PlayerStat().turnSpeed);
+	_ctx.TickMove();
 }
 
 void CPlayerState_Locomotion::Exit(CPlayerControllerContext& _ctx)
 {
+	__super::Exit(_ctx);
+
 	if (m_pChild)
 		m_pChild->Exit(_ctx);
 	m_pChild = nullptr;
