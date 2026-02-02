@@ -357,6 +357,13 @@ void CAnimatorControllerEditorBox::RenderInspector()
     ImGui::Text("Inspector");
     ImGui::Separator();
 
+    const float itemWidth = ImGui::GetContentRegionAvail().x * 0.66f;
+    struct ItemWidthScope
+    {
+        explicit ItemWidthScope(float width) { ImGui::PushItemWidth(width); }
+        ~ItemWidthScope() { ImGui::PopItemWidth(); }
+    } itemWidthScope(itemWidth);
+
     if (m_eSelectType == ESelectType::Transition &&
         m_iSelectedTransitionIndex >= 0 &&
         m_iSelectedTransitionIndex < (int)m_transitions.size())
