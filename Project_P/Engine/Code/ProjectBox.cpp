@@ -1,6 +1,26 @@
 #include "epch.h"
 #include "ProjectBox.h"
 
+static void ShowInExplorer(const fs::path& path, const _bool selectItem)
+{
+#ifdef _WIN32
+	if (selectItem && fs::is_regular_file(path))
+	{
+		wstring args = L"/select,\"" + path.wstring() + L"\"";
+		HINSTANCE result = ShellExecuteW(nullptr, L"open", L"explorer.exe", args.c_str(), nullptr, SW_SHOWNORMAL);
+		if ((INT_PTR)result <= 32)
+			CDebug::LogError(L"ShowInExplorer failed: " + path.wstring());
+		return;
+	}
+
+	HINSTANCE result = ShellExecuteW(nullptr, L"open", path.wstring().c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+	if ((INT_PTR)result <= 32)
+		CDebug::LogError(L"ShowInExplorer failed: " + path.wstring());
+#else
+	CDebug::LogError(L"ShowInExplorer is not implemented on this platform.");
+#endif
+}
+
 CProjectBox::CProjectBox()
 	: m_strCurrentSelectedFilePath("")
 	, m_strPendingDeletePath("")
@@ -142,6 +162,9 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
             ImGui::EndMenu();
         }
 
+        if (ImGui::MenuItem("Show in Explorer"))
+            ShowInExplorer(_dirPath, false);
+
         ImGui::EndPopup();
     }
 
@@ -185,6 +208,9 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                         CDebug::Log("Path: " + path);
                         CDebug::Log("Size: " + to_string(sizeKB) + "kb");
                     }
+
+                    if (ImGui::Selectable("Show in Explorer"))
+                        ShowInExplorer(entry.path(), true);
 
                     if (extension == "animatorcontroller")
                     {
