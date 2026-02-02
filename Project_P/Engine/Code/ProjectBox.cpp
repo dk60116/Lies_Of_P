@@ -195,11 +195,16 @@ void CProjectBox::RenderBinaryFoldersHierarchy()
 void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 {
     const string query = m_searchBuffer.data();
-    if (!DirectoryMatchesQuery(_dirPath, query))
+    const _bool hasQuery = !query.empty();
+    const _bool hasMatches = DirectoryMatchesQuery(_dirPath, query);
+    if (!hasMatches)
         return;
 
     string folderName = _dirPath.filename().string();
     string folderLabel = folderName + "##" + _dirPath.string();
+
+    if (hasQuery)
+        ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
     _bool opened = ImGui::TreeNode(folderLabel.c_str());
 
