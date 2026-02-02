@@ -5,14 +5,16 @@
 #include "PlayerState_Locomotion.h"
 #include "PlayerState_Idle.h"
 #include "PlayerState_Move.h"
+#include "PlayerState_Attack.h"
 
 CPlayerController::CPlayerController()
 	: m_pPlayer(nullptr)
 	, m_pPlayerCam(nullptr)
 	, m_bFSMStarted(false)
-	, m_bRunning(false)
 	, m_mStateList({})
 	, m_pRoot(nullptr)
+	, m_bRunning(false)
+	, m_bBattleMode(false)
 {
 }
 
@@ -37,16 +39,19 @@ HRESULT CPlayerController::Initialize()
 	m_mKeyHold.insert({ Back, false });
 	m_mKeyHold.insert({ Left, false });
 	m_mKeyHold.insert({ Right, false });
+	m_mKeyHold.insert({ Attack, false });
 
 	m_mStateList.insert({ PlayerState::Locomotion, new CPlayerState_Locomotion() });
 	m_mStateList.insert({ PlayerState::Idle, new CPlayerState_Idle() });
 	m_mStateList.insert({ PlayerState::Move, new CPlayerState_Move() });
+	m_mStateList.insert({ PlayerState::Attack, new CPlayerState_Attack() });
 
 	auto loco = static_cast<CPlayerState_Locomotion*>(Get_PlayerState(PlayerState::Locomotion));
 	loco->SetChildren
 	(
 		Get_PlayerState(PlayerState::Idle),
-		Get_PlayerState(PlayerState::Move)
+		Get_PlayerState(PlayerState::Move),
+		Get_PlayerState(PlayerState::Attack)
 	);
 
 	m_pRoot = Get_PlayerState(PlayerState::Locomotion);
@@ -121,13 +126,13 @@ void CPlayerController::Update()
 		m_ctx.SetDesiredYawDeg(desiredYaw);
 	}
 
+	if (m_mKeyDown[Attack])
+		m_ctx.BufferAttack();
+
 	m_ctx.SetMovePressed(hasInput);
 	m_bRunning = hasInput;
 
 	m_pRoot->Update(m_ctx);
-
-	if (m_mKeyDown[Attack])
-		m_pPlayer->Get_Animator()->SetTrigger(L"Attack");
 }
 
 void CPlayerController::LateUpdate()
@@ -169,6 +174,11 @@ void CPlayerController::Set_Camera(CPlayerCamera* _cam)
 const _bool CPlayerController::IsRunning() const
 {
 	return m_bRunning;
+}
+
+const _bool CPlayerController::IsBattle() const
+{
+	return m_bBattleMode;
 }
 
 void CPlayerController::Update_Key()

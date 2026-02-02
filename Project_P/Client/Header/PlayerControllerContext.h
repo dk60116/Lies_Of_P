@@ -50,13 +50,12 @@ public:
 	void TickMove();
 	void TickTurn(_float _yawSmooth, _float stopEpsDeg = 1.f);
 
+	CAnimator* Animator();
 	const CPlayer::PlayerStatus& PlayerStat();
 
 	void SetAnimSpeed(_float _v);
 
-	bool IsTurning() const;
-
-public:
+	_bool IsTurning() const;
 	void SetMoveWorldDir(const vector3& _dir);
 	void SetAnimTurn(const _float _value);
 	const vector3& GetMoveWorldDir() const;
@@ -64,6 +63,16 @@ public:
 	_float DeltaAngleDeg(_float _current, _float _target) const;
 	void SetDesiredYawDeg(_float _yaw);
 	_float GetDesiredYawDeg() const;
+
+public:
+	void BufferAttack();
+	_bool ConsumeAttackBuffer();
+	_bool HasAttackBuffered() const;
+
+	void SetAttackActive(_bool v);
+	_bool IsAttackActive() const;
+
+	void TickAttackBuffer();
 
 public:
 	static _float LengthXZ(const vector3& v)

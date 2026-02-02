@@ -8,6 +8,7 @@ CAnimator::CAnimator()
 	, m_mAnimationList({})
 	, m_pCrtAnimation(nullptr)
 	, m_pNextAnimation(nullptr)
+	, m_bApplyRootMotion(false)
 	, m_bIsPlaying(false)
 	, m_bBlending(false)
 	, m_bLoop(false)
@@ -40,6 +41,7 @@ CComponent* CAnimator::Clone() const
 
 	clone->m_pCrtAnimation = this->m_pCrtAnimation;
 	clone->m_pNextAnimation = this->m_pNextAnimation;
+	clone->m_bApplyRootMotion = this->m_bApplyRootMotion;
 	clone->m_bIsPlaying = this->m_bIsPlaying;
 	clone->m_fCurrentTime = this->m_fCurrentTime;
 	clone->m_fBlendTime = this->m_fBlendTime;
@@ -200,7 +202,7 @@ void CAnimator::Update()
 			if (!bone)
 				continue;
 
-			if (!m_pSkinnedRenderer->m_bApplyRootMotion && name == m_pSkinnedRenderer->Get_RootBoneName())
+			if (m_bApplyRootMotion && name == m_pSkinnedRenderer->Get_RootBoneName())
 				continue;
 
 			const auto startIt = m_mBlendStartPose.find(name);
@@ -236,7 +238,7 @@ void CAnimator::Update()
 
 		const wstring& name = m_pSkinnedRenderer->Get_BoneName(i);
 
-		if (!m_pSkinnedRenderer->m_bApplyRootMotion && name == m_pSkinnedRenderer->Get_RootBoneName())
+		if (!m_bApplyRootMotion && name == m_pSkinnedRenderer->Get_RootBoneName())
 			continue;
 
 		auto it = sampled.find(name);
@@ -267,6 +269,21 @@ const _bool CAnimator::IsLoop() const
 	return m_bLoop;
 }
 
+const _bool CAnimator::ApplyRootmotion() const
+{
+	return m_bApplyRootMotion;
+}
+
+void CAnimator::SetApplyRootmotion(const _bool _value)
+{
+	m_bApplyRootMotion = _value;
+}
+
+void CAnimator::Set_PlaybackSpeed(const _float _value)
+{
+	m_fPlaybackSpeed = _value;
+}
+
 void CAnimator::Add_Animation(const wstring& _animName, CAnimationClip* _anim)
 {
 	if (!_anim)
@@ -278,11 +295,6 @@ void CAnimator::Add_Animation(const wstring& _animName, CAnimationClip* _anim)
 	m_mAnimationList[_animName] = _anim;
 
 	_anim->AddRef();
-}
-
-void CAnimator::Set_PlaybackSpeed(const _float _value)
-{
-	m_fPlaybackSpeed = _value;
 }
 
 void CAnimator::Play()

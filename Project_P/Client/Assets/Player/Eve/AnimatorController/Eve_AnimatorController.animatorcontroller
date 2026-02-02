@@ -117,7 +117,7 @@ transitionOffset=0.000000
 
 [transition Run_TurnR->Run_Forward]
 blend=0.150000
-exitTime=0.744000
+exitTime=0.250000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -139,17 +139,17 @@ transitionOffset=0.000000
 [transition Run_TurnR->Run_End]
 blend=0.150000
 cond=speed<=0.000000
-exitTime=0.400000
-fixedDuration=false
-transitionDuration=0.150000
+exitTime=0.800000
+fixedDuration=true
+transitionDuration=0.500000
 transitionOffset=0.000000
 
 [transition Run_TurnL->Run_End]
 blend=0.150000
 cond=speed<=0.000000
-exitTime=0.400000
-fixedDuration=false
-transitionDuration=0.150000
+exitTime=0.800000
+fixedDuration=true
+transitionDuration=0.500000
 transitionOffset=0.000000
 
 [transition Attack_Light_01->Idle]

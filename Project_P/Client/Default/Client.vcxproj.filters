@@ -46,6 +46,9 @@
     <Filter Include="Scripts\Object\Player\FSM">
       <UniqueIdentifier>{dd9702fa-5a14-46b1-88dd-d0e3fd657784}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Scripts\Object\Player\FSM\PlayerState">
+      <UniqueIdentifier>{8427fb53-39a6-4782-a2ef-a82be4d2a2b1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Header\MainScene.h">
@@ -117,20 +120,23 @@
     <ClInclude Include="..\Header\PlayerController.h">
       <Filter>Scripts\Object\Player</Filter>
     </ClInclude>
-    <ClInclude Include="..\Header\PlayerState.h">
-      <Filter>Scripts\Object\Player\FSM</Filter>
-    </ClInclude>
     <ClInclude Include="..\Header\PlayerControllerContext.h">
       <Filter>Scripts\Object\Player\FSM</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerState_Idle.h">
-      <Filter>Scripts\Object\Player\FSM</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Header\PlayerState_Move.h">
-      <Filter>Scripts\Object\Player\FSM</Filter>
+      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerState_Locomotion.h">
-      <Filter>Scripts\Object\Player\FSM</Filter>
+      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\PlayerState_Move.h">
+      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\PlayerState_Attack.h">
+      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\PlayerState.h">
+      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -197,20 +203,23 @@
     <ClCompile Include="..\Code\PlayerController.cpp">
       <Filter>Scripts\Object\Player</Filter>
     </ClCompile>
-    <ClCompile Include="..\Code\PlayerState.cpp">
-      <Filter>Scripts\Object\Player\FSM</Filter>
-    </ClCompile>
     <ClCompile Include="..\Code\PlayerControllerContext.cpp">
       <Filter>Scripts\Object\Player\FSM</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerState_Idle.cpp">
-      <Filter>Scripts\Object\Player\FSM</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Code\PlayerState_Move.cpp">
-      <Filter>Scripts\Object\Player\FSM</Filter>
+      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerState_Locomotion.cpp">
-      <Filter>Scripts\Object\Player\FSM</Filter>
+      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerState_Move.cpp">
+      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerState_Attack.cpp">
+      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerState.cpp">
+      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

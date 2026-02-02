@@ -32,7 +32,7 @@ HRESULT CGameScene::Initialize()
 
 	CGameObject* lightObject = Add_GameObject(L"Directional Light");
 	m_pDirLight = lightObject->AddComponent<CLight>();
-	m_pDirLight->Set_Intensity(0.7f);
+	m_pDirLight->Set_Intensity(0.f);
 
 	m_pDirLight->Get_Transform()->Set_EulerAngles(40.f, -180.f, 0.f);
 

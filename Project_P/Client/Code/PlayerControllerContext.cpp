@@ -150,6 +150,8 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 	if (m_Cv_Move.m_turnDir == 0.f && absDelta >= stopEpsDeg)
 		m_Cv_Move.m_turnDir = (delta > 0.f) ? 1.f : -1.f;
 
+	m_pPlayer->Get_Animator()->ResetTrigger(L"turn");
+
 	if (!m_Cv_Move.m_bBigTurnLatched && absDelta >= m_Cv_Move.m_fBigTurnDeg && m_Cv_Move.m_bMovePressed)
 	{  
 		SetAnimTurn(m_Cv_Move.m_turnDir);
@@ -175,6 +177,11 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 		m_Cv_Move.m_bBigTurnLatched = false;
 		m_Cv_Move.m_turnDir = 0.f;
 	}
+}
+
+CAnimator* CPlayerControllerContext::Animator()
+{
+	return m_pPlayer->Get_Animator();
 }
 
 const CPlayer::PlayerStatus& CPlayerControllerContext::PlayerStat()
@@ -246,4 +253,51 @@ void CPlayerControllerContext::SetDesiredYawDeg(_float _yaw)
 _float CPlayerControllerContext::GetDesiredYawDeg() const
 {
 	return m_Cv_Move.m_fDesiredYaw;
+}
+
+void CPlayerControllerContext::BufferAttack()
+{
+	m_Cv_Battle.m_bAttackBuffered = true;
+	m_Cv_Battle.m_fAttackBufferT = 0.f;
+}
+
+_bool CPlayerControllerContext::ConsumeAttackBuffer()
+{
+	if (!m_Cv_Battle.m_bAttackBuffered)
+		return false;
+	m_Cv_Battle.m_bAttackBuffered = false;
+	m_Cv_Battle.m_fAttackBufferT = 0.f;
+	return true;
+}
+
+_bool CPlayerControllerContext::HasAttackBuffered() const
+{
+	return m_Cv_Battle.m_bAttackBuffered;
+}
+
+void CPlayerControllerContext::SetAttackActive(_bool v)
+{
+	m_Cv_Battle.m_bAttackActive = v;
+}
+
+_bool CPlayerControllerContext::IsAttackActive() const
+{
+	return m_Cv_Battle.m_bAttackActive;
+}
+
+void CPlayerControllerContext::TickAttackBuffer()
+{
+	if (!m_Cv_Battle.m_bAttackBuffered)
+		return;
+
+	_float dt = DELTA_TIME;
+     
+	dt = std::clamp(dt, 0.f, 0.05f);
+
+	m_Cv_Battle.m_fAttackBufferT += dt;
+	if (m_Cv_Battle.m_fAttackBufferT >= m_Cv_Battle.m_fAttackBufferLife)
+	{
+		m_Cv_Battle.m_bAttackBuffered = false;
+		m_Cv_Battle.m_fAttackBufferT = 0.f;
+	}
 }

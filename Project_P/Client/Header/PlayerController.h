@@ -37,24 +37,25 @@ public:
 
 public:
     const _bool IsRunning() const;
+    const _bool IsBattle() const;
 
 private:
     void Update_Key();
 
 private:
-    CPlayer* m_pPlayer = nullptr;
-    CPlayerCamera* m_pPlayerCam = nullptr;
+    CPlayer* m_pPlayer;
+    CPlayerCamera* m_pPlayerCam;
 
 private:
-    _bool m_bRunning = false;
+    _bool m_bFSMStarted;
+
+    CPlayerControllerContext m_ctx;
+    CPlayerState* m_pRoot;
+
+    unordered_map<PlayerState, CPlayerState*> m_mStateList;
     unordered_map<KeyMapping, _bool> m_mKeyHold, m_mKeyDown, m_mKeyUp;
 
 private:
-    bool m_bFSMStarted;
-
-    CPlayerControllerContext m_ctx;
-
-    unordered_map<PlayerState, CPlayerState*> m_mStateList;
-
-    CPlayerState* m_pRoot;
+    _bool m_bRunning;
+    _bool m_bBattleMode;
 };

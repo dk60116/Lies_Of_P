@@ -8,7 +8,6 @@ CSkinnedMeshRenderer::CSkinnedMeshRenderer()
 	, m_vBones({})
 	, m_pRootBone(nullptr)
 	, m_pBoneMatrixBuffer(nullptr)
-	, m_bApplyRootMotion(false)
 {
 	m_strName = L"Skinned Mesh Renderer";
 }
@@ -46,8 +45,6 @@ CComponent* CSkinnedMeshRenderer::Clone() const
 	clone->m_pBoneMatrixBuffer = this->m_pBoneMatrixBuffer;
 	if (clone->m_pBoneMatrixBuffer)
 		clone->m_pBoneMatrixBuffer->AddRef();
-
-	clone->m_bApplyRootMotion = this->m_bApplyRootMotion;
 
 	return clone;
 }
@@ -181,7 +178,6 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 		return;
 	}
 
-	// 1) World / View / Proj
 	vector3 cPos = _cam->Get_Transform()->Get_Position();
 	_float3 camPos = cPos.toFloat3();
 
@@ -189,14 +185,12 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 	_matrix matView = _cam->Get_ViewMatrix();
 	_matrix matProj = _cam->Get_ProjectionMatrix();
 
-	// 2) Bone Count Clamp
 	const _uint boneCount = min<_uint>(static_cast<_uint>(m_vBones.size()), MAX_BONE);
 
 	_matrix boneMatrices[MAX_BONE];
 	for (_int i = 0; i < MAX_BONE; ++i)
 		boneMatrices[i] = XMMatrixIdentity();
 
-	// 메시 월드 역행렬은 루프 밖에서 1회 계산
 	_matrix meshWorldInv = XMMatrixIdentity();
 	{
 		if (m_pGameObject && m_pGameObject->Get_Transform())
@@ -398,9 +392,4 @@ void CSkinnedMeshRenderer::Set_Bones(const vector<CTransform*>& _bones, CTransfo
 const wstring CSkinnedMeshRenderer::Get_RootBoneName() const
 {
 	return m_pRootBone->Get_GameObject()->Get_ObjectName();
-}
-
-void CSkinnedMeshRenderer::Set_ApplyRootMotion(const _bool _value)
-{
-	m_bApplyRootMotion = _value;
 }

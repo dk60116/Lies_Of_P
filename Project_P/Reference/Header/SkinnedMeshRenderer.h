@@ -52,7 +52,6 @@ private:
 	CSkinnedMeshBuffer* m_pMeshBuffer;
 	vector<CTransform*> m_vBones;
 	CTransform* m_pRootBone;
-	_bool m_bApplyRootMotion;
 
 	ID3D11Buffer* m_pBoneMatrixBuffer;
 };

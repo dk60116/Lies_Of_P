@@ -32,9 +32,12 @@ public:
 
 public:
     const _bool IsLoop() const;
+    const _bool ApplyRootmotion() const;
+
+    void SetApplyRootmotion(const _bool _value);
+    void Set_PlaybackSpeed(const _float _value);
 
     void Add_Animation(const wstring& _animName, CAnimationClip* _anim);
-    void Set_PlaybackSpeed(const _float _value);
 
     void Play();
     void Play(const wstring& _animName, const _float _blendDuration = 0.f);
@@ -64,6 +67,7 @@ private:
     class CSkinnedMeshRenderer* m_pSkinnedRenderer;
     unordered_map<wstring, CAnimationClip*> m_mAnimationList;
     CAnimationClip* m_pCrtAnimation, * m_pNextAnimation;
+    _bool m_bApplyRootMotion;
     _bool m_bIsPlaying, m_bBlending, m_bLoop;
     _float m_fCurrentTime, m_fBlendTime, m_fBlendDuration, m_fNextTime;
     _float m_fPlaybackSpeed;

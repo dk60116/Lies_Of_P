@@ -2,9 +2,9 @@
 #include "PlayerState_Locomotion.h"
 
 CPlayerState_Locomotion::CPlayerState_Locomotion()
-	: m_pIdle(nullptr)
+	: m_pChild(nullptr)
 	, m_pMove(nullptr)
-	, m_pChild(nullptr)
+	, m_pIdle(nullptr)
 {
 }
 
@@ -12,10 +12,11 @@ CPlayerState_Locomotion::~CPlayerState_Locomotion()
 {
 }
 
-void CPlayerState_Locomotion::SetChildren(CPlayerState* _idle, CPlayerState* _move)
+void CPlayerState_Locomotion::SetChildren(CPlayerState* _idle, CPlayerState* _move, CPlayerState* _attack)
 {
 	m_pIdle = _idle;
 	m_pMove = _move;
+	m_pAttack = _attack;
 }
 
 void CPlayerState_Locomotion::Enter(CPlayerControllerContext& _ctx)
@@ -31,12 +32,17 @@ void CPlayerState_Locomotion::Update(CPlayerControllerContext& _ctx)
 {
 	__super::Update(_ctx);
 
-    TransitionTo(_ctx, _ctx.IsMovePressed() ? m_pMove : m_pIdle);
+	_ctx.TickAttackBuffer();
 
-    if (m_pChild) 
+	if (_ctx.IsAttackActive() || _ctx.HasAttackBuffered())
+		TransitionTo(_ctx, m_pAttack);
+	else
+		TransitionTo(_ctx, _ctx.IsMovePressed() ? m_pMove : m_pIdle);
+
+	if (m_pChild)
 		m_pChild->Update(_ctx);
 
-    _ctx.TickTurn(_ctx.PlayerStat().turnSpeed);
+	_ctx.TickTurn(_ctx.PlayerStat().turnSpeed);
 	_ctx.TickMove();
 }
 
