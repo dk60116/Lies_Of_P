@@ -10,7 +10,7 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_bTurning(false)
 	, m_targetYaw(0.f)
 	, m_bBigTurnLatched(false)
-	, m_fBigTurnDeg(120.f)
+	, m_fBigTurnDeg(100.f)
 {
 	m_strName = L"PlayerControllerContext";
 }
@@ -70,8 +70,7 @@ _float CPlayerControllerContext::DeltaAngleDeg(float _current, _float _target)
 
 void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 {
-	if (!m_pPlayer) 
-		return;
+	if (!m_pPlayer) return;
 
 	if (!m_bTurning)
 	{
@@ -87,19 +86,18 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 	_float delta = DeltaAngleDeg(curYaw, m_targetYaw);
 	_float absDelta = fabsf(delta);
 
+	_float dirThisFrame = 0.f;
+	if (absDelta >= stopEpsDeg)
+		dirThisFrame = (delta > 0.f) ? 1.f : -1.f;
+
 	if (!m_bBigTurnLatched && absDelta >= m_fBigTurnDeg)
-	{
+	{  
+		SetAnimTurn(dirThisFrame);
 		m_pPlayer->Get_Animator()->SetTrigger(L"turn");
 		m_bBigTurnLatched = true;
 	}
 
-	if (absDelta <= 60.f)
-		m_bBigTurnLatched = false;
-
-	_float turnDir = 0.f;
-	if (absDelta >= stopEpsDeg)
-		turnDir = (delta > 0.f) ? 1.f : -1.f;
-	SetAnimTurn(turnDir);
+	// ½º¹«µù
 	_float t = 1.f - expf(-_yawSmooth * DELTA_TIME);
 	t = std::clamp(t, 0.f, 1.f);
 
@@ -111,6 +109,8 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 		tr->Set_EulerAngles(e.x, m_targetYaw, e.z);
 		m_bTurning = false;
 		SetAnimTurn(0.f);
+
+		m_bBigTurnLatched = false;
 	}
 }
 
