@@ -81,7 +81,8 @@ _float CPlayerControllerContext::DeltaAngleDeg(float _current, _float _target)
 
 void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 {
-	if (!m_pPlayer) return;
+	if (!m_pPlayer) 
+		return;
 
 	if (!m_bTurning)
 	{
@@ -108,7 +109,6 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 		m_bBigTurnLatched = true;
 	}
 
-	// 
 	_float t = 1.f - expf(-_yawSmooth * DELTA_TIME);
 	t = std::clamp(t, 0.f, 1.f);
 
@@ -124,6 +124,11 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 		m_bBigTurnLatched = false;
 		m_turnDir = 0.f;
 	}
+
+	float v = 0;
+
+	if (m_pPlayer->Get_Animator()->GetFloat(L"speed", v))
+		CDebug::LogError(v);
 }
 
 const CPlayer::PlayerStatus& CPlayerControllerContext::PlayerStat()

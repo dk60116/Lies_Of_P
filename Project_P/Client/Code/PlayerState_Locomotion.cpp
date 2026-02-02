@@ -32,7 +32,7 @@ void CPlayerState_Locomotion::Update(CPlayerControllerContext& _ctx)
     if (m_pChild) 
 		m_pChild->Update(_ctx);
 
-    _ctx.TickTurn(12.f, 1.f);
+    _ctx.TickTurn(_ctx.PlayerStat().turnSpeed, 1.f);
 }
 
 void CPlayerState_Locomotion::Exit(CPlayerControllerContext& _ctx)

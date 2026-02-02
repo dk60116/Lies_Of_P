@@ -11,25 +11,25 @@ trigger turn
 bool isDead=false
 float turnDir=0
 
-[state Run_Forward_Start]
-motion=Eve_Run_Forward_Start
-speedMul=1.000000
-pos=580,145
-
 [state Idle]
 motion=Eve_Idle
 speedMul=1.000000
 pos=176,148
 
-[state Run_End]
-motion=Eve_Run_Forward_End
+[state Run_Forward_Start]
+motion=Eve_Run_Forward_Start
 speedMul=1.000000
-pos=176,376
+pos=580,145
 
 [state Run_Forward]
 motion=Eve_Run_Forward_During
 speedMul=1.000000
 pos=582,372
+
+[state Run_End]
+motion=Eve_Run_Forward_End
+speedMul=1.000000
+pos=176,376
 
 [state Run_TurnL]
 motion=Eve_Run_TurnL
@@ -54,7 +54,7 @@ blend=0.150000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
-cond=turnDir>0.000000 && turn
+cond=turn && turnDir>0.000000
 
 [any]
 to=Run_TurnL
@@ -62,7 +62,7 @@ blend=0.150000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
-cond=turnDir<0.000000 && turn
+cond=turn && turnDir<0.000000
 
 [transition Idle->Run_Forward_Start]
 blend=0.000000
@@ -102,14 +102,14 @@ transitionOffset=0.000000
 
 [transition Run_TurnR->Run_Forward]
 blend=0.150000
-exitTime=0.750000
+exitTime=0.744000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
 [transition Run_TurnL->Run_Forward]
 blend=0.150000
-exitTime=0.750000
+exitTime=0.744000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -124,7 +124,7 @@ transitionOffset=0.000000
 [transition Run_TurnR->Run_End]
 blend=0.150000
 cond=speed<=0.000000
-exitTime=0.250000
+exitTime=0.400000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -132,7 +132,7 @@ transitionOffset=0.000000
 [transition Run_TurnL->Run_End]
 blend=0.150000
 cond=speed<=0.000000
-exitTime=0.250000
+exitTime=0.400000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

@@ -30,7 +30,7 @@ Eve_Idle : Player/Eve/Animations/Eve_Idle.fbx :  [Animation Clip] [Loop]
 Eve_Run_Forward_Start : Player/Eve/Animations/Eve_Run_Forward_Start.fbx :  [Animation Clip]
 Eve_Run_Forward_During : Player/Eve/Animations/Eve_Run_Forward_During.fbx :  [Animation Clip] [Loop]
 Eve_Run_Forward_End : Player/Eve/Animations/Eve_Run_Forward_End.fbx :  [Animation Clip]
-Eve_Run_TurnL : Player/Eve/Animations/Eve_Run_TurnR.fbx :  [Animation Clip]
+Eve_Run_TurnL : Player/Eve/Animations/Eve_Run_TurnL.fbx :  [Animation Clip]
 Eve_Run_TurnR : Player/Eve/Animations/Eve_Run_TurnR.fbx :  [Animation Clip]
 // Eve Animator Controller
 Eve_AnimatorController : Player/Eve/AnimatorController/Eve_AnimatorController.animatorcontroller : [Animator Controller]

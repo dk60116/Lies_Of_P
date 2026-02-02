@@ -125,6 +125,31 @@ void CPlayerController::Update()
 	m_ctx.SetMoveWorldDir(moveDir);
 	m_ctx.SetDesiredYawDeg(desiredYaw);
 
+	const _bool pressedOnce = m_mKeyDown[Forward] || m_mKeyDown[Back] || m_mKeyDown[Left] || m_mKeyDown[Right];
+
+	if (pressedOnce)
+	{
+		if (hasInput)
+		{
+			const _float curYaw = m_pPlayer->Get_Transform()->Get_EulerAngles().y;
+
+			const _float delta = m_ctx.DeltaAngleDeg(curYaw, desiredYaw);
+
+			//if (fabsf(delta) < 1.f)
+			//{
+			//	CDebug::LogError("[Turn] none");
+			//}
+			//else if (delta > 0.f)
+			//{
+			//	CDebug::LogError("[Turn] right");
+			//}
+			//else
+			//{
+			//	CDebug::LogError("[Turn] left");
+			//}
+		}
+	}
+
 	m_pRoot->Update(m_ctx);
 }
 
@@ -171,8 +196,23 @@ const _bool CPlayerController::IsRunning() const
 
 void CPlayerController::Update_Key()
 {
-	m_mKeyHold[Forward] = CInput::GetInstance().GetKey(W);
-	m_mKeyHold[Back] = CInput::GetInstance().GetKey(S);
-	m_mKeyHold[Left] = CInput::GetInstance().GetKey(A);
-	m_mKeyHold[Right] = CInput::GetInstance().GetKey(D);
+	KEY_CODE key_F = KEY_CODE::W;
+	KEY_CODE key_B = KEY_CODE::S;
+	KEY_CODE key_L = KEY_CODE::A;
+	KEY_CODE key_R = KEY_CODE::D;
+
+	auto UpdateOne = [&](KeyMapping k, KEY_CODE key)
+		{
+			const _bool prev = m_mKeyHold[k];
+			const _bool now = CInput::GetInstance().GetKey(key);
+
+			m_mKeyHold[k] = now;
+			m_mKeyDown[k] = (now && !prev);
+			m_mKeyUp[k] = (!now && prev);
+		};
+
+	UpdateOne(Forward, key_F);
+	UpdateOne(Back, key_B);
+	UpdateOne(Left, key_L);
+	UpdateOne(Right, key_R);
 }

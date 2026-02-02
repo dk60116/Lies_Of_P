@@ -47,7 +47,7 @@ private:
 
 private:
     _bool m_bRunning = false;
-    unordered_map<KeyMapping, _bool> m_mKeyHold;
+    unordered_map<KeyMapping, _bool> m_mKeyHold, m_mKeyDown, m_mKeyUp;
 
 private:
     bool m_bFSMStarted;
