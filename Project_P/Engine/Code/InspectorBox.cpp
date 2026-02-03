@@ -2,6 +2,9 @@
 #include "InspectorBox.h"
 #include "Resources.h"
 
+#include <iomanip>
+#include <sstream>
+
 CInspectorBox::CInspectorBox()
 	: m_fRXDrag(0.f)
     , m_fRYDrag(0.f)
@@ -112,6 +115,7 @@ void CInspectorBox::Render()
     else
         ImGui::Text("No object selected.");
 
+    RenderSelectedAssetInfo(editor.Get_SelectedAssetPath());
     RenderSelectedAssetPreview(editor.Get_SelectedAssetPath());
 
 	ImGui::End();
@@ -502,6 +506,116 @@ static _bool TryGetAssetsRelativePath(const fs::path& path, wstring& outRel)
     outRel = relative.wstring();
     outRel = CEngineString::Replace(outRel, L"\\", L"/");
     return true;
+}
+
+static string FormatFileSize(uintmax_t bytes)
+{
+    constexpr const char* units[] = { "B", "KB", "MB", "GB", "TB" };
+    double size = static_cast<double>(bytes);
+    int unitIndex = 0;
+
+    while (size >= 1024.0 && unitIndex < 4)
+    {
+        size /= 1024.0;
+        ++unitIndex;
+    }
+
+    std::ostringstream oss;
+    if (unitIndex == 0)
+        oss << static_cast<uintmax_t>(size) << " " << units[unitIndex];
+    else
+        oss << std::fixed << std::setprecision(2) << size << " " << units[unitIndex];
+
+    return oss.str();
+}
+
+void CInspectorBox::RenderSelectedAssetInfo(const fs::path& path)
+{
+    if (path.empty())
+        return;
+
+    error_code ec;
+    if (!fs::exists(path, ec))
+        return;
+
+    const string name = path.filename().string();
+    const string fullPath = path.string();
+    const uintmax_t sizeBytes = fs::is_regular_file(path, ec) ? fs::file_size(path, ec) : 0;
+    const string sizeText = (ec ? string("Unknown") : FormatFileSize(sizeBytes));
+
+    _bool hasResolution = false;
+    _uint width = 0;
+    _uint height = 0;
+
+    if (IsPreviewImageExtension(path))
+    {
+        wstring relPath;
+        if (TryGetAssetsRelativePath(path, relPath))
+        {
+            const wstring pathKey = path.wstring();
+            if (pathKey != m_previewAssetPath)
+            {
+                const wstring resourceName = L"InspectorPreview:" + pathKey;
+                CResources& resources = CResources::GetInstance();
+                auto found = resources.m_mGameResourceList.find(resourceName);
+                if (found != resources.m_mGameResourceList.end())
+                    m_pPreviewTexture = dynamic_cast<CTexture*>(found->second);
+                else
+                    m_pPreviewTexture = resources.CreateGameResource<CTexture>(resourceName, relPath);
+
+                m_previewAssetPath = pathKey;
+            }
+
+            if (m_pPreviewTexture && m_pPreviewTexture->Get_SRV())
+            {
+                const D3D11_TEXTURE2D_DESC& desc = m_pPreviewTexture->Get_TextureDesc();
+                if (desc.Width > 0 && desc.Height > 0)
+                {
+                    width = desc.Width;
+                    height = desc.Height;
+                    hasResolution = true;
+                }
+            }
+        }
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Asset");
+
+    if (ImGui::BeginTable("AssetInfoTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchProp))
+    {
+        ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 80.f);
+        ImGui::TableSetupColumn("Value");
+
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted("Name");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::TextUnformatted(name.c_str());
+
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted("Path");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::TextWrapped("%s", fullPath.c_str());
+
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted("Size");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::TextUnformatted(sizeText.c_str());
+
+        if (hasResolution)
+        {
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::TextUnformatted("Resolution");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%u x %u", width, height);
+        }
+
+        ImGui::EndTable();
+    }
 }
 
 void CInspectorBox::RenderSelectedAssetPreview(const fs::path& path)
