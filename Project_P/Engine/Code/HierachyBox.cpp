@@ -1,6 +1,35 @@
 #include "epch.h"
 #include "HierachyBox.h"
 
+#include <algorithm>
+#include <cctype>
+
+namespace
+{
+	string ToLowerCopy(string value)
+	{
+		transform(value.begin(), value.end(), value.begin(),
+			[](unsigned char c) { return static_cast<char>(tolower(c)); });
+		return value;
+	}
+
+	string TrimCopy(const string& value)
+	{
+		size_t start = 0;
+		while (start < value.size() && isspace(static_cast<unsigned char>(value[start])))
+			++start;
+
+		if (start == value.size())
+			return {};
+
+		size_t end = value.size() - 1;
+		while (end > start && isspace(static_cast<unsigned char>(value[end])))
+			--end;
+
+		return value.substr(start, end - start + 1);
+	}
+}
+
 CHierachyBox::CHierachyBox()
 {
 }
@@ -60,8 +89,14 @@ void CHierachyBox::Render()
 
 	if (currentScene)
 	{
+		ImGui::InputTextWithHint("##HierarchySearch", "Search...", m_searchBuffer.data(), m_searchBuffer.size());
+		ImGui::Separator();
+
+		const string filterText = TrimCopy(m_searchBuffer.data());
+		const string filterLower = ToLowerCopy(filterText);
+
 		for (auto& obj : currentScene->Get_RootObjects())
-			RenderObjectHierarchy(obj);
+			RenderObjectHierarchy(obj, filterLower);
 	}
 
 	ImGui::PopStyleVar();
@@ -73,18 +108,47 @@ void CHierachyBox::OnDestroy()
 {
 }
 
-void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj)
+bool CHierachyBox::ObjectMatchesFilter(CGameObject* _obj, const std::string& filterLower) const
+{
+	if (!_obj)
+		return false;
+
+	if (filterLower.empty())
+		return true;
+
+	const string name = ToLowerCopy(CEngineString::WStringToString(_obj->Get_ObjectName()));
+	if (name.find(filterLower) != string::npos)
+		return true;
+
+	for (auto* child : _obj->Get_Transform()->Get_ChldList())
+	{
+		if (ObjectMatchesFilter(child->Get_GameObject(), filterLower))
+			return true;
+	}
+
+	return false;
+}
+
+void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& filterLower)
 {
 	if (!_obj)
 		return;
 
 	CEditor& editor = CEditor::GetInstance();
+	const bool filterActive = !filterLower.empty();
 
 	string name = CEngineString::WStringToString(_obj->Get_ObjectName());
+	const bool matchesFilter = ObjectMatchesFilter(_obj, filterLower);
+
+	if (filterActive && !matchesFilter)
+		return;
 
 	_bool hasChildren = !_obj->Get_Transform()->Get_ChldList().empty();
 
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow;
+
+	if (filterActive && hasChildren)
+		ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
 	if (_obj == editor.Get_SelectedGameObject())
 		flags |= ImGuiTreeNodeFlags_Selected;
@@ -103,7 +167,7 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj)
 	if (hasChildren && nodeOpen)
 	{
 		for (auto* child : _obj->Get_Transform()->Get_ChldList())
-			RenderObjectHierarchy(child->Get_GameObject());
+			RenderObjectHierarchy(child->Get_GameObject(), filterLower);
 
 		ImGui::TreePop();
 	}
