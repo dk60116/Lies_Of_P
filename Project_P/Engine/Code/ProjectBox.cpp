@@ -69,9 +69,13 @@ CProjectBox::CProjectBox()
 	: m_strCurrentSelectedFilePath("")
 	, m_strPendingDeletePath("")
 	, m_bRequestDelete(false)
+	, m_bPendingDeleteIsDirectory(false)
 	, m_createTargetDir("")
 	, m_bRequestCreateAC(false)
 	, m_newACName({})
+	, m_createFolderTargetDir("")
+	, m_bRequestCreateFolder(false)
+	, m_newFolderName({})
 {
 }
 
@@ -147,23 +151,30 @@ void CProjectBox::Render()
 
 	if (ImGui::BeginPopupModal("ConfirmDeletePopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
-		ImGui::Text("Are you sure you want to delete this file?");
+		ImGui::Text(m_bPendingDeleteIsDirectory
+			? "Are you sure you want to delete this folder and its contents?"
+			: "Are you sure you want to delete this file?");
 		ImGui::Separator();
 
 		if (ImGui::Button("Yes", ImVec2(120, 0)))
 		{
             error_code ec;
-            fs::remove(m_strPendingDeletePath, ec);
+            if (m_bPendingDeleteIsDirectory)
+                fs::remove_all(m_strPendingDeletePath, ec);
+            else
+                fs::remove(m_strPendingDeletePath, ec);
             if (ec)
                 CDebug::LogError(L"Delete failed: " + m_strPendingDeletePath.wstring());
 
             m_strPendingDeletePath.clear();
+			m_bPendingDeleteIsDirectory = false;
             ImGui::CloseCurrentPopup();
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("No", ImVec2(120, 0)))
 		{
 			m_strPendingDeletePath.clear();
+			m_bPendingDeleteIsDirectory = false;
 			ImGui::CloseCurrentPopup();
 		}
 
@@ -171,6 +182,7 @@ void CProjectBox::Render()
 	}
 
     RenderCreateAnimatorControllerPopup();
+	RenderCreateFolderPopup();
 
 	ImGui::End();
 }
@@ -203,6 +215,7 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 
     string folderName = _dirPath.filename().string();
     string folderLabel = folderName + "##" + _dirPath.string();
+	const _bool isRoot = (_dirPath == fs::path(L"../Assets") || _dirPath == fs::path(L"BinaryAssets"));
 
     if (hasQuery)
         ImGui::SetNextItemOpen(true, ImGuiCond_Always);
@@ -213,6 +226,11 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
     {
         if (ImGui::BeginMenu("Create"))
         {
+			if (ImGui::MenuItem("Folder"))
+			{
+				m_createFolderTargetDir = _dirPath;
+				m_bRequestCreateFolder = true;
+			}
             if (ImGui::MenuItem("AnimatorController"))
             {
                 m_createTargetDir = _dirPath;
@@ -223,6 +241,19 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 
         if (ImGui::MenuItem("Show in Explorer"))
             ShowInExplorer(_dirPath, false);
+
+		if (isRoot)
+		{
+			ImGui::BeginDisabled();
+			ImGui::MenuItem("Delete");
+			ImGui::EndDisabled();
+		}
+		else if (ImGui::MenuItem("Delete"))
+		{
+			m_strPendingDeletePath = _dirPath.string();
+			m_bPendingDeleteIsDirectory = true;
+			m_bRequestDelete = true;
+		}
 
         ImGui::EndPopup();
     }
@@ -326,6 +357,7 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                     {
                         m_strPendingDeletePath = entry.path().string();
                         m_bRequestDelete = true;
+						m_bPendingDeleteIsDirectory = false;
                     }
 
                     ImGui::EndPopup();
@@ -388,6 +420,42 @@ static string SanitizeFileName(const string& name)
     return n;
 }
 
+void CProjectBox::RenderCreateFolderPopup()
+{
+	if (m_bRequestCreateFolder)
+	{
+		ImGui::OpenPopup("CreateFolderPopup");
+		m_bRequestCreateFolder = false;
+	}
+
+	if (ImGui::BeginPopupModal("CreateFolderPopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text("Create Folder");
+		ImGui::Separator();
+
+		ImGui::Text("Folder:");
+		ImGui::SameLine();
+		ImGui::Text("%s", m_createFolderTargetDir.string().c_str());
+
+		ImGui::InputText("Name", m_newFolderName.data(), m_newFolderName.size());
+		ImGui::Separator();
+
+		if (ImGui::Button("Create", ImVec2(120, 0)))
+		{
+			CreateFolder(m_createFolderTargetDir, m_newFolderName.data());
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(120, 0)))
+		{
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
+	}
+}
+
 void CProjectBox::CreateAnimatorControllerFile(const fs::path& dir, const string& name)
 {
     string safeName = SanitizeFileName(name);
@@ -419,6 +487,32 @@ void CProjectBox::CreateAnimatorControllerFile(const fs::path& dir, const string
     CEditor::GetInstance().Set_SelectedAssetPath(outPath);
 
     CDebug::Log("Created AnimatorController: " + outPath.string());
+}
+
+void CProjectBox::CreateFolder(const fs::path& dir, const string& name)
+{
+	string safeName = SanitizeFileName(name);
+
+	fs::path outPath = dir / safeName;
+
+	if (fs::exists(outPath))
+	{
+		CDebug::LogError(L"Folder create failed - already exists: " + outPath.wstring());
+		return;
+	}
+
+	error_code ec;
+	fs::create_directories(outPath, ec);
+	if (ec)
+	{
+		CDebug::LogError(L"Folder create failed: " + outPath.wstring());
+		return;
+	}
+
+	m_strCurrentSelectedFilePath = outPath.string();
+	CEditor::GetInstance().Set_SelectedAssetPath(outPath);
+
+	CDebug::Log("Created Folder: " + outPath.string());
 }
 
 string CProjectBox::MakeAnimatorControllerTemplateText(const string& controllerName)
