@@ -110,12 +110,12 @@ HWND CEditor::Get_EditorWindow()
 
 void CEditor::Editor_Update_Begin()
 {
-	// 1. ÇÁ·¹ÀÓ ½ÃÀÛ
+	// 1.  
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
-	// 2. Hierarchy/Inspector ¹Ú½º ·»´õ
+	// 2. Hierarchy/Inspector Ú½ 
 	for (TRAVERSAL_ITER(m_mBoxList, it))
 		(*it).second->Render();
 }
@@ -295,11 +295,18 @@ void CEditor::Set_SelectedGameObject(CGameObject* _target)
 		return;
 
 	m_pSelectedGameObject = _target;
+	m_selectedAssetPath.clear();
 
 	if (m_pSelectedGameObject)
 	{
 		m_pSelectedGameObject = _target;
 	}
+}
+
+void CEditor::Set_SelectedAssetPath(const fs::path& path)
+{
+	m_selectedAssetPath = path;
+	m_pSelectedGameObject = nullptr;
 }
 
 void CEditor::MoveTo_SelectedGameObject(CGameObject* _target)
@@ -346,14 +353,14 @@ void CEditor::OpenAsset(const fs::path& path)
 		return;
 	}
 
-	// Æú´õ¸é Å½»ö±â ¿­±â °°Àº °É ÇÏ°í ½Í´Ù¸é ¿©±â¼­ Ã³¸®
+	//  Å½    Ï° Í´Ù¸ â¼­ Ã³
 	if (fs::is_directory(path, ec) && !ec)
 	{
 		OpenAssetExternal(path);
 		return;
 	}
 
-	// È®ÀåÀÚ
+	// È®
 	string ext = path.extension().string();
 	ext = ToLowerCopy(ext);
 
@@ -363,21 +370,21 @@ void CEditor::OpenAsset(const fs::path& path)
 		return;
 	}
 
-	// ¿¹: ÅØ½ºÆ®/¼³Á¤ ÆÄÀÏÀº ±âº» ÅØ½ºÆ® ¿¡µðÅÍ ¹Ú½º·Î ¿­°í ½Í´Ù¸é
+	// : Ø½Æ®/  âº» Ø½Æ®  Ú½  Í´Ù¸
 	// if (ext == ".txt" || ext == ".ini" || ext == ".json" || ext == ".hlsl")
 	// {
 	//     OpenTextAsset(path); // TODO
 	//     return;
 	// }
 
-	// ¿¹: ÀÌ¹ÌÁö(ÅØ½ºÃ³) ÇÁ¸®ºä ¹Ú½º
+	// : Ì¹(Ø½Ã³)  Ú½
 	// if (ext == ".png" || ext == ".jpg" || ext == ".tga" || ext == ".dds")
 	// {
 	//     OpenTextureViewer(path); // TODO
 	//     return;
 	// }
 
-	// ¸ð¸£´Â È®ÀåÀÚ´Â ¿ÜºÎ ÇÁ·Î±×·¥À¸·Î
+	// ð¸£´ È®Ú´ Üº Î±×·
 	OpenAssetExternal(path);
 }
 
@@ -412,7 +419,7 @@ void CEditor::OpenAnimatorController(const fs::path& path)
 		return;
 	}
 
-	// 3) ¾øÀ¸¸é »ý¼ºÇØ¼­ ¸®½ºÆ®¿¡ µî·Ï
+	// 3)  Ø¼ Æ® 
 	box = CAnimatorControllerEditorBox::Create();
 	if (!box)
 	{
@@ -429,7 +436,7 @@ void CEditor::OpenAnimatorController(const fs::path& path)
 void CEditor::OpenAssetExternal(const fs::path& path)
 {
 #ifdef _WIN32
-	// Æú´õ/ÆÄÀÏ ¸ðµÎ ShellExecuteW °¡´É
+	// /  ShellExecuteW 
 	HINSTANCE r = ShellExecuteW(
 		nullptr,
 		L"open",
