@@ -94,6 +94,12 @@ void CHierachyBox::Render()
 
 		const string filterText = TrimCopy(m_searchBuffer.data());
 		const string filterLower = ToLowerCopy(filterText);
+		CGameObject* selectedObject = editor.Get_SelectedGameObject();
+		if (selectedObject != m_lastSelectedGameObject)
+		{
+			m_lastSelectedGameObject = selectedObject;
+			m_scrollToSelected = selectedObject != nullptr;
+		}
 
 		if (ImGui::BeginChild("HierarchyScrollRegion", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar))
 		{
@@ -133,6 +139,22 @@ bool CHierachyBox::ObjectMatchesFilter(CGameObject* _obj, const std::string& fil
 	return false;
 }
 
+bool CHierachyBox::IsAncestorOfSelected(CGameObject* _obj, CGameObject* selected) const
+{
+	if (!_obj || !selected)
+		return false;
+
+	CTransform* parent = selected->Get_Transform()->Get_Parent();
+	while (parent)
+	{
+		if (parent->Get_GameObject() == _obj)
+			return true;
+		parent = parent->Get_Parent();
+	}
+
+	return false;
+}
+
 void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& filterLower)
 {
 	if (!_obj)
@@ -140,6 +162,7 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& f
 
 	CEditor& editor = CEditor::GetInstance();
 	const bool filterActive = !filterLower.empty();
+	CGameObject* selectedObject = editor.Get_SelectedGameObject();
 
 	string name = CEngineString::WStringToString(_obj->Get_ObjectName());
 	const bool matchesFilter = ObjectMatchesFilter(_obj, filterLower);
@@ -154,6 +177,9 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& f
 	if (filterActive && hasChildren)
 		ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
+	if (!filterActive && selectedObject && (selectedObject == _obj || IsAncestorOfSelected(_obj, selectedObject)))
+		ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+
 	if (_obj == editor.Get_SelectedGameObject())
 		flags |= ImGuiTreeNodeFlags_Selected;
 
@@ -164,6 +190,12 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& f
 
 	if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
 		editor.Set_SelectedGameObject(_obj);
+
+	if (_obj == selectedObject && m_scrollToSelected)
+	{
+		ImGui::SetScrollHereY(0.35f);
+		m_scrollToSelected = false;
+	}
 
 	if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
 		CEditor::GetInstance().MoveTo_SelectedGameObject(_obj);
