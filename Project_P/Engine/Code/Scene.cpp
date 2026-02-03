@@ -296,7 +296,7 @@ void CScene::Update_Editor()
 				CGameObject* hitObject = hit.object;
 				if (!hitObject)
 					continue;
-				if (!hitObject->IsActive())
+				if (!hitObject->IsRecursiveActive())
 					continue;
 				if (CMeshRenderer* meshRenderer = hitObject->GetComponent<CMeshRenderer>())
 				{
