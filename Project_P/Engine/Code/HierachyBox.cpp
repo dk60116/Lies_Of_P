@@ -133,6 +133,23 @@ bool CHierachyBox::ObjectMatchesFilter(CGameObject* _obj, const std::string& fil
 	return false;
 }
 
+bool CHierachyBox::IsAncestorOfSelected(CGameObject* _obj, CGameObject* selected) const
+{
+	if (!_obj || !selected)
+		return false;
+
+	CTransform* current = selected->Get_Transform()->Get_Parent();
+	while (current)
+	{
+		if (current->Get_GameObject() == _obj)
+			return true;
+
+		current = current->Get_Parent();
+	}
+
+	return false;
+}
+
 void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& filterLower)
 {
 	if (!_obj)
@@ -153,6 +170,12 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& f
 
 	if (filterActive && hasChildren)
 		ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+
+	if (hasChildren && editor.Get_SelectedGameObject())
+	{
+		if (_obj == editor.Get_SelectedGameObject() || IsAncestorOfSelected(_obj, editor.Get_SelectedGameObject()))
+			ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+	}
 
 	if (_obj == editor.Get_SelectedGameObject())
 		flags |= ImGuiTreeNodeFlags_Selected;
