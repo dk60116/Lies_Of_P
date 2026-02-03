@@ -1,8 +1,6 @@
-// ShadowMask.hlsl
-
 cbuffer PerObject : register(b0)
 {
-    float4x4 world; // fullscreen quad용 (사용 안 해도 엔진 바인딩 호환)
+    float4x4 world;
 };
 
 cbuffer PerCamera : register(b1)
@@ -21,14 +19,14 @@ cbuffer InvViewProjCB : register(b5)
 
 cbuffer ShadowCB : register(b6)
 {
-    float4x4 gShadowViewProj; // World -> LightClip
-    float2 gShadowInvMapSize; // 1.0 / shadowMapSize
-    float gShadowBias; // e.g. 0.001 ~ 0.01
+    float4x4 gShadowViewProj;
+    float2 gShadowInvMapSize; 
+    float gShadowBias;
     float _padShadow0;
 };
 
-Texture2D<float> gSceneDepth : register(t0); // RTType::Depth SRV (R24_UNORM_X8)
-Texture2D<float> gShadowDepth : register(t1); // RTType::ShadowDepth SRV (R32_FLOAT 등)
+Texture2D<float> gSceneDepth : register(t0); 
+Texture2D<float> gShadowDepth : register(t1);
 SamplerState gSampler : register(s0);
 
 struct VSIn
@@ -75,9 +73,14 @@ float SampleShadowPCF(float2 uv, float receiverDepth)
 float4 PSMain(VSOut i) : SV_Target
 {
     float2 uv = i.uv;
-    uv.y = 1.0f - uv.y; // 이건 지금 엔진의 RT 샘플링 규칙에 맞춰 유지
+    uv.y = 1.0f - uv.y;
 
     float sceneDepth = gSceneDepth.SampleLevel(gSampler, uv, 0);
+    
+    float d = gShadowDepth.SampleLevel(gSampler, uv, 0);
+
+    float v = saturate((1.0f - d));
+    return float4(v, v, v, 1);
     
     if (sceneDepth >= 0.999999f)
         return float4(1, 1, 1, 1);
@@ -92,10 +95,9 @@ float4 PSMain(VSOut i) : SV_Target
     float4 posL = mul(float4(posW4.xyz, 1.0f), gShadowViewProj);
     float3 ndcL = posL.xyz / posL.w;
 
-    // ★ 여기: Y 뒤집기
     float2 uvL = float2(ndcL.x * 0.5f + 0.5f, -ndcL.y * 0.5f + 0.5f);
 
-    float depthL = ndcL.z; // (만약 -1..1이면: depthL = depthL*0.5+0.5)
+    float depthL = ndcL.z;
 
     if (uvL.x < 0 || uvL.x > 1 || uvL.y < 0 || uvL.y > 1 || depthL < 0 || depthL > 1)
         return float4(1, 1, 1, 1);

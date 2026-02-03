@@ -213,8 +213,11 @@ void CCamera::Update()
 
 	Find_MainLight();
 	
-	if (m_pMainLight)
-		m_pMainLight->BuildDirectionalShadow(this, CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().directionalLightShadowDist, m_sMainLightMatrix);
+	if (!m_bIsEditor)
+	{
+		if (m_pMainLight)
+			m_pMainLight->BuildDirectionalShadow(this, CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().directionalLightShadowDist, m_sMainLightMatrix);
+	}
 
 	Bind_ViewMatrix();
 	Bind_ProjectionMatrix();
@@ -877,9 +880,6 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 
 void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 {
-	if (m_bIsEditor)
-		CDebug::Log("Editor ShadowDepth mesh count = " + std::to_string((int)m_vMeshList.size()));
-
 	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 	ID3D11DeviceContext* ctx = CGraphicDevice::GetInstance().Get_Context();
 

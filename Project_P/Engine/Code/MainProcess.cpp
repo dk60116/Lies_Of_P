@@ -91,6 +91,10 @@ void CMainProcess::Update_MainApp()
         scene->Update();
         scene->LateUpdate();
 
+        graphicDev.Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
+        scene->Render_Game();
+        graphicDev.Present();
+
 #ifndef _CLIENT_BUILD
         graphicDev.Set_RenderTarget(CEditor::GetInstance().Get_EditorWindow());
 
@@ -101,10 +105,6 @@ void CMainProcess::Update_MainApp()
 
         graphicDev.Present();
 #endif
-
-        graphicDev.Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
-        scene->Render_Game();
-        graphicDev.Present();
     }
 
     if (CSceneManager::GetInstance().Is_Loading() && !CSceneLoader::GetInstance().Is_Loading())

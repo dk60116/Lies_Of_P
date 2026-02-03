@@ -20,6 +20,7 @@ public:
     
     void Clear_RenderTarget(const CRenderTarget::RTType type, const _bool _isEditor = false);
     void Clear_GBuffer(const _bool _isEditor = false);
+    void Clear_ShadowDepth();
 
 public:
     ID3D11Texture2D* GetTexture(const CRenderTarget::RTType type, const _bool _isEditor = false) const;

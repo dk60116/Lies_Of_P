@@ -970,7 +970,10 @@ CCamera* CScene::Add_Camera(CCamera* _camera)
 	if (!_camera)
 		return nullptr;
 
-	m_lCameraList.push_back(_camera);
+	if (!dynamic_cast<CEditorCamera*>(_camera))
+		m_lCameraList.push_back(_camera);
+	else
+		return nullptr;
 
 	return m_lCameraList.back();
 }
