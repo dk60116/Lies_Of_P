@@ -38,7 +38,9 @@ HRESULT CRenderer::Initialize()
 
 	if (!m_pOutlineMat)
 	{
-
+		m_pOutlineMat = CResources::GetInstance().CloneOnGame<CMaterial>(L"Outline (Material)");
+		if (m_pOutlineMat)
+			m_pOutlineMat->Set_BaseColor(ColorValue::yellow().f4Color());
 	}
 	
 	if (m_pOutlineMat)
@@ -51,8 +53,6 @@ HRESULT CRenderer::Initialize()
 		CDebug::LogError("Not found outline shader");
 		return E_FAIL;
 	}
-
-	//m_pOutlineMat->Set_Shader(outShader);
 
 	return S_OK;
 }

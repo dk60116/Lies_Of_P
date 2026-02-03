@@ -27,6 +27,7 @@ CScene::CScene()
 	, m_pSkyBoxDepthStencillState(nullptr)
 	, m_pMeshDepthStencilState(nullptr)
 	, m_pUIDepthStencilState(nullptr)
+	, m_pOutlineDepthStencilState(nullptr)
 	, m_pSkyBoxResterizerState(nullptr)
 	, m_pMeshResterizerState(nullptr)
 	, m_pUIResterizerState(nullptr)
@@ -136,6 +137,17 @@ HRESULT CScene::Initialize()
 			return E_FAIL;
 
 		if (FAILED(m_pDevice->CreateDepthStencilState(&depthDefaultDesc, &m_pMeshDepthStencilState)))
+			return E_FAIL;
+	}
+
+	{
+		D3D11_DEPTH_STENCIL_DESC outlineDepthDesc = {};
+		outlineDepthDesc.DepthEnable = TRUE;
+		outlineDepthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+		outlineDepthDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+		outlineDepthDesc.StencilEnable = FALSE;
+
+		if (FAILED(m_pDevice->CreateDepthStencilState(&outlineDepthDesc, &m_pOutlineDepthStencilState)))
 			return E_FAIL;
 	}
 
@@ -425,6 +437,30 @@ void CScene::Render_Editor()
 
 	m_pEditorCamera->RenderDisplay();
 
+	CGameObject* selected = CEditor::GetInstance().Get_SelectedGameObject();
+	if (selected && selected->IsRecursiveActive())
+	{
+		ID3D11DepthStencilState* prevDS = nullptr;
+		_uint prevStencilRef = 0;
+		ID3D11RasterizerState* prevRS = nullptr;
+
+		ctx->OMGetDepthStencilState(&prevDS, &prevStencilRef);
+		ctx->RSGetState(&prevRS);
+
+		if (m_pSkyBoxResterizerState)
+			ctx->RSSetState(m_pSkyBoxResterizerState);
+		if (m_pOutlineDepthStencilState)
+			ctx->OMSetDepthStencilState(m_pOutlineDepthStencilState, 0);
+
+		selected->Render_Outline(m_pEditorCamera);
+
+		ctx->OMSetDepthStencilState(prevDS, prevStencilRef);
+		ctx->RSSetState(prevRS);
+
+		Safe_Release(prevDS);
+		Safe_Release(prevRS);
+	}
+
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->Render_Gizmo();
 
@@ -536,6 +572,8 @@ void CScene::SceneRelease()
 {
 	Safe_Release(m_pSkyBox);
 	m_pSkyBox = nullptr;
+
+	Safe_Release(m_pOutlineDepthStencilState);
 
 	m_lCameraList.clear();
 	m_lLightList.clear();

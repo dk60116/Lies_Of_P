@@ -150,7 +150,7 @@ protected:
     _uint m_iUniqueObjectCount;
     unordered_map<_uint, CGameObject*> m_mObjectOfId;
 
-    ID3D11DepthStencilState* m_pSkyBoxDepthStencillState, * m_pMeshDepthStencilState,* m_pUIDepthStencilState;
+    ID3D11DepthStencilState* m_pSkyBoxDepthStencillState, * m_pMeshDepthStencilState,* m_pUIDepthStencilState, * m_pOutlineDepthStencilState;
     ID3D11RasterizerState* m_pSkyBoxResterizerState, * m_pMeshResterizerState, * m_pUIResterizerState;
     ID3D11BlendState* m_pBlendingState, * m_pNoneBlendingState;
 

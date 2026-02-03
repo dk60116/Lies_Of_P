@@ -56,7 +56,7 @@ HRESULT CSkinnedMeshRenderer::Initialize()
 
 	auto mat = m_pMaterial;
 
-	// º» Çà·Ä »ó¼ö ¹öÆÛ »ı¼º 
+	// ë³¸ í–‰ë ¬ ìƒìˆ˜ ë²„í¼ ìƒì„± 
 	D3D11_BUFFER_DESC desc = {};
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	desc.ByteWidth = sizeof(_matrix) * MAX_BONE;
@@ -204,20 +204,20 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 		if (!m_vBones[i])
 			continue;
 
-		// ÇöÀç º» ¿ùµå
+		// í˜„ì¬ ë³¸ ì›”ë“œ
 		_matrix boneWorld = m_vBones[i]->Get_WorldMatrix();
 
-		// ¿ª ¹ÙÀÎµå Æ÷Áî(Offset)
-		// (m_vBoneOffsetMatricesÀÇ ÀÎµ¦½º°¡ m_vBones¿Í µ¿ÀÏÇÑ ¼ø¼­¶ó´Â ÀüÁ¦)
+		// ì—­ ë°”ì¸ë“œ í¬ì¦ˆ(Offset)
+		// (m_vBoneOffsetMatricesì˜ ì¸ë±ìŠ¤ê°€ m_vBonesì™€ ë™ì¼í•œ ìˆœì„œë¼ëŠ” ì „ì œ)
 		_matrix invBindPose = XMMatrixIdentity();
 		invBindPose = XMLoadFloat4x4(&m_pMeshBuffer->m_vBoneOffsetMatrices[i]);
 
-		// boneÀ» mesh local·Î º¯È¯
-		// (boneWorld * meshWorldInv) : boneWorld ¡æ meshLocal
+		// boneì„ mesh localë¡œ ë³€í™˜
+		// (boneWorld * meshWorldInv) : boneWorld â†’ meshLocal
 		_matrix boneMeshLocal = boneWorld * meshWorldInv;
 
-		// ÃÖÁ¾ º» Çà·Ä
-		// (invBindPose * currentBone) ÇüÅÂ À¯Áö
+		// ìµœì¢… ë³¸ í–‰ë ¬
+		// (invBindPose * currentBone) í˜•íƒœ ìœ ì§€
 		boneMatrices[i] = XMMatrixTranspose(invBindPose * boneMeshLocal);
 	}
 
@@ -240,7 +240,7 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 		return;
 	}
 
-	// 6) Material bind (boneCount´Â Å¬·¥ÇÁÇÑ °ªÀ¸·Î)
+	// 6) Material bind (boneCountëŠ” í´ë¨í”„í•œ ê°’ìœ¼ë¡œ)
 	m_pMaterial->Bind_Matrix(matWorld);
 	m_pMaterial->Bind_Camera(camPos, matView, matProj, boneCount);
 
@@ -286,7 +286,7 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 	for (int i = 0; i < MAX_BONE; ++i)
 		boneMatrices[i] = XMMatrixIdentity();
 
-	// meshWorldInv 1È¸ °è»ê
+	// meshWorldInv 1íšŒ ê³„ì‚°
 	_matrix meshWorldInv = XMMatrixIdentity();
 	{
 		if (m_pGameObject && m_pGameObject->Get_Transform())
@@ -296,7 +296,7 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 		}
 	}
 
-	// 5) º» Çà·Ä °è»ê(±âÁ¸ Render_WithCamera¿Í µ¿ÀÏÇÑ ±ÔÄ¢ À¯Áö)
+	// 5) ë³¸ í–‰ë ¬ ê³„ì‚°(ê¸°ì¡´ Render_WithCameraì™€ ë™ì¼í•œ ê·œì¹™ ìœ ì§€)
 	for (_uint i = 0; i < boneCount; ++i)
 	{
 		if (!m_vBones[i])
@@ -307,11 +307,11 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 
 		_matrix boneMeshLocal = boneWorld * meshWorldInv;
 
-		// ±âÁ¸ ·»´õ¿¡¼­ transposeÇØ¼­ ¿Ã·ÈÀ¸¹Ç·Î, shadow¿¡¼­µµ µ¿ÀÏÇÏ°Ô À¯Áö
+		// ê¸°ì¡´ ë Œë”ì—ì„œ transposeí•´ì„œ ì˜¬ë ¸ìœ¼ë¯€ë¡œ, shadowì—ì„œë„ ë™ì¼í•˜ê²Œ ìœ ì§€
 		boneMatrices[i] = XMMatrixTranspose(invBindPose * boneMeshLocal);
 	}
 
-	// 6) Bone CB ¾÷·Îµå
+	// 6) Bone CB ì—…ë¡œë“œ
 	D3D11_MAPPED_SUBRESOURCE mappedRes = {};
 	HRESULT hr = m_pContext->Map(m_pBoneMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedRes);
 	if (FAILED(hr))
@@ -337,6 +337,81 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 
 void CSkinnedMeshRenderer::Render_Outline(CCamera* _cam)
 {
+	if (!_cam)
+	{
+		CDebug::LogError(L"SkinnedMeshRenderer::Render_Outline - No Camera assigned." + m_pGameObject->Get_ObjectNameID());
+		return;
+	}
+
+	if (!m_pMeshBuffer)
+	{
+		CDebug::LogError(L"SkinnedMeshRenderer::Render_Outline - No MeshBuffer: " + m_pGameObject->Get_ObjectNameID());
+		return;
+	}
+
+	if (!m_pBoneMatrixBuffer)
+	{
+		CDebug::LogError(L"SkinnedMeshRenderer::Render_Outline - BoneMatrixBuffer is null: " + m_pGameObject->Get_ObjectNameID());
+		return;
+	}
+
+	if (!m_pOutlineMat)
+	{
+		CDebug::LogError(L"SkinnedMeshRenderer::Render_Outline - No outline material assigned: " + m_pGameObject->Get_ObjectNameID());
+		return;
+	}
+
+	_matrix matWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
+
+	vector3 cPos = _cam->Get_Transform()->Get_Position();
+	_float3 camPos = cPos.toFloat3();
+	_matrix matView = _cam->Get_ViewMatrix();
+	_matrix matProj = _cam->Get_ProjectionMatrix();
+
+	const _uint boneCount = min<_uint>(static_cast<_uint>(m_vBones.size()), MAX_BONE);
+
+	_matrix boneMatrices[MAX_BONE];
+	for (int i = 0; i < MAX_BONE; ++i)
+		boneMatrices[i] = XMMatrixIdentity();
+
+	_matrix meshWorldInv = XMMatrixIdentity();
+	if (m_pGameObject && m_pGameObject->Get_Transform())
+	{
+		_matrix meshWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
+		meshWorldInv = XMMatrixInverse(nullptr, meshWorld);
+	}
+
+	for (_uint i = 0; i < boneCount; ++i)
+	{
+		if (!m_vBones[i])
+			continue;
+
+		_matrix boneWorld = m_vBones[i]->Get_WorldMatrix();
+		_matrix invBindPose = XMMatrixIdentity();
+		invBindPose = XMLoadFloat4x4(&m_pMeshBuffer->m_vBoneOffsetMatrices[i]);
+
+		_matrix boneMeshLocal = boneWorld * meshWorldInv;
+
+		boneMatrices[i] = XMMatrixTranspose(invBindPose * boneMeshLocal);
+	}
+
+	D3D11_MAPPED_SUBRESOURCE mappedRes = {};
+	HRESULT hrMap = m_pContext->Map(m_pBoneMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedRes);
+	if (FAILED(hrMap))
+	{
+		CDebug::LogError(L"SkinnedMeshRenderer::Render_Outline - Failed Map BoneMatrixBuffer: " + m_pGameObject->Get_ObjectNameID());
+		return;
+	}
+
+	memcpy(mappedRes.pData, boneMatrices, sizeof(_matrix) * MAX_BONE);
+	m_pContext->Unmap(m_pBoneMatrixBuffer, 0);
+
+	m_pOutlineMat->Bind_Matrix(matWorld);
+	m_pOutlineMat->Bind_Camera(camPos, matView, matProj, boneCount);
+
+	m_pContext->VSSetConstantBuffers(3, 1, &m_pBoneMatrixBuffer);
+
+	m_pMeshBuffer->Render();
 }
 
 CMeshBuffer* CSkinnedMeshRenderer::Get_MeshBuffer()

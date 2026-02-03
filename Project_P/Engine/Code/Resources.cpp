@@ -1731,8 +1731,11 @@ void CResources::Ready_GameResources()
 	CMaterial::MATERIALDESC ulcMatDesc = { ulcShader, false };
 	LoadResourceComplete_Game<CMaterial>(L"UnlitMaterial (Material)", L"", &ulcMatDesc);
 
-	CShader::SHADERDESC outlineShaderDesc = { L"../EngineResources/Shader/Outline.hlsl", L"",  VertexSkinnedOutlineBuffer::numElements, VertexSkinnedOutlineBuffer::elementDesc };
+	CShader::SHADERDESC outlineShaderDesc = { L"../EngineResources/Shader/Outline.hlsl", L"",  VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
 	LoadResourceComplete_Game<CShader>(L"Outline (Shader)", L"", &outlineShaderDesc);
+	CShader* outlineShader = LoadOnGame<CShader>(L"Outline (Shader)");
+	CMaterial::MATERIALDESC outlineMatDesc = { outlineShader, false };
+	LoadResourceComplete_Game<CMaterial>(L"Outline (Material)", L"", &outlineMatDesc);
 
 	CShader::SHADERDESC dUIShaderDesc = { L"../EngineResources/Shader/DefaultUI.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
 	LoadResourceComplete_Game<CShader>(L"DefaultUI (Shader)", L"", &dUIShaderDesc);

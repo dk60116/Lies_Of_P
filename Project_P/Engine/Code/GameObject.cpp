@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "GameObject.h"
+#include "Renderer.h"
 
 CGameObject::CGameObject(const wstring _name, ID3D11Device* _pDevice, ID3D11DeviceContext* _pContext)
 	: m_iUniqueID(999999)
@@ -193,6 +194,19 @@ void CGameObject::Render_Editor()
 	}
 }
 
+void CGameObject::Render_Outline(CCamera* _camera)
+{
+	for (TRAVERSAL_ITER(m_lComponentList, it))
+	{
+		if (!(*it)->Get_Enable())
+			continue;
+
+		CRenderer* renderer = dynamic_cast<CRenderer*>(*it);
+		if (renderer)
+			renderer->Render_Outline(_camera);
+	}
+}
+
 void CGameObject::OnPostRender_Editor()
 {
 	for (TRAVERSAL_ITER(m_lComponentList, it))
@@ -356,7 +370,7 @@ vector<CMeshRenderer*> CGameObject::CreateMeshHierachy(vector<MeshBundle> _meshI
 		// Hierarchy
 		child->Get_Transform()->SetParent(parentTransform);
 
-		// Local transform defaults (¿øÇÏ¸é ¿©±â¼­ position/rotationµµ ÃÊ±âÈ­ °¡´É)
+		// Local transform defaults (ì›í•˜ë©´ ì—¬ê¸°ì„œ position/rotationë„ ì´ˆê¸°í™” ê°€ëŠ¥)
 		child->Get_Transform()->Set_LocalScale(_scaleFactor);
 
 		// Renderer

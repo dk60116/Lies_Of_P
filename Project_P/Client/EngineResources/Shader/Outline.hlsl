@@ -1,7 +1,9 @@
-// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ »ó¼ö ¹öÆÛ
-cbuffer PerObject : register(b0)
+    uint useTexture;
+    uint useNormalMap;
+    uint useORMMap;
 {
-    float4x4 world;
+    float lineWidth = 0.03f;
+    skinnedPos.xyz += skinnedNormal * lineWidth;
 };
 
 cbuffer PerCamera : register(b1)
@@ -14,7 +16,7 @@ cbuffer PerMaterial : register(b2)
 {
     float4 baseColor;
     uint boneCount;
-    float2 padding; // 16¹ÙÀÌÆ® Á¤·Ä
+    float2 padding; // 16ë°”ì´íŠ¸ ì •ë ¬
 };
 
 cbuffer PerBones : register(b3)
@@ -33,14 +35,14 @@ struct VSIn
     float lineWidth : TEXCOORD1;
 };
 
-// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ ¹öÅØ½º Ãâ·Â
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ ë²„í…ìŠ¤ ì¶œë ¥
 struct VSOut
 {
     float4 posH : SV_POSITION;
     float2 uv : TEXCOORD0;
 };
 
-// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ ¹öÅØ½º ¼ÎÀÌ´õ
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ ë²„í…ìŠ¤ ì…°ì´ë”
 VSOut VSMain(VSIn v)
 {
     VSOut o;
@@ -81,7 +83,7 @@ VSOut VSMain(VSIn v)
 Texture2D myTexture : register(t0);
 SamplerState mySampler : register(s0);
 
-// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ ÇÈ¼¿ ¼ÎÀÌ´õ
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ í”½ì…€ ì…°ì´ë”
 float4 PSMain(VSOut input) : SV_TARGET
 {
     //float4 Color = 0;

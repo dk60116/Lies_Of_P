@@ -90,13 +90,13 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 		return;
 	}
 
-	// MeshBuffer °¡Á®¿À±â
+	// MeshBuffer ê°€ì ¸ì˜¤ê¸°
 	CMeshBuffer* pBuffer = m_pMeshFilter->Get_MeshBuffer();
 
 	if (!pBuffer)
 		return;
 
-	// World / View / Projection Çà·Ä °è»ê
+	// World / View / Projection í–‰ë ¬ ê³„ì‚°
 
 	vector3 cPos = _cam->Get_Transform()->Get_Position();
 	_float3 camPos = cPos.toFloat3();
@@ -104,7 +104,7 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 	_matrix matView = _cam->Get_ViewMatrix();
 	_matrix matProj = _cam->Get_ProjectionMatrix();
 
-	// ¼ÎÀÌ´õ + ÅØ½ºÃ³ + »ó¼ö ¹öÆÛ ¹ÙÀÎµù
+	// ì…°ì´ë” + í…ìŠ¤ì²˜ + ìƒìˆ˜ ë²„í¼ ë°”ì¸ë”©
 	m_pMaterial->Bind_Matrix(matWorld);
 	m_pMaterial->Bind_Camera(camPos, matView, matProj, 0);
 
@@ -136,7 +136,40 @@ void CMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const CLight:
 	_matrix matView = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(&_shadowMatrix.view));
 	_matrix matProj = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(&_shadowMatrix.proj));
 
-	// Shadow depth´Â camPos ÀÇ¹Ì ¾øÀ¸¹Ç·Î ´õ¹Ì
+	if (!_cam)
+	{
+		CDebug::LogError(L"MeshRenderer::Render_Outline - No Camera assigned." + m_pGameObject->Get_ObjectNameID());
+		return;
+	}
+
+	if (!m_pMeshFilter)
+	{
+		CDebug::LogError(L"MeshRenderer::Render_Outline - No MeshFilter assigned:" + m_pGameObject->Get_ObjectNameID());
+		return;
+	}
+
+	if (!m_pOutlineMat)
+	{
+		CDebug::LogError(L"MeshRenderer::Render_Outline - No outline material assigned: " + m_pGameObject->Get_ObjectNameID());
+		return;
+	}
+
+	CMeshBuffer* pBuffer = m_pMeshFilter->Get_MeshBuffer();
+
+	if (!pBuffer)
+		return;
+
+	vector3 cPos = _cam->Get_Transform()->Get_Position();
+	_float3 camPos = cPos.toFloat3();
+	_matrix matWorld = Get_Transform()->Get_WorldMatrix();
+	_matrix matView = _cam->Get_ViewMatrix();
+	_matrix matProj = _cam->Get_ProjectionMatrix();
+
+	m_pOutlineMat->Bind_Matrix(matWorld);
+	m_pOutlineMat->Bind_Camera(camPos, matView, matProj, 0);
+
+	pBuffer->Render();
+	// Shadow depthëŠ” camPos ì˜ë¯¸ ì—†ìœ¼ë¯€ë¡œ ë”ë¯¸
 	_float3 dummyPos = { 0.f, 0.f, 0.f };
 
 	_shadowDepthMat->Bind_Matrix(matWorld);

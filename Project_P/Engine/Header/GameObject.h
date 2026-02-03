@@ -56,6 +56,7 @@ public:
 	virtual void OnPreRender_Editor();
 	virtual void Render_Editor();
 	virtual void OnPostRender_Editor();
+	virtual void Render_Outline(class CCamera* _camera);
 
 	virtual void OnPreCull();
 	virtual void OnPreRender();
