@@ -354,11 +354,11 @@ void CScene::LateUpdate()
 void CScene::Render_Editor()
 {
 #ifndef _CLIENT_BUILD
-	// 0) ¿¡µðÅÍ Ä«¸Þ¶ó ¾øÀ¸¸é Á¾·á
+	// 0) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	if (!m_pEditorCamera)
 		return;
 
-	// 1) ¶óÀÌÆ® µ¥ÀÌÅÍ °»½Å (Render_Game°ú µ¿ÀÏ)
+	// 1) ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (Render_Gameï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
 	m_vLightData.clear();
 	for (TRAVERSAL_ITER(m_lLightList, it))
 	{
@@ -371,20 +371,30 @@ void CScene::Render_Editor()
 	ID3D11DeviceContext* ctx = m_pContext;
 	if (!ctx) return;
 
-	// 2) ¿¡µðÅÍ ºäÆ÷Æ®
+	// 2) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®
 	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_EditorViewport();
 	if (!vp)
 		vp = CGraphicDevice::GetInstance().Get_CurrentViewport();
 
+	D3D11_VIEWPORT editorRTVP = {};
+	const D3D11_VIEWPORT* rtVP = vp;
+	if (vp)
+	{
+		editorRTVP = *vp;
+		editorRTVP.TopLeftX = 0.f;
+		editorRTVP.TopLeftY = 0.f;
+		rtVP = &editorRTVP;
+	}
+
 	auto& trm = CRenderTargetManager::GetInstance();
 
 	// ------------------------------------------------------------
-	// A) Deferred: GBuffer ¹ÙÀÎµå/Å¬¸®¾î
+	// A) Deferred: GBuffer ï¿½ï¿½ï¿½Îµï¿½/Å¬ï¿½ï¿½ï¿½ï¿½
 	// ------------------------------------------------------------
-	trm.Bind_GBuffer(ctx, vp, /*isEditor=*/true);   // ¡Ú ÀÌ·± ÇüÅÂ·Î ºÐ±â ÇÊ¿ä
+	trm.Bind_GBuffer(ctx, rtVP, /*isEditor=*/true);   // ï¿½ï¿½ ï¿½Ì·ï¿½ ï¿½ï¿½ï¿½Â·ï¿½ ï¿½Ð±ï¿½ ï¿½Ê¿ï¿½
 	trm.Clear_GBuffer(/*isEditor=*/true);
 
-	// Skybox (¿øÇÏ¸é)
+	// Skybox (ï¿½ï¿½ï¿½Ï¸ï¿½)
 	if (m_pSkyBox)
 	{
 		ctx->RSSetState(m_pSkyBoxResterizerState);
@@ -392,16 +402,16 @@ void CScene::Render_Editor()
 		RenderSkyBox(m_pEditorCamera);
 	}
 
-	// Mesh ±âº» »óÅÂ
+	// Mesh ï¿½âº» ï¿½ï¿½ï¿½ï¿½
 	ctx->RSSetState(m_pMeshResterizerState);
 	ctx->OMSetDepthStencilState(m_pMeshDepthStencilState, 0);
 
 	// ------------------------------------------------------------
-	// B) ¿©±â¼­ "¿ÀºêÁ§Æ®µéÀÌ ·»´õ Á¦Ãâ"À» ÇØÁà¾ß ÇÔ
+	// B) ï¿½ï¿½ï¿½â¼­ "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½"ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
 	// ------------------------------------------------------------
-	// ±âÁ¸ Render_Editor()¿¡¼­ Áï½Ã ±×¸®´ø °É,
-	//   - °¢ Renderer°¡ m_pEditorCamera->Add_RenderTarget_Mesh(this) ½ÄÀ¸·Î Á¦Ãâ
-	// ·Î ¹Ù²ã¾ß editorCam->RenderMesh()°¡ ÀÇ¹Ì°¡ »ý±è.
+	// ï¿½ï¿½ï¿½ï¿½ Render_Editor()ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½×¸ï¿½ï¿½ï¿½ ï¿½ï¿½,
+	//   - ï¿½ï¿½ Rendererï¿½ï¿½ m_pEditorCamera->Add_RenderTarget_Mesh(this) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	// ï¿½ï¿½ ï¿½Ù²ï¿½ï¿½ editorCam->RenderMesh()ï¿½ï¿½ ï¿½Ç¹Ì°ï¿½ ï¿½ï¿½ï¿½ï¿½.
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
@@ -411,41 +421,41 @@ void CScene::Render_Editor()
 		(*it)->OnPreCull_Editor();
 		(*it)->OnPreRender_Editor();
 
-		// ¡Ú Áß¿ä: ¿©±â¼­ Áï½Ã Draw ÇÏÁö ¸»°í "Á¦Ãâ"¸¸ ÇÏµµ·Ï ±¸Á¶¸¦ ¸ÂÃß´Â °Ô ÁÁÀ½
-		(*it)->Render_Editor(); // ³»ºÎ¿¡¼­ RendererµéÀÌ editorCam¿¡ SubmitÇÏµµ·Ï
+		// ï¿½ï¿½ ï¿½ß¿ï¿½: ï¿½ï¿½ï¿½â¼­ ï¿½ï¿½ï¿½ Draw ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ "ï¿½ï¿½ï¿½ï¿½"ï¿½ï¿½ ï¿½Ïµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ß´ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+		(*it)->Render_Editor(); // ï¿½ï¿½ï¿½Î¿ï¿½ï¿½ï¿½ Rendererï¿½ï¿½ï¿½ï¿½ editorCamï¿½ï¿½ Submitï¿½Ïµï¿½ï¿½ï¿½
 	}
 
-	// ½ÇÁ¦ µå·Î¿ì´Â Ä«¸Þ¶ó°¡ ÇÑ´Ù
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Î¿ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½ ï¿½Ñ´ï¿½
 	m_pEditorCamera->RenderMesh();
 
 	// ------------------------------------------------------------
 	// C) Shadow / ObjectID / Lighting / Combine
 	// ------------------------------------------------------------
-	m_pEditorCamera->RenderShadowDepthPass(vp);
-	m_pEditorCamera->RenderObjectIDPass(vp);
-	m_pEditorCamera->RenderLightingPass_ToDiffuse(vp);
-	m_pEditorCamera->RenderLightingPass_ToSpecular(vp);
-	m_pEditorCamera->RenderShadowMaskPass(vp);
-	m_pEditorCamera->RenderCombine(vp);
+	m_pEditorCamera->RenderShadowDepthPass(rtVP);
+	m_pEditorCamera->RenderObjectIDPass(rtVP);
+	m_pEditorCamera->RenderLightingPass_ToDiffuse(rtVP);
+	m_pEditorCamera->RenderLightingPass_ToSpecular(rtVP);
+	m_pEditorCamera->RenderShadowMaskPass(rtVP);
+	m_pEditorCamera->RenderCombine(rtVP);
 
 	// ------------------------------------------------------------
-	// D) BackBuffer·Î º¹±Í ÈÄ Present + Gizmo/UI
+	// D) BackBufferï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Present + Gizmo/UI
 	// ------------------------------------------------------------
-	// ¡Ú ¿¡µðÅÍ Ã¢ Å¸°ÙÀ¸·Î º¹±Í (³Ê´Â GameWindow¸¦ ¾²°í ÀÖÀ¸´Ï EditorWindowµµ ÀÖ¾î¾ß ÇÔ)
+	// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã¢ Å¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½Ê´ï¿½ GameWindowï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ EditorWindowï¿½ï¿½ ï¿½Ö¾ï¿½ï¿½ ï¿½ï¿½)
 	CGraphicDevice::GetInstance().Set_RenderTarget(CEditor::GetInstance().Get_EditorWindow());
 
 	ColorValue back = ColorValue::gray(0.3f);
 	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&back);
 	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
-	// Combine ¡æ BackBuffer
+	// Combine ï¿½ï¿½ BackBuffer
 	m_pEditorCamera->RenderDisplay();
 
-	// Gizmo´Â º¸Åë ¿©±â¼­ (3D À§¿¡)
+	// Gizmoï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½â¼­ (3D ï¿½ï¿½ï¿½ï¿½)
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->Render_Gizmo();
 
-	// RT Debug thumbnail °°Àº °Íµµ ÇÊ¿äÇÏ¸é
+	// RT Debug thumbnail ï¿½ï¿½ï¿½ï¿½ ï¿½Íµï¿½ ï¿½Ê¿ï¿½ï¿½Ï¸ï¿½
 	m_pEditorCamera->RenderRTDebugDisplay();
 
 	// PostRender
@@ -527,19 +537,19 @@ void CScene::Render_Game()
 		}
 	}
 
-	// BackBuffer º¹±Í + UI/µð¹ö±×
+	// BackBuffer ï¿½ï¿½ï¿½ï¿½ + UI/ï¿½ï¿½ï¿½ï¿½ï¿½
 	CGraphicDevice::GetInstance().Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
 	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&backgroudColor);
 	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
-	// Combine Present¸¦ ¸ÕÀú ¹é¹öÆÛ¿¡ Ãâ·Â
+	// Combine Presentï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Û¿ï¿½ ï¿½ï¿½ï¿½
 	for (TRAVERSAL_ITER(m_lCameraList, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderDisplay();
 	}
 
-	// ±× ´ÙÀ½ UI
+	// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ UI
 	m_pContext->RSSetState(m_pUIResterizerState);
 	m_pContext->OMSetDepthStencilState(m_pUIDepthStencilState, 0);
 
@@ -547,7 +557,7 @@ void CScene::Render_Game()
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderUI();
 
-	// ÀÌÈÄ µð¹ö±×(½æ³×ÀÏ)
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½)
 	for (TRAVERSAL_ITER(m_lCameraList, it))
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderRTDebugDisplay();
