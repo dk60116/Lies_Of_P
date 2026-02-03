@@ -15,6 +15,7 @@ CEditor::CEditor()
 	, m_pSelectedGameObject(nullptr)
 	, m_pMoveTargetGameObject(nullptr)
 	, m_vCameraPos({})
+	, m_bGizmoInputBlocked(false)
 	, m_vCameraQuat({})
 	, m_bDoubleClicked(false)
 	, m_bIsMovingCamera(false)
@@ -122,6 +123,9 @@ void CEditor::Editor_Update_Begin()
 
 void CEditor::Editor_Update_During()
 {
+	if (CInput::GetInstance().GetMouseButtonUp_Editor(0))
+		m_bGizmoInputBlocked = false;
+
 	ChangeControleTool();
 
 	if (m_bIsMovingCamera)
@@ -339,6 +343,16 @@ void CEditor::MoveTo_SelectedGameObject(CGameObject* _target)
 CGameObject* CEditor::Get_SelectedGameObject() const
 {
 	return m_pSelectedGameObject;
+}
+
+void CEditor::Set_GizmoInputBlocked(const _bool _blocked)
+{
+	m_bGizmoInputBlocked = _blocked;
+}
+
+_bool CEditor::Is_GizmoInputBlocked() const
+{
+	return m_bGizmoInputBlocked;
 }
 
 void CEditor::OpenAsset(const fs::path& path)

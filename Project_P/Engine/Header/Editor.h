@@ -48,6 +48,8 @@ public:
 	void Set_SelectedGameObject(class CGameObject* _target);
 	void MoveTo_SelectedGameObject(class CGameObject* _target);
 	CGameObject* Get_SelectedGameObject() const;
+	void Set_GizmoInputBlocked(const _bool _blocked);
+	_bool Is_GizmoInputBlocked() const;
 
 public:
 	void OpenAsset(const fs::path& path);
@@ -98,6 +100,7 @@ private:
 	CGameObject* m_pSelectedGameObject;
 	CGameObject* m_pMoveTargetGameObject;
 	fs::path m_selectedAssetPath;
+	_bool m_bGizmoInputBlocked;
 
 private:
 	HICON m_hEditorWindowIcon_Default, m_hEditorWindoIcon_Small;

@@ -89,7 +89,10 @@ void CRectTransform::Update()
 
 void CRectTransform::Render_Gizmo()
 {
-    if (CEditor::GetInstance().Get_SelectedGameObject() != m_pGameObject)
+    CEditor& editor = CEditor::GetInstance();
+    if (editor.Get_SelectedGameObject() != m_pGameObject)
+        return;
+    if (editor.Is_GizmoInputBlocked())
         return;
 
     CCanvas* canvas = m_pUI->Get_Canvas();
@@ -185,23 +188,23 @@ void CRectTransform::Render_Gizmo()
 
         if (m_pParent)
         {
-            // ºÎ¸ğÀÇ ¿ùµå Çà·ÄÀÇ ¿ªÇà·Ä
+            // ë¶€ëª¨ì˜ ì›”ë“œ í–‰ë ¬ì˜ ì—­í–‰ë ¬
             _matrix parentInv = XMMatrixInverse(nullptr, m_pParent->Get_WorldMatrix());
-            // ·ÎÄÃ Çà·Ä ±¸ÇÏ±â
+            // ë¡œì»¬ í–‰ë ¬ êµ¬í•˜ê¸°
             _matrix localMatrix = newWorldMatrix * parentInv;
 
-            // ·ÎÄÃ À§Ä¡/È¸Àü/½ºÄÉÀÏ ÃßÃâ
+            // ë¡œì»¬ ìœ„ì¹˜/íšŒì „/ìŠ¤ì¼€ì¼ ì¶”ì¶œ
             _vector S, R, T;
             XMMatrixDecompose(&S, &R, &T, localMatrix);
 
-            // ÀúÀå
+            // ì €ì¥
             XMStoreFloat3(reinterpret_cast<_float3*>(&m_vScale), S);
             XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), R);
             XMStoreFloat3(reinterpret_cast<_float3*>(&m_vPosition), T);
         }
         else
         {
-            // ºÎ¸ğ ¾øÀ¸¸é ±×³É ¿ùµå == ·ÎÄÃ
+            // ë¶€ëª¨ ì—†ìœ¼ë©´ ê·¸ëƒ¥ ì›”ë“œ == ë¡œì»¬
             _vector S, R, T;
             XMMatrixDecompose(&S, &R, &T, newWorldMatrix);
 

@@ -264,20 +264,25 @@ void CScene::Update_Editor()
 		if (point.x < sceneOriginX || point.x >= sceneOriginX + sceneRes.x || point.y < sceneOriginY || point.y >= sceneOriginY + sceneRes.y)
 			return;
 
+		CEditor& editor = CEditor::GetInstance();
 		CPhysics::Ray ray = m_pEditorCamera->ScreenPointToRay_Editor(point);
 
 		auto hits = CPhysics::GetInstance().Raycast(ray);
 		const bool hasHit = !hits.empty();
+		const CGameObject* prevSelected = editor.Get_SelectedGameObject();
 
 		if (hasHit)
 		{
 			firstHit = hits[0];
-			CEditor::GetInstance().Set_SelectedGameObject(firstHit.object);
+			editor.Set_SelectedGameObject(firstHit.object);
 		}
 		else
 		{
-			CEditor::GetInstance().Set_SelectedGameObject(nullptr);
+			editor.Set_SelectedGameObject(nullptr);
 		}
+
+		if (prevSelected != editor.Get_SelectedGameObject())
+			editor.Set_GizmoInputBlocked(true);
 
 		if (hasHit && CInput::GetInstance().GetKey_Editor(CONTROL))
 		{
