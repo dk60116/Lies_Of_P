@@ -225,8 +225,8 @@ HRESULT CGraphicDevice::Add_SwapChain(HWND _hWnd, WINMODE _isWindowed, _uint _wi
 
 	sc.swapChain = swapChain;
 
-	sc.viewport.Width = static_cast<FLOAT>(_winWidth - _offsetMin.x - _offsetMax.x);
-	sc.viewport.Height = static_cast<FLOAT>(_winHeight - _offsetMin.y - _offsetMax.y);
+	// RTV 생성
+	ComPtr<ID3D11Texture2D> backBuffer;
 	swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
 
 	m_pDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, &sc.rtv);
@@ -249,8 +249,8 @@ HRESULT CGraphicDevice::Add_SwapChain(HWND _hWnd, WINMODE _isWindowed, _uint _wi
 	// 뷰포트 설정
 	sc.viewport.TopLeftX = static_cast<FLOAT>(_offsetMin.x);
 	sc.viewport.TopLeftY = static_cast<FLOAT>(_offsetMin.y);
-	sc.viewport.Width = static_cast<FLOAT>(_winWidth - _offsetMax.x);
-	sc.viewport.Height = static_cast<FLOAT>(_winHeight - _offsetMax.y);
+	sc.viewport.Width = static_cast<FLOAT>(_winWidth - _offsetMin.x - _offsetMax.x);
+	sc.viewport.Height = static_cast<FLOAT>(_winHeight - _offsetMin.y - _offsetMax.y);
 	sc.viewport.MinDepth = 0.0f;
 	sc.viewport.MaxDepth = 1.0f;
 
