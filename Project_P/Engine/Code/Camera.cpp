@@ -85,7 +85,7 @@ HRESULT CCamera::Initialize()
 	CMaterial* specularMat = Add_RectMaterial(CRenderTarget::RTType::Specular, L"DeferredSpecular (Material)");
 	CMaterial* shadowMaskMat = Add_RectMaterial(CRenderTarget::RTType::ShadowMask, L"ShadowMask (Material)");
 
-	// µğ½ºÇÃ·¹ÀÌ µî·Ï
+	// ë””ìŠ¤í”Œë ˆì´ ë“±ë¡
 	auto pushDisplay = [&](CRenderTarget::RTType type, CMaterial* mat)
 		{
 			RTDebugDisplay desc = {};
@@ -107,7 +107,7 @@ HRESULT CCamera::Initialize()
 	pushDisplay(CRenderTarget::RTType::Specular, presentMat);
 	pushDisplay(CRenderTarget::RTType::ShadowMask, shadowMaskPresentMat);
 
-	// Debug pipeline states »ı¼º
+	// Debug pipeline states ìƒì„±
 	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 
 	if (!device)
@@ -492,7 +492,10 @@ void CCamera::RenderDisplay()
 
 void CCamera::RenderRTDebugDisplay()
 {
-	if (!m_bIsEditor && CEditor::GetInstance().Get_SelectedGameObject() != m_pGameObject)
+	if (!m_bIsEditor)
+		return;
+
+	if (CEditor::GetInstance().Get_SelectedGameObject() != m_pGameObject)
 		return;
 
 	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
@@ -563,7 +566,7 @@ void CCamera::RenderRTDebugDisplay()
 
 	const _int kCount = (_int)(sizeof(types) / sizeof(types[0]));
 
-	// ½æ³×ÀÏ Å©±â
+	// ì¸ë„¤ì¼ í¬ê¸°
 
 	_uint screenes = 0;
 	_float resHeightFive = 0;
@@ -1205,7 +1208,7 @@ const _int CCamera::GetColorPickingID(const vector2Int& _mouseVPPos)
 	ID3D11Texture2D* srcTex = rtm.GetTexture(CRenderTarget::RTType::Object, m_bIsEditor);
 	if (!srcTex) return 0;
 
-	// 1x1 ¿µ¿ª¸¸ º¹»ç
+	// 1x1 ì˜ì—­ë§Œ ë³µì‚¬
 	D3D11_BOX box;
 	box.left = _mouseVPPos.x;
 	box.right = _mouseVPPos.x + 1;
