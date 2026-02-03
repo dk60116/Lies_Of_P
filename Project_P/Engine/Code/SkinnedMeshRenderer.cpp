@@ -54,8 +54,6 @@ HRESULT CSkinnedMeshRenderer::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
-	auto mat = m_pMaterial;
-
 	CCamera* editorCam = CSceneManager::GetInstance().Get_CrtScene()->Get_EditorCamera();
 	if (!editorCam)
 		return;
