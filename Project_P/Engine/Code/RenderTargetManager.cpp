@@ -2,9 +2,12 @@
 #include "RenderTargetManager.h"
 
 CRenderTargetManager::CRenderTargetManager()
-    : m_width(0)
-    , m_height(0)
+    : m_iWidth(0)
+    , m_iHeight(0)
+    , m_iWidth_E(0)
+    , m_iHeight_E(0)
     , m_rtList({})
+    , m_rtList_E({})
 {
 }
 
@@ -22,14 +25,23 @@ HRESULT CRenderTargetManager::Initialize()
 {
     ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 
-    const int width = CDisplay::GetInstance().Get_ScreenResolution().x;
-    const int height = CDisplay::GetInstance().Get_ScreenResolution().y;
+    const _int width = CDisplay::GetInstance().Get_ScreenResolution().x;
+    const _int height = CDisplay::GetInstance().Get_ScreenResolution().y;
 
-    if (!device || width == 0 || height == 0)
+    const _int width_E = CEditor::GetInstance().Get_ScreenResolution().x;
+    const _int height_E = CEditor::GetInstance().Get_ScreenResolution().y;
+
+    if (!device || width <= 0 || height <= 0)
         return E_FAIL;
 
     Destroy();
-    return CreateTargets(device, width, height);
+
+    if (FAILED(CreateTargets(device, (_uint)width, (_uint)height)))
+        return E_FAIL;
+    if (FAILED(CreateTargets(device, (_uint)width_E, (_uint)height_E, true)))
+        return E_FAIL;
+
+    return S_OK;
 }
 
 void CRenderTargetManager::Destroy()
@@ -38,32 +50,50 @@ void CRenderTargetManager::Destroy()
         kv.second.Destroy();
 
     m_rtList.clear();
-    m_width = 0;
-    m_height = 0;
+    m_iWidth = 0;
+    m_iHeight = 0;
+
+    for (auto& kv : m_rtList_E)
+        kv.second.Destroy();
+
+    m_rtList_E.clear();
+    m_iWidth_E = 0;
+    m_iHeight_E = 0;
 }
 
-HRESULT CRenderTargetManager::Resize(ID3D11Device* device, UINT width, UINT height)
+HRESULT CRenderTargetManager::Resize(ID3D11Device* device, UINT width, UINT height, const _bool _isEditor)
 {
     if (!device || width == 0 || height == 0)
         return E_FAIL;
 
-    if (width == m_width && height == m_height)
+    _uint& crtW = _isEditor ? m_iWidth_E : m_iWidth;
+    _uint& crtH = _isEditor ? m_iHeight_E : m_iHeight;
+
+    if (crtW == width && crtH == height)
         return S_OK;
 
-    Destroy();
-    return CreateTargets(device, static_cast<_uint>(width), static_cast<_uint>(height));
+    auto& rtMap = PickRTMap(this, _isEditor);
+    for (auto& kv : rtMap)
+        kv.second.Destroy();
+    rtMap.clear();
+
+    crtW = 0;
+    crtH = 0;
+
+    return CreateTargets(device, (_uint)width, (_uint)height, _isEditor);
 }
 
-void CRenderTargetManager::Bind_RenderTarget(const CRenderTarget::RTType type, ID3D11DeviceContext* context, const D3D11_VIEWPORT* vp)
+void CRenderTargetManager::Bind_RenderTarget(const CRenderTarget::RTType type, ID3D11DeviceContext* context, const D3D11_VIEWPORT* vp, const _bool _isEditor)
 {
     if (!context)
         return;
 
-    auto it = m_rtList.find(type);
-    if (it == m_rtList.end())
+    auto& rtMap = PickRTMap(this, _isEditor);
+    auto it = rtMap.find(type);
+    if (it == rtMap.end())
         return;
 
-    Unbind_AllSRVs_PS(context);
+    Unbind_AllSRVs_PS(context); // SRV/RTV 해저드 방지 (필수)
 
     CRenderTarget& rt = it->second;
 
@@ -74,10 +104,8 @@ void CRenderTargetManager::Bind_RenderTarget(const CRenderTarget::RTType type, I
             return;
 
         context->OMSetRenderTargets(0, nullptr, dsv);
-
-        if (vp)
+        if (vp) 
             context->RSSetViewports(1, vp);
-
         return;
     }
 
@@ -86,25 +114,27 @@ void CRenderTargetManager::Bind_RenderTarget(const CRenderTarget::RTType type, I
         return;
 
     ID3D11DepthStencilView* dsv = nullptr;
-    auto itDepth = m_rtList.find(CRenderTarget::RTType::Depth);
-    if (itDepth != m_rtList.end())
+    auto itDepth = rtMap.find(CRenderTarget::RTType::Depth);
+    if (itDepth != rtMap.end())
         dsv = itDepth->second.GetDSV();
 
     context->OMSetRenderTargets(1, &rtv, dsv);
-
-    if (vp)
+    if (vp) 
         context->RSSetViewports(1, vp);
 }
 
-void CRenderTargetManager::Bind_GBuffer(ID3D11DeviceContext* ctx, const D3D11_VIEWPORT* vp)
+void CRenderTargetManager::Bind_GBuffer(ID3D11DeviceContext* ctx, const D3D11_VIEWPORT* vp, const _bool _isEditor)
 {
+    if (!ctx)
+        return;
+
     Unbind_AllSRVs_PS(ctx);
 
-    auto rtvA = GetRTV(CRenderTarget::RTType::Albedo);
-    auto rtvO = GetRTV(CRenderTarget::RTType::Object);
-    auto rtvN = GetRTV(CRenderTarget::RTType::Normal);
-    auto rtvM = GetRTV(CRenderTarget::RTType::Material);
-    auto dsv = GetDSV(CRenderTarget::RTType::Depth);
+    ID3D11RenderTargetView* rtvA = GetRTV(CRenderTarget::RTType::Albedo, _isEditor);
+    ID3D11RenderTargetView* rtvO = GetRTV(CRenderTarget::RTType::Object, _isEditor);
+    ID3D11RenderTargetView* rtvN = GetRTV(CRenderTarget::RTType::Normal, _isEditor);
+    ID3D11RenderTargetView* rtvM = GetRTV(CRenderTarget::RTType::Material, _isEditor);
+    ID3D11DepthStencilView* dsv = GetDSV(CRenderTarget::RTType::Depth, _isEditor);
 
     if (!rtvA || !rtvO || !rtvN || !rtvM || !dsv)
         return;
@@ -112,20 +142,21 @@ void CRenderTargetManager::Bind_GBuffer(ID3D11DeviceContext* ctx, const D3D11_VI
     ID3D11RenderTargetView* rtvs[4] = { rtvA, rtvO, rtvN, rtvM };
     ctx->OMSetRenderTargets(4, rtvs, dsv);
 
-    if (vp) 
+    if (vp)
         ctx->RSSetViewports(1, vp);
 }
 
-void CRenderTargetManager::Clear_RenderTarget(const CRenderTarget::RTType type)
+void CRenderTargetManager::Clear_RenderTarget(const CRenderTarget::RTType type, const _bool _isEditor)
 {
     ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
 
     if (!context)
         return;
 
-    auto it = m_rtList.find(type);
+    auto& rtMap = PickRTMap(this, _isEditor);
+    auto it = rtMap.find(type);
 
-    if (it == m_rtList.end())
+    if (it == rtMap.end())
         return;
 
     CRenderTarget& rt = it->second;
@@ -133,6 +164,7 @@ void CRenderTargetManager::Clear_RenderTarget(const CRenderTarget::RTType type)
     if (type == CRenderTarget::RTType::Depth || type == CRenderTarget::RTType::ShadowDepth)
     {
         ID3D11DepthStencilView* dsv = rt.GetDSV();
+
         if (!dsv)
             return;
 
@@ -140,7 +172,7 @@ void CRenderTargetManager::Clear_RenderTarget(const CRenderTarget::RTType type)
         return;
     }
 
-    _float clear[4] = { 0, 0, 0, 0 };
+    float clear[4] = { 0,0,0,0 };
 
     if (type == CRenderTarget::RTType::Normal)
     {
@@ -158,66 +190,72 @@ void CRenderTargetManager::Clear_RenderTarget(const CRenderTarget::RTType type)
     }
 
     ID3D11RenderTargetView* rtv = rt.GetRTV();
-
     if (!rtv)
         return;
 
     context->ClearRenderTargetView(rtv, clear);
 }
 
-void CRenderTargetManager::Clear_GBuffer()
+void CRenderTargetManager::Clear_GBuffer(const _bool _isEditor)
 {
-    Clear_RenderTarget(CRenderTarget::RTType::Albedo);
-    Clear_RenderTarget(CRenderTarget::RTType::Object);
-    Clear_RenderTarget(CRenderTarget::RTType::Normal);
-    Clear_RenderTarget(CRenderTarget::RTType::Material);
-    Clear_RenderTarget(CRenderTarget::RTType::Depth);
-    Clear_RenderTarget(CRenderTarget::RTType::Specular);
-    Clear_RenderTarget(CRenderTarget::RTType::ShadowMask);
-    Clear_RenderTarget(CRenderTarget::RTType::Combine);
+    Clear_RenderTarget(CRenderTarget::RTType::Albedo, _isEditor);
+    Clear_RenderTarget(CRenderTarget::RTType::Object, _isEditor);
+    Clear_RenderTarget(CRenderTarget::RTType::Normal, _isEditor);
+    Clear_RenderTarget(CRenderTarget::RTType::Material, _isEditor);
+    Clear_RenderTarget(CRenderTarget::RTType::Depth, _isEditor);
+    Clear_RenderTarget(CRenderTarget::RTType::Diffuse, _isEditor);
+    Clear_RenderTarget(CRenderTarget::RTType::Specular, _isEditor);
+    Clear_RenderTarget(CRenderTarget::RTType::ShadowMask, _isEditor);
+    Clear_RenderTarget(CRenderTarget::RTType::Combine, _isEditor);
 }
 
-ID3D11Texture2D* CRenderTargetManager::GetTexture(const CRenderTarget::RTType type) const
+ID3D11Texture2D* CRenderTargetManager::GetTexture(const CRenderTarget::RTType type, const _bool _isEditor) const
 {
-    auto it = m_rtList.find(type);
-
-    if (it == m_rtList.end())
+    auto& rtMap = PickRTMapConst(this, _isEditor);
+    auto it = rtMap.find(type);
+    if (it == rtMap.end())
         return nullptr;
-
     return it->second.GetTexture();
 }
 
-ID3D11RenderTargetView* CRenderTargetManager::GetRTV(const CRenderTarget::RTType type) const
+ID3D11RenderTargetView* CRenderTargetManager::GetRTV(const CRenderTarget::RTType type, const _bool _isEditor) const
 {
-    auto it = m_rtList.find(type);
-
-    if (it == m_rtList.end())
+    auto& rtMap = PickRTMapConst(this, _isEditor);
+    auto it = rtMap.find(type);
+    if (it == rtMap.end())
         return nullptr;
-
     return it->second.GetRTV();
 }
 
-ID3D11ShaderResourceView* CRenderTargetManager::GetSRV(const CRenderTarget::RTType type) const
+ID3D11ShaderResourceView* CRenderTargetManager::GetSRV(const CRenderTarget::RTType type, const _bool _isEditor) const
 {
-    auto it = m_rtList.find(type);
-
-    if (it == m_rtList.end())
+    auto& rtMap = PickRTMapConst(this, _isEditor);
+    auto it = rtMap.find(type);
+    if (it == rtMap.end())
         return nullptr;
-
     return it->second.GetSRV();
 }
 
-ID3D11DepthStencilView* CRenderTargetManager::GetDSV(const CRenderTarget::RTType type) const
+ID3D11DepthStencilView* CRenderTargetManager::GetDSV(const CRenderTarget::RTType type, const _bool _isEditor) const
 {
-    auto it = m_rtList.find(type);
-
-    if (it == m_rtList.end())
+    auto& rtMap = PickRTMapConst(this, _isEditor);
+    auto it = rtMap.find(type);
+    if (it == rtMap.end())
         return nullptr;
-
     return it->second.GetDSV();
 }
 
-void CRenderTargetManager::Unbind_AllSRVs_PS(ID3D11DeviceContext* context)
+const _uint CRenderTargetManager::GetWidth(const _bool _isEditor) const
+{
+    return _isEditor ? m_iWidth_E : m_iWidth;
+}
+
+const _uint CRenderTargetManager::GetHeight(const _bool _isEditor) const
+{
+        return _isEditor ? m_iHeight_E : m_iHeight;
+}
+
+void CRenderTargetManager::Unbind_AllSRVs_PS(ID3D11DeviceContext* context, const _bool _isEditor)
 {
     if (!context)
         return;
@@ -226,42 +264,66 @@ void CRenderTargetManager::Unbind_AllSRVs_PS(ID3D11DeviceContext* context)
     context->PSSetShaderResources(0, 16, nullSRV);
 }
 
-HRESULT CRenderTargetManager::CreateTargets(ID3D11Device* device, _uint width, _uint height)
+HRESULT CRenderTargetManager::CreateTargets(ID3D11Device* device, _uint width, _uint height, const _bool _isEditor)
 {
-    m_width = width;
-    m_height = height;
-
-    if (FAILED(m_rtList[CRenderTarget::RTType::Combine].Create(CRenderTarget::RTType::Combine, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))
+    if (!device || width == 0 || height == 0)
         return E_FAIL;
 
-    if (FAILED(m_rtList[CRenderTarget::RTType::Albedo] .Create(CRenderTarget::RTType::Albedo, device, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, true)))
+    // 저장
+    if (_isEditor)
+    {
+        m_iWidth_E = width;
+        m_iHeight_E = height;
+    }
+    else
+    {
+        m_iWidth = width;
+        m_iHeight = height;
+    }
+
+    auto& rt = PickRTMap(this, _isEditor);
+
+    if (FAILED(rt[CRenderTarget::RTType::Combine].Create(CRenderTarget::RTType::Combine, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))
         return E_FAIL;
 
-    if (FAILED(m_rtList[CRenderTarget::RTType::Object].Create(CRenderTarget::RTType::Object, device, width, height, DXGI_FORMAT_R32_UINT, true)))
+    if (FAILED(rt[CRenderTarget::RTType::Albedo].Create(CRenderTarget::RTType::Albedo, device, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, true)))
         return E_FAIL;
 
-    if (FAILED(m_rtList[CRenderTarget::RTType::Normal].Create(CRenderTarget::RTType::Normal, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))
+    if (FAILED(rt[CRenderTarget::RTType::Object].Create(CRenderTarget::RTType::Object, device, width, height, DXGI_FORMAT_R32_UINT, true)))
         return E_FAIL;
 
-    if (FAILED(m_rtList[CRenderTarget::RTType::Material].Create(CRenderTarget::RTType::Material, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))
+    if (FAILED(rt[CRenderTarget::RTType::Normal].Create(CRenderTarget::RTType::Normal, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))
         return E_FAIL;
 
-    if (FAILED(m_rtList[CRenderTarget::RTType::Depth].Create(CRenderTarget::RTType::Depth, device, width, height, DXGI_FORMAT_R24G8_TYPELESS, true)))
+    if (FAILED(rt[CRenderTarget::RTType::Material].Create(CRenderTarget::RTType::Material, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))
+        return E_FAIL;
+
+    if (FAILED(rt[CRenderTarget::RTType::Depth].Create(CRenderTarget::RTType::Depth, device, width, height, DXGI_FORMAT_R24G8_TYPELESS, true)))
         return E_FAIL;
 
     _uint shadowMapSize = CSceneManager::GetInstance().Get_LightSetting().shadowMapSize;
 
-    if (FAILED(m_rtList[CRenderTarget::RTType::ShadowDepth].Create(CRenderTarget::RTType::ShadowDepth, device, shadowMapSize, shadowMapSize, DXGI_FORMAT_R32_TYPELESS, true)))
+    if (FAILED(rt[CRenderTarget::RTType::ShadowDepth].Create(CRenderTarget::RTType::ShadowDepth, device, shadowMapSize, shadowMapSize, DXGI_FORMAT_R32_TYPELESS, true)))
         return E_FAIL;
 
-    if (FAILED(m_rtList[CRenderTarget::RTType::Diffuse].Create(CRenderTarget::RTType::Diffuse, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))
+    if (FAILED(rt[CRenderTarget::RTType::Diffuse].Create(CRenderTarget::RTType::Diffuse, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))
         return E_FAIL;
 
-    if (FAILED(m_rtList[CRenderTarget::RTType::Specular].Create(CRenderTarget::RTType::Specular, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))
+    if (FAILED(rt[CRenderTarget::RTType::Specular].Create(CRenderTarget::RTType::Specular, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))
         return E_FAIL;
 
-    if (FAILED(m_rtList[CRenderTarget::RTType::ShadowMask].Create(CRenderTarget::RTType::ShadowMask, device, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, true)))
+    if (FAILED(rt[CRenderTarget::RTType::ShadowMask].Create(CRenderTarget::RTType::ShadowMask, device, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, true)))
         return E_FAIL;
 
     return S_OK;
+}
+
+map<CRenderTarget::RTType, CRenderTarget>& CRenderTargetManager::PickRTMap(CRenderTargetManager* self, _bool isEditor)
+{
+    return isEditor ? self->m_rtList_E : self->m_rtList;
+}
+
+const map<CRenderTarget::RTType, CRenderTarget>& CRenderTargetManager::PickRTMapConst(const CRenderTargetManager* self, _bool isEditor)
+{
+    return isEditor ? self->m_rtList_E : self->m_rtList;
 }

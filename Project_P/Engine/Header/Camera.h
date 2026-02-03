@@ -87,11 +87,12 @@ public:
 	CPhysics::Ray ScreenPointToRay_Editor(const vector2Int& _pixel, _float _maxDist = 999999.f);
 
 private:
-	const bool EnsurePickStaging();
+	const _bool EnsurePickStaging();
 
 private:
 	CMaterial* Add_RectMaterial(const CRenderTarget::RTType _type, const wstring& _path);
 	CMaterial* Find_RectMaterial(const CRenderTarget::RTType _type);
+	const D3D11_VIEWPORT* ResolveViewport() const;
 
 protected:
 	void Find_MainLight();
@@ -131,6 +132,8 @@ private:
 	CLight::ShadowMatrices m_sMainLightMatrix;
 
 	ID3D11Texture2D* m_pPickStaging;
+
+	_bool m_bIsEditor;
 };
 
 NS_END

@@ -1,5 +1,3 @@
-// Camera.cpp
-
 #include "epch.h"
 #include "Camera.h"
 
@@ -31,6 +29,7 @@ CCamera::CCamera()
 	, m_pMainLight(nullptr)
 	, m_sMainLightMatrix()
 	, m_pPickStaging(nullptr)
+	, m_bIsEditor(false)
 {
 	m_strName = L"Camera";
 }
@@ -64,8 +63,7 @@ HRESULT CCamera::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
-	if (dynamic_cast<CEditorCamera*>(this))
-		return S_OK;
+	m_bIsEditor = dynamic_cast<CEditorCamera*>(this);
 
 	// Rect
 	m_pRectBuffer = CResources::GetInstance().LoadOnGame<CMeshBuffer>(L"Rect (Mesh Buffer)");
@@ -76,7 +74,6 @@ HRESULT CCamera::Initialize()
 	}
 	m_pRectBuffer->AddRef();
 
-	// Present Material (DeferredPresent.hlsl을 사용하는 머티리얼)
 	CMaterial* presentMat = Add_RectMaterial(CRenderTarget::RTType::Present, L"DeferredPresent (Material)");
 	CMaterial* ObjectPresentMat = Add_RectMaterial(CRenderTarget::RTType::ObjectPresent, L"ObjectIDPresent (Material)");
 	CMaterial* depthPresentMat = Add_RectMaterial(CRenderTarget::RTType::Depth, L"DepthPresent (Material)");
@@ -163,7 +160,6 @@ HRESULT CCamera::Initialize()
 			return E_FAIL;
 	}
 
-	// Blend: AlphaBlend
 	{
 		D3D11_BLEND_DESC bs = {};
 		bs.AlphaToCoverageEnable = FALSE;
@@ -206,7 +202,15 @@ HRESULT CCamera::Initialize()
 
 void CCamera::Update()
 {
-	m_fAspect = static_cast<_float>(CDisplay::GetInstance().Get_ScreenResolution().x) / CDisplay::GetInstance().Get_ScreenResolution().y;
+	const D3D11_VIEWPORT* vp = ResolveViewport();
+
+	if (vp && vp->Height > 0.f)
+		m_fAspect = vp->Width / vp->Height;
+	else
+	{
+		vector2Int res = m_bIsEditor ? CEditor::GetInstance().Get_ScreenResolution() : CDisplay::GetInstance().Get_ScreenResolution();
+		m_fAspect = (res.y > 0) ? (_float)res.x / (_float)res.y : 1.f;
+	}
 
 	Find_MainLight();
 	
@@ -228,9 +232,6 @@ void CCamera::OnPostRender()
 
 void CCamera::OnDestroy()
 {
-	if (dynamic_cast<CEditorCamera*>(this))
-		return;
-
 	Safe_Release(m_pRectBuffer);
 
 	for (TRAVERSAL_ITER(m_mRectMats, it))
@@ -408,9 +409,6 @@ void CCamera::RenderUI()
 
 void CCamera::RenderDisplay()
 {
-	 if (dynamic_cast<CEditorCamera*>(this))
-        return;
-
     if (!m_pRectBuffer)
         return;
 
@@ -420,7 +418,7 @@ void CCamera::RenderDisplay()
 
     auto& rtm = CRenderTargetManager::GetInstance();
 
-    ID3D11ShaderResourceView* srvCombine = rtm.GetSRV(CRenderTarget::RTType::Combine);
+    ID3D11ShaderResourceView* srvCombine = rtm.GetSRV(CRenderTarget::RTType::Combine, m_bIsEditor);
 
     if (!srvCombine)
         return;
@@ -448,12 +446,11 @@ void CCamera::RenderDisplay()
 	_uint prevVPCount = 1;
     ctx->RSGetViewports(&prevVPCount, &prevVP);
 
-    // --- 뷰포트 (게임 뷰포트 우선)
-    const D3D11_VIEWPORT* useVP = CGraphicDevice::GetInstance().Get_GameViewport();
+	const D3D11_VIEWPORT* useVP = ResolveViewport();
 
-    if (!useVP) 
+	if (!useVP)
 		useVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
-    if (useVP) 
+	if (useVP)
 		ctx->RSSetViewports(1, useVP);
 
     const _float W = useVP ? useVP->Width  : (_float)CDisplay::GetInstance().Get_ScreenResolution().x;
@@ -471,7 +468,7 @@ void CCamera::RenderDisplay()
     _matrix w = XMMatrixScaling(W, H, 1.f) * XMMatrixTranslation(W * 0.5f, H * 0.5f, 0.f);
     _float3 camPos = {};
 
-    rtm.Unbind_AllSRVs_PS(ctx);
+    rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
 
     presentMat->Bind_Matrix(w);
     presentMat->Bind_Camera(camPos, v, p, 0);
@@ -479,7 +476,7 @@ void CCamera::RenderDisplay()
     ctx->PSSetShaderResources(0, 1, &srvCombine);
     m_pRectBuffer->Render();
 
-    rtm.Unbind_AllSRVs_PS(ctx);
+    rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
 
     if (prevVPCount > 0) 
 		ctx->RSSetViewports(1, &prevVP);
@@ -514,14 +511,18 @@ void CCamera::RenderRTDebugDisplay()
 	context->RSGetState(&prevRS);
 	context->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
-	// 디버그 상태 적용
 	context->OMSetDepthStencilState(m_pRTDebugDS, 0);
 	context->RSSetState(m_pRTDebugRS);
 	const _float bf[4] = { 0,0,0,0 };
 	context->OMSetBlendState(m_pRTDebugBS, bf, 0xFFFFFFFF);
 
-	// 스크린 해상도
-	auto res = CDisplay::GetInstance().Get_ScreenResolution();
+	vector2Int res = {};
+
+	if (m_bIsEditor)
+		res = CEditor::GetInstance().Get_ScreenResolution();
+	else
+		res = CDisplay::GetInstance().Get_ScreenResolution();
+
 	_float screenW = (_float)res.x;
 	_float screenH = (_float)res.y;
 
@@ -538,7 +539,11 @@ void CCamera::RenderRTDebugDisplay()
 	const _float margin = 12.f;
 	const _float gap = 10.f;
 
-	const D3D11_VIEWPORT* gameVP = CGraphicDevice::GetInstance().Get_GameViewport();
+	const D3D11_VIEWPORT* gameVP = ResolveViewport();
+
+	if (!gameVP)
+		gameVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
+
 	_float srcW = gameVP ? gameVP->Width : screenW;
 	_float srcH = gameVP ? gameVP->Height : screenH;
 	_float srcAspect = (srcH > 0.f) ? (srcW / srcH) : 1.f;
@@ -559,8 +564,21 @@ void CCamera::RenderRTDebugDisplay()
 	const _int kCount = (_int)(sizeof(types) / sizeof(types[0]));
 
 	// 썸네일 크기
-	const _uint screenes = CDisplay::GetInstance().Get_ScreenResolution().y;
-	const _float resHeightFive = (CDisplay::GetInstance().Get_ScreenResolution().y / 5.f) * 1.6f;
+
+	_uint screenes = 0;
+	_float resHeightFive = 0;
+
+	if (!m_bIsEditor)
+	{
+		screenes = CDisplay::GetInstance().Get_ScreenResolution().y;
+		resHeightFive = (CDisplay::GetInstance().Get_ScreenResolution().y / 5.f) * 1.6f;
+	}
+	else
+	{
+		screenes = CEditor::GetInstance().Get_ScreenResolution().y;
+		resHeightFive = (CEditor::GetInstance().Get_ScreenResolution().y / 5.f) * 1.6f;
+	}
+
 	_float maxBox = resHeightFive;
 
 	_float rectW = maxBox;
@@ -596,13 +614,13 @@ void CCamera::RenderRTDebugDisplay()
 		disp.material->Bind_Matrix(world);
 		disp.material->Bind_Camera(camPos, view, proj, 0);
 
-		ID3D11ShaderResourceView* srv = CRenderTargetManager::GetInstance().GetSRV(types[i]);
+		ID3D11ShaderResourceView* srv = CRenderTargetManager::GetInstance().GetSRV(types[i], m_bIsEditor);
 		context->PSSetShaderResources(0, 1, &srv);
 
 		disp.quad->Render();
 	}
 
-	CRenderTargetManager::GetInstance().Unbind_AllSRVs_PS(context);
+	CRenderTargetManager::GetInstance().Unbind_AllSRVs_PS(context, m_bIsEditor);
 
 	context->OMSetDepthStencilState(prevDS, prevStencilRef);
 	context->RSSetState(prevRS);
@@ -625,17 +643,18 @@ void CCamera::RenderLightingPass_ToDiffuse(const D3D11_VIEWPORT* vp)
 		return;
 
 	ID3D11DeviceContext* ctx = CGraphicDevice::GetInstance().Get_Context();
+
 	if (!ctx) 
 		return;
 
 	auto& rtm = CRenderTargetManager::GetInstance();
 
-	ID3D11ShaderResourceView* srvAlbedo = rtm.GetSRV(CRenderTarget::RTType::Albedo);
-	ID3D11ShaderResourceView* srvNormal = rtm.GetSRV(CRenderTarget::RTType::Normal);
-	ID3D11ShaderResourceView* srvDepth = rtm.GetSRV(CRenderTarget::RTType::Depth);
-	ID3D11ShaderResourceView* srvMaterial = rtm.GetSRV(CRenderTarget::RTType::Material);
+	ID3D11ShaderResourceView* srvAlbedo = rtm.GetSRV(CRenderTarget::RTType::Albedo, m_bIsEditor);
+	ID3D11ShaderResourceView* srvNormal = rtm.GetSRV(CRenderTarget::RTType::Normal, m_bIsEditor);
+	ID3D11ShaderResourceView* srvDepth = rtm.GetSRV(CRenderTarget::RTType::Depth, m_bIsEditor);
+	ID3D11ShaderResourceView* srvMaterial = rtm.GetSRV(CRenderTarget::RTType::Material, m_bIsEditor);
 
-	ID3D11RenderTargetView* rtvDiffuse = rtm.GetRTV(CRenderTarget::RTType::Diffuse);
+	ID3D11RenderTargetView* rtvDiffuse = rtm.GetRTV(CRenderTarget::RTType::Diffuse, m_bIsEditor);
 
 	if (!srvNormal || !srvDepth || !srvMaterial || !rtvDiffuse)
 		return;
@@ -659,12 +678,16 @@ void CCamera::RenderLightingPass_ToDiffuse(const D3D11_VIEWPORT* vp)
 	ctx->RSGetState(&prevRS);
 	ctx->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
-	rtm.Unbind_AllSRVs_PS(ctx);
+	rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
 
 	ctx->OMSetRenderTargets(1, &rtvDiffuse, nullptr);
 
-	const D3D11_VIEWPORT* useVP = vp ? vp : CGraphicDevice::GetInstance().Get_GameViewport();
-	if (useVP) 
+	const D3D11_VIEWPORT* useVP = vp ? vp : ResolveViewport();
+
+	if (!useVP)
+		useVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
+
+	if (useVP)
 		ctx->RSSetViewports(1, useVP);
 
 	const _float clear[4] = { 0.f, 0.f, 0.f, 1.f };
@@ -678,8 +701,19 @@ void CCamera::RenderLightingPass_ToDiffuse(const D3D11_VIEWPORT* vp)
 	const _float bf[4] = { 0,0,0,0 };
 	ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF);
 
-	_float W = useVP ? useVP->Width : (_float)CDisplay::GetInstance().Get_ScreenResolution().x;
-	_float H = useVP ? useVP->Height : (_float)CDisplay::GetInstance().Get_ScreenResolution().y;
+	_float W = 0.f;
+	_float H = 0.f;
+
+	if (!m_bIsEditor)
+	{
+		W = useVP ? useVP->Width : (_float)CDisplay::GetInstance().Get_ScreenResolution().x;
+		H = useVP ? useVP->Height : (_float)CDisplay::GetInstance().Get_ScreenResolution().y;
+	}
+	else
+	{
+		W = useVP ? useVP->Width : (_float)CEditor::GetInstance().Get_ScreenResolution().x;
+		H = useVP ? useVP->Height : (_float)CEditor::GetInstance().Get_ScreenResolution().y;
+	}
 
 	_matrix v = XMMatrixIdentity();
 	_matrix p = XMMatrixOrthographicOffCenterLH(0.f, W, H, 0.f, 0.f, 1.f);
@@ -703,7 +737,7 @@ void CCamera::RenderLightingPass_ToDiffuse(const D3D11_VIEWPORT* vp)
 
 	m_pRectBuffer->Render();
 
-	rtm.Unbind_AllSRVs_PS(ctx);
+	rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
 
 	ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
 	if (prevVPCount > 0) 
@@ -733,12 +767,12 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 
 	auto& rtm = CRenderTargetManager::GetInstance();
 
-	ID3D11ShaderResourceView* srvAlbedo = rtm.GetSRV(CRenderTarget::RTType::Albedo);
-	ID3D11ShaderResourceView* srvNormal = rtm.GetSRV(CRenderTarget::RTType::Normal);
-	ID3D11ShaderResourceView* srvDepth = rtm.GetSRV(CRenderTarget::RTType::Depth);
-	ID3D11ShaderResourceView* srvMaterial = rtm.GetSRV(CRenderTarget::RTType::Material);
+	ID3D11ShaderResourceView* srvAlbedo = rtm.GetSRV(CRenderTarget::RTType::Albedo, m_bIsEditor);
+	ID3D11ShaderResourceView* srvNormal = rtm.GetSRV(CRenderTarget::RTType::Normal, m_bIsEditor);
+	ID3D11ShaderResourceView* srvDepth = rtm.GetSRV(CRenderTarget::RTType::Depth, m_bIsEditor);
+	ID3D11ShaderResourceView* srvMaterial = rtm.GetSRV(CRenderTarget::RTType::Material, m_bIsEditor);
 
-	ID3D11RenderTargetView* rtvSpecular = rtm.GetRTV(CRenderTarget::RTType::Specular);
+	ID3D11RenderTargetView* rtvSpecular = rtm.GetRTV(CRenderTarget::RTType::Specular, m_bIsEditor);
 
 	if (!srvAlbedo || !srvNormal || !srvDepth || !srvMaterial || !rtvSpecular)
 		return;
@@ -762,11 +796,14 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 	ctx->RSGetState(&prevRS);
 	ctx->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
-	rtm.Unbind_AllSRVs_PS(ctx);
+	rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
 
 	ctx->OMSetRenderTargets(1, &rtvSpecular, nullptr);
 
-	const D3D11_VIEWPORT* useVP = vp ? vp : CGraphicDevice::GetInstance().Get_GameViewport();
+	const D3D11_VIEWPORT* useVP = vp ? vp : ResolveViewport();
+
+	if (!useVP)
+		useVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
 
 	if (useVP)
 		ctx->RSSetViewports(1, useVP);
@@ -781,8 +818,19 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 	const _float bf[4] = { 0.f, 0.f, 0.f, 0.f };
 	ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF);
 
-	_float W = useVP ? useVP->Width : (_float)CDisplay::GetInstance().Get_ScreenResolution().x;
-	_float H = useVP ? useVP->Height : (_float)CDisplay::GetInstance().Get_ScreenResolution().y;
+	_float W = 0;
+	_float H = 0;
+
+	if (!m_bIsEditor)
+	{
+		W = useVP ? useVP->Width : (_float)CDisplay::GetInstance().Get_ScreenResolution().x;
+		H = useVP ? useVP->Height : (_float)CDisplay::GetInstance().Get_ScreenResolution().y;
+	}
+	else
+	{
+		W = useVP ? useVP->Width : (_float)CEditor::GetInstance().Get_ScreenResolution().x;
+		H = useVP ? useVP->Height : (_float)CEditor::GetInstance().Get_ScreenResolution().y;
+	}
 
 	_matrix v = XMMatrixIdentity();
 	_matrix p = XMMatrixOrthographicOffCenterLH(0.f, W, H, 0.f, 0.f, 1.f);
@@ -807,7 +855,7 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 
 	m_pRectBuffer->Render();
 
-	rtm.Unbind_AllSRVs_PS(ctx);
+	rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
 
 	ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
 	if (prevVPCount > 0)
@@ -826,9 +874,6 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 
 void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 {
-	if (dynamic_cast<CEditorCamera*>(this))
-		return;
-
 	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 	ID3D11DeviceContext* ctx = CGraphicDevice::GetInstance().Get_Context();
 
@@ -837,7 +882,7 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 
 	auto& rtm = CRenderTargetManager::GetInstance();
 
-	ID3D11DepthStencilView* dsvShadow = rtm.GetDSV(CRenderTarget::RTType::ShadowDepth);
+	ID3D11DepthStencilView* dsvShadow = rtm.GetDSV(CRenderTarget::RTType::ShadowDepth, false);
 	if (!dsvShadow)
 		return;
 
@@ -863,7 +908,7 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	ctx->RSGetState(&prevRS);
 	ctx->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
-	rtm.Unbind_AllSRVs_PS(ctx);
+	rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
 	ctx->OMSetRenderTargets(0, nullptr, dsvShadow);
 
 	const _uint shadowSize = (_uint)CSceneManager::GetInstance().Get_LightSetting().shadowMapSize;
@@ -876,7 +921,6 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	vpt.MaxDepth = 1.f;
 	ctx->RSSetViewports(1, &vpt);
 
-	// Clear (깊이 = 1)
 	ctx->ClearDepthStencilView(dsvShadow, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	if (m_pRTShadowDepthDS)
@@ -903,7 +947,7 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 		r->Render_ShadowDepth(shadowDepthMat, m_sMainLightMatrix);
 	}
 
-	rtm.Unbind_AllSRVs_PS(ctx);
+	rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
 
 	ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
 	if (prevVPCount > 0) ctx->RSSetViewports(1, &prevVP);
@@ -921,9 +965,6 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 
 void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 {
-	if (dynamic_cast<CEditorCamera*>(this))
-		return;
-
 	ID3D11DeviceContext* ctx = CGraphicDevice::GetInstance().Get_Context();
 
 	if (!ctx || !m_pRectBuffer || !m_pInvViewProjCB || !m_pShadowCB)
@@ -931,9 +972,9 @@ void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 
 	auto& rtm = CRenderTargetManager::GetInstance();
 
-	ID3D11RenderTargetView* rtvShadowMask = rtm.GetRTV(CRenderTarget::RTType::ShadowMask);
-	ID3D11ShaderResourceView* srvSceneDepth = rtm.GetSRV(CRenderTarget::RTType::Depth);
-	ID3D11ShaderResourceView* srvShadowDepth = rtm.GetSRV(CRenderTarget::RTType::ShadowDepth);
+	ID3D11RenderTargetView* rtvShadowMask = rtm.GetRTV(CRenderTarget::RTType::ShadowMask, m_bIsEditor);
+	ID3D11ShaderResourceView* srvSceneDepth = rtm.GetSRV(CRenderTarget::RTType::Depth, m_bIsEditor);
+	ID3D11ShaderResourceView* srvShadowDepth = rtm.GetSRV(CRenderTarget::RTType::ShadowDepth, m_bIsEditor);
 
 	if (!rtvShadowMask || !srvSceneDepth || !srvShadowDepth)
 		return;
@@ -964,12 +1005,15 @@ void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 	ctx->RSGetState(&prevRS);
 	ctx->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
-	rtm.Unbind_AllSRVs_PS(ctx);
+	rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
 	ctx->OMSetRenderTargets(1, &rtvShadowMask, nullptr);
 
-	const D3D11_VIEWPORT* useVP = vp ? vp : CGraphicDevice::GetInstance().Get_GameViewport();
+	const D3D11_VIEWPORT* useVP = vp ? vp : ResolveViewport();
 
-	if (useVP) 
+	if (!useVP)
+		useVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
+
+	if (useVP)
 		ctx->RSSetViewports(1, useVP);
 
 	const _float clear[4] = { 1.f, 1.f, 1.f, 1.f };
@@ -983,8 +1027,19 @@ void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 	const _float bf[4] = { 0.f, 0.f, 0.f, 0.f };
 	ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF);
 
-	_float W = useVP ? useVP->Width : (float)CDisplay::GetInstance().Get_ScreenResolution().x;
-	_float H = useVP ? useVP->Height : (float)CDisplay::GetInstance().Get_ScreenResolution().y;
+	_float W = 0;
+	_float H = 0;
+
+	if (!m_bIsEditor)
+	{
+		W = useVP ? useVP->Width : (_float)CDisplay::GetInstance().Get_ScreenResolution().x;
+		H = useVP ? useVP->Height : (_float)CDisplay::GetInstance().Get_ScreenResolution().y;
+	}
+	else
+	{
+		W = useVP ? useVP->Width : (_float)CEditor::GetInstance().Get_ScreenResolution().x;
+		H = useVP ? useVP->Height : (_float)CEditor::GetInstance().Get_ScreenResolution().y;
+	}
 
 	_matrix v = XMMatrixIdentity();
 	_matrix p = XMMatrixOrthographicOffCenterLH(0.f, W, H, 0.f, 0.f, 1.f);
@@ -1019,10 +1074,11 @@ void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 
 	m_pRectBuffer->Render();
 
-	rtm.Unbind_AllSRVs_PS(ctx);
+	rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
 
 	ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
-	if (prevVPCount > 0) ctx->RSSetViewports(1, &prevVP);
+	if (prevVPCount > 0)
+		ctx->RSSetViewports(1, &prevVP);
 
 	ctx->OMSetDepthStencilState(prevDS, prevStencilRef);
 	ctx->RSSetState(prevRS);
@@ -1046,18 +1102,17 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 
 	auto& rtm = CRenderTargetManager::GetInstance();
 
-	ID3D11ShaderResourceView* srvAlbedo = rtm.GetSRV(CRenderTarget::RTType::Albedo);
-	ID3D11ShaderResourceView* srvDepth = rtm.GetSRV(CRenderTarget::RTType::Depth);
-	ID3D11ShaderResourceView* srvDiffuse = rtm.GetSRV(CRenderTarget::RTType::Diffuse);
-	ID3D11ShaderResourceView* srvSpecular = rtm.GetSRV(CRenderTarget::RTType::Specular);
-	ID3D11ShaderResourceView* srvShadow = rtm.GetSRV(CRenderTarget::RTType::ShadowMask);
+	ID3D11ShaderResourceView* srvAlbedo = rtm.GetSRV(CRenderTarget::RTType::Albedo, m_bIsEditor);
+	ID3D11ShaderResourceView* srvDepth = rtm.GetSRV(CRenderTarget::RTType::Depth, m_bIsEditor);
+	ID3D11ShaderResourceView* srvDiffuse = rtm.GetSRV(CRenderTarget::RTType::Diffuse, m_bIsEditor);
+	ID3D11ShaderResourceView* srvSpecular = rtm.GetSRV(CRenderTarget::RTType::Specular, m_bIsEditor);
+	ID3D11ShaderResourceView* srvShadow = rtm.GetSRV(CRenderTarget::RTType::ShadowMask, m_bIsEditor);
 
-	ID3D11RenderTargetView* rtvCombine = rtm.GetRTV(CRenderTarget::RTType::Combine);
+	ID3D11RenderTargetView* rtvCombine = rtm.GetRTV(CRenderTarget::RTType::Combine, m_bIsEditor);
 
 	if (!srvDepth || !srvAlbedo || !srvDiffuse || !srvSpecular || !srvShadow || !rtvCombine)
 		return;
 
-	// --- 상태 백업
 	ID3D11RenderTargetView* prevRTV = nullptr;
 	ID3D11DepthStencilView* prevDSV = nullptr;
 	ctx->OMGetRenderTargets(1, &prevRTV, &prevDSV);
@@ -1077,28 +1132,29 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	ctx->RSGetState(&prevRS);
 	ctx->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
-	// --- SRV 충돌 방지
-	rtm.Unbind_AllSRVs_PS(ctx);
+	rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
 
-	// --- Specular RTV 바인딩 (Depth는 필요 없으면 nullptr로)
 	ctx->OMSetRenderTargets(1, &rtvCombine, nullptr);
 
-	const D3D11_VIEWPORT* useVP = vp ? vp : CGraphicDevice::GetInstance().Get_GameViewport();
-	if (useVP) ctx->RSSetViewports(1, useVP);
+	const D3D11_VIEWPORT* useVP = vp ? vp : ResolveViewport();
 
-	// --- Clear
+	if (!useVP)
+		useVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
+
+	if (useVP)
+		ctx->RSSetViewports(1, useVP);
+
 	const _float clear[4] = { (_float)m_vBackgroundColor.r, (_float)m_vBackgroundColor.g, (_float)m_vBackgroundColor.b, 1.f };
 	ctx->ClearRenderTargetView(rtvCombine, clear);
 
-	// --- 디버그용 상태 재사용(DepthTest OFF / Cull OFF)
 	if (m_pRTDebugDS)
 		ctx->OMSetDepthStencilState(m_pRTDebugDS, 0);
 	if (m_pRTDebugRS)
 		ctx->RSSetState(m_pRTDebugRS);
-	const _float bf[4] = { 0.f, 0.f, 0.f, 0.f };
-	ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF); // 한 번에 모든 라이트 합산이면 블렌드 불필요
 
-	// --- 풀스크린 쿼드용 카메라(픽셀 Ortho)
+	const _float bf[4] = { 0.f, 0.f, 0.f, 0.f };
+	ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF);
+
 	_float W = useVP ? useVP->Width : (_float)CDisplay::GetInstance().Get_ScreenResolution().x;
 	_float H = useVP ? useVP->Height : (_float)CDisplay::GetInstance().Get_ScreenResolution().y;
 
@@ -1106,30 +1162,20 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	_matrix p = XMMatrixOrthographicOffCenterLH(0.f, W, H, 0.f, 0.f, 1.f);
 	_matrix w = XMMatrixScaling(W, H, 1.f) * XMMatrixTranslation(W * 0.5f, H * 0.5f, 0.f);
 
-	// --- 더미 카메라 정보 
 	_float3 camPos = {};
-
-	InvViewProjCB invCB = { };
-	ctx->UpdateSubresource(m_pInvViewProjCB, 0, nullptr, &invCB, 0, 0);
-	ctx->PSSetConstantBuffers(5, 1, &m_pInvViewProjCB);
 
 	CMaterial* combineMat = Find_RectMaterial(CRenderTarget::RTType::Combine);
 
-	// --- 머티리얼 바인딩
 	combineMat->Bind_Matrix(w);
 	combineMat->Bind_Camera(camPos, v, p, 0);
 
-	// --- SRV 바인딩
 	ID3D11ShaderResourceView* srvs[5] = { srvAlbedo, srvDepth, srvDiffuse, srvSpecular, srvShadow };
 	ctx->PSSetShaderResources(0, 5, srvs);
 
-	// --- Draw
 	m_pRectBuffer->Render();
 
-	// --- 정리
-	rtm.Unbind_AllSRVs_PS(ctx);
+	rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
 
-	// --- 상태 복원
 	ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
 	if (prevVPCount > 0)
 		ctx->RSSetViewports(1, &prevVP);
@@ -1156,7 +1202,7 @@ const _int CCamera::GetColorPickingID(const vector2Int& _mouseVPPos)
 	if (!EnsurePickStaging()) 
 		return 0;
 
-	ID3D11Texture2D* srcTex = rtm.GetTexture(CRenderTarget::RTType::Object);
+	ID3D11Texture2D* srcTex = rtm.GetTexture(CRenderTarget::RTType::Object, m_bIsEditor);
 	if (!srcTex) return 0;
 
 	// 1x1 영역만 복사
@@ -1242,7 +1288,7 @@ CPhysics::Ray CCamera::ScreenPointToRay_Editor(const vector2Int& _pixel, _float 
 	return result;
 }
 
-const bool CCamera::EnsurePickStaging()
+const _bool CCamera::EnsurePickStaging()
 {
 	if (m_pPickStaging)
 		return true;
@@ -1298,6 +1344,11 @@ CMaterial* CCamera::Find_RectMaterial(const CRenderTarget::RTType _type)
 		return nullptr;
 
 	return it->second;
+}
+
+const D3D11_VIEWPORT* CCamera::ResolveViewport() const
+{
+	return m_bIsEditor ? CGraphicDevice::GetInstance().Get_EditorViewport() : CGraphicDevice::GetInstance().Get_GameViewport();
 }
 
 void CCamera::Find_MainLight()

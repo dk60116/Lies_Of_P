@@ -353,23 +353,106 @@ void CScene::LateUpdate()
 
 void CScene::Render_Editor()
 {
-	ColorValue backgroudColor = ColorValue::gray(0.3f);
+#ifndef _CLIENT_BUILD
+	// 0) 에디터 카메라 없으면 종료
+	if (!m_pEditorCamera)
+		return;
 
-	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&backgroudColor);
-	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
+	// 1) 라이트 데이터 갱신 (Render_Game과 동일)
+	m_vLightData.clear();
+	for (TRAVERSAL_ITER(m_lLightList, it))
+	{
+		if (!(*it)) continue;
+		_float4x4 lightInfo = (*it)->To_LightInfo();
+		lightInfo._44 = (_float)m_lLightList.size();
+		m_vLightData.push_back(XMLoadFloat4x4(&lightInfo));
+	}
+
+	ID3D11DeviceContext* ctx = m_pContext;
+	if (!ctx) return;
+
+	// 2) 에디터 뷰포트
+	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_EditorViewport();
+	if (!vp)
+		vp = CGraphicDevice::GetInstance().Get_CurrentViewport();
+
+	auto& trm = CRenderTargetManager::GetInstance();
+
+	// ------------------------------------------------------------
+	// A) Deferred: GBuffer 바인드/클리어
+	// ------------------------------------------------------------
+	trm.Bind_GBuffer(ctx, vp, /*isEditor=*/true);   // ★ 이런 형태로 분기 필요
+	trm.Clear_GBuffer(/*isEditor=*/true);
+
+	// Skybox (원하면)
+	if (m_pSkyBox)
+	{
+		ctx->RSSetState(m_pSkyBoxResterizerState);
+		ctx->OMSetDepthStencilState(m_pSkyBoxDepthStencillState, 0);
+		RenderSkyBox(m_pEditorCamera);
+	}
+
+	// Mesh 기본 상태
+	ctx->RSSetState(m_pMeshResterizerState);
+	ctx->OMSetDepthStencilState(m_pMeshDepthStencilState, 0);
+
+	// ------------------------------------------------------------
+	// B) 여기서 "오브젝트들이 렌더 제출"을 해줘야 함
+	// ------------------------------------------------------------
+	// 기존 Render_Editor()에서 즉시 그리던 걸,
+	//   - 각 Renderer가 m_pEditorCamera->Add_RenderTarget_Mesh(this) 식으로 제출
+	// 로 바꿔야 editorCam->RenderMesh()가 의미가 생김.
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
-		if ((*it)->IsRecursiveActive())
-		{
-			(*it)->OnPreCull_Editor();
-			(*it)->OnPreRender_Editor();
-			(*it)->Render_Editor();
-			(*it)->OnPostRender_Editor();
-		}
+		if (!(*it)->IsRecursiveActive())
+			continue;
 
-		(*it)->Render_Gizmo();
+		(*it)->OnPreCull_Editor();
+		(*it)->OnPreRender_Editor();
+
+		// ★ 중요: 여기서 즉시 Draw 하지 말고 "제출"만 하도록 구조를 맞추는 게 좋음
+		(*it)->Render_Editor(); // 내부에서 Renderer들이 editorCam에 Submit하도록
 	}
+
+	// 실제 드로우는 카메라가 한다
+	m_pEditorCamera->RenderMesh();
+
+	// ------------------------------------------------------------
+	// C) Shadow / ObjectID / Lighting / Combine
+	// ------------------------------------------------------------
+	m_pEditorCamera->RenderShadowDepthPass(vp);
+	m_pEditorCamera->RenderObjectIDPass(vp);
+	m_pEditorCamera->RenderLightingPass_ToDiffuse(vp);
+	m_pEditorCamera->RenderLightingPass_ToSpecular(vp);
+	m_pEditorCamera->RenderShadowMaskPass(vp);
+	m_pEditorCamera->RenderCombine(vp);
+
+	// ------------------------------------------------------------
+	// D) BackBuffer로 복귀 후 Present + Gizmo/UI
+	// ------------------------------------------------------------
+	// ★ 에디터 창 타겟으로 복귀 (너는 GameWindow를 쓰고 있으니 EditorWindow도 있어야 함)
+	CGraphicDevice::GetInstance().Set_RenderTarget(CEditor::GetInstance().Get_EditorWindow());
+
+	ColorValue back = ColorValue::gray(0.3f);
+	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&back);
+	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
+
+	// Combine → BackBuffer
+	m_pEditorCamera->RenderDisplay();
+
+	// Gizmo는 보통 여기서 (3D 위에)
+	for (TRAVERSAL_ITER(m_lObjectList, it))
+		(*it)->Render_Gizmo();
+
+	// RT Debug thumbnail 같은 것도 필요하면
+	m_pEditorCamera->RenderRTDebugDisplay();
+
+	// PostRender
+	for (TRAVERSAL_ITER(m_lObjectList, it))
+		(*it)->OnPostRender_Editor();
+
+#endif
 }
 
 void CScene::Render_Game()
@@ -400,7 +483,6 @@ void CScene::Render_Game()
 	for (TRAVERSAL_ITER(m_lCameraList, it)) 
 		(*it)->OnPreRender();
 
-	// 3) GBuffer 패스 (MRT 유지!)
 	ID3D11DeviceContext* ctx = m_pContext;
 	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_GameViewport();
 	if (!vp) 

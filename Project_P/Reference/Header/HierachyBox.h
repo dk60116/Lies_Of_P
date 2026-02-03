@@ -2,6 +2,9 @@
 
 #include "EditorBox.h"
 
+#include <array>
+#include <string>
+
 NS_BEGIN(Engine)
 
 class ENGINE_DLL CHierachyBox final : public CEditorBox
@@ -20,8 +23,11 @@ private:
 	static CHierachyBox* Create();
 
 private:
-	void RenderObjectHierarchy(CGameObject* _obj);
+	void RenderObjectHierarchy(CGameObject* _obj, const std::string& filterLower);
+	bool ObjectMatchesFilter(CGameObject* _obj, const std::string& filterLower) const;
+
+private:
+	std::array<char, 128> m_searchBuffer{};
 };
 
 NS_END
-
