@@ -256,7 +256,16 @@ void CScene::Update_Editor()
 	if (CInput::GetInstance().GetMouseButtonDown_Editor(0))
 	{
 		const vector2Int point = CInput::GetInstance().GetMousePos_Editor();
-		CPhysics::Ray ray = m_pEditorCamera->ScreenPointToRay_Editor(point);
+		const auto options = CEditor::GetInstance().Get_Options();
+		const vector2Int sceneRes = CEditor::GetInstance().Get_ScreenResolution();
+		const _int sceneOriginX = _int(options.projectWidth + options.hierachyWidth);
+		const _int sceneOriginY = 0;
+
+		if (point.x < sceneOriginX || point.x >= sceneOriginX + sceneRes.x || point.y < sceneOriginY || point.y >= sceneOriginY + sceneRes.y)
+			return;
+
+		const vector2Int scenePoint(point.x - sceneOriginX, point.y - sceneOriginY);
+		CPhysics::Ray ray = m_pEditorCamera->ScreenPointToRay_Editor(scenePoint);
 
 		auto hits = CPhysics::GetInstance().Raycast(ray);
 		const bool hasHit = !hits.empty();
