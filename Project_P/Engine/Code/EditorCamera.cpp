@@ -49,6 +49,7 @@ void CEditorCamera::Update_Editor()
 {
 	const _bool isShift = CInput::GetInstance().GetKey_Editor(SHIFT);
 	const _bool isCtrl = CInput::GetInstance().GetKey_Editor(CONTROL);
+	const _bool wantsMouse = ImGui::GetIO().WantCaptureMouse;
 
 	CTransform& camTransform = *Get_Transform();
 
@@ -76,8 +77,8 @@ void CEditorCamera::Update_Editor()
 		else
 			m_sOptions.crtMoveSpeed = m_sOptions.moveSpeed;
 
-		const _bool isRightMouseDown = CInput::GetInstance().GetMouseButton_Editor(1);
-		const _bool isMiddleMouseDown = CInput::GetInstance().GetMouseButton_Editor(2);
+		const _bool isRightMouseDown = !wantsMouse && CInput::GetInstance().GetMouseButton_Editor(1);
+		const _bool isMiddleMouseDown = !wantsMouse && CInput::GetInstance().GetMouseButton_Editor(2);
 
 		if (isRightMouseDown || isMiddleMouseDown)
 		{
@@ -136,7 +137,7 @@ void CEditorCamera::Update_Editor()
 		}
 	}
 
-	const _float _wheel = CInput::GetInstance().GetAxis_Editor(L"Mouse ScrollWheel");
+	const _float _wheel = wantsMouse ? 0.0f : CInput::GetInstance().GetAxis_Editor(L"Mouse ScrollWheel");
 
 	if (_wheel != 0)
 	{
