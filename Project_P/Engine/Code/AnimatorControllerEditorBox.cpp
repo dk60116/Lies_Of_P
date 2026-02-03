@@ -268,7 +268,7 @@ void CAnimatorControllerEditorBox::Render()
 
     ImGui::SameLine();
 
-    ImGui::BeginChild("InspectorPanel", ImVec2(rightW, avail.y), true);
+    ImGui::BeginChild("InspectorPanel", ImVec2(rightW, avail.y), true, ImGuiWindowFlags_HorizontalScrollbar);
     RenderInspector();
     ImGui::EndChild();
 
