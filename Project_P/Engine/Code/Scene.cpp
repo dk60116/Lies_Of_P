@@ -253,7 +253,7 @@ void CScene::Update_Editor()
 
 	CPhysics::RAYCASTHIT firstHit = {};
 
-	if (CInput::GetInstance().GetMouseButtonDown_Editor(0))
+	if (CInput::GetInstance().GetMouseButtonUp_Editor(0))
 	{
 		const vector2Int point = CInput::GetInstance().GetMousePos_Editor();
 		const auto options = CEditor::GetInstance().Get_Options();
