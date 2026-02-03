@@ -72,7 +72,6 @@ HRESULT CCamera::Initialize()
 		CDebug::LogError("Not found Rect (Mesh Buffer)");
 		return E_FAIL;
 	}
-	m_pRectBuffer->AddRef();
 
 	CMaterial* presentMat = Add_RectMaterial(CRenderTarget::RTType::Present, L"DeferredPresent (Material)");
 	CMaterial* ObjectPresentMat = Add_RectMaterial(CRenderTarget::RTType::ObjectPresent, L"ObjectIDPresent (Material)");
@@ -490,15 +489,29 @@ void CCamera::RenderDisplay()
     Safe_Release(prevBS);
 }
 
-void CCamera::RenderRTDebugDisplay()
+void CCamera::RenderRTDebugDisplay(const _bool _renderingEditorPass)
 {
-	if (!m_bIsEditor && CEditor::GetInstance().Get_SelectedGameObject() != m_pGameObject)
-		return;
+	if (m_bIsEditor)
+	{
+		if (!_renderingEditorPass)
+			return;
+	}
+	else
+	{
+		if (_renderingEditorPass)
+			return;
+
+		if (CEditor::GetInstance().Get_SelectedGameObject() != m_pGameObject)
+			return;
+	}
 
 	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
-
 	if (!context || m_mRTDebugDisplays.empty())
 		return;
+
+	ID3D11RenderTargetView* prevRTV = nullptr;
+	ID3D11DepthStencilView* prevDSV = nullptr;
+	context->OMGetRenderTargets(1, &prevRTV, &prevDSV);
 
 	ID3D11DepthStencilState* prevDS = nullptr;
 	_uint prevStencilRef = 0;
@@ -511,25 +524,33 @@ void CCamera::RenderRTDebugDisplay()
 	context->RSGetState(&prevRS);
 	context->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
-	context->OMSetDepthStencilState(m_pRTDebugDS, 0);
-	context->RSSetState(m_pRTDebugRS);
-	const _float bf[4] = { 0,0,0,0 };
-	context->OMSetBlendState(m_pRTDebugBS, bf, 0xFFFFFFFF);
+	D3D11_VIEWPORT prevVP = {};
+	_uint prevVPCount = 1;
+	context->RSGetViewports(&prevVPCount, &prevVP);
 
-	vector2Int res = {};
+	if (m_pRTDebugDS)
+		context->OMSetDepthStencilState(m_pRTDebugDS, 0);
+	if (m_pRTDebugRS)
+		context->RSSetState(m_pRTDebugRS);
 
-	if (m_bIsEditor)
-		res = CEditor::GetInstance().Get_ScreenResolution();
+	const _float bf[4] = { 0.f, 0.f, 0.f, 0.f };
+	if (m_pRTDebugBS)
+		context->OMSetBlendState(m_pRTDebugBS, bf, 0xFFFFFFFF);
 	else
-		res = CDisplay::GetInstance().Get_ScreenResolution();
+		context->OMSetBlendState(nullptr, bf, 0xFFFFFFFF);
+
+	vector2Int res = m_bIsEditor ? CEditor::GetInstance().Get_ScreenResolution() : CDisplay::GetInstance().Get_ScreenResolution();
 
 	_float screenW = (_float)res.x;
 	_float screenH = (_float)res.y;
 
 	D3D11_VIEWPORT vp = {};
-	vp.TopLeftX = 0.f; vp.TopLeftY = 0.f;
-	vp.Width = screenW; vp.Height = screenH;
-	vp.MinDepth = 0.f; vp.MaxDepth = 1.f;
+	vp.TopLeftX = 0.f;
+	vp.TopLeftY = 0.f;
+	vp.Width = screenW;
+	vp.Height = screenH;
+	vp.MinDepth = 0.f;
+	vp.MaxDepth = 1.f;
 	context->RSSetViewports(1, &vp);
 
 	_matrix view = XMMatrixIdentity();
@@ -539,13 +560,12 @@ void CCamera::RenderRTDebugDisplay()
 	const _float margin = 12.f;
 	const _float gap = 10.f;
 
-	const D3D11_VIEWPORT* gameVP = ResolveViewport();
+	const D3D11_VIEWPORT* srcVP = ResolveViewport();
+	if (!srcVP)
+		srcVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
 
-	if (!gameVP)
-		gameVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
-
-	_float srcW = gameVP ? gameVP->Width : screenW;
-	_float srcH = gameVP ? gameVP->Height : screenH;
+	_float srcW = srcVP ? srcVP->Width : screenW;
+	_float srcH = srcVP ? srcVP->Height : screenH;
 	_float srcAspect = (srcH > 0.f) ? (srcW / srcH) : 1.f;
 
 	CRenderTarget::RTType types[] =
@@ -563,34 +583,12 @@ void CCamera::RenderRTDebugDisplay()
 
 	const _int kCount = (_int)(sizeof(types) / sizeof(types[0]));
 
-	// ½æ³×ÀÏ Å©±â
+	_float maxBox = (res.y / 5.f);
 
-	_uint screenes = 0;
-	_float resHeightFive = 0;
+	_float rectH = maxBox * 0.9f;
+	_float rectW = rectH * srcAspect;
 
-	if (!m_bIsEditor)
-	{
-		screenes = CDisplay::GetInstance().Get_ScreenResolution().y;
-		resHeightFive = (CDisplay::GetInstance().Get_ScreenResolution().y / 5.f) * 1.6f;
-	}
-	else
-	{
-		screenes = CEditor::GetInstance().Get_ScreenResolution().y;
-		resHeightFive = (CEditor::GetInstance().Get_ScreenResolution().y / 5.f) * 1.6f;
-	}
-
-	_float maxBox = resHeightFive;
-
-	_float rectW = maxBox;
-	_float rectH = rectW / srcAspect;
-
-	if (rectH > maxBox)
-	{
-		rectH = maxBox;
-		rectW = rectH * srcAspect;
-	}
-
-	for (int i = 0; i < kCount; ++i)
+	for (_int i = 0; i < kCount; ++i)
 	{
 		auto it = m_mRTDebugDisplays.find(types[i]);
 		if (it == m_mRTDebugDisplays.end())
@@ -603,10 +601,7 @@ void CCamera::RenderRTDebugDisplay()
 		const _bool bRightColumn = (i < 5);
 		const _int row = bRightColumn ? i : (i - 5);
 
-		_float cx = bRightColumn
-			? (screenW - margin - rectW * 0.5f)
-			: (margin + rectW * 0.5f);
-
+		_float cx = bRightColumn ? (screenW - margin - rectW * 0.5f) : (margin + rectW * 0.5f);
 		_float cy = screenH - margin - rectH * 0.5f - row * (rectH + gap);
 
 		_matrix world = XMMatrixScaling(rectW, rectH, 1.f) * XMMatrixTranslation(cx, cy, 0.f);
@@ -614,18 +609,26 @@ void CCamera::RenderRTDebugDisplay()
 		disp.material->Bind_Matrix(world);
 		disp.material->Bind_Camera(camPos, view, proj, 0);
 
-		ID3D11ShaderResourceView* srv = CRenderTargetManager::GetInstance().GetSRV(types[i], m_bIsEditor);
-		context->PSSetShaderResources(0, 1, &srv);
+		const _bool useEditorRT = (types[i] == CRenderTarget::RTType::ShadowDepth) ? false : m_bIsEditor;
+		ID3D11ShaderResourceView* srv = CRenderTargetManager::GetInstance().GetSRV(types[i], useEditorRT);
 
+		context->PSSetShaderResources(0, 1, &srv);
 		disp.quad->Render();
 	}
 
 	CRenderTargetManager::GetInstance().Unbind_AllSRVs_PS(context, m_bIsEditor);
 
+	if (prevVPCount > 0)
+		context->RSSetViewports(1, &prevVP);
+
+	context->OMSetRenderTargets(1, &prevRTV, prevDSV);
+
 	context->OMSetDepthStencilState(prevDS, prevStencilRef);
 	context->RSSetState(prevRS);
 	context->OMSetBlendState(prevBS, prevBlendFactor, prevSampleMask);
 
+	Safe_Release(prevRTV);
+	Safe_Release(prevDSV);
 	Safe_Release(prevDS);
 	Safe_Release(prevRS);
 	Safe_Release(prevBS);
@@ -874,6 +877,9 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 
 void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 {
+	if (m_bIsEditor)
+		CDebug::Log("Editor ShadowDepth mesh count = " + std::to_string((int)m_vMeshList.size()));
+
 	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 	ID3D11DeviceContext* ctx = CGraphicDevice::GetInstance().Get_Context();
 
@@ -974,7 +980,7 @@ void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 
 	ID3D11RenderTargetView* rtvShadowMask = rtm.GetRTV(CRenderTarget::RTType::ShadowMask, m_bIsEditor);
 	ID3D11ShaderResourceView* srvSceneDepth = rtm.GetSRV(CRenderTarget::RTType::Depth, m_bIsEditor);
-	ID3D11ShaderResourceView* srvShadowDepth = rtm.GetSRV(CRenderTarget::RTType::ShadowDepth, m_bIsEditor);
+	ID3D11ShaderResourceView* srvShadowDepth = rtm.GetSRV(CRenderTarget::RTType::ShadowDepth, false);
 
 	if (!rtvShadowMask || !srvSceneDepth || !srvShadowDepth)
 		return;
@@ -1331,7 +1337,6 @@ CMaterial* CCamera::Add_RectMaterial(const CRenderTarget::RTType _type, const ws
 		Safe_Release(it->second);
 
 	m_mRectMats[_type] = newMat;
-	newMat->AddRef();
 
 	return newMat;
 }

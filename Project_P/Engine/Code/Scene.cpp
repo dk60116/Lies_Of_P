@@ -354,24 +354,24 @@ void CScene::LateUpdate()
 void CScene::Render_Editor()
 {
 #ifndef _CLIENT_BUILD
-	// 0) ������ ī�޶� ������ ����
 	if (!m_pEditorCamera)
 		return;
 
-	// 1) ����Ʈ ������ ���� (Render_Game�� ����)
 	m_vLightData.clear();
 	for (TRAVERSAL_ITER(m_lLightList, it))
 	{
-		if (!(*it)) continue;
+		if (!(*it))
+			continue;
 		_float4x4 lightInfo = (*it)->To_LightInfo();
 		lightInfo._44 = (_float)m_lLightList.size();
 		m_vLightData.push_back(XMLoadFloat4x4(&lightInfo));
 	}
 
 	ID3D11DeviceContext* ctx = m_pContext;
-	if (!ctx) return;
 
-	// 2) ������ ����Ʈ
+	if (!ctx) 
+		return;
+
 	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_EditorViewport();
 	if (!vp)
 		vp = CGraphicDevice::GetInstance().Get_CurrentViewport();
@@ -388,13 +388,9 @@ void CScene::Render_Editor()
 
 	auto& trm = CRenderTargetManager::GetInstance();
 
-	// ------------------------------------------------------------
-	// A) Deferred: GBuffer ���ε�/Ŭ����
-	// ------------------------------------------------------------
-	trm.Bind_GBuffer(ctx, rtVP, /*isEditor=*/true);   // �� �̷� ���·� �б� �ʿ�
-	trm.Clear_GBuffer(/*isEditor=*/true);
+	trm.Bind_GBuffer(ctx, rtVP, true); 
+	trm.Clear_GBuffer(true);
 
-	// Skybox (���ϸ�)
 	if (m_pSkyBox)
 	{
 		ctx->RSSetState(m_pSkyBoxResterizerState);
@@ -402,16 +398,8 @@ void CScene::Render_Editor()
 		RenderSkyBox(m_pEditorCamera);
 	}
 
-	// Mesh �⺻ ����
 	ctx->RSSetState(m_pMeshResterizerState);
 	ctx->OMSetDepthStencilState(m_pMeshDepthStencilState, 0);
-
-	// ------------------------------------------------------------
-	// B) ���⼭ "������Ʈ���� ���� ����"�� ����� ��
-	// ------------------------------------------------------------
-	// ���� Render_Editor()���� ��� �׸��� ��,
-	//   - �� Renderer�� m_pEditorCamera->Add_RenderTarget_Mesh(this) ������ ����
-	// �� �ٲ�� editorCam->RenderMesh()�� �ǹ̰� ����.
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
@@ -421,16 +409,11 @@ void CScene::Render_Editor()
 		(*it)->OnPreCull_Editor();
 		(*it)->OnPreRender_Editor();
 
-		// �� �߿�: ���⼭ ��� Draw ���� ���� "����"�� �ϵ��� ������ ���ߴ� �� ����
-		(*it)->Render_Editor(); // ���ο��� Renderer���� editorCam�� Submit�ϵ���
+		(*it)->Render_Editor(); 
 	}
 
-	// ���� ��ο�� ī�޶� �Ѵ�
 	m_pEditorCamera->RenderMesh();
 
-	// ------------------------------------------------------------
-	// C) Shadow / ObjectID / Lighting / Combine
-	// ------------------------------------------------------------
 	m_pEditorCamera->RenderShadowDepthPass(rtVP);
 	m_pEditorCamera->RenderObjectIDPass(rtVP);
 	m_pEditorCamera->RenderLightingPass_ToDiffuse(rtVP);
@@ -438,30 +421,21 @@ void CScene::Render_Editor()
 	m_pEditorCamera->RenderShadowMaskPass(rtVP);
 	m_pEditorCamera->RenderCombine(rtVP);
 
-	// ------------------------------------------------------------
-	// D) BackBuffer�� ���� �� Present + Gizmo/UI
-	// ------------------------------------------------------------
-	// �� ������ â Ÿ������ ���� (�ʴ� GameWindow�� ���� ������ EditorWindow�� �־�� ��)
 	CGraphicDevice::GetInstance().Set_RenderTarget(CEditor::GetInstance().Get_EditorWindow());
 
 	ColorValue back = ColorValue::gray(0.3f);
 	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&back);
 	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
-	// Combine �� BackBuffer
 	m_pEditorCamera->RenderDisplay();
 
-	// Gizmo�� ���� ���⼭ (3D ����)
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->Render_Gizmo();
 
-	// RT Debug thumbnail ���� �͵� �ʿ��ϸ�
-	m_pEditorCamera->RenderRTDebugDisplay();
+	m_pEditorCamera->RenderRTDebugDisplay(true);
 
-	// PostRender
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->OnPostRender_Editor();
-
 #endif
 }
 
@@ -537,19 +511,16 @@ void CScene::Render_Game()
 		}
 	}
 
-	// BackBuffer ���� + UI/�����
 	CGraphicDevice::GetInstance().Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
 	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&backgroudColor);
 	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
-	// Combine Present�� ���� ����ۿ� ���
 	for (TRAVERSAL_ITER(m_lCameraList, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderDisplay();
 	}
 
-	// �� ���� UI
 	m_pContext->RSSetState(m_pUIResterizerState);
 	m_pContext->OMSetDepthStencilState(m_pUIDepthStencilState, 0);
 
@@ -557,10 +528,9 @@ void CScene::Render_Game()
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderUI();
 
-	// ���� �����(�����)
 	for (TRAVERSAL_ITER(m_lCameraList, it))
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
-			(*it)->RenderRTDebugDisplay();
+			(*it)->RenderRTDebugDisplay(false);
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->OnPostRender();

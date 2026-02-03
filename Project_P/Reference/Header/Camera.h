@@ -76,7 +76,7 @@ public:
 	void RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp);
 	void RenderShadowDepthPass(const D3D11_VIEWPORT* vp);
 	void RenderShadowMaskPass(const D3D11_VIEWPORT* vp);
-	void RenderRTDebugDisplay();
+	void RenderRTDebugDisplay(const _bool _renderingEditorPass);
 
 	void RenderCombine(const D3D11_VIEWPORT* vp);
 

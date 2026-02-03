@@ -34,8 +34,6 @@ HRESULT CRenderTargetManager::Initialize()
     if (!device || width <= 0 || height <= 0)
         return E_FAIL;
 
-    Destroy();
-
     if (FAILED(CreateTargets(device, (_uint)width, (_uint)height)))
         return E_FAIL;
     if (FAILED(CreateTargets(device, (_uint)width_E, (_uint)height_E, true)))
@@ -44,7 +42,7 @@ HRESULT CRenderTargetManager::Initialize()
     return S_OK;
 }
 
-void CRenderTargetManager::Destroy()
+void CRenderTargetManager::Release()
 {
     for (auto& kv : m_rtList)
         kv.second.Destroy();

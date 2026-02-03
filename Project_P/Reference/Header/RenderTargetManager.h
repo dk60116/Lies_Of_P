@@ -10,7 +10,7 @@ class ENGINE_DLL CRenderTargetManager final
 
 public:
     HRESULT Initialize();
-    void Destroy();
+    void Release();
 
     HRESULT Resize(ID3D11Device* device, UINT width, UINT height, const _bool _isEditor = false);
 
