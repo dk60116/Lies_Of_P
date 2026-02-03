@@ -353,10 +353,22 @@ void CScene::LateUpdate()
 
 void CScene::Render_Editor()
 {
-	ColorValue backgroudColor = ColorValue::gray(0.3f);
+	m_vLightData.clear();
 
-	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&backgroudColor);
-	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
+	for (TRAVERSAL_ITER(m_lLightList, it))
+	{
+		if (!(*it))
+			continue;
+		_float4x4 lightInfo = (*it)->To_LightInfo();
+		lightInfo._44 = (_float)m_lLightList.size();
+		m_vLightData.push_back(XMLoadFloat4x4(&lightInfo));
+	}
+
+	CCamera* editorCam = Get_EditorCamera();
+	if (!editorCam)
+		return;
+
+	ColorValue backgroudColor = editorCam->Get_BackgroundColor();
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
@@ -364,12 +376,69 @@ void CScene::Render_Editor()
 		{
 			(*it)->OnPreCull_Editor();
 			(*it)->OnPreRender_Editor();
+		}
+	}
+
+	for (TRAVERSAL_ITER(m_lObjectList, it))
+	{
+		if (!(*it)->IsRecursiveActive())
+			continue;
+
+		CRenderer* renderer = (*it)->GetComponent<CRenderer>();
+		if (!renderer || !renderer->Get_Enable())
+			continue;
+
+		editorCam->Add_RenderTarget_Mesh(renderer);
+	}
+
+	ID3D11DeviceContext* ctx = m_pContext;
+	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_EditorViewport();
+	if (!vp)
+		vp = CGraphicDevice::GetInstance().Get_CurrentViewport();
+
+	auto& trm = CRenderTargetManager::GetInstance();
+
+	trm.Bind_GBuffer(ctx, vp);
+	trm.Clear_GBuffer();
+
+	if (m_pSkyBox)
+	{
+		m_pContext->RSSetState(m_pSkyBoxResterizerState);
+		m_pContext->OMSetDepthStencilState(m_pSkyBoxDepthStencillState, 0);
+		RenderSkyBox(editorCam);
+	}
+
+	m_pContext->RSSetState(m_pMeshResterizerState);
+	m_pContext->OMSetDepthStencilState(m_pMeshDepthStencilState, 0);
+
+	editorCam->RenderMesh();
+	editorCam->RenderShadowDepthPass(vp);
+	editorCam->RenderObjectIDPass(vp);
+	editorCam->RenderLightingPass_ToDiffuse(vp);
+	editorCam->RenderLightingPass_ToSpecular(vp);
+	editorCam->RenderShadowMaskPass(vp);
+	editorCam->RenderCombine(vp);
+
+	CGraphicDevice::GetInstance().Set_RenderTarget(CEditor::GetInstance().Get_EditorWindow());
+	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&backgroudColor);
+	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
+
+	editorCam->RenderDisplay();
+
+	m_pContext->RSSetState(m_pUIResterizerState);
+	m_pContext->OMSetDepthStencilState(m_pUIDepthStencilState, 0);
+
+	for (TRAVERSAL_ITER(m_lObjectList, it))
+	{
+		if ((*it)->IsRecursiveActive())
+		{
 			(*it)->Render_Editor();
+			(*it)->Render_Gizmo();
 			(*it)->OnPostRender_Editor();
 		}
-
-		(*it)->Render_Gizmo();
 	}
+
+	editorCam->OnPostRender();
 }
 
 void CScene::Render_Game()
@@ -400,7 +469,7 @@ void CScene::Render_Game()
 	for (TRAVERSAL_ITER(m_lCameraList, it)) 
 		(*it)->OnPreRender();
 
-	// 3) GBuffer ÆÐ½º (MRT À¯Áö!)
+	// 3) GBuffer íŒ¨ìŠ¤ (MRT ìœ ì§€!)
 	ID3D11DeviceContext* ctx = m_pContext;
 	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_GameViewport();
 	if (!vp) 
@@ -445,19 +514,19 @@ void CScene::Render_Game()
 		}
 	}
 
-	// BackBuffer º¹±Í + UI/µð¹ö±×
+	// BackBuffer ë³µê·€ + UI/ë””ë²„ê·¸
 	CGraphicDevice::GetInstance().Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
 	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&backgroudColor);
 	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
-	// Combine Present¸¦ ¸ÕÀú ¹é¹öÆÛ¿¡ Ãâ·Â
+	// Combine Presentë¥¼ ë¨¼ì € ë°±ë²„í¼ì— ì¶œë ¥
 	for (TRAVERSAL_ITER(m_lCameraList, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderDisplay();
 	}
 
-	// ±× ´ÙÀ½ UI
+	// ê·¸ ë‹¤ìŒ UI
 	m_pContext->RSSetState(m_pUIResterizerState);
 	m_pContext->OMSetDepthStencilState(m_pUIDepthStencilState, 0);
 
@@ -465,7 +534,7 @@ void CScene::Render_Game()
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderUI();
 
-	// ÀÌÈÄ µð¹ö±×(½æ³×ÀÏ)
+	// ì´í›„ ë””ë²„ê·¸(ì¸ë„¤ì¼)
 	for (TRAVERSAL_ITER(m_lCameraList, it))
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderRTDebugDisplay();

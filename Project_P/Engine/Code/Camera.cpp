@@ -64,9 +64,6 @@ HRESULT CCamera::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
-	if (dynamic_cast<CEditorCamera*>(this))
-		return S_OK;
-
 	// Rect
 	m_pRectBuffer = CResources::GetInstance().LoadOnGame<CMeshBuffer>(L"Rect (Mesh Buffer)");
 	if (!m_pRectBuffer)
@@ -76,7 +73,7 @@ HRESULT CCamera::Initialize()
 	}
 	m_pRectBuffer->AddRef();
 
-	// Present Material (DeferredPresent.hlslÀ» »ç¿ëÇÏ´Â ¸ÓÆ¼¸®¾ó)
+	// Present Material (DeferredPresent.hlslì„ ì‚¬ìš©í•˜ëŠ” ë¨¸í‹°ë¦¬ì–¼)
 	CMaterial* presentMat = Add_RectMaterial(CRenderTarget::RTType::Present, L"DeferredPresent (Material)");
 	CMaterial* ObjectPresentMat = Add_RectMaterial(CRenderTarget::RTType::ObjectPresent, L"ObjectIDPresent (Material)");
 	CMaterial* depthPresentMat = Add_RectMaterial(CRenderTarget::RTType::Depth, L"DepthPresent (Material)");
@@ -88,7 +85,7 @@ HRESULT CCamera::Initialize()
 	CMaterial* specularMat = Add_RectMaterial(CRenderTarget::RTType::Specular, L"DeferredSpecular (Material)");
 	CMaterial* shadowMaskMat = Add_RectMaterial(CRenderTarget::RTType::ShadowMask, L"ShadowMask (Material)");
 
-	// µğ½ºÇÃ·¹ÀÌ µî·Ï
+	// ë””ìŠ¤í”Œë ˆì´ ë“±ë¡
 	auto pushDisplay = [&](CRenderTarget::RTType type, CMaterial* mat)
 		{
 			RTDebugDisplay desc = {};
@@ -110,7 +107,7 @@ HRESULT CCamera::Initialize()
 	pushDisplay(CRenderTarget::RTType::Specular, presentMat);
 	pushDisplay(CRenderTarget::RTType::ShadowMask, shadowMaskPresentMat);
 
-	// Debug pipeline states »ı¼º
+	// Debug pipeline states ìƒì„±
 	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 
 	if (!device)
@@ -228,9 +225,6 @@ void CCamera::OnPostRender()
 
 void CCamera::OnDestroy()
 {
-	if (dynamic_cast<CEditorCamera*>(this))
-		return;
-
 	Safe_Release(m_pRectBuffer);
 
 	for (TRAVERSAL_ITER(m_mRectMats, it))
@@ -408,9 +402,6 @@ void CCamera::RenderUI()
 
 void CCamera::RenderDisplay()
 {
-	 if (dynamic_cast<CEditorCamera*>(this))
-        return;
-
     if (!m_pRectBuffer)
         return;
 
@@ -448,7 +439,11 @@ void CCamera::RenderDisplay()
 	_uint prevVPCount = 1;
     ctx->RSGetViewports(&prevVPCount, &prevVP);
 
-    // --- ºäÆ÷Æ® (°ÔÀÓ ºäÆ÷Æ® ¿ì¼±)
+    const D3D11_VIEWPORT* useVP = nullptr;
+    if (dynamic_cast<CEditorCamera*>(this))
+        useVP = CGraphicDevice::GetInstance().Get_EditorViewport();
+    else
+        useVP = CGraphicDevice::GetInstance().Get_GameViewport();
     const D3D11_VIEWPORT* useVP = CGraphicDevice::GetInstance().Get_GameViewport();
 
     if (!useVP) 
@@ -514,13 +509,13 @@ void CCamera::RenderRTDebugDisplay()
 	context->RSGetState(&prevRS);
 	context->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
-	// µğ¹ö±× »óÅÂ Àû¿ë
+	// ë””ë²„ê·¸ ìƒíƒœ ì ìš©
 	context->OMSetDepthStencilState(m_pRTDebugDS, 0);
 	context->RSSetState(m_pRTDebugRS);
 	const _float bf[4] = { 0,0,0,0 };
 	context->OMSetBlendState(m_pRTDebugBS, bf, 0xFFFFFFFF);
 
-	// ½ºÅ©¸° ÇØ»óµµ
+	// ìŠ¤í¬ë¦° í•´ìƒë„
 	auto res = CDisplay::GetInstance().Get_ScreenResolution();
 	_float screenW = (_float)res.x;
 	_float screenH = (_float)res.y;
@@ -558,7 +553,7 @@ void CCamera::RenderRTDebugDisplay()
 
 	const _int kCount = (_int)(sizeof(types) / sizeof(types[0]));
 
-	// ½æ³×ÀÏ Å©±â
+	// ì¸ë„¤ì¼ í¬ê¸°
 	const _uint screenes = CDisplay::GetInstance().Get_ScreenResolution().y;
 	const _float resHeightFive = (CDisplay::GetInstance().Get_ScreenResolution().y / 5.f) * 1.6f;
 	_float maxBox = resHeightFive;
@@ -826,9 +821,6 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 
 void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 {
-	if (dynamic_cast<CEditorCamera*>(this))
-		return;
-
 	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 	ID3D11DeviceContext* ctx = CGraphicDevice::GetInstance().Get_Context();
 
@@ -876,7 +868,7 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	vpt.MaxDepth = 1.f;
 	ctx->RSSetViewports(1, &vpt);
 
-	// Clear (±íÀÌ = 1)
+	// Clear (ê¹Šì´ = 1)
 	ctx->ClearDepthStencilView(dsvShadow, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	if (m_pRTShadowDepthDS)
@@ -921,9 +913,6 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 
 void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 {
-	if (dynamic_cast<CEditorCamera*>(this))
-		return;
-
 	ID3D11DeviceContext* ctx = CGraphicDevice::GetInstance().Get_Context();
 
 	if (!ctx || !m_pRectBuffer || !m_pInvViewProjCB || !m_pShadowCB)
@@ -1057,7 +1046,7 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	if (!srvDepth || !srvAlbedo || !srvDiffuse || !srvSpecular || !srvShadow || !rtvCombine)
 		return;
 
-	// --- »óÅÂ ¹é¾÷
+	// --- ìƒíƒœ ë°±ì—…
 	ID3D11RenderTargetView* prevRTV = nullptr;
 	ID3D11DepthStencilView* prevDSV = nullptr;
 	ctx->OMGetRenderTargets(1, &prevRTV, &prevDSV);
@@ -1077,10 +1066,10 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	ctx->RSGetState(&prevRS);
 	ctx->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
-	// --- SRV Ãæµ¹ ¹æÁö
+	// --- SRV ì¶©ëŒ ë°©ì§€
 	rtm.Unbind_AllSRVs_PS(ctx);
 
-	// --- Specular RTV ¹ÙÀÎµù (Depth´Â ÇÊ¿ä ¾øÀ¸¸é nullptr·Î)
+	// --- Specular RTV ë°”ì¸ë”© (DepthëŠ” í•„ìš” ì—†ìœ¼ë©´ nullptrë¡œ)
 	ctx->OMSetRenderTargets(1, &rtvCombine, nullptr);
 
 	const D3D11_VIEWPORT* useVP = vp ? vp : CGraphicDevice::GetInstance().Get_GameViewport();
@@ -1090,15 +1079,15 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	const _float clear[4] = { (_float)m_vBackgroundColor.r, (_float)m_vBackgroundColor.g, (_float)m_vBackgroundColor.b, 1.f };
 	ctx->ClearRenderTargetView(rtvCombine, clear);
 
-	// --- µğ¹ö±×¿ë »óÅÂ Àç»ç¿ë(DepthTest OFF / Cull OFF)
+	// --- ë””ë²„ê·¸ìš© ìƒíƒœ ì¬ì‚¬ìš©(DepthTest OFF / Cull OFF)
 	if (m_pRTDebugDS)
 		ctx->OMSetDepthStencilState(m_pRTDebugDS, 0);
 	if (m_pRTDebugRS)
 		ctx->RSSetState(m_pRTDebugRS);
 	const _float bf[4] = { 0.f, 0.f, 0.f, 0.f };
-	ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF); // ÇÑ ¹ø¿¡ ¸ğµç ¶óÀÌÆ® ÇÕ»êÀÌ¸é ºí·»µå ºÒÇÊ¿ä
+	ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF); // í•œ ë²ˆì— ëª¨ë“  ë¼ì´íŠ¸ í•©ì‚°ì´ë©´ ë¸”ë Œë“œ ë¶ˆí•„ìš”
 
-	// --- Ç®½ºÅ©¸° Äõµå¿ë Ä«¸Ş¶ó(ÇÈ¼¿ Ortho)
+	// --- í’€ìŠ¤í¬ë¦° ì¿¼ë“œìš© ì¹´ë©”ë¼(í”½ì…€ Ortho)
 	_float W = useVP ? useVP->Width : (_float)CDisplay::GetInstance().Get_ScreenResolution().x;
 	_float H = useVP ? useVP->Height : (_float)CDisplay::GetInstance().Get_ScreenResolution().y;
 
@@ -1106,7 +1095,7 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	_matrix p = XMMatrixOrthographicOffCenterLH(0.f, W, H, 0.f, 0.f, 1.f);
 	_matrix w = XMMatrixScaling(W, H, 1.f) * XMMatrixTranslation(W * 0.5f, H * 0.5f, 0.f);
 
-	// --- ´õ¹Ì Ä«¸Ş¶ó Á¤º¸ 
+	// --- ë”ë¯¸ ì¹´ë©”ë¼ ì •ë³´ 
 	_float3 camPos = {};
 
 	InvViewProjCB invCB = { };
@@ -1115,21 +1104,21 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 
 	CMaterial* combineMat = Find_RectMaterial(CRenderTarget::RTType::Combine);
 
-	// --- ¸ÓÆ¼¸®¾ó ¹ÙÀÎµù
+	// --- ë¨¸í‹°ë¦¬ì–¼ ë°”ì¸ë”©
 	combineMat->Bind_Matrix(w);
 	combineMat->Bind_Camera(camPos, v, p, 0);
 
-	// --- SRV ¹ÙÀÎµù
+	// --- SRV ë°”ì¸ë”©
 	ID3D11ShaderResourceView* srvs[5] = { srvAlbedo, srvDepth, srvDiffuse, srvSpecular, srvShadow };
 	ctx->PSSetShaderResources(0, 5, srvs);
 
 	// --- Draw
 	m_pRectBuffer->Render();
 
-	// --- Á¤¸®
+	// --- ì •ë¦¬
 	rtm.Unbind_AllSRVs_PS(ctx);
 
-	// --- »óÅÂ º¹¿ø
+	// --- ìƒíƒœ ë³µì›
 	ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
 	if (prevVPCount > 0)
 		ctx->RSSetViewports(1, &prevVP);
@@ -1159,7 +1148,7 @@ const _int CCamera::GetColorPickingID(const vector2Int& _mouseVPPos)
 	ID3D11Texture2D* srcTex = rtm.GetTexture(CRenderTarget::RTType::Object);
 	if (!srcTex) return 0;
 
-	// 1x1 ¿µ¿ª¸¸ º¹»ç
+	// 1x1 ì˜ì—­ë§Œ ë³µì‚¬
 	D3D11_BOX box;
 	box.left = _mouseVPPos.x;
 	box.right = _mouseVPPos.x + 1;

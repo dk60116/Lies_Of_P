@@ -50,8 +50,11 @@ void CMeshRenderer::OnPreRender()
 
 void CMeshRenderer::Render_Editor()
 {
-	m_pContext->OMSetDepthStencilState(CSceneManager::GetInstance().Get_CrtScene()->Get_MeshStencillState(), 0);
-	Render_WithCamera(CSceneManager::GetInstance().Get_CrtScene()->Get_EditorCamera());
+	CCamera* editorCam = CSceneManager::GetInstance().Get_CrtScene()->Get_EditorCamera();
+	if (!editorCam)
+		return;
+
+	editorCam->Add_RenderTarget_Mesh(this);
 }
 
 void CMeshRenderer::Render()
@@ -90,13 +93,13 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 		return;
 	}
 
-	// MeshBuffer °¡Á®¿À±â
+	// MeshBuffer ê°€ì ¸ì˜¤ê¸°
 	CMeshBuffer* pBuffer = m_pMeshFilter->Get_MeshBuffer();
 
 	if (!pBuffer)
 		return;
 
-	// World / View / Projection Çà·Ä °è»ê
+	// World / View / Projection í–‰ë ¬ ê³„ì‚°
 
 	vector3 cPos = _cam->Get_Transform()->Get_Position();
 	_float3 camPos = cPos.toFloat3();
@@ -104,7 +107,7 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 	_matrix matView = _cam->Get_ViewMatrix();
 	_matrix matProj = _cam->Get_ProjectionMatrix();
 
-	// ¼ÎÀÌ´õ + ÅØ½ºÃ³ + »ó¼ö ¹öÆÛ ¹ÙÀÎµù
+	// ì…°ì´ë” + í…ìŠ¤ì²˜ + ìƒìˆ˜ ë²„í¼ ë°”ì¸ë”©
 	m_pMaterial->Bind_Matrix(matWorld);
 	m_pMaterial->Bind_Camera(camPos, matView, matProj, 0);
 
@@ -136,7 +139,7 @@ void CMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const CLight:
 	_matrix matView = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(&_shadowMatrix.view));
 	_matrix matProj = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(&_shadowMatrix.proj));
 
-	// Shadow depth´Â camPos ÀÇ¹Ì ¾øÀ¸¹Ç·Î ´õ¹Ì
+	// Shadow depthëŠ” camPos ì˜ë¯¸ ì—†ìœ¼ë¯€ë¡œ ë”ë¯¸
 	_float3 dummyPos = { 0.f, 0.f, 0.f };
 
 	_shadowDepthMat->Bind_Matrix(matWorld);
