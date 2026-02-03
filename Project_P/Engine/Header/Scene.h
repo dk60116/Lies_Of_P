@@ -124,6 +124,10 @@ protected:
     ID3D11Device* m_pDevice;
     ID3D11DeviceContext* m_pContext;
 
+private:
+    void PickObjectInEditor_Start();
+    void PickObjectInEditor_End();
+
 protected:
     _uint m_iSceneIndex;
     wstring m_strSceneName;
@@ -153,6 +157,8 @@ protected:
     vector<_matrix> m_vLightData;
 
     _float m_fPssedTime;
+
+    vector2Int m_vTempPickMousePos;
 };
 
 NS_END

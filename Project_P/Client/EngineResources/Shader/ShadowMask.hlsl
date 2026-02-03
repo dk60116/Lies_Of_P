@@ -77,10 +77,10 @@ float4 PSMain(VSOut i) : SV_Target
 
     float sceneDepth = gSceneDepth.SampleLevel(gSampler, uv, 0);
     
-    float d = gShadowDepth.SampleLevel(gSampler, uv, 0);
+    //float d = gShadowDepth.SampleLevel(gSampler, uv, 0);
 
-    float v = saturate((1.0f - d));
-    return float4(v, v, v, 1);
+    //float v = saturate((1.0f - d));
+    //return float4(v, v, v, 1);
     
     if (sceneDepth >= 0.999999f)
         return float4(1, 1, 1, 1);

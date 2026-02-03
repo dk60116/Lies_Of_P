@@ -33,6 +33,7 @@ CScene::CScene()
 	, m_pBlendingState(nullptr)
 	, m_pNoneBlendingState(nullptr)
 	, m_fPssedTime(0.f)
+	, m_vTempPickMousePos({-1, -1})
 {
 	m_strName = L"Scene";
 
@@ -248,6 +249,9 @@ void CScene::Start()
 
 void CScene::Update_Editor()
 {
+	PickObjectInEditor_End();
+	PickObjectInEditor_Start();
+
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->Update_Editor();
 
@@ -295,14 +299,6 @@ void CScene::Update_Editor()
 
 void CScene::Update()
 {
-	if (CInput::GetInstance().GetMouseButtonDown(1))
-	{
-		const _uint id = Get_Camera()->GetColorPickingID(CInput::GetInstance().GetMousePos());
-		CGameObject* pickedObj = FindGameObjectOfId(id);
-		if (pickedObj)
-			CDebug::LogError(L"Picked: " + pickedObj->Get_ObjectName());
-	}
-
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
 		if ((*it)->IsRecursiveActive())
@@ -1103,6 +1099,28 @@ HRESULT CScene::PreLoadResources()
 	CSceneLoader::GetInstance().StartLoading(nameList, fileList, formatList);
 
 	return S_OK;
+}
+
+void CScene::PickObjectInEditor_Start()
+{
+	if (CInput::GetInstance().GetMouseButtonDown_Editor(0))
+		m_vTempPickMousePos = CInput::GetInstance().GetMousePos_Editor();
+}
+
+void CScene::PickObjectInEditor_End()
+{
+	if (CInput::GetInstance().GetMouseButtonUp_Editor(0))
+	{
+		const vector2Int mp = CInput::GetInstance().GetMousePos_Editor();
+
+		if (m_vTempPickMousePos == mp)
+		{
+			const _uint id = Get_EditorCamera()->GetColorPickingID(mp);
+			CGameObject* pickedObj = FindGameObjectOfId(id);
+			if (id != 0 && pickedObj)
+				CEditor::GetInstance().Set_SelectedGameObject(pickedObj);
+		}
+	}
 }
 
 ID3D11DepthStencilState* CScene::Get_MeshStencillState() const

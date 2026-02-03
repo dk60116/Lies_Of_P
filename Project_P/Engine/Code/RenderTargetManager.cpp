@@ -267,7 +267,6 @@ HRESULT CRenderTargetManager::CreateTargets(ID3D11Device* device, _uint width, _
     if (!device || width == 0 || height == 0)
         return E_FAIL;
 
-    // ¿˙¿Â
     if (_isEditor)
     {
         m_iWidth_E = width;
@@ -299,10 +298,13 @@ HRESULT CRenderTargetManager::CreateTargets(ID3D11Device* device, _uint width, _
     if (FAILED(rt[CRenderTarget::RTType::Depth].Create(CRenderTarget::RTType::Depth, device, width, height, DXGI_FORMAT_R24G8_TYPELESS, true)))
         return E_FAIL;
 
-    _uint shadowMapSize = CSceneManager::GetInstance().Get_LightSetting().shadowMapSize;
+    if (!_isEditor)
+    {
+        _uint shadowMapSize = CSceneManager::GetInstance().Get_LightSetting().shadowMapSize;
 
-    if (FAILED(rt[CRenderTarget::RTType::ShadowDepth].Create(CRenderTarget::RTType::ShadowDepth, device, shadowMapSize, shadowMapSize, DXGI_FORMAT_R32_TYPELESS, true)))
-        return E_FAIL;
+        if (FAILED(rt[CRenderTarget::RTType::ShadowDepth].Create(CRenderTarget::RTType::ShadowDepth, device, shadowMapSize, shadowMapSize, DXGI_FORMAT_R32_TYPELESS, true)))
+            return E_FAIL;
+    }
 
     if (FAILED(rt[CRenderTarget::RTType::Diffuse].Create(CRenderTarget::RTType::Diffuse, device, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT, true)))
         return E_FAIL;

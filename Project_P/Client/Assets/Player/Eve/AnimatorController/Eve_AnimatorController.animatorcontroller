@@ -13,11 +13,6 @@ float turnDir=0
 trigger Attack
 int AttackCombo=0
 
-[state Idle]
-motion=Eve_Idle
-speedMul=1.000000
-pos=176,148
-
 [state Attack_Light_04]
 motion=Eve_Attack_Light_04
 speedMul=1.000000
@@ -28,20 +23,25 @@ motion=Eve_Run_Forward_Start
 speedMul=1.000000
 pos=580,145
 
-[state Run_Forward]
-motion=Eve_Run_Forward_During
+[state Idle]
+motion=Eve_Idle
 speedMul=1.000000
-pos=582,372
+pos=176,148
+
+[state Attack_Light_01]
+motion=Eve_Attack_Light_01
+speedMul=1.000000
+pos=-242,118
 
 [state Run_End]
 motion=Eve_Run_Forward_End
 speedMul=1.000000
 pos=176,376
 
-[state Attack_Light_01]
-motion=Eve_Attack_Light_01
+[state Run_Forward]
+motion=Eve_Run_Forward_During
 speedMul=1.000000
-pos=-242,118
+pos=582,372
 
 [state Run_TurnL]
 motion=Eve_Run_TurnL
@@ -56,7 +56,7 @@ pos=295,-131
 [state Attack_Light_02]
 motion=Eve_Attack_Light_02
 speedMul=1.000000
-pos=-241,267
+pos=-243,257
 
 [state Attack_Light_03]
 motion=Eve_Attack_Light_03
