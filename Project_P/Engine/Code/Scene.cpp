@@ -33,6 +33,9 @@ CScene::CScene()
 	, m_pBlendingState(nullptr)
 	, m_pNoneBlendingState(nullptr)
 	, m_fPssedTime(0.f)
+	, m_v2EditorPickStart(vector2Int::zero())
+	, m_bEditorPickStarted(false)
+	, m_bEditorPickDragged(false)
 {
 	m_strName = L"Scene";
 
@@ -251,36 +254,68 @@ void CScene::Update_Editor()
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->Update_Editor();
 
-	CPhysics::RAYCASTHIT firstHit = {};
+	const _bool wantsMouse = ImGui::GetIO().WantCaptureMouse;
 
 	if (CInput::GetInstance().GetMouseButtonDown_Editor(0))
 	{
-		const vector2Int point = CInput::GetInstance().GetMousePos_Editor();
-		CPhysics::Ray ray = m_pEditorCamera->ScreenPointToRay_Editor(point);
-
-		auto hits = CPhysics::GetInstance().Raycast(ray);
-
-		if (hits.size() <= 0)
-			return;
-
-		firstHit = hits[0];
-
-		//CEditor::GetInstance().Set_SelectedGameObject(firstHit.object);
-
-		if (CInput::GetInstance().GetKey_Editor(CONTROL))
+		if (!wantsMouse)
 		{
-			CDebug::LogError("Ray Origin & Dir");
-			CDebug::LogError(ray.origin);
-			CDebug::LogError(ray.dir);
-			CDebug::LogError("HitPos");
-			CDebug::LogError(firstHit.hitPos);
-			CDebug::LogError(firstHit.object->Get_ObjectName());
-
-			CGameObject* newObj = Add_GameObject(L"AddObj");
-			CMeshRenderer* newRen = newObj->AddComponent<CMeshRenderer>();
-			newRen->Get_MeshFilter()->Set_MeshBuffer(CResources::GetInstance().LoadOnGame<CMeshBuffer>(L"Cube (Mesh Buffer)"));
-			newRen->Get_Transform()->Get_Transform()->Set_Position(firstHit.hitPos);
+			m_bEditorPickStarted = true;
+			m_bEditorPickDragged = false;
+			m_v2EditorPickStart = CInput::GetInstance().GetMousePos_Editor();
 		}
+		else
+		{
+			m_bEditorPickStarted = false;
+			m_bEditorPickDragged = false;
+		}
+	}
+
+	if (m_bEditorPickStarted && CInput::GetInstance().GetMouseButton_Editor(0))
+	{
+		const vector2Int current = CInput::GetInstance().GetMousePos_Editor();
+		const vector2Int delta = current - m_v2EditorPickStart;
+		const int dragThresholdSq = 4;
+		if (delta.lengthSq() > dragThresholdSq)
+			m_bEditorPickDragged = true;
+	}
+
+	if (CInput::GetInstance().GetMouseButtonUp_Editor(0))
+	{
+		if (m_bEditorPickStarted && !m_bEditorPickDragged && !wantsMouse)
+		{
+			const vector2Int point = CInput::GetInstance().GetMousePos_Editor();
+			CPhysics::Ray ray = m_pEditorCamera->ScreenPointToRay_Editor(point);
+			auto hits = CPhysics::GetInstance().Raycast(ray);
+
+			if (hits.size() > 0)
+			{
+				CPhysics::RAYCASTHIT firstHit = hits[0];
+				CEditor::GetInstance().Set_SelectedGameObject(firstHit.object);
+
+				if (CInput::GetInstance().GetKey_Editor(CONTROL))
+				{
+					CDebug::LogError("Ray Origin & Dir");
+					CDebug::LogError(ray.origin);
+					CDebug::LogError(ray.dir);
+					CDebug::LogError("HitPos");
+					CDebug::LogError(firstHit.hitPos);
+					CDebug::LogError(firstHit.object->Get_ObjectName());
+
+					CGameObject* newObj = Add_GameObject(L"AddObj");
+					CMeshRenderer* newRen = newObj->AddComponent<CMeshRenderer>();
+					newRen->Get_MeshFilter()->Set_MeshBuffer(CResources::GetInstance().LoadOnGame<CMeshBuffer>(L"Cube (Mesh Buffer)"));
+					newRen->Get_Transform()->Get_Transform()->Set_Position(firstHit.hitPos);
+				}
+			}
+			else
+			{
+				CEditor::GetInstance().Set_SelectedGameObject(nullptr);
+			}
+		}
+
+		m_bEditorPickStarted = false;
+		m_bEditorPickDragged = false;
 	}
 
 	if (CInput::GetInstance().GetKey_Editor(CONTROL))
@@ -400,7 +435,7 @@ void CScene::Render_Game()
 	for (TRAVERSAL_ITER(m_lCameraList, it)) 
 		(*it)->OnPreRender();
 
-	// 3) GBuffer ÆÐ½º (MRT À¯Áö!)
+	// 3) GBuffer ï¿½Ð½ï¿½ (MRT ï¿½ï¿½ï¿½ï¿½!)
 	ID3D11DeviceContext* ctx = m_pContext;
 	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_GameViewport();
 	if (!vp) 
@@ -445,19 +480,19 @@ void CScene::Render_Game()
 		}
 	}
 
-	// BackBuffer º¹±Í + UI/µð¹ö±×
+	// BackBuffer ï¿½ï¿½ï¿½ï¿½ + UI/ï¿½ï¿½ï¿½ï¿½ï¿½
 	CGraphicDevice::GetInstance().Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
 	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&backgroudColor);
 	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
-	// Combine Present¸¦ ¸ÕÀú ¹é¹öÆÛ¿¡ Ãâ·Â
+	// Combine Presentï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Û¿ï¿½ ï¿½ï¿½ï¿½
 	for (TRAVERSAL_ITER(m_lCameraList, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderDisplay();
 	}
 
-	// ±× ´ÙÀ½ UI
+	// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ UI
 	m_pContext->RSSetState(m_pUIResterizerState);
 	m_pContext->OMSetDepthStencilState(m_pUIDepthStencilState, 0);
 
@@ -465,7 +500,7 @@ void CScene::Render_Game()
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderUI();
 
-	// ÀÌÈÄ µð¹ö±×(½æ³×ÀÏ)
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½)
 	for (TRAVERSAL_ITER(m_lCameraList, it))
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderRTDebugDisplay();

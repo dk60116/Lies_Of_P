@@ -153,6 +153,10 @@ protected:
     vector<_matrix> m_vLightData;
 
     _float m_fPssedTime;
+
+    vector2Int m_v2EditorPickStart;
+    _bool m_bEditorPickStarted;
+    _bool m_bEditorPickDragged;
 };
 
 NS_END
