@@ -259,15 +259,19 @@ void CScene::Update_Editor()
 		CPhysics::Ray ray = m_pEditorCamera->ScreenPointToRay_Editor(point);
 
 		auto hits = CPhysics::GetInstance().Raycast(ray);
+		const bool hasHit = !hits.empty();
 
-		if (hits.size() <= 0)
-			return;
+		if (hasHit)
+		{
+			firstHit = hits[0];
+			CEditor::GetInstance().Set_SelectedGameObject(firstHit.object);
+		}
+		else
+		{
+			CEditor::GetInstance().Set_SelectedGameObject(nullptr);
+		}
 
-		firstHit = hits[0];
-
-		CEditor::GetInstance().Set_SelectedGameObject(firstHit.object);
-
-		if (CInput::GetInstance().GetKey_Editor(CONTROL))
+		if (hasHit && CInput::GetInstance().GetKey_Editor(CONTROL))
 		{
 			CDebug::LogError("Ray Origin & Dir");
 			CDebug::LogError(ray.origin);
