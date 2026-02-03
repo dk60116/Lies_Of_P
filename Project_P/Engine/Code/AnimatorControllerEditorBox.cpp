@@ -846,14 +846,16 @@ void CAnimatorControllerEditorBox::RenderGraph()
 
     ImGui::Separator();
 
-    if (ImGui::IsWindowHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
+    const bool graphHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+
+    if (graphHovered && ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
     {
         ImVec2 d = ImGui::GetIO().MouseDelta;
         m_pan.x += d.x / m_zoom;
         m_pan.y += d.y / m_zoom;
     }
 
-    if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+    if (graphHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
     {
         m_pendingTransitionFrom.clear();
         m_pendingSourceType = EPendingSource::None;
@@ -862,7 +864,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImVec2 origin = ImGui::GetCursorScreenPos();
 
-    if (ImGui::IsWindowHovered())
+    if (graphHovered)
     {
         float wheel = ImGui::GetIO().MouseWheel;
         if (wheel != 0.0f)
@@ -1005,7 +1007,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
                 anyCenter);
             drawArrowLine(from, to, isSelected ? selectedCol : anyCol, 2.0f);
 
-            if (DistancePointToSegment(mousePos, from, to) <= 6.f)
+            if (graphHovered && DistancePointToSegment(mousePos, from, to) <= 6.f)
             {
                 if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
                     clickedTransition = i;
@@ -1072,7 +1074,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
 
         drawArrowLine(from, to, isSelected ? selectedCol : stateCol, 2.0f);
 
-        if (DistancePointToSegment(mousePos, from, to) <= 6.f)
+        if (graphHovered && DistancePointToSegment(mousePos, from, to) <= 6.f)
         {
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
                 clickedTransition = i;
@@ -1086,7 +1088,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
         m_eSelectType = ESelectType::Transition;
         m_iSelectedTransitionIndex = clickedTransition;
     }
-    else if (ImGui::IsWindowHovered() &&
+    else if (graphHovered &&
         ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
         !ImGui::IsAnyItemHovered())
     {
