@@ -231,11 +231,6 @@ void CCamera::OnPostRender()
 
 void CCamera::OnDestroy()
 {
-	Safe_Release(m_pRectBuffer);
-
-	for (TRAVERSAL_ITER(m_mRectMats, it))
-		Safe_Release((*it).second);
-
 	m_mRectMats.clear();
 
 	m_mRTDebugDisplays.clear();
@@ -1350,8 +1345,6 @@ CMaterial* CCamera::Add_RectMaterial(const CRenderTarget::RTType _type, const ws
 		Safe_Release(m_pMainLight);
 		return nullptr;
 	}
-
-	newMat->AddRef();
 
 	auto it = m_mRectMats.find(_type);
 
