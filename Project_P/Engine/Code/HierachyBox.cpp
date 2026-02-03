@@ -82,8 +82,7 @@ void CHierachyBox::Render()
 		nullptr,
 		ImGuiWindowFlags_NoMove |
 		ImGuiWindowFlags_NoResize |
-		ImGuiWindowFlags_NoCollapse |
-		ImGuiWindowFlags_HorizontalScrollbar
+		ImGuiWindowFlags_NoCollapse
 	);
 
 	ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 6.f);
@@ -96,8 +95,12 @@ void CHierachyBox::Render()
 		const string filterText = TrimCopy(m_searchBuffer.data());
 		const string filterLower = ToLowerCopy(filterText);
 
-		for (auto& obj : currentScene->Get_RootObjects())
-			RenderObjectHierarchy(obj, filterLower);
+		if (ImGui::BeginChild("HierarchyScrollRegion", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar))
+		{
+			for (auto& obj : currentScene->Get_RootObjects())
+				RenderObjectHierarchy(obj, filterLower);
+		}
+		ImGui::EndChild();
 	}
 
 	ImGui::PopStyleVar();
