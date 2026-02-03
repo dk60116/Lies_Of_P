@@ -1351,6 +1351,8 @@ CMaterial* CCamera::Add_RectMaterial(const CRenderTarget::RTType _type, const ws
 		return nullptr;
 	}
 
+	newMat->AddRef();
+
 	auto it = m_mRectMats.find(_type);
 
 	if (it != m_mRectMats.end())

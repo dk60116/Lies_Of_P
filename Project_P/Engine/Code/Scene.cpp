@@ -279,11 +279,6 @@ void CScene::Update_Editor()
 			CDebug::LogError("HitPos");
 			CDebug::LogError(firstHit.hitPos);
 			CDebug::LogError(firstHit.object->Get_ObjectName());
-
-			CGameObject* newObj = Add_GameObject(L"AddObj");
-			CMeshRenderer* newRen = newObj->AddComponent<CMeshRenderer>();
-			newRen->Get_MeshFilter()->Set_MeshBuffer(CResources::GetInstance().LoadOnGame<CMeshBuffer>(L"Cube (Mesh Buffer)"));
-			newRen->Get_Transform()->Get_Transform()->Set_Position(firstHit.hitPos);
 		}
 	}
 

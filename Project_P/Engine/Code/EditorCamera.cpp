@@ -162,4 +162,5 @@ void CEditorCamera::Update()
 
 void CEditorCamera::OnDestroy()
 {
+	__super::OnDestroy();
 }
