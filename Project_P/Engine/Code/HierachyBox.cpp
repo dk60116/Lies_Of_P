@@ -106,6 +106,9 @@ void CHierachyBox::Render()
 		{
 			for (auto& obj : currentScene->Get_RootObjects())
 				RenderObjectHierarchy(obj, filterLower);
+
+			if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0) && !ImGui::IsAnyItemHovered())
+				editor.Clear_SelectedGameObjects();
 		}
 		ImGui::EndChild();
 	}

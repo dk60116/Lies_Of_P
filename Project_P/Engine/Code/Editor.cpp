@@ -391,6 +391,34 @@ bool CEditor::Is_SelectedGameObject(CGameObject* _target) const
 	return find(m_selectedGameObjects.begin(), m_selectedGameObjects.end(), _target) != m_selectedGameObjects.end();
 }
 
+bool CEditor::Get_SelectedGameObjectsAveragePosition(vector3& outPosition) const
+{
+	if (m_selectedGameObjects.empty())
+		return false;
+
+	vector3 sum = vector3::zero();
+	_uint count = 0;
+
+	for (auto* obj : m_selectedGameObjects)
+	{
+		if (!obj)
+			continue;
+
+		CTransform* transform = obj->Get_Transform();
+		if (!transform)
+			continue;
+
+		sum += transform->Get_Position();
+		++count;
+	}
+
+	if (count == 0)
+		return false;
+
+	outPosition = sum / static_cast<_float>(count);
+	return true;
+}
+
 void CEditor::OpenAsset(const fs::path& path)
 {
 	std::error_code ec;

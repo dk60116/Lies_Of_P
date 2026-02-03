@@ -53,6 +53,7 @@ public:
 	CGameObject* Get_SelectedGameObject() const;
 	const vector<CGameObject*>& Get_SelectedGameObjects() const;
 	bool Is_SelectedGameObject(class CGameObject* _target) const;
+	bool Get_SelectedGameObjectsAveragePosition(vector3& outPosition) const;
 
 public:
 	void OpenAsset(const fs::path& path);

@@ -89,7 +89,8 @@ void CRectTransform::Update()
 
 void CRectTransform::Render_Gizmo()
 {
-    if (CEditor::GetInstance().Get_SelectedGameObject() != m_pGameObject)
+    CEditor& editor = CEditor::GetInstance();
+    if (editor.Get_SelectedGameObject() != m_pGameObject)
         return;
 
     CCanvas* canvas = m_pUI->Get_Canvas();
@@ -101,7 +102,16 @@ void CRectTransform::Render_Gizmo()
     _matrix viewMatrix = editorCam->Get_ViewMatrix();
     _matrix projMatrix = editorCam->Get_ProjectionMatrix();
 
-    _matrix worldMatrix = XMLoadFloat4x4(&m_vMatWorld);
+    _float4x4 worldMatrixValue = m_vMatWorld;
+    vector3 averagePosition = {};
+    if (editor.Get_SelectedGameObjects().size() > 1 && editor.Get_SelectedGameObjectsAveragePosition(averagePosition))
+    {
+        worldMatrixValue._41 = averagePosition.x;
+        worldMatrixValue._42 = averagePosition.y;
+        worldMatrixValue._43 = averagePosition.z;
+    }
+
+    _matrix worldMatrix = XMLoadFloat4x4(&worldMatrixValue);
 
     vector2 pivotTrans = {};
 
@@ -157,7 +167,6 @@ void CRectTransform::Render_Gizmo()
 
     static ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;
 
-    CEditor& editor = CEditor::GetInstance();
     CEditor::TransformControleTool mode = editor.Get_ControleTool();
 
     if (mode == CEditor::TransformControleTool::MOVE)
@@ -185,23 +194,23 @@ void CRectTransform::Render_Gizmo()
 
         if (m_pParent)
         {
-            // ºÎ¸ğÀÇ ¿ùµå Çà·ÄÀÇ ¿ªÇà·Ä
+            // ë¶€ëª¨ì˜ ì›”ë“œ í–‰ë ¬ì˜ ì—­í–‰ë ¬
             _matrix parentInv = XMMatrixInverse(nullptr, m_pParent->Get_WorldMatrix());
-            // ·ÎÄÃ Çà·Ä ±¸ÇÏ±â
+            // ë¡œì»¬ í–‰ë ¬ êµ¬í•˜ê¸°
             _matrix localMatrix = newWorldMatrix * parentInv;
 
-            // ·ÎÄÃ À§Ä¡/È¸Àü/½ºÄÉÀÏ ÃßÃâ
+            // ë¡œì»¬ ìœ„ì¹˜/íšŒì „/ìŠ¤ì¼€ì¼ ì¶”ì¶œ
             _vector S, R, T;
             XMMatrixDecompose(&S, &R, &T, localMatrix);
 
-            // ÀúÀå
+            // ì €ì¥
             XMStoreFloat3(reinterpret_cast<_float3*>(&m_vScale), S);
             XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), R);
             XMStoreFloat3(reinterpret_cast<_float3*>(&m_vPosition), T);
         }
         else
         {
-            // ºÎ¸ğ ¾øÀ¸¸é ±×³É ¿ùµå == ·ÎÄÃ
+            // ë¶€ëª¨ ì—†ìœ¼ë©´ ê·¸ëƒ¥ ì›”ë“œ == ë¡œì»¬
             _vector S, R, T;
             XMMatrixDecompose(&S, &R, &T, newWorldMatrix);
 
