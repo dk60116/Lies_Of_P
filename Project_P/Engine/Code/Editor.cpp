@@ -257,6 +257,10 @@ const vector2Int CEditor::Get_WindowResolution() const
 
 const vector2Int CEditor::Get_ScreenResolution() const
 {
+	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_EditorViewport();
+	if (vp && vp->Width > 0.f && vp->Height > 0.f)
+		return vector2Int(static_cast<_int>(vp->Width), static_cast<_int>(vp->Height));
+
 	_int width = _int(m_sOptions.windowWidth - (m_sOptions.projectWidth + m_sOptions.hierachyWidth + m_sOptions.inspectorWidth));
 	_int height = _int(m_sOptions.windowHeight - (m_sOptions.topBarHeight));
 

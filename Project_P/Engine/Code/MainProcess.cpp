@@ -55,6 +55,15 @@ HRESULT CMainProcess::Initialize()
         offsetMin,
         offsetMax
     );
+
+    if (const D3D11_VIEWPORT* editorVP = CGraphicDevice::GetInstance().Get_EditorViewport())
+    {
+        CRenderTargetManager::GetInstance().Resize(
+            CGraphicDevice::GetInstance().Get_Device(),
+            static_cast<UINT>(editorVP->Width),
+            static_cast<UINT>(editorVP->Height),
+            true);
+    }
 #endif
 
     CGraphicDevice::GetInstance().Add_SwapChain
@@ -64,6 +73,15 @@ HRESULT CMainProcess::Initialize()
         CDisplay::GetInstance().Get_ScreenResolution().x,
         CDisplay::GetInstance().Get_ScreenResolution().y
     );
+
+    if (const D3D11_VIEWPORT* gameVP = CGraphicDevice::GetInstance().Get_GameViewport())
+    {
+        CRenderTargetManager::GetInstance().Resize(
+            CGraphicDevice::GetInstance().Get_Device(),
+            static_cast<UINT>(gameVP->Width),
+            static_cast<UINT>(gameVP->Height),
+            false);
+    }
 
     MSG msg;
 
