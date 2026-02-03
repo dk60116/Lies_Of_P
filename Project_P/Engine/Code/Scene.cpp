@@ -264,7 +264,8 @@ void CScene::Update_Editor()
 		if (point.x < sceneOriginX || point.x >= sceneOriginX + sceneRes.x || point.y < sceneOriginY || point.y >= sceneOriginY + sceneRes.y)
 			return;
 
-		CPhysics::Ray ray = m_pEditorCamera->ScreenPointToRay_Editor(point);
+		const vector2Int scenePoint(point.x - sceneOriginX, point.y - sceneOriginY);
+		CPhysics::Ray ray = m_pEditorCamera->ScreenPointToRay_Editor(scenePoint);
 
 		auto hits = CPhysics::GetInstance().Raycast(ray);
 		const bool hasHit = !hits.empty();

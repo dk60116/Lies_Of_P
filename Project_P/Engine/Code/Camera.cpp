@@ -76,7 +76,7 @@ HRESULT CCamera::Initialize()
 	}
 	m_pRectBuffer->AddRef();
 
-	// Present Material (DeferredPresent.hlsl¿ª ªÁøÎ«œ¥¬ ∏”∆º∏ÆæÛ)
+	// Present Material (DeferredPresent.hlslÏùÑ ÏÇ¨Ïö©ÌïòÎäî Î®∏Ìã∞Î¶¨Ïñº)
 	CMaterial* presentMat = Add_RectMaterial(CRenderTarget::RTType::Present, L"DeferredPresent (Material)");
 	CMaterial* ObjectPresentMat = Add_RectMaterial(CRenderTarget::RTType::ObjectPresent, L"ObjectIDPresent (Material)");
 	CMaterial* depthPresentMat = Add_RectMaterial(CRenderTarget::RTType::Depth, L"DepthPresent (Material)");
@@ -88,7 +88,7 @@ HRESULT CCamera::Initialize()
 	CMaterial* specularMat = Add_RectMaterial(CRenderTarget::RTType::Specular, L"DeferredSpecular (Material)");
 	CMaterial* shadowMaskMat = Add_RectMaterial(CRenderTarget::RTType::ShadowMask, L"ShadowMask (Material)");
 
-	// µΩ∫«√∑π¿Ã µÓ∑œ
+	// ÎîîÏä§ÌîåÎ†àÏù¥ Îì±Î°ù
 	auto pushDisplay = [&](CRenderTarget::RTType type, CMaterial* mat)
 		{
 			RTDebugDisplay desc = {};
@@ -110,7 +110,7 @@ HRESULT CCamera::Initialize()
 	pushDisplay(CRenderTarget::RTType::Specular, presentMat);
 	pushDisplay(CRenderTarget::RTType::ShadowMask, shadowMaskPresentMat);
 
-	// Debug pipeline states ª˝º∫
+	// Debug pipeline states ÏÉùÏÑ±
 	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 
 	if (!device)
@@ -448,7 +448,7 @@ void CCamera::RenderDisplay()
 	_uint prevVPCount = 1;
     ctx->RSGetViewports(&prevVPCount, &prevVP);
 
-    // --- ∫‰∆˜∆Æ (∞‘¿” ∫‰∆˜∆Æ øÏº±)
+    // --- Î∑∞Ìè¨Ìä∏ (Í≤åÏûÑ Î∑∞Ìè¨Ìä∏ Ïö∞ÏÑ†)
     const D3D11_VIEWPORT* useVP = CGraphicDevice::GetInstance().Get_GameViewport();
 
     if (!useVP) 
@@ -514,13 +514,13 @@ void CCamera::RenderRTDebugDisplay()
 	context->RSGetState(&prevRS);
 	context->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
-	// µπˆ±◊ ªÛ≈¬ ¿˚øÎ
+	// ÎîîÎ≤ÑÍ∑∏ ÏÉÅÌÉú Ï†ÅÏö©
 	context->OMSetDepthStencilState(m_pRTDebugDS, 0);
 	context->RSSetState(m_pRTDebugRS);
 	const _float bf[4] = { 0,0,0,0 };
 	context->OMSetBlendState(m_pRTDebugBS, bf, 0xFFFFFFFF);
 
-	// Ω∫≈©∏∞ «ÿªÛµµ
+	// Ïä§ÌÅ¨Î¶∞ Ìï¥ÏÉÅÎèÑ
 	auto res = CDisplay::GetInstance().Get_ScreenResolution();
 	_float screenW = (_float)res.x;
 	_float screenH = (_float)res.y;
@@ -558,7 +558,7 @@ void CCamera::RenderRTDebugDisplay()
 
 	const _int kCount = (_int)(sizeof(types) / sizeof(types[0]));
 
-	// ΩÊ≥◊¿œ ≈©±‚
+	// Ïç∏ÎÑ§Ïùº ÌÅ¨Í∏∞
 	const _uint screenes = CDisplay::GetInstance().Get_ScreenResolution().y;
 	const _float resHeightFive = (CDisplay::GetInstance().Get_ScreenResolution().y / 5.f) * 1.6f;
 	_float maxBox = resHeightFive;
@@ -876,7 +876,7 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	vpt.MaxDepth = 1.f;
 	ctx->RSSetViewports(1, &vpt);
 
-	// Clear (±Ì¿Ã = 1)
+	// Clear (ÍπäÏù¥ = 1)
 	ctx->ClearDepthStencilView(dsvShadow, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	if (m_pRTShadowDepthDS)
@@ -1057,7 +1057,7 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	if (!srvDepth || !srvAlbedo || !srvDiffuse || !srvSpecular || !srvShadow || !rtvCombine)
 		return;
 
-	// --- ªÛ≈¬ πÈæ˜
+	// --- ÏÉÅÌÉú Î∞±ÏóÖ
 	ID3D11RenderTargetView* prevRTV = nullptr;
 	ID3D11DepthStencilView* prevDSV = nullptr;
 	ctx->OMGetRenderTargets(1, &prevRTV, &prevDSV);
@@ -1077,10 +1077,10 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	ctx->RSGetState(&prevRS);
 	ctx->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
-	// --- SRV √Êµπ πÊ¡ˆ
+	// --- SRV Ï∂©Îèå Î∞©ÏßÄ
 	rtm.Unbind_AllSRVs_PS(ctx);
 
-	// --- Specular RTV πŸ¿Œµ˘ (Depth¥¬ « ø‰ æ¯¿∏∏È nullptr∑Œ)
+	// --- Specular RTV Î∞îÏù∏Îî© (DepthÎäî ÌïÑÏöî ÏóÜÏúºÎ©¥ nullptrÎ°ú)
 	ctx->OMSetRenderTargets(1, &rtvCombine, nullptr);
 
 	const D3D11_VIEWPORT* useVP = vp ? vp : CGraphicDevice::GetInstance().Get_GameViewport();
@@ -1090,15 +1090,15 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	const _float clear[4] = { (_float)m_vBackgroundColor.r, (_float)m_vBackgroundColor.g, (_float)m_vBackgroundColor.b, 1.f };
 	ctx->ClearRenderTargetView(rtvCombine, clear);
 
-	// --- µπˆ±◊øÎ ªÛ≈¬ ¿ÁªÁøÎ(DepthTest OFF / Cull OFF)
+	// --- ÎîîÎ≤ÑÍ∑∏Ïö© ÏÉÅÌÉú Ïû¨ÏÇ¨Ïö©(DepthTest OFF / Cull OFF)
 	if (m_pRTDebugDS)
 		ctx->OMSetDepthStencilState(m_pRTDebugDS, 0);
 	if (m_pRTDebugRS)
 		ctx->RSSetState(m_pRTDebugRS);
 	const _float bf[4] = { 0.f, 0.f, 0.f, 0.f };
-	ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF); // «— π¯ø° ∏µÁ ∂Û¿Ã∆Æ «’ªÍ¿Ã∏È ∫Ì∑ªµÂ ∫“« ø‰
+	ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF); // Ìïú Î≤àÏóê Î™®Îì† ÎùºÏù¥Ìä∏ Ìï©ÏÇ∞Ïù¥Î©¥ Î∏îÎ†åÎìú Î∂àÌïÑÏöî
 
-	// --- «ÆΩ∫≈©∏∞ ƒıµÂøÎ ƒ´∏ﬁ∂Û(«»ºø Ortho)
+	// --- ÌíÄÏä§ÌÅ¨Î¶∞ ÏøºÎìúÏö© Ïπ¥Î©îÎùº(ÌîΩÏÖÄ Ortho)
 	_float W = useVP ? useVP->Width : (_float)CDisplay::GetInstance().Get_ScreenResolution().x;
 	_float H = useVP ? useVP->Height : (_float)CDisplay::GetInstance().Get_ScreenResolution().y;
 
@@ -1106,7 +1106,7 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	_matrix p = XMMatrixOrthographicOffCenterLH(0.f, W, H, 0.f, 0.f, 1.f);
 	_matrix w = XMMatrixScaling(W, H, 1.f) * XMMatrixTranslation(W * 0.5f, H * 0.5f, 0.f);
 
-	// --- ¥ıπÃ ƒ´∏ﬁ∂Û ¡§∫∏ 
+	// --- ÎçîÎØ∏ Ïπ¥Î©îÎùº Ï†ïÎ≥¥ 
 	_float3 camPos = {};
 
 	InvViewProjCB invCB = { };
@@ -1115,21 +1115,21 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 
 	CMaterial* combineMat = Find_RectMaterial(CRenderTarget::RTType::Combine);
 
-	// --- ∏”∆º∏ÆæÛ πŸ¿Œµ˘
+	// --- Î®∏Ìã∞Î¶¨Ïñº Î∞îÏù∏Îî©
 	combineMat->Bind_Matrix(w);
 	combineMat->Bind_Camera(camPos, v, p, 0);
 
-	// --- SRV πŸ¿Œµ˘
+	// --- SRV Î∞îÏù∏Îî©
 	ID3D11ShaderResourceView* srvs[5] = { srvAlbedo, srvDepth, srvDiffuse, srvSpecular, srvShadow };
 	ctx->PSSetShaderResources(0, 5, srvs);
 
 	// --- Draw
 	m_pRectBuffer->Render();
 
-	// --- ¡§∏Æ
+	// --- Ï†ïÎ¶¨
 	rtm.Unbind_AllSRVs_PS(ctx);
 
-	// --- ªÛ≈¬ ∫πø¯
+	// --- ÏÉÅÌÉú Î≥µÏõê
 	ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
 	if (prevVPCount > 0)
 		ctx->RSSetViewports(1, &prevVP);
@@ -1159,7 +1159,7 @@ const _int CCamera::GetColorPickingID(const vector2Int& _mouseVPPos)
 	ID3D11Texture2D* srcTex = rtm.GetTexture(CRenderTarget::RTType::Object);
 	if (!srcTex) return 0;
 
-	// 1x1 øµø™∏∏ ∫πªÁ
+	// 1x1 ÏòÅÏó≠Îßå Î≥µÏÇ¨
 	D3D11_BOX box;
 	box.left = _mouseVPPos.x;
 	box.right = _mouseVPPos.x + 1;
@@ -1201,8 +1201,8 @@ CPhysics::Ray CCamera::ScreenPointToRay_Editor(const vector2Int& _pixel, _float 
 	auto eo = CEditor::GetInstance().Get_Options();
 
 	auto res = CEditor::GetInstance().Get_ScreenResolution();
-	_float w = static_cast<_float>(res.x - 40);
-	_float h = static_cast<_float>(res.y + 20);
+	_float w = static_cast<_float>(res.x);
+	_float h = static_cast<_float>(res.y);
 
 	_float xNdc = 2.0f * _pixel.x / w - 1.0f;
 	_float yNdc = -2.0f * _pixel.y / h + 1.0f;
