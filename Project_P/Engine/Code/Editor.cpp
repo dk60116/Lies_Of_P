@@ -14,6 +14,7 @@ CEditor::CEditor()
 	, m_eControleTool(TransformControleTool::MOVE)
 	, m_pSelectedGameObject(nullptr)
 	, m_pMoveTargetGameObject(nullptr)
+	, m_selectedGameObjects()
 	, m_vCameraPos({})
 	, m_vCameraQuat({})
 	, m_bDoubleClicked(false)
@@ -291,22 +292,58 @@ void CEditor::Set_EditorCamTransform(CTransform* _transform)
 
 void CEditor::Set_SelectedGameObject(CGameObject* _target)
 {
-	if (_target == m_pSelectedGameObject)
+	m_selectedAssetPath.clear();
+	m_selectedGameObjects.clear();
+
+	m_pSelectedGameObject = _target;
+
+	if (m_pSelectedGameObject)
+		m_selectedGameObjects.push_back(m_pSelectedGameObject);
+}
+
+void CEditor::Add_SelectedGameObject(CGameObject* _target)
+{
+	if (!_target)
 		return;
+
+	auto it = find(m_selectedGameObjects.begin(), m_selectedGameObjects.end(), _target);
+	if (it == m_selectedGameObjects.end())
+		m_selectedGameObjects.push_back(_target);
 
 	m_pSelectedGameObject = _target;
 	m_selectedAssetPath.clear();
+}
 
-	if (m_pSelectedGameObject)
+void CEditor::Remove_SelectedGameObject(CGameObject* _target)
+{
+	if (!_target)
+		return;
+
+	auto it = find(m_selectedGameObjects.begin(), m_selectedGameObjects.end(), _target);
+	if (it == m_selectedGameObjects.end())
+		return;
+
+	m_selectedGameObjects.erase(it);
+	if (m_pSelectedGameObject == _target)
 	{
-		m_pSelectedGameObject = _target;
+		if (m_selectedGameObjects.empty())
+			m_pSelectedGameObject = nullptr;
+		else
+			m_pSelectedGameObject = m_selectedGameObjects.back();
 	}
+}
+
+void CEditor::Clear_SelectedGameObjects()
+{
+	m_selectedGameObjects.clear();
+	m_pSelectedGameObject = nullptr;
 }
 
 void CEditor::Set_SelectedAssetPath(const fs::path& path)
 {
 	m_selectedAssetPath = path;
 	m_pSelectedGameObject = nullptr;
+	m_selectedGameObjects.clear();
 }
 
 void CEditor::MoveTo_SelectedGameObject(CGameObject* _target)
@@ -339,6 +376,19 @@ void CEditor::MoveTo_SelectedGameObject(CGameObject* _target)
 CGameObject* CEditor::Get_SelectedGameObject() const
 {
 	return m_pSelectedGameObject;
+}
+
+const vector<CGameObject*>& CEditor::Get_SelectedGameObjects() const
+{
+	return m_selectedGameObjects;
+}
+
+bool CEditor::Is_SelectedGameObject(CGameObject* _target) const
+{
+	if (!_target)
+		return false;
+
+	return find(m_selectedGameObjects.begin(), m_selectedGameObjects.end(), _target) != m_selectedGameObjects.end();
 }
 
 void CEditor::OpenAsset(const fs::path& path)

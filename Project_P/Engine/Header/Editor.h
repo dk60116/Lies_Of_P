@@ -46,8 +46,13 @@ public:
 	const quaternion Get_EditorCamQuaternion() const;
 	void Set_EditorCamTransform(class CTransform* _transform);
 	void Set_SelectedGameObject(class CGameObject* _target);
+	void Add_SelectedGameObject(class CGameObject* _target);
+	void Remove_SelectedGameObject(class CGameObject* _target);
+	void Clear_SelectedGameObjects();
 	void MoveTo_SelectedGameObject(class CGameObject* _target);
 	CGameObject* Get_SelectedGameObject() const;
+	const vector<CGameObject*>& Get_SelectedGameObjects() const;
+	bool Is_SelectedGameObject(class CGameObject* _target) const;
 
 public:
 	void OpenAsset(const fs::path& path);
@@ -97,6 +102,7 @@ private:
 	TransformControleTool m_eControleTool;
 	CGameObject* m_pSelectedGameObject;
 	CGameObject* m_pMoveTargetGameObject;
+	vector<CGameObject*> m_selectedGameObjects;
 	fs::path m_selectedAssetPath;
 
 private:

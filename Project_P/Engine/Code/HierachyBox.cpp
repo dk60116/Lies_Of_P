@@ -181,7 +181,7 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& f
 	if (m_openToSelected && !filterActive && selectedObject && (selectedObject == _obj || IsAncestorOfSelected(_obj, selectedObject)))
 		ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
-	if (_obj == editor.Get_SelectedGameObject())
+	if (editor.Is_SelectedGameObject(_obj))
 		flags |= ImGuiTreeNodeFlags_Selected;
 
 	if (!hasChildren)
@@ -190,7 +190,20 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& f
 	_bool nodeOpen = ImGui::TreeNodeEx((name + "##" + to_string(reinterpret_cast<size_t>(_obj))).c_str(), flags);
 
 	if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-		editor.Set_SelectedGameObject(_obj);
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.KeyCtrl)
+		{
+			if (editor.Is_SelectedGameObject(_obj))
+				editor.Remove_SelectedGameObject(_obj);
+			else
+				editor.Add_SelectedGameObject(_obj);
+		}
+		else
+		{
+			editor.Set_SelectedGameObject(_obj);
+		}
+	}
 
 	if (_obj == selectedObject && m_scrollToSelected)
 	{
