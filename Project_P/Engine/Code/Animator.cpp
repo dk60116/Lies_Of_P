@@ -95,9 +95,11 @@ void CAnimator::Update()
 	if (!m_pSkinnedRenderer)
 		return;
 
+	const _float dt = DELTA_TIME;
+
 	if (m_bIsPlaying && m_pCrtAnimation)
 	{
-		m_fCurrentTime += DELTA_TIME * m_fPlaybackSpeed;
+		m_fCurrentTime += dt * m_fPlaybackSpeed;
 
 		const _float duration = m_pCrtAnimation->Get_Duration();
 		m_sStateInfo.length = duration;
@@ -124,8 +126,32 @@ void CAnimator::Update()
 		}
 	}
 
+	if (m_bBlending && m_pNextAnimation)
+	{
+		m_fBlendTime += dt;
+
+		m_fNextTime += dt * m_fPlaybackSpeed;
+
+		const _float nextDur = m_pNextAnimation->Get_Duration();
+		m_sStateInfo.length = nextDur;
+
+		if (nextDur > 0.f)
+		{
+			if (m_pNextAnimation->IsLoop())
+				m_fNextTime = fmodf(m_fNextTime, nextDur);
+			else if (m_fNextTime >= nextDur)
+				m_fNextTime = nextDur;
+
+			m_sStateInfo.normalizeTime = m_fNextTime / nextDur;
+		}
+		else
+		{
+			m_sStateInfo.normalizeTime = 0.f;
+		}
+	}
+
 	if (m_pController)
-		m_ControllerInst.Update(this, DELTA_TIME);
+		m_ControllerInst.Update(this, dt);
 
 	if (!m_pCrtAnimation)
 		return;
@@ -140,21 +166,8 @@ void CAnimator::Update()
 			return;
 		}
 
-		m_fBlendTime += DELTA_TIME;
-
 		_float denom = (m_fBlendDuration > 0.f) ? m_fBlendDuration : 0.0001f;
 		_float t = m_fBlendTime / denom;
-
-		m_fNextTime += DELTA_TIME * m_fPlaybackSpeed;
-
-		const _float nextDur = m_pNextAnimation->Get_Duration();
-		if (nextDur > 0.f)
-		{
-			if (m_pNextAnimation->IsLoop())
-				m_fNextTime = fmodf(m_fNextTime, nextDur);
-			else if (m_fNextTime >= nextDur)
-				m_fNextTime = nextDur;
-		}
 
 		if (t >= 1.f)
 		{

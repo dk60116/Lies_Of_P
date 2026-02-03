@@ -91,8 +91,16 @@ void CPlayerControllerContext::TickMove()
 		return;
 
 	_float dt = DELTA_TIME;
-	if (dt > 1.f) dt *= 0.001f;               
+            
 	dt = std::clamp(dt, 0.f, 0.05f);
+
+	if (IsAttackActive())
+	{
+		const _float maxDelta = PlayerStat().moveDecelRat * dt;
+		m_Cv_Move.m_fMove01 = MoveTowards1D(m_Cv_Move.m_fMove01, 0.f, maxDelta);
+
+		return;
+	}
 
 	if (m_Cv_Move.m_fMoveLockTimer > 0.f)
 	{

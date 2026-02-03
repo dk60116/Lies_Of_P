@@ -5,6 +5,9 @@ void CPlayerState_Attack::Enter(CPlayerControllerContext& _ctx)
 {
 	__super::Enter(_ctx);
 
+    _ctx.SetAttackActive(true);
+
+    _ctx.SetAnimSpeed(0.f);
     _ctx.Animator()->SetTrigger(L"Attack");
 }
 
@@ -12,9 +15,7 @@ void CPlayerState_Attack::Update(CPlayerControllerContext& _ctx)
 {
     __super::Update(_ctx);
 
-    CDebug::LogError(m_fPassedTime);
-
-    if (m_fPassedTime >= 5.f)
+    if (m_fPassedTime >= 4.5f)
         _ctx.SetAttackActive(false);
 }
 

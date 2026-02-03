@@ -107,17 +107,17 @@ const _float4x4 CLight::To_LightInfo()
 	result._21 = dir.x;
 	result._22 = dir.y;
 	result._23 = dir.z;
-	result._24 = cosf(XMConvertToRadians(m_fSpotAngle * 0.5f));
+	result._24 = m_fIntensity;
 
 	result._31 = color.x;
 	result._32 = color.y;
 	result._33 = color.z;
 	result._34 = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().ambient;
 
-	result._41 = static_cast<float>(m_eType);
+	result._41 = static_cast<_float>(m_eType);
 	result._42 = m_fAttenuation;
 	result._43 = (m_pGameObject->IsActive() && m_bEnable) ? 1.f : 0.f;
-	result._44 = 0.f;
+	result._44 = cosf(XMConvertToRadians(m_fSpotAngle * 0.5f));
 
 	return result;
 }
@@ -137,23 +137,20 @@ void CLight::BuildDirectionalShadow(CCamera* _cam, _float _shadowDistance, Shado
 	if (!_cam)
 		return;
 
-	// 1) 카메라 중심점(간이)
 	vector3 camPos = _cam->Get_Transform()->Get_Position();
 	vector3 camFwd = _cam->Get_Transform()->Get_Directions().forward;
-	camFwd = camFwd.normalized(); // 엔진 함수에 맞게 교체
+	camFwd = camFwd.normalized();
 
 	vector3 center = camPos + camFwd * (_shadowDistance * 0.5f);
 
-	// 2) 라이트 방향
 	vector3 lightDir = Get_Transform()->Get_Directions().forward;
-	lightDir = lightDir.normalized(); // 필수 권장
+	lightDir = lightDir.normalized();
 
 	vector3 lightPos = center - lightDir * _shadowDistance;
 
 	_vector eye = XMVectorSet(lightPos.x, lightPos.y, lightPos.z, 1.f);
 	_vector at = XMVectorSet(center.x, center.y, center.z, 1.f);
 
-	// 3) Up 특이점 방지
 	_vector worldUp = XMVectorSet(0.f, 1.f, 0.f, 0.f);
 	_vector ldir = XMVector3Normalize(XMVectorSet(lightDir.x, lightDir.y, lightDir.z, 0.f));
 
@@ -162,14 +159,12 @@ void CLight::BuildDirectionalShadow(CCamera* _cam, _float _shadowDistance, Shado
 
 	_matrix V = XMMatrixLookAtLH(eye, at, up);
 
-	// 4) Ortho (간이)
 	_float half = _shadowDistance * 0.5f;
 	_float nearZ = 0.0f;
 	_float farZ = _shadowDistance * 2.0f;
 
 	_matrix P = XMMatrixOrthographicOffCenterLH(-half, half, -half, half, nearZ, farZ);
 
-	// 5) Store (reinterpret_cast 지양)
-	XMStoreFloat4x4(reinterpret_cast<XMFLOAT4X4*>(&_outShadowMatix.view), V);
-	XMStoreFloat4x4(reinterpret_cast<XMFLOAT4X4*>(&_outShadowMatix.proj), P);
+	XMStoreFloat4x4(reinterpret_cast<_float4x4*>(&_outShadowMatix.view), V);
+	XMStoreFloat4x4(reinterpret_cast<_float4x4*>(&_outShadowMatix.proj), P);
 }

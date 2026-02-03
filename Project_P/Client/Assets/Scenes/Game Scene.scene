@@ -34,6 +34,9 @@ Eve_Run_TurnL : Player/Eve/Animations/Eve_Run_TurnL.fbx :  [Animation Clip]
 Eve_Run_TurnR : Player/Eve/Animations/Eve_Run_TurnR.fbx :  [Animation Clip]
 // Eve Animations - Attack
 Eve_Attack_Light_01 : Player/Eve/Animations/Eve_Attack_Light_01.fbx : [Animation Clip]
+Eve_Attack_Light_02 : Player/Eve/Animations/Eve_Attack_Light_02.fbx : [Animation Clip]
+Eve_Attack_Light_03 : Player/Eve/Animations/Eve_Attack_Light_03.fbx : [Animation Clip]
+Eve_Attack_Light_04 : Player/Eve/Animations/Eve_Attack_Light_04.fbx : [Animation Clip]
 // Eve Animator Controller
 Eve_AnimatorController : Player/Eve/AnimatorController/Eve_AnimatorController.animatorcontroller : [Animator Controller]
 // Space

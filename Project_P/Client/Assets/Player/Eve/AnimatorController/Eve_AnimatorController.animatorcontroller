@@ -18,6 +18,11 @@ motion=Eve_Idle
 speedMul=1.000000
 pos=176,148
 
+[state Attack_Light_04]
+motion=Eve_Attack_Light_04
+speedMul=1.000000
+pos=-236,513
+
 [state Run_Forward_Start]
 motion=Eve_Run_Forward_Start
 speedMul=1.000000
@@ -36,7 +41,7 @@ pos=176,376
 [state Attack_Light_01]
 motion=Eve_Attack_Light_01
 speedMul=1.000000
-pos=-258,147
+pos=-242,118
 
 [state Run_TurnL]
 motion=Eve_Run_TurnL
@@ -47,6 +52,16 @@ pos=92,-126
 motion=Eve_Run_TurnR
 speedMul=1.000000
 pos=295,-131
+
+[state Attack_Light_02]
+motion=Eve_Attack_Light_02
+speedMul=1.000000
+pos=-241,267
+
+[state Attack_Light_03]
+motion=Eve_Attack_Light_03
+speedMul=1.000000
+pos=-235,384
 
 [entry]
 to=Idle
@@ -75,7 +90,7 @@ cond=turn && turnDir<0.000000
 to=Attack_Light_01
 blend=0.150000
 fixedDuration=false
-transitionDuration=0.150000
+transitionDuration=0.000000
 transitionOffset=0.000000
 cond=Attack && AttackCombo==0
 
@@ -83,7 +98,7 @@ cond=Attack && AttackCombo==0
 blend=0.000000
 cond=speed>0.100000
 fixedDuration=false
-transitionDuration=0.150000
+transitionDuration=0.000000
 transitionOffset=0.000000
 
 [transition Run_Forward_Start->Run_Forward]
@@ -117,14 +132,14 @@ transitionOffset=0.000000
 
 [transition Run_TurnR->Run_Forward]
 blend=0.150000
-exitTime=0.250000
+exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
 [transition Run_TurnL->Run_Forward]
 blend=0.150000
-exitTime=0.744000
+exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -132,6 +147,7 @@ transitionOffset=0.000000
 [transition Run_Forward_Start->Run_End]
 blend=0.150000
 cond=speed<=0.000000
+exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -139,20 +155,41 @@ transitionOffset=0.000000
 [transition Run_TurnR->Run_End]
 blend=0.150000
 cond=speed<=0.000000
-exitTime=0.800000
-fixedDuration=true
+exitTime=0.200000
+fixedDuration=false
 transitionDuration=0.500000
 transitionOffset=0.000000
 
 [transition Run_TurnL->Run_End]
 blend=0.150000
 cond=speed<=0.000000
-exitTime=0.800000
-fixedDuration=true
+exitTime=0.200000
+fixedDuration=false
 transitionDuration=0.500000
 transitionOffset=0.000000
 
-[transition Attack_Light_01->Idle]
+[transition Attack_Light_01->Attack_Light_02]
+blend=0.150000
+exitTime=0.125000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_Light_02->Attack_Light_03]
+blend=0.150000
+exitTime=0.125000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_Light_03->Attack_Light_04]
+blend=0.150000
+exitTime=0.200000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_Light_04->Idle]
 blend=0.150000
 exitTime=0.800000
 fixedDuration=false
