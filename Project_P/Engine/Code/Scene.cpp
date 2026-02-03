@@ -265,7 +265,7 @@ void CScene::Update_Editor()
 
 		firstHit = hits[0];
 
-		//CEditor::GetInstance().Set_SelectedGameObject(firstHit.object);
+		CEditor::GetInstance().Set_SelectedGameObject(firstHit.object);
 
 		if (CInput::GetInstance().GetKey_Editor(CONTROL))
 		{
@@ -400,7 +400,7 @@ void CScene::Render_Game()
 	for (TRAVERSAL_ITER(m_lCameraList, it)) 
 		(*it)->OnPreRender();
 
-	// 3) GBuffer ÆÐ½º (MRT À¯Áö!)
+	// 3) GBuffer íŒ¨ìŠ¤ (MRT ìœ ì§€!)
 	ID3D11DeviceContext* ctx = m_pContext;
 	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_GameViewport();
 	if (!vp) 
@@ -445,19 +445,19 @@ void CScene::Render_Game()
 		}
 	}
 
-	// BackBuffer º¹±Í + UI/µð¹ö±×
+	// BackBuffer ë³µê·€ + UI/ë””ë²„ê·¸
 	CGraphicDevice::GetInstance().Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
 	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&backgroudColor);
 	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
-	// Combine Present¸¦ ¸ÕÀú ¹é¹öÆÛ¿¡ Ãâ·Â
+	// Combine Presentë¥¼ ë¨¼ì € ë°±ë²„í¼ì— ì¶œë ¥
 	for (TRAVERSAL_ITER(m_lCameraList, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderDisplay();
 	}
 
-	// ±× ´ÙÀ½ UI
+	// ê·¸ ë‹¤ìŒ UI
 	m_pContext->RSSetState(m_pUIResterizerState);
 	m_pContext->OMSetDepthStencilState(m_pUIDepthStencilState, 0);
 
@@ -465,7 +465,7 @@ void CScene::Render_Game()
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderUI();
 
-	// ÀÌÈÄ µð¹ö±×(½æ³×ÀÏ)
+	// ì´í›„ ë””ë²„ê·¸(ì¸ë„¤ì¼)
 	for (TRAVERSAL_ITER(m_lCameraList, it))
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderRTDebugDisplay();
