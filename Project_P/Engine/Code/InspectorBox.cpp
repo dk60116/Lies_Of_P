@@ -115,8 +115,11 @@ void CInspectorBox::Render()
     else
         ImGui::Text("No object selected.");
 
-    RenderSelectedAssetInfo(editor.Get_SelectedAssetPath());
-    RenderSelectedAssetPreview(editor.Get_SelectedAssetPath());
+    if (!selectedObj)
+    {
+        RenderSelectedAssetInfo(editor.Get_SelectedAssetPath());
+        RenderSelectedAssetPreview(editor.Get_SelectedAssetPath());
+    }
 
 	ImGui::End();
 }
