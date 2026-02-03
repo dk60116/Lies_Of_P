@@ -54,12 +54,12 @@ HRESULT CSkinnedMeshRenderer::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
-	CCamera* editorCam = CSceneManager::GetInstance().Get_CrtScene()->Get_EditorCamera();
-	if (!editorCam)
-		return;
-
-	editorCam->Add_RenderTarget_Mesh(this);
-	desc.ByteWidth = sizeof(_matrix) * MAX_BONE;
+	D3D11_BUFFER_DESC bufferDesc = {};
+	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bufferDesc.ByteWidth = sizeof(_matrix) * MAX_BONE;
+	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	if (FAILED(m_pDevice->CreateBuffer(&bufferDesc, nullptr, &m_pBoneMatrixBuffer)))
 	desc.Usage = D3D11_USAGE_DYNAMIC;
 	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
