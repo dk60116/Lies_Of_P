@@ -1201,8 +1201,8 @@ CPhysics::Ray CCamera::ScreenPointToRay_Editor(const vector2Int& _pixel, _float 
 	auto eo = CEditor::GetInstance().Get_Options();
 
 	auto res = CEditor::GetInstance().Get_ScreenResolution();
-	_float w = static_cast<_float>(res.x);
-	_float h = static_cast<_float>(res.y);
+	_float w = static_cast<_float>(res.x - 40);
+	_float h = static_cast<_float>(res.y + 20);
 
 	_float xNdc = 2.0f * _pixel.x / w - 1.0f;
 	_float yNdc = -2.0f * _pixel.y / h + 1.0f;
