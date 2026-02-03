@@ -28,6 +28,20 @@ namespace
 
 		return value.substr(start, end - start + 1);
 	}
+
+	bool ContainsSelected(CGameObject* obj, CGameObject* selected)
+	{
+		if (!obj || !selected)
+			return false;
+		if (obj == selected)
+			return true;
+		for (auto* child : obj->Get_Transform()->Get_ChldList())
+		{
+			if (ContainsSelected(child->Get_GameObject(), selected))
+				return true;
+		}
+		return false;
+	}
 }
 
 CHierachyBox::CHierachyBox()
@@ -148,13 +162,17 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& f
 		return;
 
 	_bool hasChildren = !_obj->Get_Transform()->Get_ChldList().empty();
+	CGameObject* selectedObj = editor.Get_SelectedGameObject();
 
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow;
 
 	if (filterActive && hasChildren)
 		ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
-	if (_obj == editor.Get_SelectedGameObject())
+	if (hasChildren && selectedObj && ContainsSelected(_obj, selectedObj))
+		ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+
+	if (_obj == selectedObj)
 		flags |= ImGuiTreeNodeFlags_Selected;
 
 	if (!hasChildren)

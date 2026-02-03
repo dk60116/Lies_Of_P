@@ -288,10 +288,30 @@ void CScene::Update_Editor()
 			CPhysics::Ray ray = m_pEditorCamera->ScreenPointToRay_Editor(point);
 			auto hits = CPhysics::GetInstance().Raycast(ray);
 
-			if (hits.size() > 0)
+			CGameObject* pickedObject = nullptr;
+			CPhysics::RAYCASTHIT firstHit = {};
+
+			for (auto& hit : hits)
 			{
-				CPhysics::RAYCASTHIT firstHit = hits[0];
-				CEditor::GetInstance().Set_SelectedGameObject(firstHit.object);
+				CGameObject* hitObject = hit.object;
+				if (!hitObject)
+					continue;
+				if (!hitObject->IsActive())
+					continue;
+				if (CMeshRenderer* meshRenderer = hitObject->GetComponent<CMeshRenderer>())
+				{
+					if (!meshRenderer->Get_Enable())
+						continue;
+				}
+
+				firstHit = hit;
+				pickedObject = hitObject;
+				break;
+			}
+
+			if (pickedObject)
+			{
+				CEditor::GetInstance().Set_SelectedGameObject(pickedObject);
 
 				if (CInput::GetInstance().GetKey_Editor(CONTROL))
 				{
