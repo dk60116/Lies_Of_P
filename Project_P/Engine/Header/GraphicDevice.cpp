@@ -253,6 +253,9 @@ HRESULT CGraphicDevice::Add_SwapChain(HWND _hWnd, WINMODE _isWindowed, _uint _wi
 	sc.viewport.Height = static_cast<FLOAT>(_winHeight - _offsetMin.y - _offsetMax.y);
 	sc.viewport.MinDepth = 0.0f;
 	sc.viewport.MaxDepth = 1.0f;
+	sc.contentViewport = sc.viewport;
+	sc.contentViewport.TopLeftX = 0.0f;
+	sc.contentViewport.TopLeftY = 0.0f;
 
 	m_mSwapChains[_hWnd] = move(sc);
 
@@ -287,6 +290,16 @@ const D3D11_VIEWPORT* CGraphicDevice::Get_EditorViewport()
 		return nullptr;
 
 	return &it->second.viewport;
+}
+
+const D3D11_VIEWPORT* CGraphicDevice::Get_EditorContentViewport()
+{
+	auto it = m_mSwapChains.find(CDisplay::GetInstance().Get_EditorWindow());
+
+	if (it == m_mSwapChains.end())
+		return nullptr;
+
+	return &it->second.contentViewport;
 }
 
 ID3D11DepthStencilState* CGraphicDevice::Get_DepthStencil_NoWrite() const

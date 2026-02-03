@@ -85,7 +85,7 @@ HRESULT CCamera::Initialize()
 	CMaterial* specularMat = Add_RectMaterial(CRenderTarget::RTType::Specular, L"DeferredSpecular (Material)");
 	CMaterial* shadowMaskMat = Add_RectMaterial(CRenderTarget::RTType::ShadowMask, L"ShadowMask (Material)");
 
-	// µΩ∫«√∑π¿Ã µÓ∑œ
+	// ÎîîÏä§ÌîåÎ†àÏù¥ Îì±Î°ù
 	auto pushDisplay = [&](CRenderTarget::RTType type, CMaterial* mat)
 		{
 			RTDebugDisplay desc = {};
@@ -107,7 +107,7 @@ HRESULT CCamera::Initialize()
 	pushDisplay(CRenderTarget::RTType::Specular, presentMat);
 	pushDisplay(CRenderTarget::RTType::ShadowMask, shadowMaskPresentMat);
 
-	// Debug pipeline states ª˝º∫
+	// Debug pipeline states ÏÉùÏÑ±
 	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 
 	if (!device)
@@ -446,7 +446,12 @@ void CCamera::RenderDisplay()
 	_uint prevVPCount = 1;
     ctx->RSGetViewports(&prevVPCount, &prevVP);
 
-	const D3D11_VIEWPORT* useVP = ResolveViewport();
+	const D3D11_VIEWPORT* useVP = nullptr;
+
+	if (m_bIsEditor)
+		useVP = CGraphicDevice::GetInstance().Get_EditorViewport();
+	else
+		useVP = ResolveViewport();
 
 	if (!useVP)
 		useVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
@@ -563,7 +568,7 @@ void CCamera::RenderRTDebugDisplay()
 
 	const _int kCount = (_int)(sizeof(types) / sizeof(types[0]));
 
-	// ΩÊ≥◊¿œ ≈©±‚
+	// Ïç∏ÎÑ§Ïùº ÌÅ¨Í∏∞
 
 	_uint screenes = 0;
 	_float resHeightFive = 0;
@@ -1205,7 +1210,7 @@ const _int CCamera::GetColorPickingID(const vector2Int& _mouseVPPos)
 	ID3D11Texture2D* srcTex = rtm.GetTexture(CRenderTarget::RTType::Object, m_bIsEditor);
 	if (!srcTex) return 0;
 
-	// 1x1 øµø™∏∏ ∫πªÁ
+	// 1x1 ÏòÅÏó≠Îßå Î≥µÏÇ¨
 	D3D11_BOX box;
 	box.left = _mouseVPPos.x;
 	box.right = _mouseVPPos.x + 1;
@@ -1348,7 +1353,7 @@ CMaterial* CCamera::Find_RectMaterial(const CRenderTarget::RTType _type)
 
 const D3D11_VIEWPORT* CCamera::ResolveViewport() const
 {
-	return m_bIsEditor ? CGraphicDevice::GetInstance().Get_EditorViewport() : CGraphicDevice::GetInstance().Get_GameViewport();
+	return m_bIsEditor ? CGraphicDevice::GetInstance().Get_EditorContentViewport() : CGraphicDevice::GetInstance().Get_GameViewport();
 }
 
 void CCamera::Find_MainLight()

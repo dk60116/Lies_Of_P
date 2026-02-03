@@ -14,6 +14,7 @@ public:
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView> rtv;
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> dsv;
 		D3D11_VIEWPORT viewport;
+		D3D11_VIEWPORT contentViewport;
 	};
 
 	SINGLETONCLASS(CGraphicDevice);
@@ -40,6 +41,7 @@ public:
 	const D3D11_VIEWPORT* Get_CurrentViewport();
 	const D3D11_VIEWPORT* Get_GameViewport();
 	const D3D11_VIEWPORT* Get_EditorViewport();
+	const D3D11_VIEWPORT* Get_EditorContentViewport();
 
 	ID3D11DepthStencilState* Get_DepthStencil_NoWrite() const;
 	ID3D11RasterizerState* Get_Rasterizer_CullFront() const;

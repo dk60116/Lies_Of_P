@@ -354,11 +354,11 @@ void CScene::LateUpdate()
 void CScene::Render_Editor()
 {
 #ifndef _CLIENT_BUILD
-	// 0) ¿¡µðÅÍ Ä«¸Þ¶ó ¾øÀ¸¸é Á¾·á
+	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_EditorContentViewport();
 	if (!m_pEditorCamera)
 		return;
 
-	// 1) ¶óÀÌÆ® µ¥ÀÌÅÍ °»½Å (Render_Game°ú µ¿ÀÏ)
+	// 1) ë¼ì´íŠ¸ ë°ì´í„° ê°±ì‹  (Render_Gameê³¼ ë™ì¼)
 	m_vLightData.clear();
 	for (TRAVERSAL_ITER(m_lLightList, it))
 	{
@@ -371,7 +371,7 @@ void CScene::Render_Editor()
 	ID3D11DeviceContext* ctx = m_pContext;
 	if (!ctx) return;
 
-	// 2) ¿¡µðÅÍ ºäÆ÷Æ®
+	// 2) ì—ë””í„° ë·°í¬íŠ¸
 	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_EditorViewport();
 	if (!vp)
 		vp = CGraphicDevice::GetInstance().Get_CurrentViewport();
@@ -379,12 +379,12 @@ void CScene::Render_Editor()
 	auto& trm = CRenderTargetManager::GetInstance();
 
 	// ------------------------------------------------------------
-	// A) Deferred: GBuffer ¹ÙÀÎµå/Å¬¸®¾î
+	// A) Deferred: GBuffer ë°”ì¸ë“œ/í´ë¦¬ì–´
 	// ------------------------------------------------------------
-	trm.Bind_GBuffer(ctx, vp, /*isEditor=*/true);   // ¡Ú ÀÌ·± ÇüÅÂ·Î ºÐ±â ÇÊ¿ä
+	trm.Bind_GBuffer(ctx, vp, /*isEditor=*/true);   // â˜… ì´ëŸ° í˜•íƒœë¡œ ë¶„ê¸° í•„ìš”
 	trm.Clear_GBuffer(/*isEditor=*/true);
 
-	// Skybox (¿øÇÏ¸é)
+	// Skybox (ì›í•˜ë©´)
 	if (m_pSkyBox)
 	{
 		ctx->RSSetState(m_pSkyBoxResterizerState);
@@ -392,16 +392,16 @@ void CScene::Render_Editor()
 		RenderSkyBox(m_pEditorCamera);
 	}
 
-	// Mesh ±âº» »óÅÂ
+	// Mesh ê¸°ë³¸ ìƒíƒœ
 	ctx->RSSetState(m_pMeshResterizerState);
 	ctx->OMSetDepthStencilState(m_pMeshDepthStencilState, 0);
 
 	// ------------------------------------------------------------
-	// B) ¿©±â¼­ "¿ÀºêÁ§Æ®µéÀÌ ·»´õ Á¦Ãâ"À» ÇØÁà¾ß ÇÔ
+	// B) ì—¬ê¸°ì„œ "ì˜¤ë¸Œì íŠ¸ë“¤ì´ ë Œë” ì œì¶œ"ì„ í•´ì¤˜ì•¼ í•¨
 	// ------------------------------------------------------------
-	// ±âÁ¸ Render_Editor()¿¡¼­ Áï½Ã ±×¸®´ø °É,
-	//   - °¢ Renderer°¡ m_pEditorCamera->Add_RenderTarget_Mesh(this) ½ÄÀ¸·Î Á¦Ãâ
-	// ·Î ¹Ù²ã¾ß editorCam->RenderMesh()°¡ ÀÇ¹Ì°¡ »ý±è.
+	// ê¸°ì¡´ Render_Editor()ì—ì„œ ì¦‰ì‹œ ê·¸ë¦¬ë˜ ê±¸,
+	//   - ê° Rendererê°€ m_pEditorCamera->Add_RenderTarget_Mesh(this) ì‹ìœ¼ë¡œ ì œì¶œ
+	// ë¡œ ë°”ê¿”ì•¼ editorCam->RenderMesh()ê°€ ì˜ë¯¸ê°€ ìƒê¹€.
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
@@ -411,11 +411,11 @@ void CScene::Render_Editor()
 		(*it)->OnPreCull_Editor();
 		(*it)->OnPreRender_Editor();
 
-		// ¡Ú Áß¿ä: ¿©±â¼­ Áï½Ã Draw ÇÏÁö ¸»°í "Á¦Ãâ"¸¸ ÇÏµµ·Ï ±¸Á¶¸¦ ¸ÂÃß´Â °Ô ÁÁÀ½
-		(*it)->Render_Editor(); // ³»ºÎ¿¡¼­ RendererµéÀÌ editorCam¿¡ SubmitÇÏµµ·Ï
+		// â˜… ì¤‘ìš”: ì—¬ê¸°ì„œ ì¦‰ì‹œ Draw í•˜ì§€ ë§ê³  "ì œì¶œ"ë§Œ í•˜ë„ë¡ êµ¬ì¡°ë¥¼ ë§žì¶”ëŠ” ê²Œ ì¢‹ìŒ
+		(*it)->Render_Editor(); // ë‚´ë¶€ì—ì„œ Rendererë“¤ì´ editorCamì— Submití•˜ë„ë¡
 	}
 
-	// ½ÇÁ¦ µå·Î¿ì´Â Ä«¸Þ¶ó°¡ ÇÑ´Ù
+	// ì‹¤ì œ ë“œë¡œìš°ëŠ” ì¹´ë©”ë¼ê°€ í•œë‹¤
 	m_pEditorCamera->RenderMesh();
 
 	// ------------------------------------------------------------
@@ -429,23 +429,23 @@ void CScene::Render_Editor()
 	m_pEditorCamera->RenderCombine(vp);
 
 	// ------------------------------------------------------------
-	// D) BackBuffer·Î º¹±Í ÈÄ Present + Gizmo/UI
+	// D) BackBufferë¡œ ë³µê·€ í›„ Present + Gizmo/UI
 	// ------------------------------------------------------------
-	// ¡Ú ¿¡µðÅÍ Ã¢ Å¸°ÙÀ¸·Î º¹±Í (³Ê´Â GameWindow¸¦ ¾²°í ÀÖÀ¸´Ï EditorWindowµµ ÀÖ¾î¾ß ÇÔ)
+	// â˜… ì—ë””í„° ì°½ íƒ€ê²Ÿìœ¼ë¡œ ë³µê·€ (ë„ˆëŠ” GameWindowë¥¼ ì“°ê³  ìžˆìœ¼ë‹ˆ EditorWindowë„ ìžˆì–´ì•¼ í•¨)
 	CGraphicDevice::GetInstance().Set_RenderTarget(CEditor::GetInstance().Get_EditorWindow());
 
 	ColorValue back = ColorValue::gray(0.3f);
 	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&back);
 	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
-	// Combine ¡æ BackBuffer
+	// Combine â†’ BackBuffer
 	m_pEditorCamera->RenderDisplay();
 
-	// Gizmo´Â º¸Åë ¿©±â¼­ (3D À§¿¡)
+	// GizmoëŠ” ë³´í†µ ì—¬ê¸°ì„œ (3D ìœ„ì—)
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->Render_Gizmo();
 
-	// RT Debug thumbnail °°Àº °Íµµ ÇÊ¿äÇÏ¸é
+	// RT Debug thumbnail ê°™ì€ ê²ƒë„ í•„ìš”í•˜ë©´
 	m_pEditorCamera->RenderRTDebugDisplay();
 
 	// PostRender
@@ -527,19 +527,19 @@ void CScene::Render_Game()
 		}
 	}
 
-	// BackBuffer º¹±Í + UI/µð¹ö±×
+	// BackBuffer ë³µê·€ + UI/ë””ë²„ê·¸
 	CGraphicDevice::GetInstance().Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
 	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&backgroudColor);
 	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
-	// Combine Present¸¦ ¸ÕÀú ¹é¹öÆÛ¿¡ Ãâ·Â
+	// Combine Presentë¥¼ ë¨¼ì € ë°±ë²„í¼ì— ì¶œë ¥
 	for (TRAVERSAL_ITER(m_lCameraList, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderDisplay();
 	}
 
-	// ±× ´ÙÀ½ UI
+	// ê·¸ ë‹¤ìŒ UI
 	m_pContext->RSSetState(m_pUIResterizerState);
 	m_pContext->OMSetDepthStencilState(m_pUIDepthStencilState, 0);
 
@@ -547,7 +547,7 @@ void CScene::Render_Game()
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderUI();
 
-	// ÀÌÈÄ µð¹ö±×(½æ³×ÀÏ)
+	// ì´í›„ ë””ë²„ê·¸(ì¸ë„¤ì¼)
 	for (TRAVERSAL_ITER(m_lCameraList, it))
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderRTDebugDisplay();
