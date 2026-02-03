@@ -59,7 +59,8 @@ void CInspectorBox::Render()
 		nullptr,
 		ImGuiWindowFlags_NoMove |
 		ImGuiWindowFlags_NoResize |
-		ImGuiWindowFlags_NoCollapse
+		ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_HorizontalScrollbar
     );
 
     CGameObject* selectedObj = editor.Get_SelectedGameObject();

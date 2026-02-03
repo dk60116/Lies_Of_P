@@ -123,7 +123,8 @@ void CProjectBox::Render()
 		nullptr,
 		ImGuiWindowFlags_NoMove |
 		ImGuiWindowFlags_NoResize |
-		ImGuiWindowFlags_NoCollapse
+		ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_HorizontalScrollbar
 	);
 
 	ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.f);

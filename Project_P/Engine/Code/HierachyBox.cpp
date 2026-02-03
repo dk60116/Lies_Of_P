@@ -85,7 +85,7 @@ void CHierachyBox::Render()
 		ImGuiWindowFlags_NoCollapse
 	);
 
-	ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.f);
+	ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 6.f);
 
 	if (currentScene)
 	{
