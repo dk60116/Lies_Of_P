@@ -31,6 +31,7 @@ private:
 	std::array<char, 128> m_searchBuffer{};
 	CGameObject* m_lastSelectedGameObject = nullptr;
 	bool m_scrollToSelected = false;
+	bool m_openToSelected = false;
 };
 
 NS_END

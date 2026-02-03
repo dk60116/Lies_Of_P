@@ -99,6 +99,7 @@ void CHierachyBox::Render()
 		{
 			m_lastSelectedGameObject = selectedObject;
 			m_scrollToSelected = selectedObject != nullptr;
+			m_openToSelected = selectedObject != nullptr;
 		}
 
 		if (ImGui::BeginChild("HierarchyScrollRegion", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar))
@@ -177,7 +178,7 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& f
 	if (filterActive && hasChildren)
 		ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
-	if (!filterActive && selectedObject && (selectedObject == _obj || IsAncestorOfSelected(_obj, selectedObject)))
+	if (m_openToSelected && !filterActive && selectedObject && (selectedObject == _obj || IsAncestorOfSelected(_obj, selectedObject)))
 		ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
 	if (_obj == editor.Get_SelectedGameObject())
@@ -195,6 +196,7 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& f
 	{
 		ImGui::SetScrollHereY(0.35f);
 		m_scrollToSelected = false;
+		m_openToSelected = false;
 	}
 
 	if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
