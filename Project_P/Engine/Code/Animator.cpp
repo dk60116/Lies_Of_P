@@ -242,7 +242,7 @@ void CAnimator::Update()
 									const vector3 offset = btStart.pos - m_vNextRootStartPos;
 									rootPos = vector3::Lerp(btStart.pos, btNext.pos + offset, t);
 								}
-								ApplyRootMotionDelta(rootPos, dt);
+								ApplyRootMotionDelta(rootPos);
 								rootMotionApplied = true;
 							}
 						}
@@ -296,7 +296,7 @@ void CAnimator::Update()
 						auto rootIt = sampled.find(name);
 						if (rootIt != sampled.end())
 						{
-							ApplyRootMotionDelta(rootIt->second.pos, dt);
+							ApplyRootMotionDelta(rootIt->second.pos);
 							rootMotionApplied = true;
 						}
 					}
@@ -330,7 +330,7 @@ void CAnimator::OnDestroy()
 	Safe_Release(m_pRootMotionParent);
 }
 
-void CAnimator::ApplyRootMotionDelta(const vector3& rootPos, const _float dt)
+void CAnimator::ApplyRootMotionDelta(const vector3& rootPos)
 {
 	if (!m_pRootMotionParent)
 		return;
@@ -345,8 +345,7 @@ void CAnimator::ApplyRootMotionDelta(const vector3& rootPos, const _float dt)
 	vector3 delta = rootPos - m_vPrevRootMotionPos;
 	vector3 mapped = vector3(delta.z, delta.y, -delta.x);
 	const auto& directions = m_pRootMotionParent->Get_Directions();
-	vector3 worldDelta = directions.right * mapped.x + directions.up * mapped.y + directions.forward * mapped.z;
-	worldDelta *= dt;
+	vector3 worldDelta = (directions.right * mapped.x + directions.up * mapped.y + directions.forward * mapped.z) * m_pSkinnedRenderer->Get_SkinnedMeshBuffer()->Get_ScaleFactor();
 	m_pRootMotionParent->Add_LocalPosition(-worldDelta);
 	m_vPrevRootMotionPos = rootPos;
 }
@@ -415,7 +414,7 @@ void CAnimator::Play()
 	}
 }
 
-void CAnimator::Play(const wstring& _animName, const _float _blendDuration)
+void CAnimator::Play(const wstring& _animName, const _float _blendDuration, _bool _restartSame)
 {
 	auto iter = m_mAnimationList.find(_animName);
 
@@ -432,6 +431,24 @@ void CAnimator::Play(const wstring& _animName, const _float _blendDuration)
 	}
 
 	CAnimationClip* nextAnim = iter->second;
+
+	if (_restartSame && nextAnim && nextAnim == m_pCrtAnimation && !m_bBlending)
+	{
+		m_pNextAnimation = nullptr;
+		m_fCurrentTime = 0.f;
+		m_fNextTime = 0.f;
+
+		m_bIsPlaying = true;
+		m_bBlending = false;
+		m_fBlendTime = 0.f;
+		m_fBlendDuration = 0.f;
+
+		m_bHasPrevRootMotion = false;
+		m_bHasNextRootStartPos = false;
+
+		m_bLoop = m_pCrtAnimation->IsLoop();
+		return;
+	}
 
 	if (_blendDuration <= 0.f || !m_pCrtAnimation)
 	{

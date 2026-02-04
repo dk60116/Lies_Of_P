@@ -350,8 +350,20 @@ void CAnimatorControllerInstance::Update(CAnimator* _animator, const _float _dt)
         return;
 
     const auto* curState = m_pController->Find_State(m_strCurrentState);
+
     if (!curState)
         return;
+
+    auto hasTriggerCondition = [&](const CAnimatorController::Transition& tr) -> bool
+        {
+            for (const auto& c : tr.conditions)
+            {
+                const auto* pd = m_pController->Find_Parameter(c.paramName);
+                if (pd && pd->type == CAnimatorController::PARAM_TYPE::TRIGGER)
+                    return true;
+            }
+            return false;
+        };
 
     auto TryFire = [&](const CAnimatorController::Transition& tr) -> bool
         {
@@ -365,14 +377,20 @@ void CAnimatorControllerInstance::Update(CAnimator* _animator, const _float _dt)
             if (!nextState)
                 return false;
 
-            if (nextState->name == m_strCurrentState)
+            const bool isSelf = (nextState->name == m_strCurrentState);
+
+            if (isSelf && !hasTriggerCondition(tr))
                 return false;
 
             Consume_TriggersUsedBy(tr);
 
             m_strCurrentState = nextState->name;
             _animator->Set_PlaybackSpeed(nextState->speedMul);
-            _animator->Play(nextState->motionName, tr.blendDuration);
+
+            const _float blend = isSelf ? 0.f : tr.blendDuration;
+            const _bool  restartIfSame = isSelf ? true : false;
+
+            _animator->Play(nextState->motionName, blend, restartIfSame);
 
             return true;
         };

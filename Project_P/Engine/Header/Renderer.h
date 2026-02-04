@@ -30,12 +30,14 @@ public:
 
 public:
 	const _bool IsCastShadow() const;
+	virtual const _float GetScaleFactor() const PURE;
 	void SetCastShadow(const _bool _on);
 
 protected:
 	CMaterial* m_pMaterial;
 	CMaterial* m_pOutlineMat;
 
+	_float m_fSclaeFactor;
 	_bool m_bCastShadow;
 };
 

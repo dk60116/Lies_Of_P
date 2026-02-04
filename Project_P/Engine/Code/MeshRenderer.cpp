@@ -160,3 +160,8 @@ CMeshBuffer* CMeshRenderer::Get_MeshBuffer()
 {
 	return m_pMeshFilter->Get_MeshBuffer();
 }
+
+const _float CMeshRenderer::GetScaleFactor() const
+{
+	return m_pMeshFilter->Get_MeshBuffer()->Get_ScaleFactor();
+}

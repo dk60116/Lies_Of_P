@@ -5,16 +5,21 @@ CPlayerState_Attack::CPlayerState_Attack()
     : m_iCombo(0)
     , m_bQueuedNext(false)
     , m_fComboTerm()
+    , m_fComboLimit()
     , m_fEndTime()
 {
-    m_fComboTerm[0] = 0.32f;
-    m_fComboTerm[1] = 0.35f;
+    m_fComboTerm[0] = 0.3f;
+    m_fComboTerm[1] = 0.3f;
     m_fComboTerm[2] = 0.45f;
 
-    m_fEndTime[0] = 0.8f;
-    m_fEndTime[1] = 0.8f;
-    m_fEndTime[2] = 1.f;
-    m_fEndTime[3] = 1.5f;
+    m_fComboLimit[0] = 0.35f;
+    m_fComboLimit[1] = 0.37f;
+    m_fComboLimit[2] = 0.4f;
+
+    m_fEndTime[0] = 2.8f;
+    m_fEndTime[1] = 2.8f;
+    m_fEndTime[2] = 2.8f;
+    m_fEndTime[3] = 3.f;
 }
 
 CPlayerState_Attack::~CPlayerState_Attack()
@@ -31,8 +36,6 @@ void CPlayerState_Attack::Enter(CPlayerControllerContext& _ctx)
     _ctx.Animator()->SetTrigger(L"Attack");
     _ctx.Animator()->SetBool(L"IsAttack", true);
 
-    m_bDash = false;
-
     m_iCombo = 0;
 }
 
@@ -46,13 +49,25 @@ void CPlayerState_Attack::Update(CPlayerControllerContext& _ctx)
     {
         if (m_iCombo == i)
         {
-            if (m_fPassedTime >= m_fComboTerm[i] && _ctx.IsLightAttackPressed())
+            if (m_fPassedTime >= m_fComboTerm[i])
             {
-                _ctx.Animator()->SetBool(L"comboContinue", true);
-                TurnPlayer(_ctx);
-                ++m_iCombo;
-                m_fPassedTime = 0.f;
-                m_bDash = true;
+                if (m_fPassedTime < m_fComboTerm[i] + m_fComboLimit[i])
+                {
+                    if (_ctx.IsLightAttackPressed())
+                    {
+                        _ctx.Animator()->SetBool(L"comboContinue", true);
+                        TurnPlayer(_ctx);
+                        ++m_iCombo;
+                        m_fPassedTime = 0.f;
+                    }
+                }
+                else
+                {
+                    if (_ctx.IsLightAttackPressed())
+                    {
+                        Enter(_ctx);
+                    }
+                }
             }
 
             if (m_fPassedTime >= m_fEndTime[i])

@@ -40,7 +40,7 @@ public:
     void Add_Animation(const wstring& _animName, CAnimationClip* _anim);
 
     void Play();
-    void Play(const wstring& _animName, const _float _blendDuration = 0.f);
+    void Play(const wstring& _animName, const _float _blendDuration = 0.f, const _bool _restartSame = false);
     void Pause();
     void Stop();
 
@@ -68,7 +68,7 @@ public:
 
 private:
     _bool IsRootBone(const wstring& _name);
-    void ApplyRootMotionDelta(const vector3& rootPos, const _float dt);
+    void ApplyRootMotionDelta(const vector3& rootPos);
 
 private:
     class CSkinnedMeshRenderer* m_pSkinnedRenderer;

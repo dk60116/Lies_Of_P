@@ -406,6 +406,7 @@ vector<CSkinnedMeshRenderer*> CGameObject::CreateSkinnedMeshHierachy(vector<Skin
 		r->Set_Material(CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferLit (Material)"));
 		if (si.texture)
 			r->Get_Material()->Set_Texture(si.texture, 0);
+		r->Get_MeshBuffer()->Set_Scalefactor(_scaleFactor);
 		renderers.push_back(r);
 	}
 

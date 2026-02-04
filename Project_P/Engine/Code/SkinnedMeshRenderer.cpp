@@ -408,3 +408,8 @@ void CSkinnedMeshRenderer::AddRootBone(CTransform* _tf)
 		m_vRootBone.back()->AddRef();
 	}
 }
+
+const _float CSkinnedMeshRenderer::GetScaleFactor() const
+{
+	return m_pMeshBuffer->Get_ScaleFactor();
+}

@@ -5,6 +5,7 @@ CRenderer::CRenderer()
 	: m_pMaterial(nullptr)
 	, m_pOutlineMat(nullptr)
 	, m_bCastShadow(true)
+	, m_fSclaeFactor(1.f)
 {
 }
 

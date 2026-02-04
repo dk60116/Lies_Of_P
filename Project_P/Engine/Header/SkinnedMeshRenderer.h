@@ -49,6 +49,9 @@ public:
 	const wstring Get_RootBoneName(const _int _index) const;
 	void AddRootBone(CTransform* _tf);
 
+public:
+	const _float GetScaleFactor() const override;
+
 private:
 	CSkinnedMeshBuffer* m_pMeshBuffer;
 	vector<CTransform*> m_vBones;

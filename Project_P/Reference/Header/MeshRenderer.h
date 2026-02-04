@@ -36,6 +36,8 @@ public:
 	CMeshFilter* Get_MeshFilter();
 	CMeshBuffer* Get_MeshBuffer() override;
 
+	const _float GetScaleFactor() const override;
+
 private:
 	CMeshFilter* m_pMeshFilter;
 };

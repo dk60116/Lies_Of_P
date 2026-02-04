@@ -29,8 +29,7 @@ private:
     _int  m_iCombo;
     _bool m_bQueuedNext;
     _float m_fComboTerm[3];
+    _float m_fComboLimit[3];
     _float m_fEndTime[4];
-
-    _bool m_bDash;
 };
 

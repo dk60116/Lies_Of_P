@@ -73,6 +73,7 @@ public:
 	void Render();
 
 public:
+	const _float Get_ScaleFactor() const;
 	virtual void Set_Scalefactor(const _float _value);
 	vector<VertexTexNormalTangentBuffer> Get_VertexBuffer() const;
 	vector<_uint> Get_IndexBuffer() const;
@@ -87,6 +88,8 @@ protected:
 protected:
 	void* m_pVertexSysMem;
 	void* m_pIndexSysMem;
+
+	_float m_fScaleFactor;
 };
 
 NS_END
