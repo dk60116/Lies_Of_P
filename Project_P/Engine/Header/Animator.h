@@ -86,6 +86,8 @@ private:
     CTransform* m_pRootMotionParent;
     vector3 m_vPrevRootMotionPos;
     _bool m_bHasPrevRootMotion;
+    vector3 m_vNextRootStartPos;
+    _bool m_bHasNextRootStartPos;
 
 private:
     class CAnimatorController* m_pController;

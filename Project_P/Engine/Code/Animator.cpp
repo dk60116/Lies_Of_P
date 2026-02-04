@@ -24,6 +24,8 @@ CAnimator::CAnimator()
 	, m_pRootMotionParent(nullptr)
 	, m_vPrevRootMotionPos(vector3::zero())
 	, m_bHasPrevRootMotion(false)
+	, m_vNextRootStartPos(vector3::zero())
+	, m_bHasNextRootStartPos(false)
 {
 	m_strName = L"Animator";
 }
@@ -223,19 +225,21 @@ void CAnimator::Update()
 			{
 				if (IsRootBone(name))
 				{
-					if (!rootMotionApplied && m_pRootMotionParent)
-					{
-						const auto startIt = m_mBlendStartPose.find(name);
-						const auto nextIt = sampledNext.find(name);
-						if (startIt != m_mBlendStartPose.end() && nextIt != sampledNext.end())
+						if (!rootMotionApplied && m_pRootMotionParent)
 						{
-							const auto& btStart = startIt->second;
-							const auto& btNext = nextIt->second;
-							vector3 rootPos = vector3::Lerp(btStart.pos, btNext.pos, t);
-							ApplyRootMotionDelta(rootPos, dt);
-							rootMotionApplied = true;
+							const auto startIt = m_mBlendStartPose.find(name);
+							const auto nextIt = sampledNext.find(name);
+							if (startIt != m_mBlendStartPose.end() && nextIt != sampledNext.end())
+							{
+								const auto& btStart = startIt->second;
+								const auto& btNext = nextIt->second;
+								vector3 rootPos = vector3::Lerp(btStart.pos, btNext.pos, t);
+								if (m_bHasNextRootStartPos)
+									rootPos = btStart.pos + (btNext.pos - m_vNextRootStartPos);
+								ApplyRootMotionDelta(rootPos, dt);
+								rootMotionApplied = true;
+							}
 						}
-					}
 					continue;
 				}
 			}
@@ -447,12 +451,24 @@ void CAnimator::Play(const wstring& _animName, const _float _blendDuration)
 	m_bBlending = true;
 
 	m_fNextTime = 0.f;
+	m_bHasNextRootStartPos = false;
 
 	if (!m_bIsPlaying)
 		m_fCurrentTime = 0.f;
 
 	m_mBlendStartPose.clear();
 	m_pCrtAnimation->Sample(m_fCurrentTime, m_mBlendStartPose);
+	unordered_map<wstring, CAnimationClip::BoneTransform> nextStartPose;
+	m_pNextAnimation->Sample(0.f, nextStartPose);
+	for (const auto& item : nextStartPose)
+	{
+		if (IsRootBone(item.first))
+		{
+			m_vNextRootStartPos = item.second.pos;
+			m_bHasNextRootStartPos = true;
+			break;
+		}
+	}
 	m_bHasPrevRootMotion = false;
 
 	m_bIsPlaying = true;
