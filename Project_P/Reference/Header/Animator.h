@@ -68,6 +68,7 @@ public:
 
 private:
     _bool IsRootBone(const wstring& _name);
+    void ApplyRootMotionDelta(const vector3& rootPos, const _float dt);
 
 private:
     class CSkinnedMeshRenderer* m_pSkinnedRenderer;
@@ -83,6 +84,10 @@ private:
     unordered_map<wstring, CAnimationClip::BoneTransform> m_mBlendStartPose;
 
     CTransform* m_pRootMotionParent;
+    vector3 m_vPrevRootMotionPos;
+    _bool m_bHasPrevRootMotion;
+    vector3 m_vNextRootStartPos;
+    _bool m_bHasNextRootStartPos;
 
 private:
     class CAnimatorController* m_pController;
@@ -95,4 +100,3 @@ private:
 };
 
 NS_END
-
