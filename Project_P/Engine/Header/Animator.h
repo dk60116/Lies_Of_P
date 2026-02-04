@@ -68,7 +68,7 @@ public:
 
 private:
     _bool IsRootBone(const wstring& _name);
-    void ApplyRootMotionDelta(const vector3& rootPos);
+    void ApplyRootMotionDelta(const vector3& rootPos, const _float dt);
 
 private:
     class CSkinnedMeshRenderer* m_pSkinnedRenderer;

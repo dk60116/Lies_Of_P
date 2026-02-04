@@ -232,7 +232,7 @@ void CAnimator::Update()
 							const auto& btStart = startIt->second;
 							const auto& btNext = nextIt->second;
 							vector3 rootPos = vector3::Lerp(btStart.pos, btNext.pos, t);
-							ApplyRootMotionDelta(rootPos);
+							ApplyRootMotionDelta(rootPos, dt);
 							rootMotionApplied = true;
 						}
 					}
@@ -286,7 +286,7 @@ void CAnimator::Update()
 						auto rootIt = sampled.find(name);
 						if (rootIt != sampled.end())
 						{
-							ApplyRootMotionDelta(rootIt->second.pos);
+							ApplyRootMotionDelta(rootIt->second.pos, dt);
 							rootMotionApplied = true;
 						}
 					}
@@ -320,7 +320,7 @@ void CAnimator::OnDestroy()
 	Safe_Release(m_pRootMotionParent);
 }
 
-void CAnimator::ApplyRootMotionDelta(const vector3& rootPos)
+void CAnimator::ApplyRootMotionDelta(const vector3& rootPos, const _float dt)
 {
 	if (!m_pRootMotionParent)
 		return;
@@ -333,6 +333,8 @@ void CAnimator::ApplyRootMotionDelta(const vector3& rootPos)
 	}
 
 	vector3 delta = rootPos - m_vPrevRootMotionPos;
+	delta = vector3(delta.z, delta.y, -delta.x);
+	delta *= dt;
 	m_pRootMotionParent->Add_LocalPosition(delta);
 	m_vPrevRootMotionPos = rootPos;
 }
