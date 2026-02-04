@@ -75,6 +75,9 @@ void CPlayerController::Start()
 		m_pRoot->Enter(m_ctx);
 		m_bFSMStarted = true;
 	}
+
+	for (TRAVERSAL_ITER(m_mStateList, it))
+		(*it).second->Initialize(m_ctx);
 }
 
 void CPlayerController::Update()

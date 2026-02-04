@@ -39,6 +39,12 @@ public:
 		vector<NodeTrack> tracks;
 	};
 
+	struct ActionTrigger
+	{
+		_int frame = 0;
+		wstring actionName = L"";
+	};
+
 protected:
 	CAnimationClip();
 	~CAnimationClip();
@@ -57,9 +63,13 @@ public:
 	void SetLoop(const _bool _loop);
 	const _float Get_Duration() const;
 	const _float Get_TickPerSecons() const;
+	const vector<ActionTrigger>& Get_ActionTriggerList() const;
+	void Add_ActionTrigger(const ActionTrigger& _trigger);
+	_bool Remove_ActionTrigger(const ActionTrigger& _trigger);
 
 private:
 	vector<NodeTrack> m_vBoneAnimation;
+	vector<ActionTrigger> m_vActionTriggerList;
 	_bool m_bLoopTime;
 	_float m_fDuration;
 	_float m_fTicksPerSecond;

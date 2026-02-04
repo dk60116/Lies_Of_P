@@ -1,6 +1,10 @@
 #include "cpch.h"
 #include "PlayerState_Idle.h"
 
+void CPlayerState_Idle::Initialize(CPlayerControllerContext& _ctx)
+{
+}
+
 void CPlayerState_Idle::Enter(CPlayerControllerContext& _ctx)
 {
 	__super::Enter(_ctx);

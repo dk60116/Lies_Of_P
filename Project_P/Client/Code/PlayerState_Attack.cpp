@@ -27,6 +27,15 @@ CPlayerState_Attack::~CPlayerState_Attack()
 {
 }
 
+void CPlayerState_Attack::Initialize(CPlayerControllerContext& _ctx)
+{
+    CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_Light_01 (Animation Clip)");
+    CAnimationClip::ActionTrigger at = { 0, L"LightAttack01_Enter" };
+    ealClip->Add_ActionTrigger(at);
+
+    _ctx.Animator()->RegisterActionHandler(L"LightAttack01_Enter", []() { CDebug::LogError("Enter01"); });
+}
+
 void CPlayerState_Attack::Enter(CPlayerControllerContext& _ctx)
 {
 	__super::Enter(_ctx);

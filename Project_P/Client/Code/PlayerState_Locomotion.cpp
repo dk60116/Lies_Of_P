@@ -19,6 +19,10 @@ void CPlayerState_Locomotion::SetChildren(CPlayerState* _idle, CPlayerState* _mo
 	m_pAttack = _attack;
 }
 
+void CPlayerState_Locomotion::Initialize(CPlayerControllerContext& _ctx)
+{
+}
+
 void CPlayerState_Locomotion::Enter(CPlayerControllerContext& _ctx)
 {
 	__super::Enter(_ctx);

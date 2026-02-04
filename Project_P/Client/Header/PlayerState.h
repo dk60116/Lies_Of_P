@@ -11,6 +11,7 @@ public:
     CPlayerState();
     ~CPlayerState();
 
+    virtual void Initialize(CPlayerControllerContext&) PURE;
     virtual void Enter(CPlayerControllerContext&);
     virtual void Exit(CPlayerControllerContext&);
     virtual void Update(CPlayerControllerContext&) PURE;

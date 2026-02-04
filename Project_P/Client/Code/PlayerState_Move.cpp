@@ -1,6 +1,10 @@
 #include "cpch.h"
 #include "PlayerState_Move.h"
 
+void CPlayerState_Move::Initialize(CPlayerControllerContext& _ctx)
+{
+}
+
 void CPlayerState_Move::Enter(CPlayerControllerContext& _ctx)
 {
     _ctx.SetAnimMoveSpeed(0.2f);

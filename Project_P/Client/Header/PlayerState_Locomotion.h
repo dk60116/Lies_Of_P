@@ -10,6 +10,7 @@ public:
 public:
     void SetChildren(CPlayerState* _idle, CPlayerState* _move, CPlayerState* _attack);
 
+    void Initialize(CPlayerControllerContext& _ctx) override;
     void Enter(CPlayerControllerContext& _ctx) override;
     void Update(CPlayerControllerContext& _ctx) override;
     void Exit(CPlayerControllerContext& _ctx) override;
