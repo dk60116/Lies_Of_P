@@ -22,6 +22,8 @@ CAnimator::CAnimator()
 	, m_sStateInfo({})
 	, m_pController(nullptr)
 	, m_pRootMotionParent(nullptr)
+	, m_vPrevRootMotionPos(vector3::zero())
+	, m_bHasPrevRootMotion(false)
 {
 	m_strName = L"Animator";
 }
@@ -161,6 +163,7 @@ void CAnimator::Update()
 
 	if (m_bBlending)
 	{
+		_bool rootMotionApplied = false;
 		if (!m_pNextAnimation)
 		{
 			m_bBlending = false;
@@ -220,6 +223,19 @@ void CAnimator::Update()
 			{
 				if (IsRootBone(name))
 				{
+					if (!rootMotionApplied && m_pRootMotionParent)
+					{
+						const auto startIt = m_mBlendStartPose.find(name);
+						const auto nextIt = sampledNext.find(name);
+						if (startIt != m_mBlendStartPose.end() && nextIt != sampledNext.end())
+						{
+							const auto& btStart = startIt->second;
+							const auto& btNext = nextIt->second;
+							vector3 rootPos = vector3::Lerp(btStart.pos, btNext.pos, t);
+							ApplyRootMotionDelta(rootPos);
+							rootMotionApplied = true;
+						}
+					}
 					continue;
 				}
 			}
@@ -248,6 +264,7 @@ void CAnimator::Update()
 	m_pCrtAnimation->Sample(m_fCurrentTime, sampled);
 
 	const _uint boneCount = m_pSkinnedRenderer->Get_BoneCount();
+	_bool rootMotionApplied = false;
 
 	for (_uint i = 0; i < boneCount; ++i)
 	{
@@ -264,6 +281,15 @@ void CAnimator::Update()
 			{
 				if (m_pRootMotionParent)
 				{
+					if (!rootMotionApplied)
+					{
+						auto rootIt = sampled.find(name);
+						if (rootIt != sampled.end())
+						{
+							ApplyRootMotionDelta(rootIt->second.pos);
+							rootMotionApplied = true;
+						}
+					}
 				}
 				continue;
 			}
@@ -294,6 +320,23 @@ void CAnimator::OnDestroy()
 	Safe_Release(m_pRootMotionParent);
 }
 
+void CAnimator::ApplyRootMotionDelta(const vector3& rootPos)
+{
+	if (!m_pRootMotionParent)
+		return;
+
+	if (!m_bHasPrevRootMotion)
+	{
+		m_vPrevRootMotionPos = rootPos;
+		m_bHasPrevRootMotion = true;
+		return;
+	}
+
+	vector3 delta = rootPos - m_vPrevRootMotionPos;
+	m_pRootMotionParent->Add_LocalPosition(delta);
+	m_vPrevRootMotionPos = rootPos;
+}
+
 const _bool CAnimator::IsLoop() const
 {
 	return m_bLoop;
@@ -307,6 +350,7 @@ const _bool CAnimator::ApplyRootmotion() const
 void CAnimator::SetApplyRootmotion(const _bool _value, CTransform* _target)
 {
 	m_bApplyRootMotion = _value;
+	m_bHasPrevRootMotion = false;
 
 	if (m_pRootMotionParent)
 	{
@@ -353,6 +397,7 @@ void CAnimator::Play()
 	{
 		m_bLoop = m_pCrtAnimation->IsLoop();
 		m_bIsPlaying = true;
+		m_bHasPrevRootMotion = false;
 	}
 }
 
@@ -386,6 +431,7 @@ void CAnimator::Play(const wstring& _animName, const _float _blendDuration)
 		m_bBlending = false;
 		m_fBlendTime = 0.f;
 		m_fBlendDuration = 0.f;
+		m_bHasPrevRootMotion = false;
 
 		m_bLoop = m_pCrtAnimation->IsLoop();
 		return;
@@ -403,6 +449,7 @@ void CAnimator::Play(const wstring& _animName, const _float _blendDuration)
 
 	m_mBlendStartPose.clear();
 	m_pCrtAnimation->Sample(m_fCurrentTime, m_mBlendStartPose);
+	m_bHasPrevRootMotion = false;
 
 	m_bIsPlaying = true;
 }
@@ -417,6 +464,7 @@ void CAnimator::Stop()
 	m_fCurrentTime = 0.f;
 	Update();
 	m_bIsPlaying = false;
+	m_bHasPrevRootMotion = false;
 }
 
 void CAnimator::Set_Controller(CAnimatorController* _controller, const _bool _playEntry)
