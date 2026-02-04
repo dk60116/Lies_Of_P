@@ -6,6 +6,7 @@ CComponent::CComponent()
 	, m_pContext(nullptr)
 	, m_bEnable(true)
 	, m_pGameObject(nullptr)
+	, m_iSortIndex(0)
 {
 }
 
@@ -160,5 +161,10 @@ vector<FieldInfo> CComponent::GetInspectorFields()
 CTransform* CComponent::Get_Transform()
 {
 	return m_pGameObject->Get_Transform();
+}
+
+const _int CComponent::GetSortIndex() const
+{
+	return m_iSortIndex;
 }
 

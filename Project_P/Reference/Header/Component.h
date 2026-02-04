@@ -73,6 +73,8 @@ public:
 	CGameObject* Get_GameObject();
 	class CTransform* Get_Transform();
 
+	const _int GetSortIndex() const;
+
 private:
 	void Set_Object(class CGameObject* _gameObject);
 
@@ -83,6 +85,9 @@ protected:
 protected:
 	_bool m_bEnable;
 	class CGameObject* m_pGameObject;
+
+protected:
+	_int m_iSortIndex;
 
 public:
 	virtual vector<FieldInfo> GetInspectorFields();

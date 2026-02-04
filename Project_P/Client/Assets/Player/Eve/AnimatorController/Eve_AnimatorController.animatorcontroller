@@ -15,11 +15,6 @@ int attackCombo=0
 bool comboContinue=false
 bool IsAttack=false
 
-[state Idle]
-motion=Eve_Idle
-speedMul=1.000000
-pos=170,174
-
 [state Run_Forward_Start]
 motion=Eve_Run_Forward_Start
 speedMul=1.000000
@@ -30,20 +25,25 @@ motion=Eve_Attack_Light_04
 speedMul=1.000000
 pos=-118,507
 
-[state Run_Forward]
-motion=Eve_Run_Forward_During
+[state Idle]
+motion=Eve_Idle
 speedMul=1.000000
-pos=582,372
+pos=170,174
+
+[state Attack_Light_01]
+motion=Eve_Attack_Light_01
+speedMul=1.000000
+pos=-163,137
 
 [state Run_End]
 motion=Eve_Run_Forward_End
 speedMul=1.000000
 pos=176,376
 
-[state Attack_Light_01]
-motion=Eve_Attack_Light_01
+[state Run_Forward]
+motion=Eve_Run_Forward_During
 speedMul=1.000000
-pos=-163,137
+pos=582,372
 
 [state Run_TurnL]
 motion=Eve_Run_TurnL
@@ -97,7 +97,7 @@ transitionOffset=0.000000
 cond=Attack && attackCombo==0
 
 [transition Idle->Run_Forward_Start]
-blend=0.000000
+blend=0.150000
 cond=speed>0.100000
 fixedDuration=false
 transitionDuration=0.000000
@@ -133,7 +133,7 @@ transitionDuration=0.150000
 transitionOffset=0.000000
 
 [transition Run_TurnR->Run_Forward]
-blend=0.150000
+blend=0.350000
 exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
@@ -173,6 +173,7 @@ transitionOffset=0.000000
 [transition Attack_Light_01->Attack_Light_02]
 blend=0.150000
 cond=comboContinue==true
+exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -180,6 +181,7 @@ transitionOffset=0.000000
 [transition Attack_Light_03->Attack_Light_04]
 blend=0.150000
 cond=comboContinue==true
+exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -187,7 +189,7 @@ transitionOffset=0.000000
 [transition Attack_Light_04->Idle]
 blend=0.350000
 cond=comboContinue==false && IsAttack==false
-exitTime=0.500000
+exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.500000
 transitionOffset=0.000000
@@ -195,7 +197,7 @@ transitionOffset=0.000000
 [transition Attack_Light_03->Idle]
 blend=0.350000
 cond=comboContinue==false && IsAttack==false
-exitTime=0.350000
+exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -203,7 +205,7 @@ transitionOffset=0.000000
 [transition Attack_Light_02->Idle]
 blend=0.350000
 cond=comboContinue==false && IsAttack==false
-exitTime=0.300000
+exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -211,41 +213,45 @@ transitionOffset=0.000000
 [transition Attack_Light_02->Attack_Light_03]
 blend=0.150000
 cond=comboContinue==true
+exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
 [transition Attack_Light_01->Idle]
 blend=0.350000
-cond=comboContinue==false && IsAttack==false
-exitTime=0.350000
+cond=comboContinue==false
+exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
 [transition Attack_Light_04->Run_Forward_Start]
-blend=0.300000
+blend=0.200000
 cond=speed>0.100000
+exitTime=0.350000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
 [transition Attack_Light_01->Run_Forward_Start]
-blend=0.300000
+blend=0.200000
 cond=speed>0.100000
+exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
 [transition Attack_Light_02->Run_Forward_Start]
-blend=0.300000
+blend=0.200000
 cond=speed>0.100000
+exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
 [transition Attack_Light_03->Run_Forward_Start]
-blend=0.300000
+blend=0.200000
 cond=speed>0.100000
 fixedDuration=false
 transitionDuration=0.150000

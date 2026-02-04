@@ -28,6 +28,7 @@ CAnimator::CAnimator()
 	, m_bHasNextRootStartPos(false)
 {
 	m_strName = L"Animator";
+	m_iSortIndex = 1;
 }
 
 CAnimator::~CAnimator()

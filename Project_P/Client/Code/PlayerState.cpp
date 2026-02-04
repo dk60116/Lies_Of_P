@@ -12,6 +12,7 @@ CPlayerState::~CPlayerState()
 
 void CPlayerState::Enter(CPlayerControllerContext&)
 {
+	m_fPassedTime = 0.f;
 }
 
 void CPlayerState::Exit(CPlayerControllerContext&)

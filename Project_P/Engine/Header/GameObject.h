@@ -163,6 +163,11 @@ inline T* CGameObject::AddComponent()
 			m_pScene->Add_Canvas(canv);
 	}
 
+	m_lComponentList.sort([](const CComponent* a, const CComponent* b)
+		{
+			return a->GetSortIndex() < b->GetSortIndex();
+		});
+
 	return newComponent;
 }
 

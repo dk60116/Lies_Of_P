@@ -26,7 +26,7 @@ private:
     void TurnPlayer(CPlayerControllerContext& _ctx);
 
 private:
-    _int  m_iCombo;
+    _int  m_iCombo, m_iPrevCombo;
     _bool m_bQueuedNext;
     _float m_fComboTerm[3];
     _float m_fComboLimit[3];
