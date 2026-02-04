@@ -2,7 +2,7 @@ SceneName : Game Scene
 Main_BG : MainMenu/Main_Backgrouond.png : [Texture]
 Main_Logo : MainMenu/Zelda_Logo.png : [Texture]
 // Eve Model
-EveBody_Model : Player/Eve/EveBody.fbx :  [Skinned Mesh]
+EveBody_Model : Player/Eve/EveBody.fbx :  [Skinned Mesh] [Root : Root]
 EveHead_Model : Player/Eve/EveHead.fbx :  [Skinned Mesh]
 EveHairMain_Model : Player/Eve/EveHairMain.fbx :  [Skinned Mesh]
 // Eve Body Textures

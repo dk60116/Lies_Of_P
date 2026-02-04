@@ -58,6 +58,16 @@ string CEngineString::Trim(const string& _str)
     return _str.substr(start, end - start + 1);
 }
 
+string CEngineString::Trim(const string_view& _sv)
+{
+    const char* ws = " \t\r\n";
+    const size_t b = _sv.find_first_not_of(ws);
+    if (b == string_view::npos) 
+        return {};
+    const size_t e = _sv.find_last_not_of(ws);
+    return string(_sv.substr(b, e - b + 1));
+}
+
 wstring CEngineString::Trim(const wstring& _wstr)
 {
     const wchar_t* whitespace = L" \t\n\r";
@@ -70,6 +80,16 @@ wstring CEngineString::Trim(const wstring& _wstr)
     const size_t end = _wstr.find_last_not_of(whitespace);
     
     return _wstr.substr(start, end - start + 1);
+}
+
+wstring CEngineString::Trim(const wstring_view& _sv)
+{
+    const wchar_t* ws = L" \t\r\n";
+    const size_t b = _sv.find_first_not_of(ws);
+    if (b == string_view::npos)
+        return {};
+    const size_t e = _sv.find_last_not_of(ws);
+    return wstring(_sv.substr(b, e - b + 1));
 }
 
 vector<string> CEngineString::Split(const string& _str, const string& _delimiter)
@@ -103,13 +123,13 @@ vector<wstring> CEngineString::Split(const wstring& _wstr, const wstring& _delim
     if (_delimiter.empty())
         return tokens;
 
-    if (_wstr.find(_delimiter) == string::npos)
+    if (_wstr.find(_delimiter) == wstring::npos)
         return tokens;
 
     size_t start = 0;
     size_t pos = 0;
 
-    while ((pos = _wstr.find(_delimiter, start)) != string::npos)
+    while ((pos = _wstr.find(_delimiter, start)) != wstring::npos)
     {
         tokens.emplace_back(_wstr.substr(start, pos - start));
         start = pos + _delimiter.length();

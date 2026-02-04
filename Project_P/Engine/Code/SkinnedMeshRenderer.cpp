@@ -274,22 +274,17 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 		return;
 	}
 
-	// 1) World
 	_matrix matWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
 
-	// 2) Light View/Proj
 	_matrix matView = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.view));
 	_matrix matProj = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.proj));
 
-	// Bone Count Clamp
 	const _uint boneCount = min<_uint>(static_cast<_uint>(m_vBones.size()), MAX_BONE);
 
-	//Bone Matrices
 	_matrix boneMatrices[MAX_BONE];
 	for (int i = 0; i < MAX_BONE; ++i)
 		boneMatrices[i] = XMMatrixIdentity();
 
-	// meshWorldInv 1회 계산
 	_matrix meshWorldInv = XMMatrixIdentity();
 	{
 		if (m_pGameObject && m_pGameObject->Get_Transform())
@@ -299,22 +294,19 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 		}
 	}
 
-	// 5) 본 행렬 계산(기존 Render_WithCamera와 동일한 규칙 유지)
 	for (_uint i = 0; i < boneCount; ++i)
 	{
 		if (!m_vBones[i])
 			continue;
 
 		_matrix boneWorld = m_vBones[i]->Get_WorldMatrix();
-		_matrix invBindPose = XMLoadFloat4x4(&m_pMeshBuffer->m_vBoneOffsetMatrices[i]); // offset
+		_matrix invBindPose = XMLoadFloat4x4(&m_pMeshBuffer->m_vBoneOffsetMatrices[i]);
 
 		_matrix boneMeshLocal = boneWorld * meshWorldInv;
 
-		// 기존 렌더에서 transpose해서 올렸으므로, shadow에서도 동일하게 유지
 		boneMatrices[i] = XMMatrixTranspose(invBindPose * boneMeshLocal);
 	}
 
-	// 6) Bone CB 업로드
 	D3D11_MAPPED_SUBRESOURCE mappedRes = {};
 	HRESULT hr = m_pContext->Map(m_pBoneMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedRes);
 	if (FAILED(hr))
@@ -326,15 +318,12 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 	memcpy(mappedRes.pData, boneMatrices, sizeof(_matrix) * MAX_BONE);
 	m_pContext->Unmap(m_pBoneMatrixBuffer, 0);
 
-	// 7) Material bind
 	_float3 dummyPos = { 0.f, 0.f, 0.f };
 	_shadowDepthMat->Bind_Matrix(matWorld);
 	_shadowDepthMat->Bind_Camera(dummyPos, matView, matProj, boneCount);
 
-	// 8) Bones CB bind (b3)
 	m_pContext->VSSetConstantBuffers(3, 1, &m_pBoneMatrixBuffer);
 
-	// 9) Draw
 	m_pMeshBuffer->Render();
 }
 
@@ -400,4 +389,12 @@ vector<CTransform*>& CSkinnedMeshRenderer::GetRootBons()
 const wstring CSkinnedMeshRenderer::Get_RootBoneName(const _int _index) const
 {
 	return m_vRootBone[_index]->Get_GameObject()->Get_ObjectName();
+}
+
+void CSkinnedMeshRenderer::AddRootBone(CTransform* _tf)
+{
+	if (_tf)
+	{
+		m_vRootBone.push_back(_tf);
+	}
 }

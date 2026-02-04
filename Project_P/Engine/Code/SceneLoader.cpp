@@ -137,6 +137,13 @@ void CSceneLoader::ThreadLoadingLoop()
 					if (CEngineString::Contains(wFormat, L"[Bone]"))
 						filter |= FILTER_BONE;
 
+					wstring rootName = L"";
+
+					vector<wstring> out = {};
+
+					if (CEngineString::Contains(wFormat, L"[Root : "))
+						out = FormatToRootNode(wFormat);
+
 					auto skinnedDataSplit = CEngineString::Split(wFile, L"/");
 					wstring skinnedDataFolder = skinnedDataSplit[skinnedDataSplit.size() - 2];
 					wstring skinnedDataTail = skinnedDataSplit[skinnedDataSplit.size() - 1];
@@ -226,6 +233,42 @@ void CSceneLoader::Shutdown()
 	WaitForSingleObject(GetInstance().m_hThread, INFINITE);
 	CloseHandle(GetInstance().m_hThread);
 	DeleteCriticalSection(&GetInstance().m_pCriticalSection);
+}
+
+vector<wstring> CSceneLoader::FormatToRootNode(const wstring& _format)
+{
+	vector<wstring> out;
+
+	size_t rootPos = _format.find(L"Root");
+	if (rootPos == wstring::npos) 
+		return out;
+
+	size_t colonPos = _format.find(L':', rootPos);
+	if (colonPos == wstring::npos)
+		return out;
+
+	size_t start = colonPos + 1;
+	size_t end = _format.find(L']', start);
+	if (end == wstring::npos) 
+		end = _format.size();
+
+	wstring_view payload(_format.data() + start, end - start);
+
+	size_t i = 0;
+	while (i < payload.size())
+	{
+		size_t j = payload.find(L',', i);
+		if (j == wstring_view::npos)
+			j = payload.size();
+
+		wstring token = CEngineString::Trim(payload.substr(i, j - i));
+		if (!token.empty()) 
+			out.push_back(std::move(token));
+
+		i = (j < payload.size()) ? (j + 1) : j;
+	}
+
+	return out;
 }
 
 CSkyBox::SKYBOXBUFFERDESC CSceneLoader::FormatToSkyBoxDesc(const wstring& _name, const wstring& _format) const

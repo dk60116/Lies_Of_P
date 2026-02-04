@@ -14,7 +14,9 @@ public:
 	static string WStringToString(const wstring& _wstr);
 	static wstring StringToWString(const string& _str);
 	static string Trim(const string& _str);
+	static string Trim(const string_view& _sv);
 	static wstring Trim(const wstring& _wstr);
+	static wstring Trim(const wstring_view& _sv);
 	static vector<string> Split(const string& _str, const string& _delimiter);
 	static vector<wstring> Split(const wstring& _wstr, const wstring& _delimiter);
 	static string Erase(const string& _str, const string& _target);

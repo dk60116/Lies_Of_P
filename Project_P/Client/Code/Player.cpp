@@ -63,6 +63,11 @@ HRESULT CPlayer::Initialize()
 
 	m_vBodySuits = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveBody_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveBody_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
 
+	CTransform* addRoot = Get_Transform()->Find_ChildRecursive(L"Root");
+
+	for (TRAVERSAL_ITER(m_vBodySuits, it))
+		(*it)->AddRootBone(addRoot);
+
 	m_vBodySuits[0]->Get_Material()->Set_Texture(suit_BaseTex);
 	m_vBodySuits[0]->Get_Material()->Set_Texture(suit_NormalTex, 1);
 	m_vBodySuits[0]->Get_Material()->Set_Texture(suit_ORMTex, 2);

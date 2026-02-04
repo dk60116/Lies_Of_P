@@ -28,6 +28,7 @@ private:
 	void Shutdown();
 
 private:
+	vector<wstring> FormatToRootNode(const wstring& _format);
 	CSkyBox::SKYBOXBUFFERDESC FormatToSkyBoxDesc(const wstring& _name, const wstring& _format) const;
 	CMeshBuffer::TERRAINBUFFERDESC FormatToTerrainDesc(const wstring& _name, const wstring& _format) const;
 

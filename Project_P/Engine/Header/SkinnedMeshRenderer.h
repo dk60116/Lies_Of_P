@@ -47,6 +47,7 @@ public:
 	void Set_Bones(const vector<CTransform*>& _bones, vector<CTransform*>);
 	vector<CTransform*>& GetRootBons();
 	const wstring Get_RootBoneName(const _int _index) const;
+	void AddRootBone(CTransform* _tf);
 
 private:
 	CSkinnedMeshBuffer* m_pMeshBuffer;
