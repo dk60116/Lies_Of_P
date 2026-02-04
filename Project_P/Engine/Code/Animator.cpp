@@ -23,8 +23,12 @@ CAnimator::CAnimator()
 	, m_pController(nullptr)
 	, m_pRootMotionParent(nullptr)
 	, m_vPrevRootMotionPos(vector3::zero())
+	, m_qPrevRootMotionRot(quaternion::identity())
+	, m_vPrevRootMotionScale(vector3(1.f, 1.f, 1.f))
 	, m_bHasPrevRootMotion(false)
 	, m_vNextRootStartPos(vector3::zero())
+	, m_qNextRootStartRot(quaternion::identity())
+	, m_vNextRootStartScale(vector3(1.f, 1.f, 1.f))
 	, m_bHasNextRootStartPos(false)
 {
 	m_strName = L"Animator";
@@ -128,8 +132,7 @@ void CAnimator::Update()
 		else
 		{
 			m_sStateInfo.normalizeTime = 0.f;
-		}
-	}
+				}
 
 	if (m_bBlending && m_pNextAnimation)
 	{
@@ -152,8 +155,7 @@ void CAnimator::Update()
 		else
 		{
 			m_sStateInfo.normalizeTime = 0.f;
-		}
-	}
+				}
 
 	if (m_pController)
 		m_ControllerInst.Update(this, dt);
@@ -227,24 +229,32 @@ void CAnimator::Update()
 			{
 				if (IsRootBone(name))
 				{
-						if (!rootMotionApplied && m_pRootMotionParent)
+					if (!rootMotionApplied && m_pRootMotionParent)
+					{
+						const auto startIt = m_mBlendStartPose.find(name);
+						const auto nextIt = sampledNext.find(name);
+						if (startIt != m_mBlendStartPose.end() && nextIt != sampledNext.end())
 						{
-							const auto startIt = m_mBlendStartPose.find(name);
-							const auto nextIt = sampledNext.find(name);
-							if (startIt != m_mBlendStartPose.end() && nextIt != sampledNext.end())
+							const auto& btStart = startIt->second;
+							const auto& btNext = nextIt->second;
+							vector3 rootPos = vector3::Lerp(btStart.pos, btNext.pos, t);
+							quaternion rootRot = quaternion::Slerp(btStart.rot, btNext.rot, t);
+							vector3 rootScale = vector3::Lerp(btStart.scale, btNext.scale, t);
+							if (m_bHasNextRootStartPos)
 							{
-								const auto& btStart = startIt->second;
-								const auto& btNext = nextIt->second;
-								vector3 rootPos = vector3::Lerp(btStart.pos, btNext.pos, t);
-								if (m_bHasNextRootStartPos)
-								{
-									const vector3 offset = btStart.pos - m_vNextRootStartPos;
-									rootPos = vector3::Lerp(btStart.pos, btNext.pos + offset, t);
-								}
-								ApplyRootMotionDelta(rootPos, dt);
-								rootMotionApplied = true;
+								const vector3 offset = btStart.pos - m_vNextRootStartPos;
+								rootPos = vector3::Lerp(btStart.pos, btNext.pos + offset, t);
+								quaternion invNextStart;
+								m_qNextRootStartRot.Inverse(invNextStart);
+								const quaternion rotOffset = btStart.rot * invNextStart;
+								rootRot = quaternion::Slerp(btStart.rot, btNext.rot * rotOffset, t);
+								const vector3 scaleOffset = btStart.scale - m_vNextRootStartScale;
+								rootScale = vector3::Lerp(btStart.scale, btNext.scale + scaleOffset, t);
 							}
+							ApplyRootMotionDelta(rootPos, rootRot, rootScale, dt);
+							rootMotionApplied = true;
 						}
+					}
 					continue;
 				}
 			}
@@ -295,7 +305,7 @@ void CAnimator::Update()
 						auto rootIt = sampled.find(name);
 						if (rootIt != sampled.end())
 						{
-							ApplyRootMotionDelta(rootIt->second.pos, dt);
+							ApplyRootMotionDelta(rootIt->second.pos, rootIt->second.rot, rootIt->second.scale, dt);
 							rootMotionApplied = true;
 						}
 					}
@@ -329,7 +339,7 @@ void CAnimator::OnDestroy()
 	Safe_Release(m_pRootMotionParent);
 }
 
-void CAnimator::ApplyRootMotionDelta(const vector3& rootPos, const _float dt)
+void CAnimator::ApplyRootMotionDelta(const vector3& rootPos, const quaternion& rootRot, const vector3& rootScale, const _float dt)
 {
 	if (!m_pRootMotionParent)
 		return;
@@ -337,6 +347,8 @@ void CAnimator::ApplyRootMotionDelta(const vector3& rootPos, const _float dt)
 	if (!m_bHasPrevRootMotion)
 	{
 		m_vPrevRootMotionPos = rootPos;
+		m_qPrevRootMotionRot = rootRot;
+		m_vPrevRootMotionScale = rootScale;
 		m_bHasPrevRootMotion = true;
 		return;
 	}
@@ -347,7 +359,16 @@ void CAnimator::ApplyRootMotionDelta(const vector3& rootPos, const _float dt)
 	vector3 worldDelta = directions.right * mapped.x + directions.up * mapped.y + directions.forward * mapped.z;
 	worldDelta *= dt;
 	m_pRootMotionParent->Add_LocalPosition(-worldDelta);
+	quaternion invPrev;
+	m_qPrevRootMotionRot.Inverse(invPrev);
+	quaternion deltaRot = rootRot * invPrev;
+	quaternion stepRot = quaternion::Slerp(quaternion::identity(), deltaRot, dt);
+	m_pRootMotionParent->Add_Quaternion(stepRot);
+	vector3 deltaScale = rootScale - m_vPrevRootMotionScale;
+	m_pRootMotionParent->Add_LocalScale(deltaScale * dt);
 	m_vPrevRootMotionPos = rootPos;
+	m_qPrevRootMotionRot = rootRot;
+	m_vPrevRootMotionScale = rootScale;
 }
 
 const _bool CAnimator::IsLoop() const
@@ -470,6 +491,8 @@ void CAnimator::Play(const wstring& _animName, const _float _blendDuration)
 		if (IsRootBone(item.first))
 		{
 			m_vNextRootStartPos = item.second.pos;
+			m_qNextRootStartRot = item.second.rot;
+			m_vNextRootStartScale = item.second.scale;
 			m_bHasNextRootStartPos = true;
 			break;
 		}

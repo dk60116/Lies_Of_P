@@ -68,7 +68,7 @@ public:
 
 private:
     _bool IsRootBone(const wstring& _name);
-    void ApplyRootMotionDelta(const vector3& rootPos, const _float dt);
+    void ApplyRootMotionDelta(const vector3& rootPos, const quaternion& rootRot, const vector3& rootScale, const _float dt);
 
 private:
     class CSkinnedMeshRenderer* m_pSkinnedRenderer;
@@ -85,8 +85,12 @@ private:
 
     CTransform* m_pRootMotionParent;
     vector3 m_vPrevRootMotionPos;
+    quaternion m_qPrevRootMotionRot;
+    vector3 m_vPrevRootMotionScale;
     _bool m_bHasPrevRootMotion;
     vector3 m_vNextRootStartPos;
+    quaternion m_qNextRootStartRot;
+    vector3 m_vNextRootStartScale;
     _bool m_bHasNextRootStartPos;
 
 private:
