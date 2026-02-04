@@ -189,6 +189,8 @@ void CAnimator::Update()
 
 			m_bIsPlaying = true;
 			m_bLoop = (m_pCrtAnimation) ? m_pCrtAnimation->IsLoop() : false;
+			m_bHasPrevRootMotion = false;
+			m_bHasNextRootStartPos = false;
 
 			if (m_pCrtAnimation)
 			{
