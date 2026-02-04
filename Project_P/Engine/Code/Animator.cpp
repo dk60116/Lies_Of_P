@@ -466,9 +466,9 @@ void CAnimator::Pause()
 void CAnimator::Stop()
 {
 	m_fCurrentTime = 0.f;
+	m_bHasPrevRootMotion = false;
 	Update();
 	m_bIsPlaying = false;
-	m_bHasPrevRootMotion = false;
 }
 
 void CAnimator::Set_Controller(CAnimatorController* _controller, const _bool _playEntry)
