@@ -25,6 +25,8 @@ CComponent* CSkinnedMeshRenderer::Clone() const
 {
 	auto* clone = new CSkinnedMeshRenderer();
 
+	clone->m_bCastShadow = this->m_bCastShadow;
+
 	clone->m_pMeshBuffer = this->m_pMeshBuffer;
 	if (clone->m_pMeshBuffer)
 	if (clone->m_pMeshBuffer)

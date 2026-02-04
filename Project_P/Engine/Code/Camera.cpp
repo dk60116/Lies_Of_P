@@ -964,6 +964,8 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 			continue;
 		if (!r->Get_Enable())
 			continue;
+		if (!r->IsCastShadow())
+			continue;
 
 		r->Render_ShadowDepth(shadowDepthMat, m_sMainLightMatrix);
 	}

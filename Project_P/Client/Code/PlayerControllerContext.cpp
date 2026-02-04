@@ -1,5 +1,6 @@
 #include "cpch.h"
 #include "PlayerControllerContext.h"
+#include "PlayerController.h"
 
 CPlayerControllerContext::CPlayerControllerContext()
 	: m_pPlayer(nullptr)
@@ -14,10 +15,11 @@ CPlayerControllerContext::~CPlayerControllerContext()
 {
 }
 
-void CPlayerControllerContext::Bind(CPlayer* _player, CPlayerCamera* _cam)
+void CPlayerControllerContext::Bind(CPlayer* _player, CPlayerCamera* _cam, CPlayerController* _controller)
 {
 	m_pPlayer = _player;
 	m_pCam = _cam;
+	m_pController = _controller;
 }
 
 void CPlayerControllerContext::SetMovePressed(_bool pressed)
@@ -25,9 +27,14 @@ void CPlayerControllerContext::SetMovePressed(_bool pressed)
 	m_Cv_Move.m_bMovePressed = pressed;
 }
 
-_bool CPlayerControllerContext::IsMovePressed() const
+const _bool CPlayerControllerContext::IsMovePressed() const
 {
 	return m_Cv_Move.m_bMovePressed;
+}
+
+const _bool CPlayerControllerContext::IsLightAttackPressed()
+{
+	return m_pController->m_mKeyDown[CPlayerController::Attack];
 }
 
 vector3 CPlayerControllerContext::CameraForward() const

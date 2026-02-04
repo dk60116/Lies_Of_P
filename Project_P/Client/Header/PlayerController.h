@@ -6,6 +6,8 @@
 
 class CPlayerController final : public CComponent
 {
+    friend class CPlayerControllerContext;
+
 public:
     enum KeyMapping { Forward, Back, Left, Right, Attack };
 

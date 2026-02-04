@@ -71,7 +71,7 @@ void CPlayerController::Start()
 {
 	if (m_pPlayer && m_pPlayerCam && m_pRoot)
 	{
-		m_ctx.Bind(m_pPlayer, m_pPlayerCam);
+		m_ctx.Bind(m_pPlayer, m_pPlayerCam, this);
 		m_pRoot->Enter(m_ctx);
 		m_bFSMStarted = true;
 	}
@@ -85,7 +85,7 @@ void CPlayerController::Update()
     {
         if (m_pPlayer && m_pPlayerCam && m_pRoot)
         {
-            m_ctx.Bind(m_pPlayer, m_pPlayerCam);
+            m_ctx.Bind(m_pPlayer, m_pPlayerCam, this);
             m_pRoot->Enter(m_ctx);
             m_bFSMStarted = true;
         }
@@ -172,7 +172,7 @@ void CPlayerController::Set_Player(CPlayer* _player)
 	m_pPlayer = _player;
 
 	if (m_pPlayerCam) 
-		m_ctx.Bind(m_pPlayer, m_pPlayerCam);
+		m_ctx.Bind(m_pPlayer, m_pPlayerCam, this);
 }
 
 void CPlayerController::Set_Camera(CPlayerCamera* _cam)
@@ -180,7 +180,7 @@ void CPlayerController::Set_Camera(CPlayerCamera* _cam)
 	m_pPlayerCam = _cam;
 
 	if (m_pPlayer)
-		m_ctx.Bind(m_pPlayer, m_pPlayerCam);
+		m_ctx.Bind(m_pPlayer, m_pPlayerCam, this);
 }
 
 const _bool CPlayerController::IsRunning() const

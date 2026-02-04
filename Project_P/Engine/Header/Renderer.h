@@ -28,9 +28,15 @@ public:
 	void Set_Material(CMaterial* _material);
 	virtual CMeshBuffer* Get_MeshBuffer() PURE;
 
+public:
+	const _bool IsCastShadow() const;
+	void SetCastShadow(const _bool _on);
+
 protected:
 	CMaterial* m_pMaterial;
 	CMaterial* m_pOutlineMat;
+
+	_bool m_bCastShadow;
 };
 
 NS_END

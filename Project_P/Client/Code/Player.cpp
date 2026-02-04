@@ -10,16 +10,10 @@ CPlayer::CPlayer()
 	, m_pAnimator(nullptr)
 	, m_pEquipWeapon(nullptr)
 	, m_sPlayerStatus({})
-	, m_eAnimationStatus(Idle)
-	, m_fSwordActionEndFrames()
-	, m_fAttackComboNT(0.f)
-	, m_iAttackComboDest(0)
-	, m_bIsJump(false)
-	, m_bIsPrevJump(false)
-	, m_pFocusTransform(nullptr)
 	, m_vBodySuits({})
 	, m_vFaces({})
 	, m_vHairs({})
+	, m_iLightAttackComboCount(0)
 {
 	m_strName = L"Player";
 }
@@ -89,6 +83,7 @@ HRESULT CPlayer::Initialize()
 	m_vBodySuits[4]->Get_Material()->Set_Texture(wing_BaseTex);
 	m_vBodySuits[4]->Get_Material()->Set_Texture(wing_NormalTex, 1);
 	m_vBodySuits[4]->Get_Material()->Set_Texture(wing_ORMTex, 2);
+	m_vBodySuits[4]->SetCastShadow(false);
 
 	m_vBodySuits[5]->Get_Material()->Set_Texture(frill_BaseTex);
 	m_vBodySuits[5]->Get_Material()->Set_Texture(frill_NormalTex, 1);
@@ -189,11 +184,6 @@ const CPlayer::PlayerStatus& CPlayer::Get_PlayerStatus()
 	return m_sPlayerStatus;
 }
 
-void CPlayer::Set_Focus(CTransform* _transform)
-{
-	m_pFocusTransform = _transform;
-}
-
 void CPlayer::RecoverHp(const _uint _value)
 {
 	m_sPlayerStatus.crtHp += _value;
@@ -206,4 +196,14 @@ void CPlayer::GetDamage(const _uint _damage)
 	m_sPlayerStatus.crtHp -= _damage;
 	m_sPlayerStatus.crtHp = max(m_sPlayerStatus.crtHp, 0);
 	CGameManager::GetInstance().Get_PlayerHUD()->Update_Heart(m_sPlayerStatus.crtHp, m_sPlayerStatus.maxHp);
+}
+
+const _uint CPlayer::GetLightAttackComboCount() const
+{
+	return m_iLightAttackComboCount;
+}
+
+void CPlayer::SetLightAttakComboCount(const _uint _count)
+{
+	m_iLightAttackComboCount = _count;
 }

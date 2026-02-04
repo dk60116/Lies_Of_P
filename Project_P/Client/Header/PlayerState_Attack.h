@@ -3,6 +3,10 @@
 
 class CPlayerState_Attack final : public CPlayerState
 {
+public:
+    CPlayerState_Attack();
+    ~CPlayerState_Attack();
+
 private:
     struct Step
     {
@@ -12,11 +16,12 @@ private:
         const wchar_t* trigger;
     };
 
-    Step  m_steps[3] =
+    Step  m_steps[4] =
     {
         { 0.55f, 0.20f, 0.42f, L"atk1" },
         { 0.60f, 0.22f, 0.45f, L"atk2" },
         { 0.70f, 0.00f, 0.00f, L"atk3" },
+        { 0.70f, 0.00f, 0.00f, L"atk4" },
     };
 
 public:
@@ -28,8 +33,8 @@ private:
     void PlayStep(CPlayerControllerContext& _ctx, _int _idx);
 
 private:
-    _int  m_iStep = 0;
-    _float m_t = 0.f;
-    _bool m_bQueuedNext = false;
+    _int  m_iCombo;
+    _bool m_bQueuedNext;
+    _float m_fComboTerm[4];
 };
 

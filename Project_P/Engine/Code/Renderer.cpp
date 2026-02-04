@@ -4,6 +4,7 @@
 CRenderer::CRenderer()
 	: m_pMaterial(nullptr)
 	, m_pOutlineMat(nullptr)
+	, m_bCastShadow(true)
 {
 }
 
@@ -70,4 +71,14 @@ void CRenderer::Set_Material(CMaterial* _material)
 
 	if (m_pMaterial)
 		m_pMaterial->AddRef();
+}
+
+const _bool CRenderer::IsCastShadow() const
+{
+	return m_bCastShadow;
+}
+
+void CRenderer::SetCastShadow(const _bool _on)
+{
+	m_bCastShadow = _on;
 }

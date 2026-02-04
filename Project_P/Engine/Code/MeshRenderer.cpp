@@ -21,6 +21,8 @@ CComponent* CMeshRenderer::Clone() const
 {
 	CMeshRenderer* clone = new CMeshRenderer();
 
+	clone->m_bCastShadow = this->m_bCastShadow;
+
 	return clone;
 }
 

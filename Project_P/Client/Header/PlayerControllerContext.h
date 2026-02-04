@@ -33,10 +33,12 @@ public:
 	~CPlayerControllerContext();
 
 public:
-	void Bind(CPlayer* _player, CPlayerCamera* _cam);
+	void Bind(CPlayer* _player, CPlayerCamera* _cam, CPlayerController* _controller);
 
 	void SetMovePressed(_bool pressed);
-	_bool IsMovePressed() const;
+	const _bool IsMovePressed() const;
+
+	const _bool IsLightAttackPressed();
 
 	vector3 CameraForward() const;
 	_float CameraYawDeg() const;
@@ -99,6 +101,7 @@ public:
 private:
 	CPlayer* m_pPlayer;
 	CPlayerCamera* m_pCam;
+	CPlayerController* m_pController;
 
 private:
 	CV_MOVE m_Cv_Move;

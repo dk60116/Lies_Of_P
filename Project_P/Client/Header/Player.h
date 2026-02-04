@@ -49,7 +49,6 @@ public:
 
 public:
 	const PlayerStatus& Get_PlayerStatus();
-	void Set_Focus(CTransform* _transform);
 	void RecoverHp(const _uint _value);
 	void GetDamage(const _uint _damage);
 
@@ -63,17 +62,14 @@ private:
 	class CWeapon* m_pEquipWeapon;
 
 	PlayerStatus m_sPlayerStatus;
-	PlayerAnimationStatus m_eAnimationStatus;
-
-	_float m_fSwordActionEndFrames[3];
-
-	_float m_fAttackComboNT;
-	_uint m_iAttackComboDest;
-
-	_bool m_bIsJump, m_bIsPrevJump;
-
-	CTransform* m_pFocusTransform;
 
 	vector<CSkinnedMeshRenderer*> m_vBodySuits, m_vFaces, m_vHairs;
+
+public:
+	const _uint GetLightAttackComboCount() const;
+	void SetLightAttakComboCount(const _uint _count);
+
+public:
+	_uint m_iLightAttackComboCount;
 };
 
