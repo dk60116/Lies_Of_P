@@ -21,6 +21,7 @@ CAnimator::CAnimator()
 	, m_mBlendStartPose({})
 	, m_sStateInfo({})
 	, m_pController(nullptr)
+	, m_pRootMotionParent(nullptr)
 {
 	m_strName = L"Animator";
 }
@@ -217,12 +218,10 @@ void CAnimator::Update()
 			
 			if (m_bApplyRootMotion)
 			{
-				auto& routs = m_pSkinnedRenderer->GetRootBons();
-
-				for (size_t i = 0; i < routs.size(); ++i)
+				if (IsRootBone(name))
 				{
-					if (routs[i]->Get_GameObject()->Get_ObjectName() == name)
-						continue;
+					SetRootMovement();
+					continue;
 				}
 			}
 
@@ -250,6 +249,7 @@ void CAnimator::Update()
 	m_pCrtAnimation->Sample(m_fCurrentTime, sampled);
 
 	const _uint boneCount = m_pSkinnedRenderer->Get_BoneCount();
+
 	for (_uint i = 0; i < boneCount; ++i)
 	{
 		CTransform* bone = m_pSkinnedRenderer->Get_BoneTransform(i);
@@ -261,16 +261,18 @@ void CAnimator::Update()
 
 		if (m_bApplyRootMotion)
 		{
-			auto& routs = m_pSkinnedRenderer->GetRootBons();
-
-			for (size_t i = 0; i < routs.size(); ++i)
+			if (IsRootBone(name))
 			{
-				if (routs[i]->Get_GameObject()->Get_ObjectName() == name)
-					continue;
+				if (m_pRootMotionParent)
+				{
+					SetRootMovement();
+				}
+				continue;
 			}
 		}
 
 		auto it = sampled.find(name);
+		
 		if (it == sampled.end())
 			continue;
 
@@ -303,9 +305,23 @@ const _bool CAnimator::ApplyRootmotion() const
 	return m_bApplyRootMotion;
 }
 
-void CAnimator::SetApplyRootmotion(const _bool _value)
+void CAnimator::SetApplyRootmotion(const _bool _value, CTransform* _target)
 {
 	m_bApplyRootMotion = _value;
+
+	if (m_pRootMotionParent)
+	{
+		Safe_Release(m_pRootMotionParent);
+		m_pRootMotionParent = nullptr;
+	}
+
+	if (_value)
+	{
+		m_pRootMotionParent = _target;
+
+		if (_target)
+			_target->AddRef();
+	}
 }
 
 void CAnimator::Set_PlaybackSpeed(const _float _value)
@@ -484,6 +500,25 @@ const _float CAnimator::GetNormalizedTime() const
 		return 0.f;
 
 	return clamp(t, 0.f, 1.f);
+}
+
+_bool CAnimator::IsRootBone(const wstring& _name)
+{
+	_bool result = false;
+
+	auto& routs = m_pSkinnedRenderer->GetRootBons();
+
+	for (size_t i = 0; i < routs.size(); ++i)
+	{
+		if (routs[i]->Get_GameObject()->Get_ObjectName() == _name)
+			result = true;
+	}
+
+	return result;
+}
+
+void CAnimator::SetRootMovement(const vector3& _p, const vector3& _r, const vector3 _s)
+{
 }
 
 void CAnimator::SetBool(const wstring& n, _bool v)

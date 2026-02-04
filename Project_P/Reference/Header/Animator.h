@@ -67,6 +67,9 @@ public:
     const _float GetNormalizedTime() const;
 
 private:
+    _bool IsRootBone(const wstring& _name);
+
+private:
     class CSkinnedMeshRenderer* m_pSkinnedRenderer;
     unordered_map<wstring, CAnimationClip*> m_mAnimationList;
     CAnimationClip* m_pCrtAnimation, * m_pNextAnimation;

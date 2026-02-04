@@ -34,7 +34,7 @@ public:
     const _bool IsLoop() const;
     const _bool ApplyRootmotion() const;
 
-    void SetApplyRootmotion(const _bool _value);
+    void SetApplyRootmotion(const _bool _value, CTransform* _target);
     void Set_PlaybackSpeed(const _float _value);
 
     void Add_Animation(const wstring& _animName, CAnimationClip* _anim);
@@ -67,6 +67,10 @@ public:
     const _float GetNormalizedTime() const;
 
 private:
+    _bool IsRootBone(const wstring& _name);
+    void SetRootMovement(const vector3& _p, const vector3& _r, const vector3 _s);
+
+private:
     class CSkinnedMeshRenderer* m_pSkinnedRenderer;
     unordered_map<wstring, CAnimationClip*> m_mAnimationList;
     CAnimationClip* m_pCrtAnimation, * m_pNextAnimation;
@@ -78,6 +82,8 @@ private:
 	AnimatorStateInfo m_sStateInfo;
 
     unordered_map<wstring, CAnimationClip::BoneTransform> m_mBlendStartPose;
+
+    CTransform* m_pRootMotionParent;
 
 private:
     class CAnimatorController* m_pController;
