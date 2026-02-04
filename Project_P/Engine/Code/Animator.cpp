@@ -220,7 +220,6 @@ void CAnimator::Update()
 			{
 				if (IsRootBone(name))
 				{
-					SetRootMovement();
 					continue;
 				}
 			}
@@ -265,7 +264,6 @@ void CAnimator::Update()
 			{
 				if (m_pRootMotionParent)
 				{
-					SetRootMovement();
 				}
 				continue;
 			}
@@ -290,9 +288,10 @@ void CAnimator::OnDestroy()
 	m_mAnimationList.clear();
 
 	m_ControllerInst.OnDestroy();
-	Safe_Release(m_pController);
 
+	Safe_Release(m_pController);
 	Safe_Release(m_pSkinnedRenderer);
+	Safe_Release(m_pRootMotionParent);
 }
 
 const _bool CAnimator::IsLoop() const
@@ -515,10 +514,6 @@ _bool CAnimator::IsRootBone(const wstring& _name)
 	}
 
 	return result;
-}
-
-void CAnimator::SetRootMovement(const vector3& _p, const vector3& _r, const vector3 _s)
-{
 }
 
 void CAnimator::SetBool(const wstring& n, _bool v)

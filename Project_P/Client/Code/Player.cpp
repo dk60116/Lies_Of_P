@@ -118,7 +118,7 @@ HRESULT CPlayer::Initialize()
 	m_pAnimator = m_pGameObject->AddComponent<CAnimator>();
 	CAnimatorController* animCon = CResources::GetInstance().LoadOnScene<CAnimatorController>(L"Eve_AnimatorController (Animator Controller)");
 	m_pAnimator->Set_Controller(animCon);
-	m_pAnimator->SetApplyRootmotion(true);
+	m_pAnimator->SetApplyRootmotion(true, Get_Transform());
 	//CAnimationClip* idle = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Idle (Animation)");
 	//idle->SetLoop(true);
 	//CAnimationClip* run_during = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Run_Forward_During (Animation)");

@@ -68,7 +68,6 @@ public:
 
 private:
     _bool IsRootBone(const wstring& _name);
-    void SetRootMovement(const vector3& _p, const vector3& _r, const vector3 _s);
 
 private:
     class CSkinnedMeshRenderer* m_pSkinnedRenderer;

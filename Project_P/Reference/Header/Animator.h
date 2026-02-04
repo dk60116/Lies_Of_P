@@ -34,7 +34,7 @@ public:
     const _bool IsLoop() const;
     const _bool ApplyRootmotion() const;
 
-    void SetApplyRootmotion(const _bool _value);
+    void SetApplyRootmotion(const _bool _value, CTransform* _target);
     void Set_PlaybackSpeed(const _float _value);
 
     void Add_Animation(const wstring& _animName, CAnimationClip* _anim);
@@ -81,6 +81,8 @@ private:
 	AnimatorStateInfo m_sStateInfo;
 
     unordered_map<wstring, CAnimationClip::BoneTransform> m_mBlendStartPose;
+
+    CTransform* m_pRootMotionParent;
 
 private:
     class CAnimatorController* m_pController;

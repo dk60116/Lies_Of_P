@@ -29,7 +29,6 @@ CComponent* CSkinnedMeshRenderer::Clone() const
 
 	clone->m_pMeshBuffer = this->m_pMeshBuffer;
 	if (clone->m_pMeshBuffer)
-	if (clone->m_pMeshBuffer)
 		clone->m_pMeshBuffer->AddRef();
 
 	clone->m_vBones.clear();
@@ -104,6 +103,12 @@ void CSkinnedMeshRenderer::OnDestroy()
 
 	for (TRAVERSAL_ITER(m_vBones, it))
 		Safe_Release(*it);
+
+	for (TRAVERSAL_ITER(m_vRootBone, it))
+		Safe_Release(*it);
+	
+	m_vBones.clear();
+	m_vRootBone.clear();
 
 	m_vBones.clear();
 }
@@ -374,11 +379,15 @@ void CSkinnedMeshRenderer::Set_Bones(const vector<CTransform*>& _bones, vector<C
 	m_vBones.reserve(_bones.size());
 	for (auto* t : _bones)
 	{
-		if (t) t->AddRef();
+		if (t) 
+			t->AddRef();
 		m_vBones.push_back(t);
 	}
 	
 	m_vRootBone = _rootBone;
+
+	for (TRAVERSAL_ITER(m_vRootBone, it))
+		(*it)->AddRef();
 }
 
 vector<CTransform*>& CSkinnedMeshRenderer::GetRootBons()
@@ -396,5 +405,6 @@ void CSkinnedMeshRenderer::AddRootBone(CTransform* _tf)
 	if (_tf)
 	{
 		m_vRootBone.push_back(_tf);
+		m_vRootBone.back()->AddRef();
 	}
 }
