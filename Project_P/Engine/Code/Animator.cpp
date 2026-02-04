@@ -235,7 +235,10 @@ void CAnimator::Update()
 								const auto& btNext = nextIt->second;
 								vector3 rootPos = vector3::Lerp(btStart.pos, btNext.pos, t);
 								if (m_bHasNextRootStartPos)
-									rootPos = btStart.pos + (btNext.pos - m_vNextRootStartPos);
+								{
+									const vector3 offset = btStart.pos - m_vNextRootStartPos;
+									rootPos = vector3::Lerp(btStart.pos, btNext.pos + offset, t);
+								}
 								ApplyRootMotionDelta(rootPos, dt);
 								rootMotionApplied = true;
 							}
