@@ -17,6 +17,8 @@ CAnimator::CAnimator()
 	, m_fNextTime(0.f)
 	, m_fBlendDuration(0.f)
 	, m_fPlaybackSpeed(1.f)
+	, m_iPrevTriggerFrame(-1)
+	, m_pPrevTriggerClip(nullptr)
 	, m_vFinalBoneMatrix({})
 	, m_mBlendStartPose({})
 	, m_sStateInfo({})
@@ -101,7 +103,9 @@ void CAnimator::Update()
 	if (!m_pSkinnedRenderer)
 		return;
 
-	const _float dt = DELTA_TIME;
+	const _float dt = DELTA_TIME;	
+	const _float prevCurrentTime = m_fCurrentTime;
+	const _float prevNextTime = m_fNextTime;
 
 	if (m_bIsPlaying && m_pCrtAnimation)
 	{
@@ -163,6 +167,24 @@ void CAnimator::Update()
 		return;
 	if (!m_bIsPlaying && !m_bBlending)
 		return;
+
+	CAnimationClip* triggerClip = m_pCrtAnimation;
+	_float prevTriggerTime = prevCurrentTime;
+	_float currentTriggerTime = m_fCurrentTime;
+	if (m_bBlending && m_pNextAnimation)	
+	{
+		triggerClip = m_pNextAnimation;
+		prevTriggerTime = prevNextTime;
+		currentTriggerTime = m_fNextTime;
+	}
+
+	if (triggerClip != m_pPrevTriggerClip)
+	{
+		m_pPrevTriggerClip = triggerClip;
+		m_iPrevTriggerFrame = -1;
+	}
+	ProcessActionTriggers(triggerClip, prevTriggerTime, currentTriggerTime);
+
 
 	if (m_bBlending)
 	{
@@ -446,6 +468,7 @@ void CAnimator::Play(const wstring& _animName, const _float _blendDuration, _boo
 
 		m_bHasPrevRootMotion = false;
 		m_bHasNextRootStartPos = false;
+		ResetActionTriggerState();
 
 		m_bLoop = m_pCrtAnimation->IsLoop();
 		return;
@@ -464,6 +487,7 @@ void CAnimator::Play(const wstring& _animName, const _float _blendDuration, _boo
 		m_fBlendTime = 0.f;
 		m_fBlendDuration = 0.f;
 		m_bHasPrevRootMotion = false;
+		ResetActionTriggerState();
 
 		m_bLoop = m_pCrtAnimation->IsLoop();
 		return;
@@ -507,6 +531,7 @@ void CAnimator::Stop()
 {
 	m_fCurrentTime = 0.f;
 	m_bHasPrevRootMotion = false;
+	ResetActionTriggerState();
 	Update();
 	m_bIsPlaying = false;
 }
@@ -616,6 +641,76 @@ void CAnimator::SetBool(const wstring& n, _bool v)
 void CAnimator::SetFloat(const wstring& n, _float v)
 {
 	m_ControllerInst.SetFloat(n, v);
+}
+
+void CAnimator::ProcessActionTriggers(CAnimationClip* clip, _float prevTime, _float currentTime)
+{
+	if (!clip)
+		return;
+
+	const auto& triggers = clip->Get_ActionTriggerList();
+	if (triggers.empty())
+		return;
+
+	const _float ticksPerSecond = clip->Get_TickPerSecons();
+	if (ticksPerSecond <= 0.f)
+		return;
+
+	const _float duration = clip->Get_Duration();
+	if (duration <= 0.f)
+		return;
+
+	const _float totalTicks = duration * ticksPerSecond;
+	if (totalTicks <= 0.f)
+		return;
+
+	auto calcFrame = [totalTicks, ticksPerSecond](const _float time, const _bool looped)
+	{
+		_float ticks = time * ticksPerSecond;
+		if (looped)
+			ticks = fmodf(ticks, totalTicks);
+		else if (ticks > totalTicks)
+			ticks = totalTicks;
+		if (ticks < 0.f)
+			ticks = 0.f;
+		return static_cast<_int>(floor(ticks));
+	};
+
+	const _bool looped = clip->IsLoop();
+	_int currentFrame = calcFrame(currentTime, looped);
+	_int prevFrame = m_iPrevTriggerFrame;
+	if (prevFrame < 0)
+		prevFrame = currentFrame - 1;
+
+	if (looped && currentFrame < prevFrame)
+	{
+		const _int lastFrame = static_cast<_int>(floor(totalTicks));
+		for (const auto& trigger : triggers)
+		{
+			if (trigger.actionName.empty())
+				continue;
+			if ((trigger.frame > prevFrame && trigger.frame <= lastFrame) || (trigger.frame >= 0 && trigger.frame <= currentFrame))
+				m_ControllerInst.SetTrigger(trigger.actionName);
+		}
+	}
+	else if (currentFrame != prevFrame)
+	{
+		for (const auto& trigger : triggers)
+		{
+			if (trigger.actionName.empty())
+				continue;
+			if (trigger.frame > prevFrame && trigger.frame <= currentFrame)
+				m_ControllerInst.SetTrigger(trigger.actionName);
+		}
+	}
+
+	m_iPrevTriggerFrame = currentFrame;
+}
+
+void CAnimator::ResetActionTriggerState()
+{
+	m_iPrevTriggerFrame = -1;
+	m_pPrevTriggerClip = nullptr;
 }
 
 void CAnimator::SetTrigger(const wstring& n)

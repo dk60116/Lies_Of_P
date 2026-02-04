@@ -69,6 +69,8 @@ public:
 private:
     _bool IsRootBone(const wstring& _name);
     void ApplyRootMotionDelta(const vector3& rootPos);
+    void ProcessActionTriggers(CAnimationClip* clip, _float prevTime, _float currentTime);
+    void ResetActionTriggerState();
 
 private:
     class CSkinnedMeshRenderer* m_pSkinnedRenderer;
@@ -77,6 +79,8 @@ private:
     _bool m_bApplyRootMotion;
     _bool m_bIsPlaying, m_bBlending, m_bLoop;
     _float m_fCurrentTime, m_fBlendTime, m_fBlendDuration, m_fNextTime;
+    _int m_iPrevTriggerFrame;
+    CAnimationClip* m_pPrevTriggerClip;
     _float m_fPlaybackSpeed;
     vector<_matrix> m_vFinalBoneMatrix;
 	AnimatorStateInfo m_sStateInfo;
