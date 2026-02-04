@@ -84,6 +84,10 @@ private:
     unordered_map<wstring, CAnimationClip::BoneTransform> m_mBlendStartPose;
 
     CTransform* m_pRootMotionParent;
+    vector3 m_vPrevRootPos;
+    vector3 m_vPrevRootRot;
+    vector3 m_vPrevRootScale;
+    _bool m_bHasPrevRootMotion;
 
 private:
     class CAnimatorController* m_pController;
@@ -96,4 +100,3 @@ private:
 };
 
 NS_END
-
