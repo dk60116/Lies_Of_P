@@ -6,7 +6,7 @@ CSkinnedMeshRenderer::CSkinnedMeshRenderer()
 	: CRenderer{}
 	, m_pMeshBuffer(nullptr)
 	, m_vBones({})
-	, m_pRootBone(nullptr)
+	, m_vRootBone({})
 	, m_pBoneMatrixBuffer(nullptr)
 {
 	m_strName = L"Skinned Mesh Renderer";
@@ -40,9 +40,10 @@ CComponent* CSkinnedMeshRenderer::Clone() const
 		clone->m_vBones.push_back(b);
 	}
 
-	clone->m_pRootBone = this->m_pRootBone;
-	if (clone->m_pRootBone)
-		clone->m_pRootBone->AddRef();
+	clone->m_vRootBone = this->m_vRootBone;
+	
+	for (auto r : clone->m_vRootBone)
+		r->AddRef();
 
 	clone->m_pBoneMatrixBuffer = this->m_pBoneMatrixBuffer;
 	if (clone->m_pBoneMatrixBuffer)
@@ -369,15 +370,17 @@ void CSkinnedMeshRenderer::Set_MeshBuffer(CSkinnedMeshBuffer* _mesh)
 	m_pMeshBuffer->AddRef();
 }
 
-void CSkinnedMeshRenderer::Set_Bones(const vector<CTransform*>& _bones, CTransform* _rootBone)
+void CSkinnedMeshRenderer::Set_Bones(const vector<CTransform*>& _bones, vector<CTransform*> _rootBone)
 {
 	for (auto* t : m_vBones)
 		Safe_Release(t);
 
 	m_vBones.clear();
 
-	Safe_Release(m_pRootBone);
-	m_pRootBone = nullptr;
+	for (TRAVERSAL_ITER(m_vRootBone, it))
+		Safe_Release(*it);
+
+	m_vRootBone = {};
 
 	m_vBones.reserve(_bones.size());
 	for (auto* t : _bones)
@@ -385,12 +388,16 @@ void CSkinnedMeshRenderer::Set_Bones(const vector<CTransform*>& _bones, CTransfo
 		if (t) t->AddRef();
 		m_vBones.push_back(t);
 	}
-
-	if (_rootBone)
-		m_pRootBone = _rootBone;
+	
+	m_vRootBone = _rootBone;
 }
 
-const wstring CSkinnedMeshRenderer::Get_RootBoneName() const
+vector<CTransform*>& CSkinnedMeshRenderer::GetRootBons()
 {
-	return m_pRootBone->Get_GameObject()->Get_ObjectName();
+	return m_vRootBone;
+}
+
+const wstring CSkinnedMeshRenderer::Get_RootBoneName(const _int _index) const
+{
+	return m_vRootBone[_index]->Get_GameObject()->Get_ObjectName();
 }

@@ -455,15 +455,12 @@ vector<CSkinnedMeshRenderer*> CGameObject::CreateSkinnedMeshHierachy(vector<Skin
 	for (size_t i = 0; i < _bonesInfo.size(); ++i)
 		nameMap[_bonesInfo[i].name] = boneTfs[i];
 
-	CTransform* baseTransform = nullptr;
+	vector<CTransform*> baseTransforms = {};
 
 	for (auto& b : _bonesInfo)
 	{
 		if (b.parentId == -1)
-		{
-			baseTransform = nameMap[b.name];
-			break;
-		}
+			baseTransforms.push_back(nameMap[b.name]);
 	}
 
 	for (auto* r : renderers)
@@ -478,7 +475,7 @@ vector<CSkinnedMeshRenderer*> CGameObject::CreateSkinnedMeshHierachy(vector<Skin
 				bones[i] = it->second;
 		}
 
-		r->Set_Bones(bones, baseTransform);
+		r->Set_Bones(bones, baseTransforms);
 	}
 
 	return renderers;

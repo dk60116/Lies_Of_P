@@ -104,7 +104,6 @@ HRESULT CAnimatorControllerInstance::Initialize(
     m_pController = _controller;
     m_pController->AddRef();
 
-    // 런타임 파라미터 초기화
     for (const auto& kv : m_pController->Get_ParamMap())
     {
         const auto& desc = kv.second;

@@ -52,6 +52,16 @@ void CPlayerControllerContext::StartMoveLock(_float _sec)
 	m_Cv_Move.m_fMoveLockTimer = max(m_Cv_Move.m_fMoveLockTimer, _sec);
 }
 
+const vector3& CPlayerControllerContext::PlayerForward()
+{
+	return m_pPlayer->Get_Transform()->Get_Directions().forward;
+}
+
+void CPlayerControllerContext::SetPlayerYaw(const _float _y)
+{
+	m_pPlayer->Get_Transform()->Set_LocalEulerAngles(0.f, _y, 0.f);
+}
+
 void CPlayerControllerContext::AddPosition(const vector3& delta)
 {
 	if (!m_pPlayer) 
@@ -139,7 +149,7 @@ void CPlayerControllerContext::TickMove()
 	const _float curSpeed = PlayerStat().moveSpeed * m_Cv_Move.m_fMove01;
 	AddPosition(dir * curSpeed * dt);
 
-	SetAnimSpeed(m_Cv_Move.m_fMove01);
+	SetAnimMoveSpeed(m_Cv_Move.m_fMove01);
 }
 
 void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
@@ -204,7 +214,7 @@ const CPlayer::PlayerStatus& CPlayerControllerContext::PlayerStat()
 	return m_pPlayer->Get_PlayerStatus();
 }
 
-void CPlayerControllerContext::SetAnimSpeed(_float _v)
+void CPlayerControllerContext::SetAnimMoveSpeed(_float _v)
 {
 	if (!m_pPlayer)
 		return;
@@ -239,6 +249,11 @@ void CPlayerControllerContext::SetAnimTurn(const _float _value)
 const vector3& CPlayerControllerContext::GetMoveWorldDir() const
 {
 	return m_Cv_Move.m_vMoveWorldDir;
+}
+
+const _float CPlayerControllerContext::GetCameraYaw() const
+{
+	return m_pCam->Get_ForwardAngle();
 }
 
 _float CPlayerControllerContext::WrapDeg(_float _deg) const

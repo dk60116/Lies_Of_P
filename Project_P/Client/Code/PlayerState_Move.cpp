@@ -3,7 +3,7 @@
 
 void CPlayerState_Move::Enter(CPlayerControllerContext& _ctx)
 {
-    _ctx.SetAnimSpeed(0.2f);
+    _ctx.SetAnimMoveSpeed(0.2f);
 }
 
 void CPlayerState_Move::Update(CPlayerControllerContext& _ctx)
@@ -17,5 +17,5 @@ void CPlayerState_Move::Update(CPlayerControllerContext& _ctx)
     _ctx.BeginTurnTo(_ctx.GetDesiredYawDeg());
 
     if (m_fPassedTime >= 0.5f)
-        _ctx.SetAnimSpeed(1.f);
+        _ctx.SetAnimMoveSpeed(1.f);
 }

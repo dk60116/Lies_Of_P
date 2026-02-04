@@ -44,14 +44,14 @@ public:
 	CMeshBuffer* Get_MeshBuffer() override;
 	CSkinnedMeshBuffer* Get_SkinnedMeshBuffer();
 	void Set_MeshBuffer(CSkinnedMeshBuffer* _Mesh);
-	void Set_Bones(const vector<CTransform*>& _bones, CTransform* _rootBone = nullptr);
-	const wstring Get_RootBoneName() const;
-	void Set_ApplyRootMotion(const _bool _value);
+	void Set_Bones(const vector<CTransform*>& _bones, vector<CTransform*>);
+	vector<CTransform*>& GetRootBons();
+	const wstring Get_RootBoneName(const _int _index) const;
 
 private:
 	CSkinnedMeshBuffer* m_pMeshBuffer;
 	vector<CTransform*> m_vBones;
-	CTransform* m_pRootBone;
+	vector<CTransform*> m_vRootBone;
 
 	ID3D11Buffer* m_pBoneMatrixBuffer;
 };

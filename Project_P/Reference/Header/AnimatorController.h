@@ -138,7 +138,7 @@ public:
 		_int   i = 0;
 		_float f = 0.f;
 
-		_bool  trigger = false; // TRIGGER용
+		_bool  trigger = false;
 	};
 
 public:

@@ -45,6 +45,10 @@ public:
 
 	void StartMoveLock(_float _sec);
 
+	const vector3& PlayerForward();
+
+	void SetPlayerYaw(const _float _y);
+
 	void AddPosition(const vector3& delta);
 
 	void BeginTurnTo(_float _targetYawDeg);
@@ -55,12 +59,13 @@ public:
 	CAnimator* Animator();
 	const CPlayer::PlayerStatus& PlayerStat();
 
-	void SetAnimSpeed(_float _v);
+	void SetAnimMoveSpeed(_float _v);
 
 	_bool IsTurning() const;
 	void SetMoveWorldDir(const vector3& _dir);
 	void SetAnimTurn(const _float _value);
 	const vector3& GetMoveWorldDir() const;
+	const _float GetCameraYaw() const;
 	_float WrapDeg(_float _deg) const;
 	_float DeltaAngleDeg(_float _current, _float _target) const;
 	void SetDesiredYawDeg(_float _yaw);

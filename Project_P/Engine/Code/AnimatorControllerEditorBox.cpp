@@ -212,7 +212,7 @@ bool CAnimatorControllerEditorBox::LoadFromFile(const fs::path& path)
         return false;
     }
 
-    OnDestroy(); // 기존 데이터 초기화
+    OnDestroy();
 
     m_path = path;
 
@@ -222,7 +222,6 @@ bool CAnimatorControllerEditorBox::LoadFromFile(const fs::path& path)
         return false;
     }
 
-    // 기본 선택
     if (m_selectedState.empty() && !m_states.empty())
         m_selectedState = m_states.begin()->first;
 
@@ -329,7 +328,6 @@ void CAnimatorControllerEditorBox::RenderLeftPanel()
             RequestDeleteState(m_selectedState);
     }
 
-    // ===== Parameters Header + Add 버튼 =====
     ImGui::Text("Parameters");
     ImGui::SameLine();
     if (ImGui::SmallButton("+##AddParam"))
@@ -364,7 +362,6 @@ void CAnimatorControllerEditorBox::RenderLeftPanel()
 
     ImGui::Spacing();
 
-    // ===== States Header + Add 버튼 =====
     ImGui::Text("States");
     ImGui::SameLine();
     if (ImGui::SmallButton("+##AddState"))
@@ -634,16 +631,12 @@ void CAnimatorControllerEditorBox::RenderInspector()
         return;
     }
 
-    // =========================
-    // Parameter Inspector
-    // =========================
     if (m_eSelectType == ESelectType::Param &&
         m_iSelectedParamIndex >= 0 &&
         m_iSelectedParamIndex < (int)m_params.size())
     {
         Param& p = m_params[m_iSelectedParamIndex];
 
-        // (중요) rename 입력 버퍼를 선택된 인덱스에 바인딩 (멤버 버퍼)
         BindParamRenameBuffer(m_iSelectedParamIndex);
 
         ImGui::Text("Parameter");
@@ -651,8 +644,7 @@ void CAnimatorControllerEditorBox::RenderInspector()
 
         ImGui::Text("Type: %s", p.type.c_str());
 
-        // ---- Rename (Param Name) ----
-        bool applyRename = false;
+        _bool applyRename = false;
         applyRename |= ImGui::InputText("Name##ParamRename",
             m_editParamNameBuf.data(), m_editParamNameBuf.size(),
             ImGuiInputTextFlags_EnterReturnsTrue);
@@ -670,7 +662,7 @@ void CAnimatorControllerEditorBox::RenderInspector()
             else
             {
                 m_strRenameError.clear();
-                // 정규화된 이름으로 다시 세팅
+
                 strcpy_s(m_editParamNameBuf.data(), m_editParamNameBuf.size(),
                     m_params[m_iSelectedParamIndex].name.c_str());
             }
@@ -681,7 +673,6 @@ void CAnimatorControllerEditorBox::RenderInspector()
             ImGui::TextColored(ImVec4(1, 0.3f, 0.3f, 1), "%s", m_strRenameError.c_str());
         }
 
-        // ---- Value ---- (trigger는 value 없음)
         if (p.type != "trigger")
         {
             std::array<char, 128> valBuf{};
@@ -697,9 +688,6 @@ void CAnimatorControllerEditorBox::RenderInspector()
         return;
     }
 
-    // =========================
-    // State Inspector
-    // =========================
     if (m_selectedState.empty())
     {
         ImGui::TextDisabled("No state selected.");
@@ -713,8 +701,6 @@ void CAnimatorControllerEditorBox::RenderInspector()
         return;
     }
 
-    // (중요) st 참조는 rename에서 map re-key가 발생하면 무효화될 수 있으니
-    // rename 처리 후에는 다시 find 해서 st를 갱신한다.
     {
         const std::string currentName = it->second.name;
         BindStateRenameBuffer(currentName);
@@ -722,8 +708,7 @@ void CAnimatorControllerEditorBox::RenderInspector()
         ImGui::Text("State");
         ImGui::Separator();
 
-        // ---- Rename (State Name) ----
-        bool applyStateRename = false;
+        _bool applyStateRename = false;
         applyStateRename |= ImGui::InputText("Name##StateRename",
             m_editStateNameBuf.data(), m_editStateNameBuf.size(),
             ImGuiInputTextFlags_EnterReturnsTrue);
@@ -737,17 +722,14 @@ void CAnimatorControllerEditorBox::RenderInspector()
             if (!RenameState(currentName, m_editStateNameBuf.data(), &err))
             {
                 m_strRenameError = err;
-                // 실패 시 버퍼를 원복
                 strcpy_s(m_editStateNameBuf.data(), m_editStateNameBuf.size(), currentName.c_str());
             }
             else
             {
                 m_strRenameError.clear();
-                // rename 성공 시 m_selectedState도 바뀌어 있을 수 있으니 버퍼/이터레이터 재바인딩
                 BindStateRenameBuffer(m_selectedState);
             }
 
-            // map이 바뀌었을 수 있으니 안전하게 다시 찾고 진행
             it = m_states.find(m_selectedState);
             if (it == m_states.end())
                 return;
@@ -763,7 +745,6 @@ void CAnimatorControllerEditorBox::RenderInspector()
 
     State& st = it->second;
 
-    // ---- Motion Combo ----
     EnsureMotionOptionsLoaded();
 
     ImGui::Text("Motion");
@@ -777,7 +758,6 @@ void CAnimatorControllerEditorBox::RenderInspector()
     const char* preview = st.motion.empty() ? "<None>" : st.motion.c_str();
     if (ImGui::BeginCombo("Motion##Combo", preview))
     {
-        // None
         {
             bool sel = st.motion.empty();
             if (ImGui::Selectable("<None>", sel))
@@ -785,7 +765,6 @@ void CAnimatorControllerEditorBox::RenderInspector()
             if (sel) ImGui::SetItemDefaultFocus();
         }
 
-        // Options
         for (const auto& opt : m_motionOptions)
         {
             bool sel = (st.motion == opt);
@@ -797,11 +776,9 @@ void CAnimatorControllerEditorBox::RenderInspector()
         ImGui::EndCombo();
     }
 
-    // ---- State Properties ----
     ImGui::DragFloat("SpeedMul", &st.speedMul, 0.01f, 0.0f, 10.0f);
     ImGui::Text("Pos: (%.1f, %.1f)", st.pos.x, st.pos.y);
 
-    // ---- Transitions ----
     ImGui::Separator();
     ImGui::Text("Transitions (from this)");
     for (const auto& tr : m_transitions)
@@ -882,7 +859,6 @@ void CAnimatorControllerEditorBox::RenderGraph()
         }
     }
 
-    // ===== Grid =====
     {
         ImVec2 size = ImGui::GetContentRegionAvail();
         const float gridStep = 32.f;
@@ -899,7 +875,6 @@ void CAnimatorControllerEditorBox::RenderGraph()
             dl->AddLine(ImVec2(origin.x, origin.y + y), ImVec2(origin.x + size.x, origin.y + y), col);
     }
 
-    // ===== Node constants =====
     const ImVec2 nodeSize(160.f * m_zoom, 70.f * m_zoom);
 
     auto getNodeCenter = [&](const State& st) -> ImVec2
@@ -908,7 +883,6 @@ void CAnimatorControllerEditorBox::RenderGraph()
             return ImVec2(p.x + nodeSize.x * 0.5f, p.y + nodeSize.y * 0.5f);
         };
 
-    // ===== AnyState / Entry Blocks (pos/size) =====
     const ImVec2 anyPos = ImVec2(origin.x + (m_anyStatePos.x + m_pan.x) * m_zoom, origin.y + (m_anyStatePos.y + m_pan.y) * m_zoom);
     const ImVec2 anySize = ImVec2(120.f * m_zoom, 40.f * m_zoom);
 
@@ -981,7 +955,6 @@ void CAnimatorControllerEditorBox::RenderGraph()
     const ImVec2 anyCenter = rectCenter(anyPos, anySize);
     const ImVec2 entryCenter = rectCenter(entryPos, entrySize);
 
-    // ===== Transition lines first =====
     _int clickedTransition = -1;
     _int deleteTransition = -1;
     const ImU32 selectedCol = IM_COL32(255, 165, 0, 230);
@@ -1063,9 +1036,9 @@ void CAnimatorControllerEditorBox::RenderGraph()
             int side = 0;
 
             if (horizontal)
-                side = (sign > 0.f) ? 2 : 3; // top/bottom
+                side = (sign > 0.f) ? 2 : 3;
             else
-                side = (sign > 0.f) ? 0 : 1; // left/right
+                side = (sign > 0.f) ? 0 : 1;
 
             from = rectEdgePointOnSide(fromRectPos, nodeSize, drawTo, side);
             to = rectEdgePointOnSide(toRectPos, nodeSize, drawFrom, side);
@@ -1107,19 +1080,16 @@ void CAnimatorControllerEditorBox::RenderGraph()
         DeleteTransition(m_iSelectedTransitionIndex);
     }
 
-    // ===== Draw AnyState block =====
     {
         dl->AddRectFilled(anyPos, ImVec2(anyPos.x + anySize.x, anyPos.y + anySize.y), IM_COL32(70, 70, 70, 220), 6.f);
         dl->AddText(ImVec2(anyPos.x + 10.f * m_zoom, anyPos.y + 12.f * m_zoom), IM_COL32(255, 255, 255, 255), "AnyState");
     }
 
-    // ===== Draw Entry block =====
     {
         dl->AddRectFilled(entryPos, ImVec2(entryPos.x + entrySize.x, entryPos.y + entrySize.y), IM_COL32(70, 70, 70, 220), 6.f);
         dl->AddText(ImVec2(entryPos.x + 10.f * m_zoom, entryPos.y + 12.f * m_zoom), IM_COL32(255, 255, 255, 255), "Entry");
     }
 
-    // ===== AnyState input =====
     {
         ImGui::SetCursorScreenPos(anyPos);
         ImGui::InvisibleButton("any_state_node", anySize);
@@ -1145,7 +1115,6 @@ void CAnimatorControllerEditorBox::RenderGraph()
         }
     }
 
-    // ===== Entry input =====
     {
         ImGui::SetCursorScreenPos(entryPos);
         ImGui::InvisibleButton("entry_node", entrySize);
@@ -1171,9 +1140,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
         }
     }
 
-    // ===== Entry -> entryState line (single) =====
     {
-        // entry 타겟 결정(없으면 첫 state)
         std::string entryTarget = m_entryState;
         if (entryTarget.empty() && !m_states.empty())
             entryTarget = m_states.begin()->first;
@@ -1192,12 +1159,10 @@ void CAnimatorControllerEditorBox::RenderGraph()
         }
         else
         {
-            // entry가 깨졌을 때 표시(선택)
             dl->AddText(ImVec2(entryPos.x + 55.f * m_zoom, entryPos.y + 12.f * m_zoom), IM_COL32(255, 100, 100, 255), "!");
         }
     }
 
-    // ===== Draw State nodes =====
     for (auto& kv : m_states)
     {
         State& st = kv.second;
@@ -1402,7 +1367,6 @@ void CAnimatorControllerEditorBox::DeleteParam(int idx)
 
     m_params.erase(m_params.begin() + idx);
 
-    // selection 보정
     if (m_eSelectType == ESelectType::Param)
     {
         if (m_params.empty())
@@ -1423,17 +1387,13 @@ void CAnimatorControllerEditorBox::DeleteState(const string& name)
     if (it == m_states.end())
         return;
 
-    // 1) 상태 삭제
     m_states.erase(it);
 
-    // 2) 관련 전이 정리
     CleanupTransitionsForDeletedState(name);
 
-    // 3) entry 보정
     if (m_entryState == name)
         m_entryState = m_states.empty() ? "" : m_states.begin()->first;
 
-    // 4) 선택 보정
     if (m_selectedState == name)
         m_selectedState = m_states.empty() ? "" : m_states.begin()->first;
 
@@ -1522,12 +1482,12 @@ void CAnimatorControllerEditorBox::RenderAddParamPopup()
         ImGui::Combo("Type", &m_iNewParamType, kTypes, IM_ARRAYSIZE(kTypes));
         ImGui::InputText("Name", m_newParamName.data(), m_newParamName.size());
 
-        if (m_iNewParamType == 2) // bool
+        if (m_iNewParamType == 2)
         {
             static const char* kBoolVals[] = { "false", "true" };
             ImGui::Combo("Value", &m_iNewParamBool, kBoolVals, IM_ARRAYSIZE(kBoolVals));
         }
-        else if (m_iNewParamType != 3) // not trigger
+        else if (m_iNewParamType != 3)
         {
             ImGui::InputText("Value", m_newParamValue.data(), m_newParamValue.size());
         }
@@ -1606,7 +1566,6 @@ void CAnimatorControllerEditorBox::RenderAddStatePopup()
 
         ImGui::InputText("Name", m_newStateName.data(), m_newStateName.size());
 
-        // ---- Motion 선택 (콤보) ----
         EnsureMotionOptionsLoaded();
 
         ImGui::Text("Motion");
@@ -1620,7 +1579,6 @@ void CAnimatorControllerEditorBox::RenderAddStatePopup()
         const char* preview = (m_newStateMotion[0] == '\0') ? "<None>" : m_newStateMotion.data();
         if (ImGui::BeginCombo("##NewStateMotionCombo", preview))
         {
-            // None
             {
                 bool sel = (m_newStateMotion[0] == '\0');
                 if (ImGui::Selectable("<None>", sel))
@@ -1628,7 +1586,6 @@ void CAnimatorControllerEditorBox::RenderAddStatePopup()
                 if (sel) ImGui::SetItemDefaultFocus();
             }
 
-            // Options
             for (const auto& opt : m_motionOptions)
             {
                 bool sel = (opt == std::string(m_newStateMotion.data()));
@@ -1639,7 +1596,6 @@ void CAnimatorControllerEditorBox::RenderAddStatePopup()
 
             ImGui::EndCombo();
         }
-        // ----------------------------
 
         ImGui::DragFloat("SpeedMul", &m_newStateSpeedMul, 0.01f, 0.0f, 10.0f);
 
@@ -1661,7 +1617,7 @@ void CAnimatorControllerEditorBox::RenderAddStatePopup()
             else
             {
                 string uniq = MakeUniqueStateName(name);
-                string motion = Trim(m_newStateMotion.data()); // 콤보에서 선택된 값
+                string motion = Trim(m_newStateMotion.data());
                 AddState(uniq, motion, m_newStateSpeedMul);
                 ImGui::CloseCurrentPopup();
             }
@@ -1697,16 +1653,14 @@ void CAnimatorControllerEditorBox::AddState(const string& name, const string& mo
     st.motion = motion;
     st.speedMul = speedMul;
 
-    // 겹치지 않게 배치(간단 그리드)
     const int col = 4;
-    int x = (m_iStateSpawnIndex % col);
-    int y = (m_iStateSpawnIndex / col);
+    _int x = (m_iStateSpawnIndex % col);
+    _int y = (m_iStateSpawnIndex / col);
     st.pos = ImVec2(100.f + x * 200.f, 100.f + y * 120.f);
     ++m_iStateSpawnIndex;
 
     m_states[name] = st;
 
-    // entry가 비어있거나 유효하지 않으면 첫 state로 지정
     if (m_entryState.empty() || m_states.find(m_entryState) == m_states.end())
         m_entryState = name;
 
@@ -1766,7 +1720,6 @@ void CAnimatorControllerEditorBox::RefreshMotionOptions()
     m_motionOptions.clear();
     m_bMotionOptionsDirty = false;
 
-    // 예: fs::path sceneDir = CPath::GetInstance().Get_ProjectRoot() / "Assets" / "Scenes";
     fs::path sceneDir = fs::path("../Assets") / "Scenes";
 
     error_code ec;
@@ -2065,7 +2018,6 @@ bool CAnimatorControllerEditorBox::RenameState(const string& oldNameIn, const st
     st.name = newName;
     m_states.emplace(newName, st);
 
-    // 2) transitions 동기화
     for (auto& tr : m_transitions)
     {
         if (tr.isAny)
@@ -2079,11 +2031,9 @@ bool CAnimatorControllerEditorBox::RenameState(const string& oldNameIn, const st
         }
     }
 
-    // 3) entry/selection 동기화
     if (m_entryState == oldName)    m_entryState = newName;
     if (m_selectedState == oldName) m_selectedState = newName;
 
-    // 4) delete 대상도 동기화(안전)
     if (m_strDeleteStateName == oldName) m_strDeleteStateName = newName;
 
     return true;
@@ -2194,7 +2144,6 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
                 continue;
             }
 
-            // [transition A->B]
             if (StartsWith(secName, "transition "))
             {
                 sec = Sec::Transition;
@@ -2226,7 +2175,6 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
             continue;
         }
 
-        // key=value
         auto eq = line.find('=');
 
         if (sec == Sec::None)
@@ -2254,7 +2202,7 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
             if (parts.size() >= 2)
             {
                 p.type = Trim(parts[0]);
-                string rest = Trim(line.substr(p.type.size() + 1)); // "speed=0" or "attack"
+                string rest = Trim(line.substr(p.type.size() + 1));
 
                 auto eq2 = rest.find('=');
                 if (eq2 == string::npos)
@@ -2294,7 +2242,6 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
             continue;
         }
 
-        // Transition / Any
         if ((sec == Sec::Transition || sec == Sec::Any || sec == Sec::Entry) && buildingTransition)
         {
             if (eq == string::npos)
@@ -2339,11 +2286,9 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
 
     flushTransition();
 
-    // 기본값: controllerName 없으면 파일명에서
     if (m_controllerName.empty() && !m_path.empty())
         m_controllerName = m_path.stem().string();
 
-    // entry가 없으면 첫 state
     if (m_entryState.empty())
     {
         if (!firstStateName.empty())
@@ -2374,8 +2319,6 @@ string CAnimatorControllerEditorBox::SerializeText() const
     }
     t += "\n";
 
-    // states
-    // (출력 순서 고정 원하면 vector로 정렬하세요)
     for (const auto& kv : m_states)
     {
         const auto& st = kv.second;

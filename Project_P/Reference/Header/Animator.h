@@ -63,6 +63,9 @@ public:
     CAnimationClip* Get_CurrentAnimation();
     AnimatorStateInfo& Get_StateInfo();
 
+public:
+    const _float GetNormalizedTime() const;
+
 private:
     class CSkinnedMeshRenderer* m_pSkinnedRenderer;
     unordered_map<wstring, CAnimationClip*> m_mAnimationList;

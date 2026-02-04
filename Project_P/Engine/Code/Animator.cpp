@@ -214,9 +214,17 @@ void CAnimator::Update()
 
 			if (!bone)
 				continue;
+			
+			if (m_bApplyRootMotion)
+			{
+				auto& routs = m_pSkinnedRenderer->GetRootBons();
 
-			if (m_bApplyRootMotion && name == m_pSkinnedRenderer->Get_RootBoneName())
-				continue;
+				for (size_t i = 0; i < routs.size(); ++i)
+				{
+					if (routs[i]->Get_GameObject()->Get_ObjectName() == name)
+						continue;
+				}
+			}
 
 			const auto startIt = m_mBlendStartPose.find(name);
 			const auto nextIt = sampledNext.find(name);
@@ -251,8 +259,16 @@ void CAnimator::Update()
 
 		const wstring& name = m_pSkinnedRenderer->Get_BoneName(i);
 
-		if (!m_bApplyRootMotion && name == m_pSkinnedRenderer->Get_RootBoneName())
-			continue;
+		if (m_bApplyRootMotion)
+		{
+			auto& routs = m_pSkinnedRenderer->GetRootBons();
+
+			for (size_t i = 0; i < routs.size(); ++i)
+			{
+				if (routs[i]->Get_GameObject()->Get_ObjectName() == name)
+					continue;
+			}
+		}
 
 		auto it = sampled.find(name);
 		if (it == sampled.end())
@@ -432,6 +448,42 @@ CAnimationClip* CAnimator::Get_CurrentAnimation()
 CAnimator:: AnimatorStateInfo& CAnimator::Get_StateInfo()
 {
 	return m_sStateInfo;
+}
+
+const _float CAnimator::GetNormalizedTime() const
+{
+	const CAnimationClip* clip = nullptr;
+	_float time = 0.f;
+
+	if (m_bBlending && m_pNextAnimation)
+	{
+		clip = m_pNextAnimation;
+		time = m_fNextTime;
+	}
+	else
+	{
+		clip = m_pCrtAnimation;
+		time = m_fCurrentTime;
+	}
+
+	if (!clip)
+		return 0.f;
+
+	const _float dur = clip->Get_Duration();
+	if (dur <= 0.f)
+		return 0.f;
+
+	_float t = time / dur;
+
+	if (clip->IsLoop())
+	{
+		const _float wrapped = fmodf(time, dur);
+		t = wrapped / dur;
+	}
+	if (!(t == t))
+		return 0.f;
+
+	return clamp(t, 0.f, 1.f);
 }
 
 void CAnimator::SetBool(const wstring& n, _bool v)
