@@ -152,23 +152,23 @@ void CTransform::Render_Gizmo()
 
         if (m_pParent)
         {
-            // ºÎ¸ğÀÇ ¿ùµå Çà·ÄÀÇ ¿ªÇà·Ä
+            // ë¶€ëª¨ì˜ ì›”ë“œ í–‰ë ¬ì˜ ì—­í–‰ë ¬
             _matrix parentInv = XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_pParent->m_vMatWorld));
-            // ·ÎÄÃ Çà·Ä ±¸ÇÏ±â
+            // ë¡œì»¬ í–‰ë ¬ êµ¬í•˜ê¸°
             _matrix localMatrix = newWorldMatrix * parentInv;
 
-            // ·ÎÄÃ À§Ä¡/È¸Àü/½ºÄÉÀÏ ÃßÃâ
+            // ë¡œì»¬ ìœ„ì¹˜/íšŒì „/ìŠ¤ì¼€ì¼ ì¶”ì¶œ
             _vector S, R, T;
             XMMatrixDecompose(&S, &R, &T, localMatrix);
 
-            // ÀúÀå
+            // ì €ì¥
             XMStoreFloat3(reinterpret_cast<_float3*>(&m_vScale), S);
             XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), R);
             XMStoreFloat3(reinterpret_cast<_float3*>(&m_vPosition), T);
         }
         else
         {
-            // ºÎ¸ğ ¾øÀ¸¸é ±×³É ¿ùµå == ·ÎÄÃ
+            // ë¶€ëª¨ ì—†ìœ¼ë©´ ê·¸ëƒ¥ ì›”ë“œ == ë¡œì»¬
             _vector S, R, T;
             XMMatrixDecompose(&S, &R, &T, newWorldMatrix);
 
@@ -194,16 +194,16 @@ void CTransform::SetParent(CTransform* _parent)
     if (_parent == m_pParent)
         return;
 
-    // 1) ±âÁ¸ ¿ùµå Çà·Ä/¿ùµå À§Ä¡ ÀúÀå
+    // 1) ê¸°ì¡´ ì›”ë“œ í–‰ë ¬/ì›”ë“œ ìœ„ì¹˜ ì €ì¥
     _matrix W_old = XMLoadFloat4x4(&m_vMatWorld);
 
-    // 2) ±âÁ¸ ºÎ¸ğ ¸µÅ©¸¸ Á¤¸®
+    // 2) ê¸°ì¡´ ë¶€ëª¨ ë§í¬ë§Œ ì •ë¦¬
     if (m_pParent) {
         m_pParent->m_lChildList.remove(this);
         Safe_Release(m_pParent);
     }
 
-    // 3) »õ ºÎ¸ğ ¿¬°á
+    // 3) ìƒˆ ë¶€ëª¨ ì—°ê²°
     m_pParent = _parent;
     if (m_pParent) {
         m_pGameObject->Set_RecursiveActive(m_pParent->m_pGameObject->m_bRecursiveActive);
@@ -211,21 +211,21 @@ void CTransform::SetParent(CTransform* _parent)
         m_pParent->AddRef();
     }
 
-    // 4) ºÎ¸ğ ¿ùµå ÃÖ½ÅÈ­(·çÆ®±îÁö) ÈÄ ºÎ¸ğ ¿ùµå/¿ªÇà·Ä È®º¸
+    // 4) ë¶€ëª¨ ì›”ë“œ ìµœì‹ í™”(ë£¨íŠ¸ê¹Œì§€) í›„ ë¶€ëª¨ ì›”ë“œ/ì—­í–‰ë ¬ í™•ë³´
     RecalcWorldUpChain(m_pParent);
 
     _matrix P = XMMatrixIdentity();
     if (m_pParent) P = XMLoadFloat4x4(&m_pParent->m_vMatWorld);
     _matrix invP = XMMatrixInverse(nullptr, P);
 
-    // 5) ºÎ¸ğ/ÀÚ½Å ¿ùµå¿¡¼­ S/R/T ºĞÇØ
+    // 5) ë¶€ëª¨/ìì‹  ì›”ë“œì—ì„œ S/R/T ë¶„í•´
     _vector sW, rW, tW;
     _vector sP, rP, tP;
     bool okW = XMMatrixDecompose(&sW, &rW, &tW, W_old);
     bool okP = XMMatrixDecompose(&sP, &rP, &tP, P);
 
-    // 6) ·ÎÄÃ S/R/T °è»ê (°ü°è½Ä)
-    //    S_local = S_world / S_parent  (¼ººĞº°)
+    // 6) ë¡œì»¬ S/R/T ê³„ì‚° (ê´€ê³„ì‹)
+    //    S_local = S_world / S_parent  (ì„±ë¶„ë³„)
     auto safeDiv = [](float a, float b) { return (fabsf(b) < 1e-8f) ? 0.f : (a / b); };
 
     XMFLOAT3 SW, SP;
@@ -243,19 +243,19 @@ void CTransform::SetParent(CTransform* _parent)
     //    T_local = TransformCoord(worldPos, invParent)
     vector3 T_local;
     {
-        // worldPos¸¦ invP·Î ÁÂÇ¥º¯È¯
+        // worldPosë¥¼ invPë¡œ ì¢Œí‘œë³€í™˜
         vector3 worldPos = vector3(m_vMatWorld._41, m_vMatWorld._42, m_vMatWorld._43);
         XMVECTOR wp = XMVectorSet(worldPos.x, worldPos.y, worldPos.z, 1.0f);
         XMVECTOR lp = XMVector3TransformCoord(wp, invP);
         T_local = vector3(XMVectorGetX(lp), XMVectorGetY(lp), XMVectorGetZ(lp));
     }
 
-    // 7) ·ÎÄÃ¿¡ ¹İ¿µ
+    // 7) ë¡œì»¬ì— ë°˜ì˜
     m_vScale = S_local;
     XMStoreFloat4(reinterpret_cast<XMFLOAT4*>(&m_vQuaternion), rLocal);
     m_vPosition = T_local;
 
-    // 8) ¿ùµå/¹æÇâ °»½Å
+    // 8) ì›”ë“œ/ë°©í–¥ ê°±ì‹ 
     Bind_Matrix();
     Bind_Direction();
 
@@ -490,22 +490,28 @@ void CTransform::Add_PositionZ(const _float _value)
 
 void CTransform::Add_LocalPosition(const vector3& _value)
 {
+    m_vPosition += _value;
+    Bind_Matrix();
 }
 
 void CTransform::Add_LocalPosition(const _float _x, const _float _y, const _float _z)
 {
+    m_vPosition += vector3(_x, _y, _z);
 }
 
 void CTransform::Add_LocalPositionX(const _float _value)
 {
+    m_vPosition.x += _value;
 }
 
 void CTransform::Add_LocalPositionY(const _float _value)
 {
+    m_vPosition.y += _value;
 }
 
 void CTransform::Add_LocalPositionZ(const _float _value)
 {
+    m_vPosition.z += _value;
 }
 
 void CTransform::Set_Quaternion(const quaternion& _value)
@@ -833,21 +839,21 @@ void CTransform::SetTransformForMatrix(_matrix _matWorld)
 
     if (m_pParent)
     {
-        // ºÎ¸ğ°¡ ÀÖ´Ù¸é ºÎ¸ğ ¿ùµå Çà·ÄÀÇ ¿ªÇà·Ä·Î ·ÎÄÃ Çà·ÄÀ» ±¸ÇÔ
+        // ë¶€ëª¨ê°€ ìˆë‹¤ë©´ ë¶€ëª¨ ì›”ë“œ í–‰ë ¬ì˜ ì—­í–‰ë ¬ë¡œ ë¡œì»¬ í–‰ë ¬ì„ êµ¬í•¨
         _matrix parentInv = XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_pParent->m_vMatWorld));
         localMatrix = _matWorld * parentInv;
     }
 
-    // ·ÎÄÃ Çà·Ä¿¡¼­ ½ºÄÉÀÏ, È¸Àü ÄõÅÍ´Ï¾ğ, À§Ä¡ ºĞÇØ
+    // ë¡œì»¬ í–‰ë ¬ì—ì„œ ìŠ¤ì¼€ì¼, íšŒì „ ì¿¼í„°ë‹ˆì–¸, ìœ„ì¹˜ ë¶„í•´
     _vector S, R, T;
     XMMatrixDecompose(&S, &R, &T, localMatrix);
 
-    // ·ÎÄÃ¿¡ ÀúÀå
+    // ë¡œì»¬ì— ì €ì¥
     XMStoreFloat3(reinterpret_cast<_float3*>(&m_vScale), S);
     XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), R);
     XMStoreFloat3(reinterpret_cast<_float3*>(&m_vPosition), T);
 
-    // º¯°æ»çÇ×À» ¹İ¿µÇÏ±â À§ÇØ Çà·Ä °»½Å
+    // ë³€ê²½ì‚¬í•­ì„ ë°˜ì˜í•˜ê¸° ìœ„í•´ í–‰ë ¬ ê°±ì‹ 
     Bind_Matrix();
     Bind_Direction();
 }
@@ -874,7 +880,7 @@ void CTransform::LookAt(const vector3& _target, const _uint _lockRotationFilter)
     _vector q = XMQuaternionRotationMatrix(rot);
     q = XMQuaternionNormalize(q);
 
-    // ºÎ¸ğ °ø°£À¸·Î º¯È¯
+    // ë¶€ëª¨ ê³µê°„ìœ¼ë¡œ ë³€í™˜
     if (m_pParent)
     {
         _vector parentQ = m_pParent->m_vQuaternion.toXMVector();
@@ -882,11 +888,11 @@ void CTransform::LookAt(const vector3& _target, const _uint _lockRotationFilter)
         q = XMQuaternionMultiply(invParentQ, q);
     }
 
-    // È¸Àü ÇÊÅÍ Àû¿ë
+    // íšŒì „ í•„í„° ì ìš©
     if (_lockRotationFilter)
     {
-        quaternion qNew(q);                       // ¸ñÇ¥ È¸Àü
-        quaternion qCur = m_vQuaternion;          // ÇöÀç È¸Àü
+        quaternion qNew(q);                       // ëª©í‘œ íšŒì „
+        quaternion qCur = m_vQuaternion;          // í˜„ì¬ íšŒì „
 
         vector3 eulerNew = qNew.to_euler();
         vector3 eulerCur = qCur.to_euler();
