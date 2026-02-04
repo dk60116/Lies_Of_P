@@ -19,6 +19,7 @@ CAnimator::CAnimator()
 	, m_fPlaybackSpeed(1.f)
 	, m_iPrevTriggerFrame(-1)
 	, m_pPrevTriggerClip(nullptr)
+	, m_mActionHandlers({})
 	, m_vFinalBoneMatrix({})
 	, m_mBlendStartPose({})
 	, m_sStateInfo({})
@@ -55,6 +56,7 @@ CComponent* CAnimator::Clone() const
 	clone->m_fBlendTime = this->m_fBlendTime;
 	clone->m_fBlendDuration = this->m_fBlendDuration;
 	clone->m_fPlaybackSpeed = this->m_fPlaybackSpeed;
+	clone->m_mActionHandlers = this->m_mActionHandlers;
 	clone->m_vFinalBoneMatrix = this->m_vFinalBoneMatrix;
 	clone->m_mBlendStartPose = this->m_mBlendStartPose;
 	clone->m_sStateInfo = this->m_sStateInfo;
@@ -690,7 +692,12 @@ void CAnimator::ProcessActionTriggers(CAnimationClip* clip, _float prevTime, _fl
 			if (trigger.actionName.empty())
 				continue;
 			if ((trigger.frame > prevFrame && trigger.frame <= lastFrame) || (trigger.frame >= 0 && trigger.frame <= currentFrame))
+			{
+				const auto handlerIt = m_mActionHandlers.find(trigger.actionName);
+				if (handlerIt != m_mActionHandlers.end() && handlerIt->second)
+					handlerIt->second();
 				m_ControllerInst.SetTrigger(trigger.actionName);
+			}
 		}
 	}
 	else if (currentFrame != prevFrame)
@@ -700,7 +707,12 @@ void CAnimator::ProcessActionTriggers(CAnimationClip* clip, _float prevTime, _fl
 			if (trigger.actionName.empty())
 				continue;
 			if (trigger.frame > prevFrame && trigger.frame <= currentFrame)
+			{
+				const auto handlerIt = m_mActionHandlers.find(trigger.actionName);
+				if (handlerIt != m_mActionHandlers.end() && handlerIt->second)
+					handlerIt->second();
 				m_ControllerInst.SetTrigger(trigger.actionName);
+			}
 		}
 	}
 
@@ -721,6 +733,21 @@ void CAnimator::SetTrigger(const wstring& n)
 void CAnimator::ResetTrigger(const wstring& n)
 {
 	m_ControllerInst.ResetTrigger(n);
+}
+
+void CAnimator::RegisterActionHandler(const wstring& name, const std::function<void()>& handler)
+{
+	m_mActionHandlers[name] = handler;
+}
+
+void CAnimator::UnregisterActionHandler(const wstring& name)
+{
+	m_mActionHandlers.erase(name);
+}
+
+void CAnimator::ClearActionHandlers()
+{
+	m_mActionHandlers.clear();
 }
 
 const _bool CAnimator::GetBool(const wstring& n, _bool& out) const

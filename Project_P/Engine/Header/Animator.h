@@ -2,6 +2,7 @@
 
 #include "Component.h"
 #include "AnimatorController.h"
+#include <functional>
 
 NS_BEGIN(Engine)
 
@@ -53,6 +54,9 @@ public:
     void SetFloat(const wstring& n, _float v);
     void SetTrigger(const wstring& n);
     void ResetTrigger(const wstring& n);
+    void RegisterActionHandler(const wstring& name, const std::function<void()>& handler);
+    void UnregisterActionHandler(const wstring& name);
+    void ClearActionHandlers();
 
     const _bool GetBool(const wstring& n, _bool& out) const;
     const _bool GetInt(const wstring& n, _bool& out) const;
@@ -81,6 +85,7 @@ private:
     _float m_fCurrentTime, m_fBlendTime, m_fBlendDuration, m_fNextTime;
     _int m_iPrevTriggerFrame;
     CAnimationClip* m_pPrevTriggerClip;
+    unordered_map<wstring, std::function<void()>> m_mActionHandlers;
     _float m_fPlaybackSpeed;
     vector<_matrix> m_vFinalBoneMatrix;
 	AnimatorStateInfo m_sStateInfo;
