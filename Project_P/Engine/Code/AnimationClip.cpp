@@ -3,6 +3,7 @@
 
 CAnimationClip::CAnimationClip()
 	: m_vBoneAnimation({})
+	, m_vActionTriggerList({})
 	, m_bLoopTime(false)
 	, m_fDuration(0.f)
 	, m_fTicksPerSecond(0.f)
@@ -25,6 +26,7 @@ void CAnimationClip::OnDestroy()
 	__super::OnDestroy();
 
 	m_vBoneAnimation.clear();
+	m_vActionTriggerList.clear();
 }
 
 HRESULT CAnimationClip::Initialize(const wstring& _name, const wstring& _filePath, void* _desc)
@@ -70,11 +72,11 @@ _int CAnimationClip::Sample(_float _timeSec, unordered_map<wstring, BoneTransfor
 		size_t i1 = 0, i2 = 0;
 		while (i2 < keys.size() && time >= keys[i2].timeStamp) { i1 = i2++; }
 
-		if (i2 >= keys.size()) { i2 = i1; }          // ³¡ ±¸°£
+		if (i2 >= keys.size()) { i2 = i1; }          // Â³Â¡ Â±Â¸Â°Â£
 		_float span = float(keys[i2].timeStamp - keys[i1].timeStamp);
 		_float  t = span > 0.f ? float((time - keys[i1].timeStamp) / span) : 0.f;
 
-		// º¸°£
+		// ÂºÂ¸Â°Â£
 		BoneTransform bt;
 		XMStoreFloat3
 		(
@@ -113,4 +115,29 @@ const _float CAnimationClip::Get_Duration() const
 const _float CAnimationClip::Get_TickPerSecons() const
 {
 	return m_fTicksPerSecond;
+}
+
+const vector<CAnimationClip::ActionTrigger>& CAnimationClip::Get_ActionTriggerList() const
+{
+	return m_vActionTriggerList;
+}
+
+void CAnimationClip::Add_ActionTrigger(const ActionTrigger& _trigger)
+{
+	m_vActionTriggerList.push_back(_trigger);
+}
+
+_bool CAnimationClip::Remove_ActionTrigger(const ActionTrigger& _trigger)
+{
+	auto iter = std::find_if(m_vActionTriggerList.begin(), m_vActionTriggerList.end(),
+		[&_trigger](const ActionTrigger& item)
+		{
+			return item.frame == _trigger.frame && item.actionName == _trigger.actionName;
+		});
+
+	if (iter == m_vActionTriggerList.end())
+		return false;
+
+	m_vActionTriggerList.erase(iter);
+	return true;
 }
