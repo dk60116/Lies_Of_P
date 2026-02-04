@@ -333,9 +333,11 @@ void CAnimator::ApplyRootMotionDelta(const vector3& rootPos, const _float dt)
 	}
 
 	vector3 delta = rootPos - m_vPrevRootMotionPos;
-	delta = vector3(delta.z, delta.y, -delta.x);
-	delta *= dt;
-	m_pRootMotionParent->Add_LocalPosition(delta);
+	vector3 mapped = vector3(delta.z, delta.y, -delta.x);
+	const auto& directions = m_pRootMotionParent->Get_Directions();
+	vector3 worldDelta = directions.right * mapped.x + directions.up * mapped.y + directions.forward * mapped.z;
+	worldDelta *= dt;
+	m_pRootMotionParent->Add_LocalPosition(worldDelta);
 	m_vPrevRootMotionPos = rootPos;
 }
 
