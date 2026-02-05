@@ -820,24 +820,74 @@ void CAnimatorControllerEditorBox::RenderInspector()
                 st.blendTreeType = State::BlendTreeType::Direct;
         }
 
-        if (st.blendTreeType == State::BlendTreeType::OneD)
+    if (st.blendTreeType == State::BlendTreeType::OneD)
+    {
+        auto floatParams = CollectParamNames({ "float" });
+        vector<string> options;
+        options.reserve(floatParams.size() + 2);
+        options.push_back("<None>");
+        for (const auto& name : floatParams)
+            options.push_back(name);
+        if (!st.blendParamX.empty() &&
+            std::find(options.begin(), options.end(), st.blendParamX) == options.end())
+            options.push_back(st.blendParamX);
+
+        const char* preview = st.blendParamX.empty() ? "<None>" : st.blendParamX.c_str();
+        if (ImGui::BeginCombo("Param", preview))
         {
-            std::array<char, 128> buf{};
-            strcpy_s(buf.data(), buf.size(), st.blendParamX.c_str());
-            if (ImGui::InputText("Param", buf.data(), buf.size()))
-                st.blendParamX = buf.data();
+            for (const auto& opt : options)
+            {
+                bool sel = (opt == st.blendParamX) || (opt == "<None>" && st.blendParamX.empty());
+                if (ImGui::Selectable(opt.c_str(), sel))
+                    st.blendParamX = (opt == "<None>") ? "" : opt;
+                if (sel) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
         }
-        else if (st.blendTreeType == State::BlendTreeType::TwoD)
+    }
+    else if (st.blendTreeType == State::BlendTreeType::TwoD)
+    {
+        auto floatParams = CollectParamNames({ "float" });
+        vector<string> options;
+        options.reserve(floatParams.size() + 2);
+        options.push_back("<None>");
+        for (const auto& name : floatParams)
+            options.push_back(name);
+
+        if (!st.blendParamX.empty() &&
+            std::find(options.begin(), options.end(), st.blendParamX) == options.end())
+            options.push_back(st.blendParamX);
+
+        const char* previewX = st.blendParamX.empty() ? "<None>" : st.blendParamX.c_str();
+        if (ImGui::BeginCombo("ParamX", previewX))
         {
-            std::array<char, 128> bufX{};
-            std::array<char, 128> bufY{};
-            strcpy_s(bufX.data(), bufX.size(), st.blendParamX.c_str());
-            strcpy_s(bufY.data(), bufY.size(), st.blendParamY.c_str());
-            if (ImGui::InputText("ParamX", bufX.data(), bufX.size()))
-                st.blendParamX = bufX.data();
-            if (ImGui::InputText("ParamY", bufY.data(), bufY.size()))
-                st.blendParamY = bufY.data();
+            for (const auto& opt : options)
+            {
+                bool sel = (opt == st.blendParamX) || (opt == "<None>" && st.blendParamX.empty());
+                if (ImGui::Selectable(opt.c_str(), sel))
+                    st.blendParamX = (opt == "<None>") ? "" : opt;
+                if (sel) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
         }
+
+        if (!st.blendParamY.empty() &&
+            std::find(options.begin(), options.end(), st.blendParamY) == options.end())
+            options.push_back(st.blendParamY);
+
+        const char* previewY = st.blendParamY.empty() ? "<None>" : st.blendParamY.c_str();
+        if (ImGui::BeginCombo("ParamY", previewY))
+        {
+            for (const auto& opt : options)
+            {
+                bool sel = (opt == st.blendParamY) || (opt == "<None>" && st.blendParamY.empty());
+                if (ImGui::Selectable(opt.c_str(), sel))
+                    st.blendParamY = (opt == "<None>") ? "" : opt;
+                if (sel) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+    }
 
         ImGui::Separator();
         ImGui::Text("Blend Children");
@@ -911,10 +961,28 @@ void CAnimatorControllerEditorBox::RenderInspector()
                 }
                 else
                 {
-                    std::array<char, 128> buf{};
-                    strcpy_s(buf.data(), buf.size(), child.directParam.c_str());
-                    if (ImGui::InputText("Direct Param", buf.data(), buf.size()))
-                        child.directParam = buf.data();
+                    auto directParams = CollectParamNames({ "float", "int" });
+                    vector<string> options;
+                    options.reserve(directParams.size() + 2);
+                    options.push_back("<None>");
+                    for (const auto& name : directParams)
+                        options.push_back(name);
+                    if (!child.directParam.empty() &&
+                        std::find(options.begin(), options.end(), child.directParam) == options.end())
+                        options.push_back(child.directParam);
+
+                    const char* preview = child.directParam.empty() ? "<None>" : child.directParam.c_str();
+                    if (ImGui::BeginCombo("Direct Param", preview))
+                    {
+                        for (const auto& opt : options)
+                        {
+                            bool sel = (opt == child.directParam) || (opt == "<None>" && child.directParam.empty());
+                            if (ImGui::Selectable(opt.c_str(), sel))
+                                child.directParam = (opt == "<None>") ? "" : opt;
+                            if (sel) ImGui::SetItemDefaultFocus();
+                        }
+                        ImGui::EndCombo();
+                    }
                 }
 
                 if (ImGui::Button("Remove Child"))
@@ -1763,11 +1831,76 @@ void CAnimatorControllerEditorBox::RenderAddStatePopup()
             ImGui::Combo("Blend Type", &m_iNewBlendTreeType, blendTypeLabels, IM_ARRAYSIZE(blendTypeLabels));
 
             if (m_iNewBlendTreeType == 0)
-                ImGui::InputText("Param", m_newBlendParamX.data(), m_newBlendParamX.size());
+            {
+                auto floatParams = CollectParamNames({ "float" });
+                vector<string> options;
+                options.reserve(floatParams.size() + 1);
+                options.push_back("<None>");
+                for (const auto& name : floatParams)
+                    options.push_back(name);
+
+                const char* preview = (m_newBlendParamX[0] == '\0') ? "<None>" : m_newBlendParamX.data();
+                if (ImGui::BeginCombo("Param", preview))
+                {
+                    for (const auto& opt : options)
+                    {
+                        bool sel = (opt == m_newBlendParamX.data()) || (opt == "<None>" && m_newBlendParamX[0] == '\0');
+                        if (ImGui::Selectable(opt.c_str(), sel))
+                        {
+                            if (opt == "<None>")
+                                m_newBlendParamX[0] = '\0';
+                            else
+                                strcpy_s(m_newBlendParamX.data(), m_newBlendParamX.size(), opt.c_str());
+                        }
+                        if (sel) ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+            }
             else if (m_iNewBlendTreeType == 1)
             {
-                ImGui::InputText("ParamX", m_newBlendParamX.data(), m_newBlendParamX.size());
-                ImGui::InputText("ParamY", m_newBlendParamY.data(), m_newBlendParamY.size());
+                auto floatParams = CollectParamNames({ "float" });
+                vector<string> options;
+                options.reserve(floatParams.size() + 1);
+                options.push_back("<None>");
+                for (const auto& name : floatParams)
+                    options.push_back(name);
+
+                const char* previewX = (m_newBlendParamX[0] == '\0') ? "<None>" : m_newBlendParamX.data();
+                if (ImGui::BeginCombo("ParamX", previewX))
+                {
+                    for (const auto& opt : options)
+                    {
+                        bool sel = (opt == m_newBlendParamX.data()) || (opt == "<None>" && m_newBlendParamX[0] == '\0');
+                        if (ImGui::Selectable(opt.c_str(), sel))
+                        {
+                            if (opt == "<None>")
+                                m_newBlendParamX[0] = '\0';
+                            else
+                                strcpy_s(m_newBlendParamX.data(), m_newBlendParamX.size(), opt.c_str());
+                        }
+                        if (sel) ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+
+                const char* previewY = (m_newBlendParamY[0] == '\0') ? "<None>" : m_newBlendParamY.data();
+                if (ImGui::BeginCombo("ParamY", previewY))
+                {
+                    for (const auto& opt : options)
+                    {
+                        bool sel = (opt == m_newBlendParamY.data()) || (opt == "<None>" && m_newBlendParamY[0] == '\0');
+                        if (ImGui::Selectable(opt.c_str(), sel))
+                        {
+                            if (opt == "<None>")
+                                m_newBlendParamY[0] = '\0';
+                            else
+                                strcpy_s(m_newBlendParamY.data(), m_newBlendParamY.size(), opt.c_str());
+                        }
+                        if (sel) ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
             }
         }
 
@@ -1955,6 +2088,17 @@ void CAnimatorControllerEditorBox::RefreshMotionOptions()
     std::sort(m_motionOptions.begin(), m_motionOptions.end());
 
     CDebug::Log("Motion options loaded: " + std::to_string(m_motionOptions.size()));
+}
+
+vector<string> CAnimatorControllerEditorBox::CollectParamNames(const vector<string>& types) const
+{
+    vector<string> names;
+    for (const auto& param : m_params)
+    {
+        if (std::find(types.begin(), types.end(), param.type) != types.end())
+            names.push_back(param.name);
+    }
+    return names;
 }
 
 string CAnimatorControllerEditorBox::ExtractKeyBeforeColon(const string& line)

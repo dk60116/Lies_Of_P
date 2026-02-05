@@ -126,6 +126,7 @@ private:
 private:
     void EnsureMotionOptionsLoaded();
     void RefreshMotionOptions();
+    vector<string> CollectParamNames(const vector<string>& types) const;
 
     static string ExtractKeyBeforeColon(const string& line);
     static _bool IsSceneCommentLine(const string& trimmedLine);
