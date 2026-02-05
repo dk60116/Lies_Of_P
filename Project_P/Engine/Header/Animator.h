@@ -72,11 +72,14 @@ public:
     const _float GetNormalizedTime() const;
 
 private:
+    struct DirectBlendState;
     _bool IsRootBone(const wstring& _name);
     void ApplyRootMotionDelta(const vector3& rootPos);
     void ProcessActionTriggers(CAnimationClip* clip, _float prevTime, _float currentTime);
     void ResetActionTriggerState();
     _float GetParamValue(const wstring& name) const;
+    void UpdateDirectBlendState(struct DirectBlendState& state, const CAnimatorController::State::BlendTree* tree, _float dt);
+    _float GetDirectBlendParamValue(const CAnimatorController::State::BlendTree& tree) const;
     void ComputeBlendTreeWeights(const CAnimatorController::State::BlendTree& tree, vector<_float>& weights, vector<const CAnimatorController::State::BlendTreeChild*>& children) const;
     _float GetBlendTreeDuration(const CAnimatorController::State::BlendTree& tree) const;
     _bool IsBlendTreeLoop(const CAnimatorController::State::BlendTree& tree) const;
@@ -102,6 +105,20 @@ private:
     _bool m_bNextBlendTreeActive;
 
     unordered_map<wstring, CAnimationClip::BoneTransform> m_mBlendStartPose;
+
+    struct DirectBlendState
+    {
+        const CAnimatorController::State::BlendTree* tree = nullptr;
+        _float current = 0.f;
+        _float target = 0.f;
+        _float start = 0.f;
+        _float timer = 0.f;
+        _float duration = 0.f;
+        _bool active = false;
+        _bool hasValue = false;
+    };
+    DirectBlendState m_directBlendCurrent;
+    DirectBlendState m_directBlendNext;
 
     CTransform* m_pRootMotionParent;
     vector3 m_vPrevRootMotionPos;

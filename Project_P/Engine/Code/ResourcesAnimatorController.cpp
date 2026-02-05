@@ -458,6 +458,10 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
                 {
                     it->second.blendTree.paramY = CEngineString::StringToWString(v);
                 }
+                else if (k == "directBlend")
+                {
+                    it->second.blendTree.directBlendDuration = static_cast<_float>(atof(v.c_str()));
+                }
                 else if (k == "child")
                 {
                     auto parts = SplitString(v, ",");
@@ -606,7 +610,7 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
                 out.write(reinterpret_cast<const char*>(ws.data()), sizeof(wchar_t) * len);
         };
 
-    const _uint magic = 0x41434234;
+    const _uint magic = 0x41434235;
     out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 
     writeWString(info.controllerName);
@@ -640,6 +644,7 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
             out.write(reinterpret_cast<const char*>(&treeType), sizeof(_uint));
             writeWString(st.blendTree.paramX);
             writeWString(st.blendTree.paramY);
+            out.write(reinterpret_cast<const char*>(&st.blendTree.directBlendDuration), sizeof(_float));
             _uint childCount = static_cast<_uint>(st.blendTree.children.size());
             out.write(reinterpret_cast<const char*>(&childCount), sizeof(_uint));
             for (const auto& child : st.blendTree.children)

@@ -1277,14 +1277,15 @@ CAnimatorController::AnimatorControllerInitInfo CResources::ReadAnimatorControll
 
 	_uint magic = 0;
 	in.read(reinterpret_cast<char*>(&magic), sizeof(_uint));
-	const _bool hasGraphData = (magic == 0x41434232 || magic == 0x41434233 || magic == 0x41434234);
-	const _bool hasEntryTransitions = (magic == 0x41434233 || magic == 0x41434234);
-	const _bool hasBlendTree = (magic == 0x41434234);
-	if (magic != 0x41434231 && !hasGraphData)
-	{
-		CDebug::LogError(L"ReadAnimationAnimatoinControllerBufferInfos failed - invalid magic: " + _binFileName);
-		return {};
-	}
+    const _bool hasGraphData = (magic == 0x41434232 || magic == 0x41434233 || magic == 0x41434234 || magic == 0x41434235);
+    const _bool hasEntryTransitions = (magic == 0x41434233 || magic == 0x41434234 || magic == 0x41434235);
+    const _bool hasBlendTree = (magic == 0x41434234 || magic == 0x41434235);
+    const _bool hasDirectBlend = (magic == 0x41434235);
+    if (magic != 0x41434231 && !hasGraphData)
+    {
+        CDebug::LogError(L"ReadAnimationAnimatoinControllerBufferInfos failed - invalid magic: " + _binFileName);
+        return {};
+    }
 
 	auto readWString = [&in]()
 		{
@@ -1341,12 +1342,16 @@ CAnimatorController::AnimatorControllerInitInfo CResources::ReadAnimatorControll
 			st.motionType = static_cast<CAnimatorController::STATE_MOTION_TYPE>(motionType);
 			if (st.motionType == CAnimatorController::STATE_MOTION_TYPE::BLEND_TREE)
 			{
-				_uint treeType = 0;
-				in.read(reinterpret_cast<char*>(&treeType), sizeof(_uint));
-				st.blendTree.type = static_cast<CAnimatorController::BLEND_TREE_TYPE>(treeType);
-				st.blendTree.paramX = readWString();
-				st.blendTree.paramY = readWString();
-				_uint childCount = 0;
+                _uint treeType = 0;
+                in.read(reinterpret_cast<char*>(&treeType), sizeof(_uint));
+                st.blendTree.type = static_cast<CAnimatorController::BLEND_TREE_TYPE>(treeType);
+                st.blendTree.paramX = readWString();
+                st.blendTree.paramY = readWString();
+                if (hasDirectBlend)
+                    in.read(reinterpret_cast<char*>(&st.blendTree.directBlendDuration), sizeof(_float));
+                else
+                    st.blendTree.directBlendDuration = 0.f;
+                _uint childCount = 0;
 				in.read(reinterpret_cast<char*>(&childCount), sizeof(_uint));
 				st.blendTree.children.reserve(childCount);
 				for (_uint c = 0; c < childCount; ++c)

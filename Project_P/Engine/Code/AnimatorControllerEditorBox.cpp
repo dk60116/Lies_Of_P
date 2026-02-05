@@ -844,6 +844,7 @@ void CAnimatorControllerEditorBox::RenderInspector()
             }
             ImGui::EndCombo();
         }
+        ImGui::DragFloat("Direct Blend", &st.directBlend, 0.01f, 0.0f, 5.0f);
     }
     else if (st.blendTreeType == State::BlendTreeType::TwoD)
     {
@@ -912,6 +913,7 @@ void CAnimatorControllerEditorBox::RenderInspector()
             }
             ImGui::EndCombo();
         }
+        ImGui::DragFloat("Direct Blend", &st.directBlend, 0.01f, 0.0f, 5.0f);
     }
 
         ImGui::Separator();
@@ -2520,6 +2522,7 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
                     st.motion = "";
                     st.motionType = State::MotionType::Clip;
                     st.blendTreeType = State::BlendTreeType::OneD;
+                    st.directBlend = 0.f;
                     st.speedMul = 1.f;
                     st.pos = ImVec2(100, 100);
                     m_states[curState] = st;
@@ -2651,6 +2654,10 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
                 else if (k == "paramY")
                 {
                     st.blendParamY = v;
+                }
+                else if (k == "directBlend")
+                {
+                    st.directBlend = (float)atof(v.c_str());
                 }
                 else if (k == "child")
                 {
@@ -2800,6 +2807,8 @@ string CAnimatorControllerEditorBox::SerializeText() const
             {
                 if (!st.blendParamX.empty())
                     t += "param=" + st.blendParamX + "\n";
+                if (st.directBlend > 0.f)
+                    t += "directBlend=" + to_string(st.directBlend) + "\n";
             }
 
             for (const auto& child : st.blendChildren)

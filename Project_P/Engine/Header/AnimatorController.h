@@ -100,6 +100,7 @@ public:
 			BLEND_TREE_TYPE type = BLEND_TREE_TYPE::ONE_D;
 			wstring paramX = L"";
 			wstring paramY = L"";
+			_float directBlendDuration = 0.f;
 			vector<BlendTreeChild> children = {};
 		};
 

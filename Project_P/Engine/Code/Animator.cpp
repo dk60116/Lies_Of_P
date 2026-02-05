@@ -173,6 +173,9 @@ void CAnimator::Update()
 	if (m_pController)
 		m_ControllerInst.Update(this, dt);
 
+	UpdateDirectBlendState(m_directBlendCurrent, m_bBlendTreeActive ? m_pBlendTree : nullptr, dt);
+	UpdateDirectBlendState(m_directBlendNext, m_bNextBlendTreeActive ? m_pNextBlendTree : nullptr, dt);
+
 	if (!m_pCrtAnimation && !m_bBlendTreeActive)
 		return;
 	if (!m_bIsPlaying && !m_bBlending)
@@ -930,6 +933,79 @@ _float CAnimator::GetParamValue(const wstring& name) const
 	return 0.f;
 }
 
+void CAnimator::UpdateDirectBlendState(DirectBlendState& state, const CAnimatorController::State::BlendTree* tree, _float dt)
+{
+	if (!tree || tree->type != CAnimatorController::BLEND_TREE_TYPE::DIRECT || tree->paramX.empty() || tree->directBlendDuration <= 0.f)
+	{
+		state.tree = tree;
+		state.active = false;
+		state.hasValue = false;
+		state.timer = 0.f;
+		state.duration = 0.f;
+		return;
+	}
+
+	if (state.tree != tree)
+	{
+		state = DirectBlendState{};
+		state.tree = tree;
+	}
+
+	state.duration = tree->directBlendDuration;
+	_float value = GetParamValue(tree->paramX);
+
+	if (!state.hasValue)
+	{
+		state.current = value;
+		state.target = value;
+		state.start = value;
+		state.timer = 0.f;
+		state.active = false;
+		state.hasValue = true;
+		return;
+	}
+
+	if (value != state.target)
+	{
+		state.start = state.current;
+		state.target = value;
+		state.timer = 0.f;
+		state.active = true;
+	}
+
+	if (state.active)
+	{
+		state.timer += dt;
+		_float denom = state.duration > 0.f ? state.duration : 0.0001f;
+		_float t = state.timer / denom;
+		if (t >= 1.f)
+		{
+			state.current = state.target;
+			state.active = false;
+		}
+		else
+		{
+			state.current = state.start + (state.target - state.start) * t;
+		}
+	}
+	else
+	{
+		state.current = state.target;
+	}
+}
+
+_float CAnimator::GetDirectBlendParamValue(const CAnimatorController::State::BlendTree& tree) const
+{
+	if (tree.type != CAnimatorController::BLEND_TREE_TYPE::DIRECT || tree.paramX.empty() || tree.directBlendDuration <= 0.f)
+		return GetParamValue(tree.paramX);
+
+	if (m_directBlendCurrent.tree == &tree && m_directBlendCurrent.hasValue)
+		return m_directBlendCurrent.current;
+	if (m_directBlendNext.tree == &tree && m_directBlendNext.hasValue)
+		return m_directBlendNext.current;
+	return GetParamValue(tree.paramX);
+}
+
 void CAnimator::ComputeBlendTreeWeights(const CAnimatorController::State::BlendTree& tree, vector<_float>& weights, vector<const CAnimatorController::State::BlendTreeChild*>& children) const
 {
 	weights.clear();
@@ -1010,7 +1086,7 @@ void CAnimator::ComputeBlendTreeWeights(const CAnimatorController::State::BlendT
 	{
 		if (!tree.paramX.empty())
 		{
-			_float x = GetParamValue(tree.paramX);
+			_float x = GetDirectBlendParamValue(tree);
 			vector<_float> thresholds;
 			thresholds.reserve(children.size());
 			for (const auto* child : children)
