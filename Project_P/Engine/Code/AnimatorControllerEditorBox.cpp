@@ -1069,7 +1069,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
         if (wheel != 0.0f)
         {
             const float oldZoom = m_zoom;
-            m_zoom = std::clamp(m_zoom + wheel * 0.1f, 0.5f, 2.0f);
+            m_zoom = std::clamp(m_zoom + wheel * 0.1f, 0.25f, 2.0f);
             if (m_zoom != oldZoom)
             {
                 ImVec2 mouse = ImGui::GetIO().MousePos;
