@@ -11,7 +11,7 @@ class CPlayerController final : public CComponent
 public:
     enum KeyMapping { Forward, Back, Left, Right, Jump, Attack, Attack_S, Guard };
 
-    enum class PlayerState { Locomotion, Idle, Move, Attack };
+    enum class PlayerState { Locomotion, Idle, Move, Attack, Attack_S, Guard };
 
 protected:
     CPlayerController();

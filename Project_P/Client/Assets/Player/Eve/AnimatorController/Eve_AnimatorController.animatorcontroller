@@ -16,16 +16,7 @@ bool comboContinue=false
 bool IsAttack=false
 bool IsGuard=false
 bool IsBattle=false
-
-[state Attack_Light_04]
-motion=Eve_Attack_Light_04
-speedMul=1.000000
-pos=-112,481
-
-[state Run_Forward_Start]
-motion=Eve_Run_Forward_Start
-speedMul=1.000000
-pos=578,145
+trigger BattleEnd
 
 [state Idle]
 blendTree=direct
@@ -36,20 +27,39 @@ child=Eve_BattleIdle,1.000000
 speedMul=1.000000
 pos=121,258
 
+[state Attack_Light_04]
+motion=Eve_Attack_Light_04
+speedMul=1.000000
+pos=-112,481
+
+[state Run_Forward_Start]
+blendTree=direct
+param=IsBattle
+child=Eve_Run_Forward_Start,0.000000
+child=Eve_BattleRun_Start,1.000000
+speedMul=1.000000
+pos=578,145
+
+[state Run_Forward]
+blendTree=direct
+param=IsBattle
+child=Eve_Run_Forward_During,0.000000
+child=Eve_BattleRun_During,1.000000
+speedMul=1.000000
+pos=662,414
+
+[state Run_End]
+blendTree=direct
+param=IsBattle
+child=Eve_Run_Forward_End,0.000000
+child=Eve_BattleRun_End,1.000000
+speedMul=1.000000
+pos=407,373
+
 [state Attack_Light_01]
 motion=Eve_Attack_Light_01
 speedMul=1.000000
 pos=-357,160
-
-[state Run_End]
-motion=Eve_Run_Forward_End
-speedMul=1.000000
-pos=386,412
-
-[state Run_Forward]
-motion=Eve_Run_Forward_During
-speedMul=1.000000
-pos=662,414
 
 [state Run_TurnL]
 motion=Eve_Run_TurnL
@@ -80,6 +90,14 @@ pos=-102,-180
 motion=Eve_Guard_Idle
 speedMul=1.000000
 pos=-380,-176
+
+[state IdleTo_Battle_End]
+blendTree=direct
+param=speed
+directBlend=0.150000
+child=Eve_BattleEnd,0.000000
+speedMul=1.000000
+pos=196,511
 
 [entry]
 to=Idle
@@ -370,6 +388,27 @@ transitionOffset=0.000000
 blend=0.150000
 cond=comboContinue==false
 exitTime=0.800000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Idle->IdleTo_Battle_End]
+blend=0.150000
+cond=IsBattle==false && BattleEnd
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition IdleTo_Battle_End->Idle]
+blend=0.150000
+exitTime=0.800000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition IdleTo_Battle_End->Run_Forward_Start]
+blend=0.150000
+cond=speed>0.100000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

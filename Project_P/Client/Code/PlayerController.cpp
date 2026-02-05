@@ -6,6 +6,7 @@
 #include "PlayerState_Idle.h"
 #include "PlayerState_Move.h"
 #include "PlayerState_Attack.h"
+#include "PlayerState_Guard.h"
 
 CPlayerController::CPlayerController()
 	: m_pPlayer(nullptr)
@@ -40,11 +41,13 @@ HRESULT CPlayerController::Initialize()
 	m_mKeyHold.insert({ Left, false });
 	m_mKeyHold.insert({ Right, false });
 	m_mKeyHold.insert({ Attack, false });
+	m_mKeyHold.insert({ Guard, false });
 
 	m_mStateList.insert({ PlayerState::Locomotion, new CPlayerState_Locomotion() });
 	m_mStateList.insert({ PlayerState::Idle, new CPlayerState_Idle() });
 	m_mStateList.insert({ PlayerState::Move, new CPlayerState_Move() });
 	m_mStateList.insert({ PlayerState::Attack, new CPlayerState_Attack() });
+	m_mStateList.insert({ PlayerState::Guard, new CPlayerState_Guard() });
 
 	auto loco = static_cast<CPlayerState_Locomotion*>(Get_PlayerState(PlayerState::Locomotion));
 
@@ -96,6 +99,8 @@ void CPlayerController::Update()
         }
     }
 
+	if (m_mKeyDown[Guard])
+		m_ctx.BufferGuard();
     if (m_mKeyDown[Attack])
         m_ctx.BufferAttack();
 

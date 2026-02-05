@@ -28,7 +28,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx)
     m_iComboLimit[0] = 18;
     m_iComboLimit[1] = 20;
     m_iComboLimit[2] = 22;
-    m_iComboLimit[3] = 29;
+    m_iComboLimit[3] = 25;
 
     m_iTurnLock[0] = 0;
     m_iTurnLock[1] = 10;

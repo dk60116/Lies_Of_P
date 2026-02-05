@@ -98,8 +98,10 @@ _float CPlayerControllerContext::DeltaAngleDeg(float _current, _float _target)
 
 static _float MoveTowards1D(_float cur, _float target, _float maxDelta)
 {
-	if (cur < target) return (cur + maxDelta > target) ? target : (cur + maxDelta);
-	if (cur > target) return (cur - maxDelta < target) ? target : (cur - maxDelta);
+	if (cur < target)
+		return (cur + maxDelta > target) ? target : (cur + maxDelta);
+	if (cur > target)
+		return (cur - maxDelta < target) ? target : (cur - maxDelta);
 	return target;
 }
 
@@ -297,6 +299,7 @@ const _bool CPlayerControllerContext::IsBattle() const
 void CPlayerControllerContext::SetBattle(const _bool _value)
 {
 	m_pController->SetBattle(_value);
+	m_pPlayer->Get_Animator()->SetTrigger(L"BattleEnd");
 }
 
 void CPlayerControllerContext::BufferAttack()
@@ -327,6 +330,36 @@ void CPlayerControllerContext::SetAttackActive(_bool v)
 _bool CPlayerControllerContext::IsAttackActive() const
 {
 	return m_Cv_Battle.m_bAttackActive;
+}
+
+void CPlayerControllerContext::BufferGuard()
+{
+	m_Cv_Battle.m_bGuardBuffered = true;
+	m_Cv_Battle.m_fGuardBufferT = 0.f;
+}
+
+_bool CPlayerControllerContext::ConsumeGuardBuffer()
+{
+	if (!m_Cv_Battle.m_bGuardBuffered)
+		return false;
+	m_Cv_Battle.m_bGuardBuffered = false;
+	m_Cv_Battle.m_fGuardBufferT = 0.f;
+	return true;
+}
+
+_bool CPlayerControllerContext::HasGuardBuffered() const
+{
+	return m_Cv_Battle.m_bGuardBuffered;
+}
+
+void CPlayerControllerContext::SetGuardActive(_bool v)
+{
+	m_Cv_Battle.m_bGuardActive = v;
+}
+
+_bool CPlayerControllerContext::IsGuardActive() const
+{
+	return 	m_Cv_Battle.m_bGuardActive;
 }
 
 void CPlayerControllerContext::TickAttackBuffer()

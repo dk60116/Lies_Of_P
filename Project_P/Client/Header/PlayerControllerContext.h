@@ -26,6 +26,11 @@ private:
 		_bool  m_bAttackBuffered = false;
 		_float m_fAttackBufferT = 0.f;
 		_float m_fAttackBufferLife = 0.25f;
+
+		_bool  m_bGuardActive = false;
+		_bool  m_bGuardBuffered = false;
+		_float m_fGuardBufferT = 0.f;
+		_float m_fGuardBufferLife = 0.25f;
 	}CV_BATTLE;
 
 public:
@@ -82,6 +87,13 @@ public:
 
 	void SetAttackActive(_bool v);
 	_bool IsAttackActive() const;
+
+	void BufferGuard();
+	_bool ConsumeGuardBuffer();
+	_bool HasGuardBuffered() const;
+
+	void SetGuardActive(_bool v);
+	_bool IsGuardActive() const;
 
 	void TickAttackBuffer();
 

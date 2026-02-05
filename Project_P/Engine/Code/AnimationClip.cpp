@@ -159,7 +159,7 @@ const _uint CAnimationClip::Get_LastFrameIndex() const
 
 const _uint CAnimationClip::Get_NormalizedFrameIndex(_float _value)
 {
-	const _int frameCount = Get_FrameCount();
+	const _int frameCount = static_cast<_int>(Get_FrameCount());
 
 	if (frameCount <= 0)
 		return -1;
@@ -170,5 +170,5 @@ const _uint CAnimationClip::Get_NormalizedFrameIndex(_float _value)
 	_int idx = (_int)lround((double)f);
 
 	idx = clamp(idx, 0, frameCount - 1);
-	return idx;
+	return static_cast<_uint>(idx);
 }
