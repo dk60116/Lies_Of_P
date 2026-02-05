@@ -100,6 +100,7 @@ private:
     static _bool StartsWith(const string& s, const char* prefix);
     static vector<string> Split(const string& s, char delim);
     static _bool TryParseVec2(const string& s, ImVec2& out);
+    static _bool TryParseFloatValue(const string& s, float& out);
 
     void RequestDeleteParam(int idx);
     void RequestDeleteState(const string& name);

@@ -1008,6 +1008,58 @@ void CAnimator::ComputeBlendTreeWeights(const CAnimatorController::State::BlendT
 
 	if (tree.type == CAnimatorController::BLEND_TREE_TYPE::DIRECT)
 	{
+		if (!tree.paramX.empty())
+		{
+			_float x = GetParamValue(tree.paramX);
+			vector<_float> thresholds;
+			thresholds.reserve(children.size());
+			for (const auto* child : children)
+				thresholds.push_back(child->threshold);
+
+			vector<size_t> order(thresholds.size());
+			for (size_t i = 0; i < order.size(); ++i)
+				order[i] = i;
+
+			std::sort(order.begin(), order.end(), [&](size_t a, size_t b)
+				{
+					return thresholds[a] < thresholds[b];
+				});
+
+			if (order.size() == 1)
+			{
+				weights[order[0]] = 1.f;
+				return;
+			}
+
+			if (x <= thresholds[order.front()])
+			{
+				weights[order.front()] = 1.f;
+				return;
+			}
+			if (x >= thresholds[order.back()])
+			{
+				weights[order.back()] = 1.f;
+				return;
+			}
+
+			for (size_t i = 0; i + 1 < order.size(); ++i)
+			{
+				size_t a = order[i];
+				size_t b = order[i + 1];
+				_float t0 = thresholds[a];
+				_float t1 = thresholds[b];
+				if (x >= t0 && x <= t1)
+				{
+					_float range = t1 - t0;
+					_float t = (range <= 0.f) ? 0.f : (x - t0) / range;
+					weights[a] = 1.f - t;
+					weights[b] = t;
+					return;
+				}
+			}
+			return;
+		}
+
 		_float total = 0.f;
 		for (size_t i = 0; i < children.size(); ++i)
 		{

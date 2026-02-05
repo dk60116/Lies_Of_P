@@ -888,6 +888,31 @@ void CAnimatorControllerEditorBox::RenderInspector()
             ImGui::EndCombo();
         }
     }
+    else
+    {
+        auto directParams = CollectParamNames({ "float", "int", "bool" });
+        vector<string> options;
+        options.reserve(directParams.size() + 2);
+        options.push_back("<None>");
+        for (const auto& name : directParams)
+            options.push_back(name);
+        if (!st.blendParamX.empty() &&
+            std::find(options.begin(), options.end(), st.blendParamX) == options.end())
+            options.push_back(st.blendParamX);
+
+        const char* preview = st.blendParamX.empty() ? "<None>" : st.blendParamX.c_str();
+        if (ImGui::BeginCombo("Param", preview))
+        {
+            for (const auto& opt : options)
+            {
+                bool sel = (opt == st.blendParamX) || (opt == "<None>" && st.blendParamX.empty());
+                if (ImGui::Selectable(opt.c_str(), sel))
+                    st.blendParamX = (opt == "<None>") ? "" : opt;
+                if (sel) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+    }
 
         ImGui::Separator();
         ImGui::Text("Blend Children");
@@ -961,28 +986,7 @@ void CAnimatorControllerEditorBox::RenderInspector()
                 }
                 else
                 {
-                    auto directParams = CollectParamNames({ "float", "int" });
-                    vector<string> options;
-                    options.reserve(directParams.size() + 2);
-                    options.push_back("<None>");
-                    for (const auto& name : directParams)
-                        options.push_back(name);
-                    if (!child.directParam.empty() &&
-                        std::find(options.begin(), options.end(), child.directParam) == options.end())
-                        options.push_back(child.directParam);
-
-                    const char* preview = child.directParam.empty() ? "<None>" : child.directParam.c_str();
-                    if (ImGui::BeginCombo("Direct Param", preview))
-                    {
-                        for (const auto& opt : options)
-                        {
-                            bool sel = (opt == child.directParam) || (opt == "<None>" && child.directParam.empty());
-                            if (ImGui::Selectable(opt.c_str(), sel))
-                                child.directParam = (opt == "<None>") ? "" : opt;
-                            if (sel) ImGui::SetItemDefaultFocus();
-                        }
-                        ImGui::EndCombo();
-                    }
+                    ImGui::DragFloat("Value", &child.threshold, 0.01f, -1000.f, 1000.f);
                 }
 
                 if (ImGui::Button("Remove Child"))
@@ -1497,6 +1501,21 @@ _bool CAnimatorControllerEditorBox::TryParseVec2(const string& s, ImVec2& out)
     return true;
 }
 
+_bool CAnimatorControllerEditorBox::TryParseFloatValue(const string& s, float& out)
+{
+    char* endPtr = nullptr;
+    out = strtof(s.c_str(), &endPtr);
+    if (s.c_str() == endPtr)
+        return false;
+    while (*endPtr != '\0')
+    {
+        if (!isspace(static_cast<unsigned char>(*endPtr)))
+            return false;
+        ++endPtr;
+    }
+    return true;
+}
+
 void CAnimatorControllerEditorBox::RequestDeleteParam(int idx)
 {
     if (idx < 0 || idx >= (int)m_params.size()) 
@@ -1896,6 +1915,33 @@ void CAnimatorControllerEditorBox::RenderAddStatePopup()
                                 m_newBlendParamY[0] = '\0';
                             else
                                 strcpy_s(m_newBlendParamY.data(), m_newBlendParamY.size(), opt.c_str());
+                        }
+                        if (sel) ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+            }
+            else
+            {
+                auto directParams = CollectParamNames({ "float", "int", "bool" });
+                vector<string> options;
+                options.reserve(directParams.size() + 1);
+                options.push_back("<None>");
+                for (const auto& name : directParams)
+                    options.push_back(name);
+
+                const char* preview = (m_newBlendParamX[0] == '\0') ? "<None>" : m_newBlendParamX.data();
+                if (ImGui::BeginCombo("Param", preview))
+                {
+                    for (const auto& opt : options)
+                    {
+                        bool sel = (opt == m_newBlendParamX.data()) || (opt == "<None>" && m_newBlendParamX[0] == '\0');
+                        if (ImGui::Selectable(opt.c_str(), sel))
+                        {
+                            if (opt == "<None>")
+                                m_newBlendParamX[0] = '\0';
+                            else
+                                strcpy_s(m_newBlendParamX.data(), m_newBlendParamX.size(), opt.c_str());
                         }
                         if (sel) ImGui::SetItemDefaultFocus();
                     }
@@ -2625,7 +2671,13 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
                     else
                     {
                         if (parts.size() >= 2)
-                            child.directParam = parts[1];
+                        {
+                            float value = 0.f;
+                            if (TryParseFloatValue(parts[1], value))
+                                child.threshold = value;
+                            else
+                                child.directParam = parts[1];
+                        }
                     }
                     st.motionType = State::MotionType::BlendTree;
                     st.blendChildren.push_back(child);
@@ -2738,6 +2790,11 @@ string CAnimatorControllerEditorBox::SerializeText() const
                 if (!st.blendParamY.empty())
                     t += "paramY=" + st.blendParamY + "\n";
             }
+            else
+            {
+                if (!st.blendParamX.empty())
+                    t += "param=" + st.blendParamX + "\n";
+            }
 
             for (const auto& child : st.blendChildren)
             {
@@ -2753,7 +2810,7 @@ string CAnimatorControllerEditorBox::SerializeText() const
                 }
                 else
                 {
-                    t += "child=" + child.motion + "," + child.directParam + "\n";
+                    t += "child=" + child.motion + "," + to_string(child.threshold) + "\n";
                 }
             }
         }

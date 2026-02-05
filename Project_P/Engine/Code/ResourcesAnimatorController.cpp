@@ -47,6 +47,21 @@ namespace
         return true;
     }
 
+    bool TryParseFloatValue(const string& s, _float& out)
+    {
+        char* endPtr = nullptr;
+        out = static_cast<_float>(strtof(s.c_str(), &endPtr));
+        if (s.c_str() == endPtr)
+            return false;
+        while (*endPtr != '\0')
+        {
+            if (!isspace(static_cast<unsigned char>(*endPtr)))
+                return false;
+            ++endPtr;
+        }
+        return true;
+    }
+
     bool TryParseBlendTreeType(const string& s, CAnimatorController::BLEND_TREE_TYPE& out)
     {
         string v = TrimString(s);
@@ -469,7 +484,13 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
                     else if (it->second.blendTree.type == CAnimatorController::BLEND_TREE_TYPE::DIRECT)
                     {
                         if (parts.size() >= 2)
-                            child.directParam = CEngineString::StringToWString(parts[1]);
+                        {
+                            _float value = 0.f;
+                            if (TryParseFloatValue(parts[1], value))
+                                child.threshold = value;
+                            else
+                                child.directParam = CEngineString::StringToWString(parts[1]);
+                        }
                     }
                     it->second.motionType = CAnimatorController::STATE_MOTION_TYPE::BLEND_TREE;
                     it->second.blendTree.children.push_back(child);
