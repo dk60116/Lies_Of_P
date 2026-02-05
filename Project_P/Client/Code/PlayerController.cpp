@@ -47,12 +47,8 @@ HRESULT CPlayerController::Initialize()
 	m_mStateList.insert({ PlayerState::Attack, new CPlayerState_Attack() });
 
 	auto loco = static_cast<CPlayerState_Locomotion*>(Get_PlayerState(PlayerState::Locomotion));
-	loco->SetChildren
-	(
-		Get_PlayerState(PlayerState::Idle),
-		Get_PlayerState(PlayerState::Move),
-		Get_PlayerState(PlayerState::Attack)
-	);
+
+	loco->SetChildren(m_mStateList);
 
 	m_pRoot = Get_PlayerState(PlayerState::Locomotion);
 
@@ -196,6 +192,7 @@ void CPlayerController::Update_Key()
 	KEY_CODE key_B = KEY_CODE::S;
 	KEY_CODE key_L = KEY_CODE::A;
 	KEY_CODE key_R = KEY_CODE::D;
+	KEY_CODE key_Guard = KEY_CODE::E;
 
 	_uint mouse0 = 0;
 
@@ -217,4 +214,8 @@ void CPlayerController::Update_Key()
 	m_mKeyHold[Attack] = CInput::GetInstance().GetMouseButton(mouse0);
 	m_mKeyDown[Attack] = CInput::GetInstance().GetMouseButtonDown(mouse0);
 	m_mKeyUp[Attack] = CInput::GetInstance().GetMouseButtonUp(mouse0);
+
+	m_mKeyHold[Guard] = CInput::GetInstance().GetKey(key_Guard);
+	m_mKeyDown[Guard] = CInput::GetInstance().GetKeyDown(key_Guard);
+	m_mKeyUp[Guard] = CInput::GetInstance().GetKeyUp(key_Guard);
 }

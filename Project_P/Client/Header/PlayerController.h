@@ -9,7 +9,7 @@ class CPlayerController final : public CComponent
     friend class CPlayerControllerContext;
 
 public:
-    enum KeyMapping { Forward, Back, Left, Right, Attack };
+    enum KeyMapping { Forward, Back, Left, Right, Jump, Attack, Attack_S, Guard };
 
     enum class PlayerState { Locomotion, Idle, Move, Attack };
 

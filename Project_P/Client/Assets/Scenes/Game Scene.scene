@@ -1,6 +1,4 @@
 SceneName : Game Scene
-Main_BG : MainMenu/Main_Backgrouond.png : [Texture]
-Main_Logo : MainMenu/Zelda_Logo.png : [Texture]
 // Eve Model
 EveBody_Model : Player/Eve/EveBody.fbx :  [Skinned Mesh] [Root : Root]
 EveHead_Model : Player/Eve/EveHead.fbx :  [Skinned Mesh]
@@ -25,8 +23,10 @@ EveFace_Base : Player/Eve/Texture/EveFace_BaseMap.png : [Texture]
 EveFace_Normal : Player/Eve/Texture/EveFace_NormalMap.png : [Texture]
 EveFace_ORM : Player/Eve/Texture/EveFace_ORMMap.png : [Texture]
 // Eve Hair
-// Eve Animations - Move
+// Eve Animations - Default
 Eve_Idle : Player/Eve/Animations/Eve_Idle.fbx :  [Animation Clip] [Loop]
+Eve_BattleIdle : Player/Eve/Animations/Eve_BattleIdle.fbx :  [Animation Clip] [Loop]
+// Eve Animations - Move
 Eve_Run_Forward_Start : Player/Eve/Animations/Eve_Run_Forward_Start.fbx :  [Animation Clip]
 Eve_Run_Forward_During : Player/Eve/Animations/Eve_Run_Forward_During.fbx :  [Animation Clip] [Loop]
 Eve_Run_Forward_End : Player/Eve/Animations/Eve_Run_Forward_End.fbx :  [Animation Clip]
@@ -37,12 +37,12 @@ Eve_Attack_Light_01 : Player/Eve/Animations/Eve_Attack_Light_01.fbx : [Animation
 Eve_Attack_Light_02 : Player/Eve/Animations/Eve_Attack_Light_02.fbx : [Animation Clip]
 Eve_Attack_Light_03 : Player/Eve/Animations/Eve_Attack_Light_03.fbx : [Animation Clip]
 Eve_Attack_Light_04 : Player/Eve/Animations/Eve_Attack_Light_04.fbx : [Animation Clip]
+// Eve Animations - Guard
+Eve_Guard_Start : Player/Eve/Animations/Eve_Guard_Start.fbx : [Animation Clip]
+Eve_Guard_Idle : Player/Eve/Animations/Eve_Guard_Idle.fbx : [Animation Clip]
 // Eve Animator Controller
 Eve_AnimatorController : Player/Eve/AnimatorController/Eve_AnimatorController.animatorcontroller : [Animator Controller]
 // Space
-//Sample_Terrain : Terrain : [1, 300, 300, 2.0, 50.0, Map/TerrainHeight.png]
-Terrain_MainTex : Map/Grass.png : [Texture]
 VahMedoh : Map/VahMedoh/VahMedoh_Body.fbx : [Mesh] [Material]
-WoodenSword : Weapons/WoodenSword.fbx : [Mesh] [Material]
 // UI
 HeartBar : UI/HUDUI/HeartBar.png : [Texture]

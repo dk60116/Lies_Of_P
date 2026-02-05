@@ -50,7 +50,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx)
             ealClip->Add_ActionTrigger(at);
             m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Enter", [this]()
                 {
-                    m_iCrtCombo = 0;
+                    ++m_iCrtCombo;
                     m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
                     m_pCtx->Animator()->SetBool(L"comboContinue", false);
                     m_bCanContinue = true;
@@ -99,7 +99,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx)
 
         // Turn
         {
-            CAnimationClip::ActionTrigger at = { termFrame, L"LightAttack0" + to_wstring(i) + L"_Turn" };
+            CAnimationClip::ActionTrigger at = { m_iTurnLock[i], L"LightAttack0" + to_wstring(i) + L"_Turn"};
             ealClip->Add_ActionTrigger(at);
             m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Turn", [this]()
                 {

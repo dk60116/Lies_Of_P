@@ -3,9 +3,7 @@
 
 CPlayerState_Locomotion::CPlayerState_Locomotion()
 	: m_pChild(nullptr)
-	, m_pMove(nullptr)
-	, m_pIdle(nullptr)
-	, m_pAttack(nullptr)
+	, m_mChildList({})
 {
 }
 
@@ -13,18 +11,16 @@ CPlayerState_Locomotion::~CPlayerState_Locomotion()
 {
 }
 
-void CPlayerState_Locomotion::SetChildren(CPlayerState* _idle, CPlayerState* _move, CPlayerState* _attack)
+void CPlayerState_Locomotion::SetChildren(const unordered_map<CPlayerController::PlayerState, CPlayerState*> _childList)
 {
-	m_pIdle = _idle;
-	m_pMove = _move;
-	m_pAttack = _attack;
+	m_mChildList = _childList;
 }
 
 void CPlayerState_Locomotion::Enter()
 {
 	__super::Enter();
 
-	m_pChild = m_pIdle;
+	m_pChild = m_mChildList[CPlayerController::PlayerState::Idle];
 
 	if (m_pChild) 
 		m_pChild->Enter();
@@ -37,9 +33,9 @@ void CPlayerState_Locomotion::Update()
 	m_pCtx->TickAttackBuffer();
 
 	if (m_pCtx->IsAttackActive() || m_pCtx->HasAttackBuffered())
-		TransitionTo(m_pAttack);
+		TransitionTo(m_mChildList[CPlayerController::PlayerState::Attack]);
 	else
-		TransitionTo(m_pCtx->IsMovePressed() ? m_pMove : m_pIdle);
+		TransitionTo(m_pCtx->IsMovePressed() ? m_mChildList[CPlayerController::PlayerState::Move] : m_mChildList[CPlayerController::PlayerState::Idle]);
 
 	if (m_pChild)
 		m_pChild->Update();

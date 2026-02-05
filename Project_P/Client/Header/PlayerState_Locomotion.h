@@ -1,5 +1,6 @@
 #pragma once
 #include "PlayerState.h"
+#include "PlayerController.h"
 
 class CPlayerState_Locomotion : public CPlayerState
 {
@@ -8,7 +9,7 @@ public:
     ~CPlayerState_Locomotion();
 
 public:
-    void SetChildren(CPlayerState* _idle, CPlayerState* _move, CPlayerState* _attack);
+    void SetChildren(const unordered_map<CPlayerController::PlayerState, CPlayerState*> _childList);
 
     void Enter() override;
     void Update() override;
@@ -19,8 +20,6 @@ private:
 
 private:
     CPlayerState* m_pChild;
-    CPlayerState* m_pIdle;
-    CPlayerState* m_pMove;
-    CPlayerState* m_pAttack;
+    unordered_map<CPlayerController::PlayerState, CPlayerState*> m_mChildList;
 };
 
