@@ -12,4 +12,11 @@ void CPlayerState_Idle::Update()
 	__super::Update();
 
 	m_pCtx->TickMove();
+
+	if (m_pCtx->IsBattle())
+	{
+		if (m_fPassedTime >= 3.f)
+			m_pCtx->SetBattle(false);
+	}
+
 }

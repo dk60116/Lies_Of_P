@@ -32,6 +32,19 @@ public:
 		LESS_EQUAL,
 	};
 
+	enum class STATE_MOTION_TYPE : _uint
+	{
+		CLIP,
+		BLEND_TREE,
+	};
+
+	enum class BLEND_TREE_TYPE : _uint
+	{
+		ONE_D,
+		TWO_D,
+		DIRECT,
+	};
+
 	struct ParameterDesc
 	{
 		wstring     name = L"";
@@ -69,8 +82,28 @@ public:
 		wstring name = L"";
 		wstring motionName = L""; 
 
+		STATE_MOTION_TYPE motionType = STATE_MOTION_TYPE::CLIP;
+
 		_float  speedMul = 1.f;
 		_float2 pos = {};
+
+		struct BlendTreeChild
+		{
+			wstring motionName = L"";
+			_float threshold = 0.f;
+			_float2 position = {};
+			wstring directParam = L"";
+		};
+
+		struct BlendTree
+		{
+			BLEND_TREE_TYPE type = BLEND_TREE_TYPE::ONE_D;
+			wstring paramX = L"";
+			wstring paramY = L"";
+			vector<BlendTreeChild> children = {};
+		};
+
+		BlendTree blendTree = {};
 
 		vector<Transition> transitions = {};
 	};
@@ -162,6 +195,7 @@ public:
 	const _bool GetBool(const wstring& n, _bool& out) const;
 	const _bool GetInt(const wstring& n, _bool& out) const;
 	const _bool GetFloat(const wstring& n, _float& out) const;
+	const _bool TryGetParamValue(const wstring& n, _float& out) const;
 
 public:
 	const wstring& Get_CurrentState() const { return m_strCurrentState; }

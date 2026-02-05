@@ -40,6 +40,7 @@ public:
 public:
     const _bool IsRunning() const;
     const _bool IsBattle() const;
+    void SetBattle(const _bool _value);
 
 private:
     void Update_Key();

@@ -72,6 +72,10 @@ public:
 	_float GetDesiredYawDeg() const;
 
 public:
+	const _bool IsBattle() const;
+	void SetBattle(const _bool _value);
+
+public:
 	void BufferAttack();
 	_bool ConsumeAttackBuffer();
 	_bool HasAttackBuffered() const;

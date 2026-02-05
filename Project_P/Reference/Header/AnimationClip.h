@@ -41,7 +41,7 @@ public:
 
 	struct ActionTrigger
 	{
-		_uint frame = 0;
+		_int frame = 0;
 		wstring actionName = L"";
 	};
 

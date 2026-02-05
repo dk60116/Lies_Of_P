@@ -2,7 +2,7 @@
 name=Eve_AnimatorController
 entry=Idle
 
-EntryStateTranslation=10,60
+EntryStateTranslation=-27,81
 Any_stateTranslation=-22,4
 
 [parameters]
@@ -18,14 +18,17 @@ bool IsGuard=false
 bool IsBattle=false
 
 [state Idle]
-motion=Eve_Idle
+blendTree=direct
+param=IsBattle
+child=Eve_Idle,0.000000
+child=Eve_BattleIdle,1.000000
 speedMul=1.000000
-pos=152,200
+pos=121,258
 
 [state Attack_Light_04]
 motion=Eve_Attack_Light_04
 speedMul=1.000000
-pos=-112,475
+pos=-112,481
 
 [state Run_Forward_Start]
 motion=Eve_Run_Forward_Start
@@ -45,7 +48,7 @@ pos=386,412
 [state Attack_Light_01]
 motion=Eve_Attack_Light_01
 speedMul=1.000000
-pos=-336,135
+pos=-357,160
 
 [state Run_TurnL]
 motion=Eve_Run_TurnL
@@ -60,12 +63,12 @@ pos=671,-181
 [state Attack_Light_02]
 motion=Eve_Attack_Light_02
 speedMul=1.000000
-pos=-399,326
+pos=-408,341
 
 [state Attack_Light_03]
 motion=Eve_Attack_Light_03
 speedMul=1.000000
-pos=-423,486
+pos=-411,492
 
 [state Guard_Start]
 motion=Eve_Guard_Start
@@ -76,11 +79,6 @@ pos=-102,-180
 motion=Eve_Guard_Idle
 speedMul=1.000000
 pos=-380,-176
-
-[state BattleIdle]
-motion=Eve_BattleIdle
-speedMul=1.000000
-pos=98,668
 
 [entry]
 to=Idle
@@ -343,7 +341,7 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Attack_Light_01->BattleIdle]
+[transition Attack_Light_01->Idle]
 blend=0.150000
 cond=comboContinue==false
 exitTime=0.800000
@@ -351,7 +349,7 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Attack_Light_02->BattleIdle]
+[transition Attack_Light_02->Idle]
 blend=0.150000
 cond=comboContinue==false
 exitTime=0.800000
@@ -359,7 +357,7 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Attack_Light_03->BattleIdle]
+[transition Attack_Light_03->Idle]
 blend=0.150000
 cond=comboContinue==false
 exitTime=0.800000
@@ -367,31 +365,10 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Attack_Light_04->BattleIdle]
+[transition Attack_Light_04->Idle]
 blend=0.150000
 cond=comboContinue==false
 exitTime=0.800000
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition Guard_Idle->BattleIdle]
-blend=0.150000
-exitTime=0.800000
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition BattleIdle->Run_Forward_Start]
-blend=0.150000
-cond=speed>0.100000
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition Run_End->BattleIdle]
-blend=0.150000
-cond=speed<=0.000000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

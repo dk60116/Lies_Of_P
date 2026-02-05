@@ -48,8 +48,24 @@ private:
 
     struct State
     {
+        enum class MotionType { Clip, BlendTree };
+        enum class BlendTreeType { OneD, TwoD, Direct };
+
+        struct BlendTreeChild
+        {
+            string motion;
+            _float threshold = 0.f;
+            ImVec2 position = ImVec2(0.f, 0.f);
+            string directParam;
+        };
+
         string name;
         string motion;
+        MotionType motionType = MotionType::Clip;
+        BlendTreeType blendTreeType = BlendTreeType::OneD;
+        string blendParamX;
+        string blendParamY;
+        vector<BlendTreeChild> blendChildren;
         _float speedMul = 1.f;
         ImVec2 pos = ImVec2(100, 100);
     };
@@ -84,6 +100,7 @@ private:
     static _bool StartsWith(const string& s, const char* prefix);
     static vector<string> Split(const string& s, char delim);
     static _bool TryParseVec2(const string& s, ImVec2& out);
+    static _bool TryParseFloatValue(const string& s, float& out);
 
     void RequestDeleteParam(int idx);
     void RequestDeleteState(const string& name);
@@ -101,7 +118,7 @@ private:
     void RenderAddStatePopup();
 
     void AddParam(const string& type, const string& name, const string& value);
-    void AddState(const string& name, const string& motion, _float speedMul);
+    void AddState(const string& name, const string& motion, _float speedMul, State::MotionType motionType);
 
     _bool ParamNameExists(const string& name) const;
     string MakeUniqueStateName(const string& base) const;
@@ -110,6 +127,7 @@ private:
 private:
     void EnsureMotionOptionsLoaded();
     void RefreshMotionOptions();
+    vector<string> CollectParamNames(const vector<string>& types) const;
 
     static string ExtractKeyBeforeColon(const string& line);
     static _bool IsSceneCommentLine(const string& trimmedLine);
@@ -170,6 +188,10 @@ private:
     array<char, 128> m_newStateName{};
     array<char, 256> m_newStateMotion{};
     _float m_newStateSpeedMul = 1.f;
+    _int m_iNewStateType = 0;
+    _int m_iNewBlendTreeType = 0;
+    array<char, 128> m_newBlendParamX{};
+    array<char, 128> m_newBlendParamY{};
     _int m_iStateSpawnIndex = 0;
 
     string m_strCreateError;
@@ -188,6 +210,7 @@ private:
 private:
     string m_pendingTransitionFrom;
     EPendingSource m_pendingSourceType = EPendingSource::None;
+    _int m_selectedBlendChildIndex = -1;
 };
 
 NS_END

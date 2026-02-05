@@ -115,6 +115,8 @@ void CPlayerState_Attack::Enter()
 
     m_pCtx->SetAttackActive(true);
 
+    m_pCtx->SetBattle(true);
+
     m_pCtx->Animator()->SetInt(L"AttackCombo", 0);
     m_pCtx->SetAnimMoveSpeed(0.f);
     m_pCtx->Animator()->SetTrigger(L"Attack");

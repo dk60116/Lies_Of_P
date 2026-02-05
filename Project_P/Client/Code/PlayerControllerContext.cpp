@@ -289,6 +289,16 @@ _float CPlayerControllerContext::GetDesiredYawDeg() const
 	return m_Cv_Move.m_fDesiredYaw;
 }
 
+const _bool CPlayerControllerContext::IsBattle() const
+{
+	return m_pController->IsBattle();
+}
+
+void CPlayerControllerContext::SetBattle(const _bool _value)
+{
+	m_pController->SetBattle(_value);
+}
+
 void CPlayerControllerContext::BufferAttack()
 {
 	m_Cv_Battle.m_bAttackBuffered = true;

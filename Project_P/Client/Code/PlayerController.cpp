@@ -186,6 +186,12 @@ const _bool CPlayerController::IsBattle() const
 	return m_bBattleMode;
 }
 
+void CPlayerController::SetBattle(const _bool _value)
+{
+	m_bBattleMode = _value;
+	m_pPlayer->Get_Animator()->SetBool(L"IsBattle", m_bBattleMode);
+}
+
 void CPlayerController::Update_Key()
 {
 	KEY_CODE key_F = KEY_CODE::W;
