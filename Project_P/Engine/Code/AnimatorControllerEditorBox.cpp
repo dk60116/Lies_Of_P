@@ -6,6 +6,7 @@
 #include <sstream>
 #include <cfloat>
 #include <algorithm>
+#include <cctype>
 
 static string ReadAllText(const fs::path& p)
 {
@@ -371,13 +372,17 @@ void CAnimatorControllerEditorBox::RenderLeftPanel()
     for (auto& kv : m_states)
     {
         const string& name = kv.first;
+        string label = name;
+        if (kv.second.motionType == State::MotionType::BlendTree)
+            label += " (Blend)";
         _bool selected = (m_eSelectType == ESelectType::State && m_selectedState == name);
 
         ImGui::PushID(name.c_str());
-        if (ImGui::Selectable(name.c_str(), selected))
+        if (ImGui::Selectable(label.c_str(), selected))
         {
             m_eSelectType = ESelectType::State;
             m_selectedState = name;
+            m_selectedBlendChildIndex = -1;
         }
 
         if (ImGui::BeginPopupContextItem("StateCtx"))
@@ -747,33 +752,179 @@ void CAnimatorControllerEditorBox::RenderInspector()
 
     EnsureMotionOptionsLoaded();
 
-    ImGui::Text("Motion");
-    ImGui::SameLine();
-    if (ImGui::SmallButton("Refresh##MotionList"))
+    const char* typeLabels[] = { "State", "BlendState" };
+    int typeIndex = (st.motionType == State::MotionType::BlendTree) ? 1 : 0;
+    if (ImGui::Combo("State Type", &typeIndex, typeLabels, IM_ARRAYSIZE(typeLabels)))
     {
-        m_bMotionOptionsDirty = true;
-        EnsureMotionOptionsLoaded();
+        if (typeIndex == 0)
+        {
+            st.motionType = State::MotionType::Clip;
+            st.blendChildren.clear();
+            st.blendParamX.clear();
+            st.blendParamY.clear();
+        }
+        else
+        {
+            st.motionType = State::MotionType::BlendTree;
+            st.motion.clear();
+        }
     }
 
-    const char* preview = st.motion.empty() ? "<None>" : st.motion.c_str();
-    if (ImGui::BeginCombo("Motion##Combo", preview))
+    if (st.motionType == State::MotionType::Clip)
     {
+        ImGui::Text("Motion");
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Refresh##MotionList"))
         {
-            bool sel = st.motion.empty();
-            if (ImGui::Selectable("<None>", sel))
-                st.motion.clear();
-            if (sel) ImGui::SetItemDefaultFocus();
+            m_bMotionOptionsDirty = true;
+            EnsureMotionOptionsLoaded();
         }
 
-        for (const auto& opt : m_motionOptions)
+        const char* preview = st.motion.empty() ? "<None>" : st.motion.c_str();
+        if (ImGui::BeginCombo("Motion##Combo", preview))
         {
-            bool sel = (st.motion == opt);
-            if (ImGui::Selectable(opt.c_str(), sel))
-                st.motion = opt;
-            if (sel) ImGui::SetItemDefaultFocus();
+            {
+                bool sel = st.motion.empty();
+                if (ImGui::Selectable("<None>", sel))
+                    st.motion.clear();
+                if (sel) ImGui::SetItemDefaultFocus();
+            }
+
+            for (const auto& opt : m_motionOptions)
+            {
+                bool sel = (st.motion == opt);
+                if (ImGui::Selectable(opt.c_str(), sel))
+                    st.motion = opt;
+                if (sel) ImGui::SetItemDefaultFocus();
+            }
+
+            ImGui::EndCombo();
+        }
+    }
+    else
+    {
+        const char* blendTypeLabels[] = { "1D", "2D", "Direct" };
+        int blendTypeIndex = 0;
+        if (st.blendTreeType == State::BlendTreeType::TwoD)
+            blendTypeIndex = 1;
+        else if (st.blendTreeType == State::BlendTreeType::Direct)
+            blendTypeIndex = 2;
+
+        if (ImGui::Combo("Blend Type", &blendTypeIndex, blendTypeLabels, IM_ARRAYSIZE(blendTypeLabels)))
+        {
+            if (blendTypeIndex == 0)
+                st.blendTreeType = State::BlendTreeType::OneD;
+            else if (blendTypeIndex == 1)
+                st.blendTreeType = State::BlendTreeType::TwoD;
+            else
+                st.blendTreeType = State::BlendTreeType::Direct;
         }
 
-        ImGui::EndCombo();
+        if (st.blendTreeType == State::BlendTreeType::OneD)
+        {
+            std::array<char, 128> buf{};
+            strcpy_s(buf.data(), buf.size(), st.blendParamX.c_str());
+            if (ImGui::InputText("Param", buf.data(), buf.size()))
+                st.blendParamX = buf.data();
+        }
+        else if (st.blendTreeType == State::BlendTreeType::TwoD)
+        {
+            std::array<char, 128> bufX{};
+            std::array<char, 128> bufY{};
+            strcpy_s(bufX.data(), bufX.size(), st.blendParamX.c_str());
+            strcpy_s(bufY.data(), bufY.size(), st.blendParamY.c_str());
+            if (ImGui::InputText("ParamX", bufX.data(), bufX.size()))
+                st.blendParamX = bufX.data();
+            if (ImGui::InputText("ParamY", bufY.data(), bufY.size()))
+                st.blendParamY = bufY.data();
+        }
+
+        ImGui::Separator();
+        ImGui::Text("Blend Children");
+
+        if (ImGui::Button("Add Child"))
+        {
+            State::BlendTreeChild child{};
+            st.blendChildren.push_back(child);
+            m_selectedBlendChildIndex = (int)st.blendChildren.size() - 1;
+        }
+
+        if (!st.blendChildren.empty())
+        {
+            if (m_selectedBlendChildIndex < 0 || m_selectedBlendChildIndex >= (int)st.blendChildren.size())
+                m_selectedBlendChildIndex = 0;
+
+            if (ImGui::BeginListBox("##BlendChildList", ImVec2(-FLT_MIN, 100.f)))
+            {
+                for (int i = 0; i < (int)st.blendChildren.size(); ++i)
+                {
+                    const bool isSelected = (m_selectedBlendChildIndex == i);
+                    string label = st.blendChildren[i].motion.empty() ? "<None>" : st.blendChildren[i].motion;
+                    if (ImGui::Selectable(label.c_str(), isSelected))
+                        m_selectedBlendChildIndex = i;
+                    if (isSelected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndListBox();
+            }
+
+            if (m_selectedBlendChildIndex >= 0 && m_selectedBlendChildIndex < (int)st.blendChildren.size())
+            {
+                auto& child = st.blendChildren[m_selectedBlendChildIndex];
+
+                ImGui::Text("Child Motion");
+                ImGui::SameLine();
+                if (ImGui::SmallButton("Refresh##BlendChildMotionList"))
+                {
+                    m_bMotionOptionsDirty = true;
+                    EnsureMotionOptionsLoaded();
+                }
+
+                const char* childPreview = child.motion.empty() ? "<None>" : child.motion.c_str();
+                if (ImGui::BeginCombo("##BlendChildMotionCombo", childPreview))
+                {
+                    {
+                        bool sel = child.motion.empty();
+                        if (ImGui::Selectable("<None>", sel))
+                            child.motion.clear();
+                        if (sel) ImGui::SetItemDefaultFocus();
+                    }
+
+                    for (const auto& opt : m_motionOptions)
+                    {
+                        bool sel = (child.motion == opt);
+                        if (ImGui::Selectable(opt.c_str(), sel))
+                            child.motion = opt;
+                        if (sel) ImGui::SetItemDefaultFocus();
+                    }
+
+                    ImGui::EndCombo();
+                }
+
+                if (st.blendTreeType == State::BlendTreeType::OneD)
+                {
+                    ImGui::DragFloat("Threshold", &child.threshold, 0.01f, -1000.f, 1000.f);
+                }
+                else if (st.blendTreeType == State::BlendTreeType::TwoD)
+                {
+                    ImGui::DragFloat2("Position", (float*)&child.position, 0.01f, -1000.f, 1000.f);
+                }
+                else
+                {
+                    std::array<char, 128> buf{};
+                    strcpy_s(buf.data(), buf.size(), child.directParam.c_str());
+                    if (ImGui::InputText("Direct Param", buf.data(), buf.size()))
+                        child.directParam = buf.data();
+                }
+
+                if (ImGui::Button("Remove Child"))
+                {
+                    st.blendChildren.erase(st.blendChildren.begin() + m_selectedBlendChildIndex);
+                    if (m_selectedBlendChildIndex >= (int)st.blendChildren.size())
+                        m_selectedBlendChildIndex = (int)st.blendChildren.size() - 1;
+                }
+            }
+        }
     }
 
     ImGui::DragFloat("SpeedMul", &st.speedMul, 0.01f, 0.0f, 10.0f);
@@ -1453,6 +1604,10 @@ void CAnimatorControllerEditorBox::RequestAddState()
     m_newStateName.fill(0);
     m_newStateMotion.fill(0);
     m_newStateSpeedMul = 1.f;
+    m_iNewStateType = 0;
+    m_iNewBlendTreeType = 0;
+    m_newBlendParamX.fill(0);
+    m_newBlendParamY.fill(0);
 
     strcpy_s(m_newStateName.data(), m_newStateName.size(), "NewState");
 
@@ -1566,35 +1721,54 @@ void CAnimatorControllerEditorBox::RenderAddStatePopup()
 
         ImGui::InputText("Name", m_newStateName.data(), m_newStateName.size());
 
+        const char* stateTypeLabels[] = { "State", "BlendState" };
+        ImGui::Combo("Type", &m_iNewStateType, stateTypeLabels, IM_ARRAYSIZE(stateTypeLabels));
+
         EnsureMotionOptionsLoaded();
 
-        ImGui::Text("Motion");
-        ImGui::SameLine();
-        if (ImGui::SmallButton("Refresh##NewStateMotionList"))
+        if (m_iNewStateType == 0)
         {
-            m_bMotionOptionsDirty = true;
-            EnsureMotionOptionsLoaded();
+            ImGui::Text("Motion");
+            ImGui::SameLine();
+            if (ImGui::SmallButton("Refresh##NewStateMotionList"))
+            {
+                m_bMotionOptionsDirty = true;
+                EnsureMotionOptionsLoaded();
+            }
+
+            const char* preview = (m_newStateMotion[0] == '\0') ? "<None>" : m_newStateMotion.data();
+            if (ImGui::BeginCombo("##NewStateMotionCombo", preview))
+            {
+                {
+                    bool sel = (m_newStateMotion[0] == '\0');
+                    if (ImGui::Selectable("<None>", sel))
+                        m_newStateMotion[0] = '\0';
+                    if (sel) ImGui::SetItemDefaultFocus();
+                }
+
+                for (const auto& opt : m_motionOptions)
+                {
+                    bool sel = (opt == std::string(m_newStateMotion.data()));
+                    if (ImGui::Selectable(opt.c_str(), sel))
+                        strcpy_s(m_newStateMotion.data(), m_newStateMotion.size(), opt.c_str());
+                    if (sel) ImGui::SetItemDefaultFocus();
+                }
+
+                ImGui::EndCombo();
+            }
         }
-
-        const char* preview = (m_newStateMotion[0] == '\0') ? "<None>" : m_newStateMotion.data();
-        if (ImGui::BeginCombo("##NewStateMotionCombo", preview))
+        else
         {
-            {
-                bool sel = (m_newStateMotion[0] == '\0');
-                if (ImGui::Selectable("<None>", sel))
-                    m_newStateMotion[0] = '\0';
-                if (sel) ImGui::SetItemDefaultFocus();
-            }
+            const char* blendTypeLabels[] = { "1D", "2D", "Direct" };
+            ImGui::Combo("Blend Type", &m_iNewBlendTreeType, blendTypeLabels, IM_ARRAYSIZE(blendTypeLabels));
 
-            for (const auto& opt : m_motionOptions)
+            if (m_iNewBlendTreeType == 0)
+                ImGui::InputText("Param", m_newBlendParamX.data(), m_newBlendParamX.size());
+            else if (m_iNewBlendTreeType == 1)
             {
-                bool sel = (opt == std::string(m_newStateMotion.data()));
-                if (ImGui::Selectable(opt.c_str(), sel))
-                    strcpy_s(m_newStateMotion.data(), m_newStateMotion.size(), opt.c_str());
-                if (sel) ImGui::SetItemDefaultFocus();
+                ImGui::InputText("ParamX", m_newBlendParamX.data(), m_newBlendParamX.size());
+                ImGui::InputText("ParamY", m_newBlendParamY.data(), m_newBlendParamY.size());
             }
-
-            ImGui::EndCombo();
         }
 
         ImGui::DragFloat("SpeedMul", &m_newStateSpeedMul, 0.01f, 0.0f, 10.0f);
@@ -1618,7 +1792,8 @@ void CAnimatorControllerEditorBox::RenderAddStatePopup()
             {
                 string uniq = MakeUniqueStateName(name);
                 string motion = Trim(m_newStateMotion.data());
-                AddState(uniq, motion, m_newStateSpeedMul);
+                State::MotionType motionType = (m_iNewStateType == 0) ? State::MotionType::Clip : State::MotionType::BlendTree;
+                AddState(uniq, motion, m_newStateSpeedMul, motionType);
                 ImGui::CloseCurrentPopup();
             }
         }
@@ -1646,11 +1821,24 @@ void CAnimatorControllerEditorBox::AddParam(const string& type, const string& na
     m_iSelectedParamIndex = (int)m_params.size() - 1;
 }
 
-void CAnimatorControllerEditorBox::AddState(const string& name, const string& motion, _float speedMul)
+void CAnimatorControllerEditorBox::AddState(const string& name, const string& motion, _float speedMul, State::MotionType motionType)
 {
     State st{};
     st.name = name;
     st.motion = motion;
+    st.motionType = motionType;
+    if (motionType == State::MotionType::BlendTree)
+    {
+        st.motion.clear();
+        if (m_iNewBlendTreeType == 1)
+            st.blendTreeType = State::BlendTreeType::TwoD;
+        else if (m_iNewBlendTreeType == 2)
+            st.blendTreeType = State::BlendTreeType::Direct;
+        else
+            st.blendTreeType = State::BlendTreeType::OneD;
+        st.blendParamX = Trim(m_newBlendParamX.data());
+        st.blendParamY = Trim(m_newBlendParamY.data());
+    }
     st.speedMul = speedMul;
 
     const int col = 4;
@@ -2134,6 +2322,8 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
                     State st{};
                     st.name = curState;
                     st.motion = "";
+                    st.motionType = State::MotionType::Clip;
+                    st.blendTreeType = State::BlendTreeType::OneD;
                     st.speedMul = 1.f;
                     st.pos = ImVec2(100, 100);
                     m_states[curState] = st;
@@ -2235,7 +2425,67 @@ _bool CAnimatorControllerEditorBox::ParseText(const string& text)
                 string k = Trim(line.substr(0, eq));
                 string v = Trim(line.substr(eq + 1));
 
-                if (k == "motion") st.motion = v;
+                if (k == "motion")
+                {
+                    st.motion = v;
+                    st.motionType = State::MotionType::Clip;
+                }
+                else if (k == "blendTree" || k == "blendtree")
+                {
+                    st.motionType = State::MotionType::BlendTree;
+                    st.blendChildren.clear();
+                    string lower = v;
+                    for (auto& c : lower)
+                        c = static_cast<char>(tolower(c));
+                    if (lower == "2d" || lower == "two_d" || lower == "two-d")
+                        st.blendTreeType = State::BlendTreeType::TwoD;
+                    else if (lower == "direct")
+                        st.blendTreeType = State::BlendTreeType::Direct;
+                    else
+                        st.blendTreeType = State::BlendTreeType::OneD;
+                }
+                else if (k == "param")
+                {
+                    st.blendParamX = v;
+                }
+                else if (k == "paramX")
+                {
+                    st.blendParamX = v;
+                }
+                else if (k == "paramY")
+                {
+                    st.blendParamY = v;
+                }
+                else if (k == "child")
+                {
+                    auto parts = Split(v, ',');
+                    for (auto& part : parts)
+                        part = Trim(part);
+                    if (parts.empty() || parts[0].empty())
+                        continue;
+                    State::BlendTreeChild child{};
+                    child.motion = parts[0];
+                    if (st.blendTreeType == State::BlendTreeType::OneD)
+                    {
+                        if (parts.size() >= 2)
+                            child.threshold = (float)atof(parts[1].c_str());
+                    }
+                    else if (st.blendTreeType == State::BlendTreeType::TwoD)
+                    {
+                        if (parts.size() >= 3)
+                        {
+                            child.position.x = (float)atof(parts[1].c_str());
+                            child.position.y = (float)atof(parts[2].c_str());
+                        }
+                    }
+                    else
+                    {
+                        if (parts.size() >= 2)
+                            child.directParam = parts[1];
+                    }
+                    st.motionType = State::MotionType::BlendTree;
+                    st.blendChildren.push_back(child);
+                }
                 else if (k == "speedMul") st.speedMul = (float)atof(v.c_str());
                 else if (k == "pos") TryParseVec2(v, st.pos);
             }
@@ -2323,7 +2573,50 @@ string CAnimatorControllerEditorBox::SerializeText() const
     {
         const auto& st = kv.second;
         t += "[state " + st.name + "]\n";
-        t += "motion=" + st.motion + "\n";
+        if (st.motionType == State::MotionType::BlendTree)
+        {
+            string blendType = "1d";
+            if (st.blendTreeType == State::BlendTreeType::TwoD)
+                blendType = "2d";
+            else if (st.blendTreeType == State::BlendTreeType::Direct)
+                blendType = "direct";
+
+            t += "blendTree=" + blendType + "\n";
+            if (st.blendTreeType == State::BlendTreeType::OneD)
+            {
+                if (!st.blendParamX.empty())
+                    t += "param=" + st.blendParamX + "\n";
+            }
+            else if (st.blendTreeType == State::BlendTreeType::TwoD)
+            {
+                if (!st.blendParamX.empty())
+                    t += "paramX=" + st.blendParamX + "\n";
+                if (!st.blendParamY.empty())
+                    t += "paramY=" + st.blendParamY + "\n";
+            }
+
+            for (const auto& child : st.blendChildren)
+            {
+                if (child.motion.empty())
+                    continue;
+                if (st.blendTreeType == State::BlendTreeType::OneD)
+                {
+                    t += "child=" + child.motion + "," + to_string(child.threshold) + "\n";
+                }
+                else if (st.blendTreeType == State::BlendTreeType::TwoD)
+                {
+                    t += "child=" + child.motion + "," + to_string(child.position.x) + "," + to_string(child.position.y) + "\n";
+                }
+                else
+                {
+                    t += "child=" + child.motion + "," + child.directParam + "\n";
+                }
+            }
+        }
+        else
+        {
+            t += "motion=" + st.motion + "\n";
+        }
         t += "speedMul=" + to_string(st.speedMul) + "\n";
         t += "pos=" + to_string((int)st.pos.x) + "," + to_string((int)st.pos.y) + "\n\n";
     }
