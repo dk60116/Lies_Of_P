@@ -10,13 +10,12 @@ public:
 public:
     void SetChildren(CPlayerState* _idle, CPlayerState* _move, CPlayerState* _attack);
 
-    void Initialize(CPlayerControllerContext& _ctx) override;
-    void Enter(CPlayerControllerContext& _ctx) override;
-    void Update(CPlayerControllerContext& _ctx) override;
-    void Exit(CPlayerControllerContext& _ctx) override;
+    void Enter() override;
+    void Update() override;
+    void Exit() override;
 
 private:
-    void TransitionTo(CPlayerControllerContext& _ctx, CPlayerState* _next);
+    void TransitionTo(CPlayerState* _next);
 
 private:
     CPlayerState* m_pChild;

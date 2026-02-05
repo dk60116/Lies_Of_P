@@ -1,19 +1,15 @@
 #include "cpch.h"
 #include "PlayerState_Idle.h"
 
-void CPlayerState_Idle::Initialize(CPlayerControllerContext& _ctx)
+void CPlayerState_Idle::Enter()
 {
+	__super::Enter();
+	m_pCtx->SetAnimMoveSpeed(0.f);
 }
 
-void CPlayerState_Idle::Enter(CPlayerControllerContext& _ctx)
+void CPlayerState_Idle::Update()
 {
-	__super::Enter(_ctx);
-	_ctx.SetAnimMoveSpeed(0.f);
-}
+	__super::Update();
 
-void CPlayerState_Idle::Update(CPlayerControllerContext& _ctx)
-{
-	__super::Update(_ctx);
-
-	_ctx.TickMove();
+	m_pCtx->TickMove();
 }

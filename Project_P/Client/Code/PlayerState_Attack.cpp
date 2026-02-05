@@ -27,35 +27,39 @@ CPlayerState_Attack::~CPlayerState_Attack()
 {
 }
 
-void CPlayerState_Attack::Initialize(CPlayerControllerContext& _ctx)
+void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx)
 {
-    CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_Light_01 (Animation Clip)");
-    CAnimationClip::ActionTrigger at = { 0, L"LightAttack01_Enter" };
-    ealClip->Add_ActionTrigger(at);
+    __super::Initialize(_ctx);
 
-    _ctx.Animator()->RegisterActionHandler(L"LightAttack01_Enter", []() { CDebug::LogError("Enter01"); });
+    CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_Light_01 (Animation Clip)");
+
+    {
+        CAnimationClip::ActionTrigger at = { 0, L"LightAttack01_Enter" };
+        ealClip->Add_ActionTrigger(at);
+        m_pCtx->Animator()->RegisterActionHandler(L"LightAttack01_Enter", []() { CDebug::LogError("Enter01"); });
+    }
 }
 
-void CPlayerState_Attack::Enter(CPlayerControllerContext& _ctx)
+void CPlayerState_Attack::Enter()
 {
-	__super::Enter(_ctx);
+	__super::Enter();
 
-    _ctx.SetAttackActive(true);
+    m_pCtx->SetAttackActive(true);
 
-    _ctx.SetAnimMoveSpeed(0.f);
-    _ctx.Animator()->SetTrigger(L"Attack");
-    _ctx.Animator()->SetBool(L"IsAttack", true);
-    _ctx.Animator()->SetBool(L"comboContinue", false);
+    m_pCtx->SetAnimMoveSpeed(0.f);
+    m_pCtx->Animator()->SetTrigger(L"Attack");
+    m_pCtx->Animator()->SetBool(L"IsAttack", true);
+    m_pCtx->Animator()->SetBool(L"comboContinue", false);
 
     m_iCombo = 0;
     m_iPrevCombo = 0;
 }
 
-void CPlayerState_Attack::Update(CPlayerControllerContext& _ctx)
+void CPlayerState_Attack::Update()
 {
-    __super::Update(_ctx);
+    __super::Update();
 
-    const _float nt = _ctx.Animator()->GetNormalizedTime();
+    const _float nt = m_pCtx->Animator()->GetNormalizedTime();
 
     if (m_iCombo != m_iPrevCombo)
         m_iPrevCombo = m_iCombo;
@@ -66,50 +70,41 @@ void CPlayerState_Attack::Update(CPlayerControllerContext& _ctx)
         {
             if (nt < m_fComboLimit[i])
             {
-                if (_ctx.IsLightAttackPressed())
+                if (m_pCtx->IsLightAttackPressed())
                 {
-                    _ctx.Animator()->SetBool(L"comboContinue", true);
-                    TurnPlayer(_ctx);
+                    m_pCtx->Animator()->SetBool(L"comboContinue", true);
+                    TurnPlayer();
                     ++m_iCombo;
                     m_fPassedTime = 0.f;
                 }
             }
             else
             {
-                if (_ctx.IsLightAttackPressed())
-                    Enter(_ctx);
+                if (m_pCtx->IsLightAttackPressed())
+                    Enter();
             }
 
             if (nt > m_fEndTime[i])
-                _ctx.SetAttackActive(false);
+                m_pCtx->SetAttackActive(false);
         }
 
         if (m_iCombo >= 4)
-            _ctx.SetAttackActive(false);
+            m_pCtx->SetAttackActive(false);
     }
 }
 
-void CPlayerState_Attack::Exit(CPlayerControllerContext& _ctx)
+void CPlayerState_Attack::Exit()
 {
-    __super::Exit(_ctx);
+    __super::Exit();
 
-    _ctx.SetAttackActive(false);
+    m_pCtx->SetAttackActive(false);
     m_bQueuedNext = false;
 
-    _ctx.Animator()->SetBool(L"comboContinue", false);
-    _ctx.Animator()->SetBool(L"IsAttack", false);
+    m_pCtx->Animator()->SetBool(L"comboContinue", false);
+    m_pCtx->Animator()->SetBool(L"IsAttack", false);
 }
 
-void CPlayerState_Attack::PlayStep(CPlayerControllerContext& _ctx, _int _idx)
+void CPlayerState_Attack::TurnPlayer()
 {
-    auto anim = _ctx.PlayerStat();
-    auto a = _ctx.Animator();
-
-    m_fPassedTime = 0.f;
-    m_bQueuedNext = false;
-}
-
-void CPlayerState_Attack::TurnPlayer(CPlayerControllerContext& _ctx)
-{
-    _ctx.SetPlayerYaw(_ctx.GetCameraYaw());
+    m_pCtx->SetPlayerYaw(m_pCtx->GetCameraYaw());
 }

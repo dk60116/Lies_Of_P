@@ -735,7 +735,7 @@ void CAnimator::ResetTrigger(const wstring& n)
 	m_ControllerInst.ResetTrigger(n);
 }
 
-void CAnimator::RegisterActionHandler(const wstring& name, const std::function<void()>& handler)
+void CAnimator::RegisterActionHandler(const wstring& name, const function<void()>& handler)
 {
 	m_mActionHandlers[name] = handler;
 }

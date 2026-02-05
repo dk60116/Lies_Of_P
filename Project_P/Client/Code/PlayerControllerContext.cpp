@@ -113,7 +113,7 @@ void CPlayerControllerContext::TickMove()
 
 	if (IsAttackActive())
 	{
-		const _float maxDelta = PlayerStat().moveDecelRat * dt;
+		const _float maxDelta = PlayerStatus().moveDecelRat * dt;
 		m_Cv_Move.m_fMove01 = MoveTowards1D(m_Cv_Move.m_fMove01, 0.f, maxDelta);
 
 		return;
@@ -128,7 +128,7 @@ void CPlayerControllerContext::TickMove()
 	}
 
 	const _float target01 = m_Cv_Move.m_bMovePressed ? 1.f : 0.f;
-	const _float rate = (target01 > m_Cv_Move.m_fMove01) ? PlayerStat().moveAccelRate : PlayerStat().moveDecelRat;
+	const _float rate = (target01 > m_Cv_Move.m_fMove01) ? PlayerStatus().moveAccelRate : PlayerStatus().moveDecelRat;
 	const _float maxDelta = rate * dt;
 
 	m_Cv_Move.m_fMove01 = MoveTowards1D(m_Cv_Move.m_fMove01, target01, maxDelta);
@@ -146,7 +146,7 @@ void CPlayerControllerContext::TickMove()
 		dir = vector3(0.f, 0.f, 0.f); 
 	}
 
-	const _float curSpeed = PlayerStat().moveSpeed * m_Cv_Move.m_fMove01;
+	const _float curSpeed = PlayerStatus().moveSpeed * m_Cv_Move.m_fMove01;
 	AddPosition(dir * curSpeed * dt);
 
 	SetAnimMoveSpeed(m_Cv_Move.m_fMove01);
@@ -182,7 +182,7 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 		SetAnimTurn(m_Cv_Move.m_turnDir);
 		m_pPlayer->Get_Animator()->SetTrigger(L"turn");
 
-		StartMoveLock(PlayerStat().bigTurnStopSec);
+		StartMoveLock(PlayerStatus().bigTurnStopSec);
 
 		m_Cv_Move.m_bBigTurnLatched = true;
 	}
@@ -209,7 +209,7 @@ CAnimator* CPlayerControllerContext::Animator()
 	return m_pPlayer->Get_Animator();
 }
 
-const CPlayer::PlayerStatus& CPlayerControllerContext::PlayerStat()
+const CPlayer::PlayerStatus& CPlayerControllerContext::PlayerStatus()
 {
 	return m_pPlayer->Get_PlayerStatus();
 }

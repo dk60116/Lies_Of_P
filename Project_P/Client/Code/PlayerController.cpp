@@ -70,14 +70,16 @@ void CPlayerController::Awake()
 void CPlayerController::Start()
 {
 	if (m_pPlayer && m_pPlayerCam && m_pRoot)
-	{
 		m_ctx.Bind(m_pPlayer, m_pPlayerCam, this);
-		m_pRoot->Enter(m_ctx);
-		m_bFSMStarted = true;
-	}
 
 	for (TRAVERSAL_ITER(m_mStateList, it))
-		(*it).second->Initialize(m_ctx);
+		(*it).second->Initialize(&m_ctx);
+
+	if (m_pPlayer && m_pPlayerCam && m_pRoot)
+	{
+		m_pRoot->Enter();
+		m_bFSMStarted = true;
+	}
 }
 
 void CPlayerController::Update()
@@ -89,7 +91,7 @@ void CPlayerController::Update()
         if (m_pPlayer && m_pPlayerCam && m_pRoot)
         {
             m_ctx.Bind(m_pPlayer, m_pPlayerCam, this);
-            m_pRoot->Enter(m_ctx);
+            m_pRoot->Enter();
             m_bFSMStarted = true;
         }
         else
@@ -147,7 +149,7 @@ void CPlayerController::Update()
         m_bRunning = false;
     }
 
-    m_pRoot->Update(m_ctx);
+    m_pRoot->Update();
 }
 
 void CPlayerController::LateUpdate()

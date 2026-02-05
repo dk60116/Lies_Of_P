@@ -4,8 +4,7 @@
 class CPlayerState_Idle final : public CPlayerState
 {
 public:
-    void Initialize(CPlayerControllerContext& _ctx) override;
-    void Enter(CPlayerControllerContext& _ctx) override;
-    void Update(CPlayerControllerContext& _ctx) override;
+    void Enter() override;
+    void Update() override;
 };
 

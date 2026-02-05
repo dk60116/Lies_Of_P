@@ -17,14 +17,13 @@ private:
     };
 
 public:
-    void Initialize(CPlayerControllerContext& _ctx) override;
-    void Enter(CPlayerControllerContext& _ctx) override;
-    void Update(CPlayerControllerContext& _ctx) override;
-    void Exit(CPlayerControllerContext& _ctx) override;
+    void Initialize(CPlayerControllerContext* _ctx) override;
+    void Enter() override;
+    void Update() override;
+    void Exit() override;
 
 private:
-    void PlayStep(CPlayerControllerContext& _ctx, _int _idx);
-    void TurnPlayer(CPlayerControllerContext& _ctx);
+    void TurnPlayer();
 
 private:
     _int  m_iCombo, m_iPrevCombo;

@@ -142,7 +142,6 @@ void CSceneManager::LoadComplete()
 
 	m_pCrtScene->Bind_ObjectsTransform(sceneTransformInfo);
 	m_pCrtScene->Awake();
-	m_pCrtScene->Start();
 }
 
 CCamera* CSceneManager::Get_EditorCamera()

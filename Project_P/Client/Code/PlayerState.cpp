@@ -2,7 +2,8 @@
 #include "PlayerState.h"
 
 CPlayerState::CPlayerState()
-	: m_fPassedTime(0.f)
+	: m_pCtx(nullptr)
+	, m_fPassedTime(0.f)
 {
 }
 
@@ -10,17 +11,22 @@ CPlayerState::~CPlayerState()
 {
 }
 
-void CPlayerState::Enter(CPlayerControllerContext&)
+void CPlayerState::Initialize(CPlayerControllerContext* _ctx)
+{
+	m_pCtx = _ctx;
+}
+
+void CPlayerState::Enter()
 {
 	m_fPassedTime = 0.f;
 }
 
-void CPlayerState::Exit(CPlayerControllerContext&)
+void CPlayerState::Exit()
 {
 	m_fPassedTime = 0.f;
 }
 
-void CPlayerState::Update(CPlayerControllerContext&)
+void CPlayerState::Update()
 {
 	m_fPassedTime += DELTA_TIME;
 }

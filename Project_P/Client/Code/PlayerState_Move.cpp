@@ -1,25 +1,21 @@
 #include "cpch.h"
 #include "PlayerState_Move.h"
 
-void CPlayerState_Move::Initialize(CPlayerControllerContext& _ctx)
+void CPlayerState_Move::Enter()
 {
+    m_pCtx->SetAnimMoveSpeed(0.2f);
 }
 
-void CPlayerState_Move::Enter(CPlayerControllerContext& _ctx)
+void CPlayerState_Move::Update()
 {
-    _ctx.SetAnimMoveSpeed(0.2f);
-}
+    __super::Update();
 
-void CPlayerState_Move::Update(CPlayerControllerContext& _ctx)
-{
-    __super::Update(_ctx);
+    const vector3& dir = m_pCtx->GetMoveWorldDir();
+    const _float speed = m_pCtx->PlayerStatus().moveSpeed;
+    m_pCtx->AddPosition(dir * speed * DELTA_TIME);
 
-    const vector3& dir = _ctx.GetMoveWorldDir();
-    const _float speed = _ctx.PlayerStat().moveSpeed;
-    _ctx.AddPosition(dir * speed * DELTA_TIME);
-
-    _ctx.BeginTurnTo(_ctx.GetDesiredYawDeg());
+    m_pCtx->BeginTurnTo(m_pCtx->GetDesiredYawDeg());
 
     if (m_fPassedTime >= 0.5f)
-        _ctx.SetAnimMoveSpeed(1.f);
+        m_pCtx->SetAnimMoveSpeed(1.f);
 }

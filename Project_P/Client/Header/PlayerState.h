@@ -11,12 +11,13 @@ public:
     CPlayerState();
     ~CPlayerState();
 
-    virtual void Initialize(CPlayerControllerContext&) PURE;
-    virtual void Enter(CPlayerControllerContext&);
-    virtual void Exit(CPlayerControllerContext&);
-    virtual void Update(CPlayerControllerContext&) PURE;
+    virtual void Initialize(CPlayerControllerContext* _ctx);
+    virtual void Enter();
+    virtual void Exit();
+    virtual void Update() PURE;
 
 protected:
+    CPlayerControllerContext* m_pCtx;
     _float m_fPassedTime;
 };
 

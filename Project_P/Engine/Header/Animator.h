@@ -54,7 +54,7 @@ public:
     void SetFloat(const wstring& n, _float v);
     void SetTrigger(const wstring& n);
     void ResetTrigger(const wstring& n);
-    void RegisterActionHandler(const wstring& name, const std::function<void()>& handler);
+    void RegisterActionHandler(const wstring& name, const function<void()>& handler);
     void UnregisterActionHandler(const wstring& name);
     void ClearActionHandlers();
 
@@ -85,7 +85,7 @@ private:
     _float m_fCurrentTime, m_fBlendTime, m_fBlendDuration, m_fNextTime;
     _int m_iPrevTriggerFrame;
     CAnimationClip* m_pPrevTriggerClip;
-    unordered_map<wstring, std::function<void()>> m_mActionHandlers;
+    unordered_map<wstring, function<void()>> m_mActionHandlers;
     _float m_fPlaybackSpeed;
     vector<_matrix> m_vFinalBoneMatrix;
 	AnimatorStateInfo m_sStateInfo;

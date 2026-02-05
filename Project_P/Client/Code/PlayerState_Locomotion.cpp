@@ -5,6 +5,7 @@ CPlayerState_Locomotion::CPlayerState_Locomotion()
 	: m_pChild(nullptr)
 	, m_pMove(nullptr)
 	, m_pIdle(nullptr)
+	, m_pAttack(nullptr)
 {
 }
 
@@ -19,53 +20,51 @@ void CPlayerState_Locomotion::SetChildren(CPlayerState* _idle, CPlayerState* _mo
 	m_pAttack = _attack;
 }
 
-void CPlayerState_Locomotion::Initialize(CPlayerControllerContext& _ctx)
+void CPlayerState_Locomotion::Enter()
 {
-}
-
-void CPlayerState_Locomotion::Enter(CPlayerControllerContext& _ctx)
-{
-	__super::Enter(_ctx);
+	__super::Enter();
 
 	m_pChild = m_pIdle;
+
 	if (m_pChild) 
-		m_pChild->Enter(_ctx);
+		m_pChild->Enter();
 }
 
-void CPlayerState_Locomotion::Update(CPlayerControllerContext& _ctx)
+void CPlayerState_Locomotion::Update()
 {
-	__super::Update(_ctx);
+	__super::Update();
 
-	_ctx.TickAttackBuffer();
+	m_pCtx->TickAttackBuffer();
 
-	if (_ctx.IsAttackActive() || _ctx.HasAttackBuffered())
-		TransitionTo(_ctx, m_pAttack);
+	if (m_pCtx->IsAttackActive() || m_pCtx->HasAttackBuffered())
+		TransitionTo(m_pAttack);
 	else
-		TransitionTo(_ctx, _ctx.IsMovePressed() ? m_pMove : m_pIdle);
+		TransitionTo(m_pCtx->IsMovePressed() ? m_pMove : m_pIdle);
 
 	if (m_pChild)
-		m_pChild->Update(_ctx);
+		m_pChild->Update();
 
-	_ctx.TickTurn(_ctx.PlayerStat().turnSpeed);
-	_ctx.TickMove();
+	m_pCtx->TickTurn(m_pCtx->PlayerStatus().turnSpeed);
+	m_pCtx->TickMove();
 }
 
-void CPlayerState_Locomotion::Exit(CPlayerControllerContext& _ctx)
+void CPlayerState_Locomotion::Exit()
 {
-	__super::Exit(_ctx);
+	__super::Exit();
 
 	if (m_pChild)
-		m_pChild->Exit(_ctx);
+		m_pChild->Exit();
+
 	m_pChild = nullptr;
 }
 
-void CPlayerState_Locomotion::TransitionTo(CPlayerControllerContext& _ctx, CPlayerState* _next)
+void CPlayerState_Locomotion::TransitionTo(CPlayerState* _next)
 {
 	if (!_next || _next == m_pChild)
 		return;
 
 	if (m_pChild)
-		m_pChild->Exit(_ctx);
+		m_pChild->Exit();
 	m_pChild = _next;
-	m_pChild->Enter(_ctx);
+	m_pChild->Enter();
 }
