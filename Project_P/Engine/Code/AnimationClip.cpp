@@ -72,11 +72,10 @@ _int CAnimationClip::Sample(_float _timeSec, unordered_map<wstring, BoneTransfor
 		size_t i1 = 0, i2 = 0;
 		while (i2 < keys.size() && time >= keys[i2].timeStamp) { i1 = i2++; }
 
-		if (i2 >= keys.size()) { i2 = i1; }          // ³¡ ±¸°£
+		if (i2 >= keys.size()) { i2 = i1; }
 		_float span = float(keys[i2].timeStamp - keys[i1].timeStamp);
 		_float  t = span > 0.f ? float((time - keys[i1].timeStamp) / span) : 0.f;
 
-		// º¸°£
 		BoneTransform bt;
 		XMStoreFloat3
 		(
@@ -127,7 +126,7 @@ void CAnimationClip::Add_ActionTrigger(const ActionTrigger& _trigger)
 	m_vActionTriggerList.push_back(_trigger);
 }
 
-_bool CAnimationClip::Remove_ActionTrigger(const ActionTrigger& _trigger)
+const _bool CAnimationClip::Remove_ActionTrigger(const ActionTrigger& _trigger)
 {
 	auto iter = std::find_if(m_vActionTriggerList.begin(), m_vActionTriggerList.end(),
 		[&_trigger](const ActionTrigger& item)
@@ -140,4 +139,36 @@ _bool CAnimationClip::Remove_ActionTrigger(const ActionTrigger& _trigger)
 
 	m_vActionTriggerList.erase(iter);
 	return true;
+}
+
+const _uint CAnimationClip::Get_FrameCount() const
+{
+	size_t maxCount = 0;
+
+	for (const auto& ba : m_vBoneAnimation)
+		maxCount = max(maxCount, ba.keyframes.size());
+
+	return static_cast<_int>(maxCount);
+}
+
+const _uint CAnimationClip::Get_LastFrameIndex() const
+{
+	_uint count = Get_FrameCount();
+	return (count > 0) ? (count - 1) : -1;
+}
+
+const _uint CAnimationClip::Get_NormalizedFrameIndex(_float _value)
+{
+	const _int frameCount = Get_FrameCount();
+
+	if (frameCount <= 0)
+		return -1;
+
+	_value = clamp(_value, 0.f, 1.f);
+
+	const _float f = _value * (_float)(frameCount - 1);
+	_int idx = (_int)lround((double)f);
+
+	idx = clamp(idx, 0, frameCount - 1);
+	return idx;
 }

@@ -23,7 +23,7 @@ pos=578,145
 [state Attack_Light_04]
 motion=Eve_Attack_Light_04
 speedMul=1.000000
-pos=-118,507
+pos=-112,475
 
 [state Idle]
 motion=Eve_Idle
@@ -33,7 +33,7 @@ pos=170,174
 [state Attack_Light_01]
 motion=Eve_Attack_Light_01
 speedMul=1.000000
-pos=-163,137
+pos=-336,135
 
 [state Run_End]
 motion=Eve_Run_Forward_End
@@ -48,12 +48,12 @@ pos=582,372
 [state Run_TurnL]
 motion=Eve_Run_TurnL
 speedMul=1.000000
-pos=79,-130
+pos=305,-292
 
 [state Run_TurnR]
 motion=Eve_Run_TurnR
 speedMul=1.000000
-pos=295,-131
+pos=671,-181
 
 [state Attack_Light_02]
 motion=Eve_Attack_Light_02
@@ -134,6 +134,7 @@ transitionOffset=0.000000
 
 [transition Run_TurnR->Run_Forward]
 blend=0.350000
+cond=IsAttack==false
 exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
@@ -156,7 +157,7 @@ transitionOffset=0.000000
 
 [transition Run_TurnR->Run_End]
 blend=0.150000
-cond=speed<=0.000000
+cond=speed<=0.000000 && IsAttack==false
 exitTime=0.200000
 fixedDuration=false
 transitionDuration=0.500000
@@ -229,7 +230,7 @@ transitionOffset=0.000000
 [transition Attack_Light_04->Run_Forward_Start]
 blend=0.200000
 cond=speed>0.100000
-exitTime=0.350000
+exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -253,6 +254,7 @@ transitionOffset=0.000000
 [transition Attack_Light_03->Run_Forward_Start]
 blend=0.200000
 cond=speed>0.100000
+exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -267,6 +269,69 @@ transitionOffset=0.000000
 [transition Run_TurnR->Run_TurnL]
 blend=0.150000
 cond=turn && turnDir<0.000000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_TurnR->Attack_Light_02]
+blend=0.150000
+cond=IsAttack==true && attackCombo==1
+exitTime=0.100000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_TurnR->Attack_Light_03]
+blend=0.150000
+cond=IsAttack==true && attackCombo==2
+exitTime=0.100000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_TurnR->Attack_Light_01]
+blend=0.150000
+cond=IsAttack==true && attackCombo==0
+exitTime=0.100000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_TurnL->Attack_Light_02]
+blend=0.150000
+cond=IsAttack==true && attackCombo==1
+exitTime=0.100000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_TurnL->Attack_Light_01]
+blend=0.150000
+cond=IsAttack==true && attackCombo==0
+exitTime=0.100000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_TurnL->Attack_Light_03]
+blend=0.150000
+cond=IsAttack==true && attackCombo==2
+exitTime=0.100000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_TurnL->Attack_Light_04]
+blend=0.150000
+cond=IsAttack==true && attackCombo==3
+exitTime=0.100000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_TurnR->Attack_Light_04]
+blend=0.150000
+cond=IsAttack==true && attackCombo==3
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

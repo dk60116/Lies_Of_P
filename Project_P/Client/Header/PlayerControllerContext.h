@@ -82,6 +82,10 @@ public:
 	void TickAttackBuffer();
 
 public:
+	const _bool IsCanTurn() const;
+	void SetCanTurn(const _bool _value);
+
+public:
 	static _float LengthXZ(const vector3& v)
 	{
 		return sqrtf(v.x * v.x + v.z * v.z);
@@ -107,6 +111,9 @@ private:
 	CPlayer* m_pPlayer;
 	CPlayerCamera* m_pCam;
 	CPlayerController* m_pController;
+
+private:
+	_bool m_bCanTurn;
 
 private:
 	CV_MOVE m_Cv_Move;

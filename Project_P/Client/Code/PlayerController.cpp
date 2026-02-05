@@ -115,39 +115,31 @@ void CPlayerController::Update()
 
     const _bool attackLock = m_ctx.IsAttackActive();
 
-    if (!attackLock)
-    {
-        if (hasInput)
-        {
-            vector3 f = m_ctx.NormalizeXZ(m_pPlayerCam->Get_ForwardVector());
-            vector3 r = m_ctx.NormalizeXZ(vector3(f.z, 0.f, -f.x));
+	if (hasInput)
+	{
+		vector3 f = m_ctx.NormalizeXZ(m_pPlayerCam->Get_ForwardVector());
+		vector3 r = m_ctx.NormalizeXZ(vector3(f.z, 0.f, -f.x));
 
-            vector3 moveDir = m_ctx.NormalizeXZ(f * (_float)y + r * (_float)x);
+		vector3 moveDir = m_ctx.NormalizeXZ(f * (_float)y + r * (_float)x);
 
-            _float camYaw = m_ctx.WrapDeg(m_pPlayerCam->Get_ForwardAngle());
-            _float offsetDeg = atan2f((_float)x, (_float)y) * (180.f / 3.141592f);
-            _float desiredYaw = m_ctx.WrapDeg(camYaw + offsetDeg);
+		_float camYaw = m_ctx.WrapDeg(m_pPlayerCam->Get_ForwardAngle());
+		_float offsetDeg = atan2f((_float)x, (_float)y) * (180.f / 3.141592f);
+		_float desiredYaw = m_ctx.WrapDeg(camYaw + offsetDeg);
 
-            const _bool onlyBack = (y < 0) && (x == 0) && !m_mKeyHold[Forward];
-            if (onlyBack)
-            {
-                moveDir = m_ctx.NormalizeXZ(-f);
-                desiredYaw = m_ctx.WrapDeg(camYaw + 180.f);
-            }
+		const _bool onlyBack = (y < 0) && (x == 0) && !m_mKeyHold[Forward];
+		if (onlyBack)
+		{
+			moveDir = m_ctx.NormalizeXZ(-f);
+			desiredYaw = m_ctx.WrapDeg(camYaw + 180.f);
+		}
 
-            m_ctx.SetMoveWorldDir(moveDir);
-            m_ctx.SetDesiredYawDeg(desiredYaw);
-            m_ctx.BeginTurnTo(desiredYaw);
-        }
+		m_ctx.SetMoveWorldDir(moveDir);
+		m_ctx.SetDesiredYawDeg(desiredYaw);
+		m_ctx.BeginTurnTo(desiredYaw);
+	}
 
-        m_ctx.SetMovePressed(hasInput);
-        m_bRunning = hasInput;
-    }
-    else
-    {
-        m_ctx.SetMovePressed(false);
-        m_bRunning = false;
-    }
+	m_ctx.SetMovePressed(hasInput);
+	m_bRunning = hasInput;
 
     m_pRoot->Update();
 }

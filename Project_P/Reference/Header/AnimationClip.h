@@ -65,7 +65,10 @@ public:
 	const _float Get_TickPerSecons() const;
 	const vector<ActionTrigger>& Get_ActionTriggerList() const;
 	void Add_ActionTrigger(const ActionTrigger& _trigger);
-	_bool Remove_ActionTrigger(const ActionTrigger& _trigger);
+	const _bool Remove_ActionTrigger(const ActionTrigger& _trigger);
+	const _uint Get_FrameCount() const;
+	const _uint Get_LastFrameIndex() const;
+	const _uint Get_NormalizedFrameIndex(_float _value);
 
 private:
 	vector<NodeTrack> m_vBoneAnimation;

@@ -7,6 +7,7 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_pCam(nullptr)
 	, m_Cv_Move({})
 	, m_Cv_Battle({})
+	, m_bCanTurn(true)
 {
 	m_strName = L"PlayerControllerContext";
 }
@@ -155,6 +156,9 @@ void CPlayerControllerContext::TickMove()
 void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 {
 	if (!m_pPlayer) 
+		return;
+
+	if (!m_bCanTurn)
 		return;
 
 	if (!m_Cv_Move.m_bTurning)
@@ -330,4 +334,14 @@ void CPlayerControllerContext::TickAttackBuffer()
 		m_Cv_Battle.m_bAttackBuffered = false;
 		m_Cv_Battle.m_fAttackBufferT = 0.f;
 	}
+}
+
+const _bool CPlayerControllerContext::IsCanTurn() const
+{
+	return m_bCanTurn;
+}
+
+void CPlayerControllerContext::SetCanTurn(const _bool _value)
+{
+	m_bCanTurn = _value;
 }

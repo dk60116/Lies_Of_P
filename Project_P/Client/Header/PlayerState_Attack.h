@@ -23,13 +23,15 @@ public:
     void Exit() override;
 
 private:
+    void ContinueCombo();
     void TurnPlayer();
 
 private:
-    _int  m_iCombo, m_iPrevCombo;
-    _bool m_bQueuedNext;
-    _float m_fComboTerm[3];
-    _float m_fComboLimit[3];
-    _float m_fEndTime[4];
+    _bool m_bCanContinue, m_bPressedContinue, m_bUnderTerm, m_bUnderLimit;
+
+    _uint m_iCrtCombo;
+    _uint m_iComboTerm[4];
+    _uint m_iComboLimit[4];
+    _uint m_iTurnLock[4];
 };
 

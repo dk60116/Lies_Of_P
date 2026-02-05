@@ -2,25 +2,15 @@
 #include "PlayerState_Attack.h"
 
 CPlayerState_Attack::CPlayerState_Attack()
-    : m_iCombo(0)
-    , m_iPrevCombo(0)
-    , m_bQueuedNext(false)
-    , m_fComboTerm()
-    , m_fComboLimit()
-    , m_fEndTime()
+    : m_bCanContinue(false)
+    , m_bPressedContinue(false)
+    , m_iCrtCombo(0)
+    , m_bUnderTerm(false)
+    , m_bUnderLimit(false)
+    , m_iComboTerm()
+    , m_iComboLimit()
+    , m_iTurnLock()
 {
-    m_fComboTerm[0] = 0.1f;
-    m_fComboTerm[1] = 0.1f;
-    m_fComboTerm[2] = 0.1f;
-
-    m_fComboLimit[0] = 0.15f;
-    m_fComboLimit[1] = 0.15f;
-    m_fComboLimit[2] = 0.15f;
-
-    m_fEndTime[0] = 0.8f;
-    m_fEndTime[1] = 0.8f;
-    m_fEndTime[2] = 0.8f;
-    m_fEndTime[3] = 0.8f;
 }
 
 CPlayerState_Attack::~CPlayerState_Attack()
@@ -31,12 +21,91 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx)
 {
     __super::Initialize(_ctx);
 
-    CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_Light_01 (Animation Clip)");
+    m_iComboTerm[0] = 8;
+    m_iComboTerm[1] = 13;
+    m_iComboTerm[2] = 15;
 
+    m_iComboLimit[0] = 18;
+    m_iComboLimit[1] = 20;
+    m_iComboLimit[2] = 22;
+    m_iComboLimit[3] = 29;
+
+    m_iTurnLock[0] = 0;
+    m_iTurnLock[1] = 10;
+    m_iTurnLock[2] = 10;
+    m_iTurnLock[3] = 10;
+
+    for (_int i = 1; i <= 4; ++i)
     {
-        CAnimationClip::ActionTrigger at = { 0, L"LightAttack01_Enter" };
-        ealClip->Add_ActionTrigger(at);
-        m_pCtx->Animator()->RegisterActionHandler(L"LightAttack01_Enter", []() { CDebug::LogError("Enter01"); });
+        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_Light_0" + to_wstring(i) + L" (Animation Clip)");
+
+        const wstring clipName = ealClip->Get_ResourceName();
+        const _uint frameCount = ealClip->Get_FrameCount();
+        const _uint endFrame = ealClip->Get_NormalizedFrameIndex(0.78f);
+        const _uint termFrame = m_iComboTerm[i - 1];
+        const _uint limitFrame = m_iComboLimit[i - 1];
+
+        {
+            CAnimationClip::ActionTrigger at = { 0, L"LightAttack0" + to_wstring(i) + L"_Enter" };
+            ealClip->Add_ActionTrigger(at);
+            m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Enter", [this]()
+                {
+                    m_iCrtCombo = 0;
+                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
+                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
+                    m_bCanContinue = true;
+                    m_bPressedContinue = false;
+                    m_bUnderTerm = true;
+                    m_bUnderLimit = true;
+                    m_pCtx->SetCanTurn(true);
+                });
+        }
+
+        {
+            CAnimationClip::ActionTrigger at = { endFrame, L"LightAttack0" + to_wstring(i) + L"_Exit" };
+            ealClip->Add_ActionTrigger(at);
+            m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Exit", [this]()
+                {
+                    m_pCtx->SetAttackActive(false);
+                    m_pCtx->SetCanTurn(true);
+                });
+        }
+        
+        // Continue Term
+        {
+            CAnimationClip::ActionTrigger at = { termFrame, L"LightAttack0" + to_wstring(i) + L"_Term" };
+            ealClip->Add_ActionTrigger(at);
+            m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Term", [this]()
+                {
+                    m_bUnderTerm = false;
+
+                    if (m_bPressedContinue)
+                        ContinueCombo();
+
+                    m_pCtx->SetCanTurn(true);
+                });
+        }
+
+        // Continue Limit
+        {
+            CAnimationClip::ActionTrigger at = { limitFrame, L"LightAttack0" + to_wstring(i) + L"_Limit" };
+            ealClip->Add_ActionTrigger(at);
+            m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Limit", [this, clipName]()
+                {
+                    m_bCanContinue = false;
+                    m_bUnderLimit = false;
+                });
+        }
+
+        // Turn
+        {
+            CAnimationClip::ActionTrigger at = { termFrame, L"LightAttack0" + to_wstring(i) + L"_Turn" };
+            ealClip->Add_ActionTrigger(at);
+            m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Turn", [this]()
+                {
+                    m_pCtx->SetCanTurn(false);
+                });
+        }
     }
 }
 
@@ -46,62 +115,51 @@ void CPlayerState_Attack::Enter()
 
     m_pCtx->SetAttackActive(true);
 
+    m_pCtx->Animator()->SetInt(L"AttackCombo", 0);
     m_pCtx->SetAnimMoveSpeed(0.f);
     m_pCtx->Animator()->SetTrigger(L"Attack");
     m_pCtx->Animator()->SetBool(L"IsAttack", true);
     m_pCtx->Animator()->SetBool(L"comboContinue", false);
 
-    m_iCombo = 0;
-    m_iPrevCombo = 0;
+    m_iCrtCombo = 0;
+    m_bCanContinue = true;
+    m_bPressedContinue = false;
+    m_bUnderTerm = true;
+    m_bUnderLimit = true;
 }
 
 void CPlayerState_Attack::Update()
 {
     __super::Update();
 
-    const _float nt = m_pCtx->Animator()->GetNormalizedTime();
-
-    if (m_iCombo != m_iPrevCombo)
-        m_iPrevCombo = m_iCombo;
-
-    for (_int i = 0; i <= 4; ++i)
+    if (m_pCtx->IsLightAttackPressed())
     {
-        if (m_iCombo == i)
-        {
-            if (nt < m_fComboLimit[i])
-            {
-                if (m_pCtx->IsLightAttackPressed())
-                {
-                    m_pCtx->Animator()->SetBool(L"comboContinue", true);
-                    TurnPlayer();
-                    ++m_iCombo;
-                    m_fPassedTime = 0.f;
-                }
-            }
-            else
-            {
-                if (m_pCtx->IsLightAttackPressed())
-                    Enter();
-            }
-
-            if (nt > m_fEndTime[i])
-                m_pCtx->SetAttackActive(false);
-        }
-
-        if (m_iCombo >= 4)
-            m_pCtx->SetAttackActive(false);
+        if (m_bUnderTerm)
+            m_bPressedContinue = true;
+        else
+            ContinueCombo();
     }
+
+    if (m_pCtx->IsMovePressed() && !m_bUnderLimit)
+        m_pCtx->SetAttackActive(false);
 }
 
 void CPlayerState_Attack::Exit()
 {
     __super::Exit();
 
-    m_pCtx->SetAttackActive(false);
-    m_bQueuedNext = false;
-
     m_pCtx->Animator()->SetBool(L"comboContinue", false);
     m_pCtx->Animator()->SetBool(L"IsAttack", false);
+
+    m_pCtx->SetCanTurn(true);
+}
+
+void CPlayerState_Attack::ContinueCombo()
+{
+    if (m_bCanContinue)
+        m_pCtx->Animator()->SetBool(L"comboContinue", true);
+    else
+        Enter();
 }
 
 void CPlayerState_Attack::TurnPlayer()

@@ -640,6 +640,11 @@ void CAnimator::SetBool(const wstring& n, _bool v)
 	m_ControllerInst.SetBool(n, v);
 }
 
+void CAnimator::SetInt(const wstring& n, _int v)
+{
+	m_ControllerInst.SetInt(n, v);
+}
+
 void CAnimator::SetFloat(const wstring& n, _float v)
 {
 	m_ControllerInst.SetFloat(n, v);
