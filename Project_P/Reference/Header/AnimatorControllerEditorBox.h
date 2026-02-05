@@ -65,6 +65,7 @@ private:
         BlendTreeType blendTreeType = BlendTreeType::OneD;
         string blendParamX;
         string blendParamY;
+        _float directBlend = 0.f;
         vector<BlendTreeChild> blendChildren;
         _float speedMul = 1.f;
         ImVec2 pos = ImVec2(100, 100);
