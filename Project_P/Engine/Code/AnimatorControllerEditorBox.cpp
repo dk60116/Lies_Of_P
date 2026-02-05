@@ -1181,6 +1181,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
     _int clickedTransition = -1;
     _int deleteTransition = -1;
     const ImU32 selectedCol = IM_COL32(255, 165, 0, 230);
+    const ImU32 highlightCol = IM_COL32(60, 120, 200, 210);
     const ImU32 anyCol = IM_COL32(255, 200, 0, 200);
     const ImU32 stateCol = IM_COL32(120, 200, 255, 200);
     const float reverseOffset = 24.f * m_zoom;
@@ -1189,6 +1190,9 @@ void CAnimatorControllerEditorBox::RenderGraph()
     {
         const auto& tr = m_transitions[i];
         const bool isSelected = (m_eSelectType == ESelectType::Transition && m_iSelectedTransitionIndex == i);
+        const bool isStateFocus = (m_eSelectType == ESelectType::State && !m_selectedState.empty());
+        const bool isRelated = isStateFocus && (tr.from == m_selectedState || tr.to == m_selectedState);
+        const ImU32 transitionCol = isSelected ? selectedCol : (isRelated ? highlightCol : stateCol);
         if (tr.isAny)
         {
             auto itTo = m_states.find(tr.to);
@@ -1200,7 +1204,9 @@ void CAnimatorControllerEditorBox::RenderGraph()
                 ImVec2(origin.x + (itTo->second.pos.x + m_pan.x) * m_zoom, origin.y + (itTo->second.pos.y + m_pan.y) * m_zoom),
                 nodeSize,
                 anyCenter);
-            drawArrowLine(from, to, isSelected ? selectedCol : anyCol, 2.0f);
+            const bool isAnyRelated = isStateFocus && tr.to == m_selectedState;
+            const ImU32 anyTransitionCol = isSelected ? selectedCol : (isAnyRelated ? highlightCol : anyCol);
+            drawArrowLine(from, to, anyTransitionCol, 2.0f);
 
             if (isGraphHovered && DistancePointToSegment(mousePos, from, to) <= 6.f)
             {
@@ -1267,7 +1273,7 @@ void CAnimatorControllerEditorBox::RenderGraph()
             to = rectEdgePointOnSide(toRectPos, nodeSize, drawFrom, side);
         }
 
-        drawArrowLine(from, to, isSelected ? selectedCol : stateCol, 2.0f);
+        drawArrowLine(from, to, transitionCol, 2.0f);
 
         if (isGraphHovered && DistancePointToSegment(mousePos, from, to) <= 6.f)
         {
