@@ -1181,9 +1181,9 @@ void CAnimatorControllerEditorBox::RenderGraph()
     _int clickedTransition = -1;
     _int deleteTransition = -1;
     const ImU32 selectedCol = IM_COL32(255, 165, 0, 230);
-    const ImU32 highlightCol = IM_COL32(60, 120, 200, 210);
-    const ImU32 anyCol = IM_COL32(255, 200, 0, 200);
-    const ImU32 stateCol = IM_COL32(120, 200, 255, 200);
+    const ImU32 highlightCol = IM_COL32(120, 200, 255, 230);
+    const ImU32 anyCol = IM_COL32(180, 140, 0, 190);
+    const ImU32 stateCol = IM_COL32(60, 100, 160, 190);
     const float reverseOffset = 24.f * m_zoom;
     const ImVec2 mousePos = ImGui::GetIO().MousePos;
     for (_int i = 0; i < (_int)m_transitions.size(); ++i)
