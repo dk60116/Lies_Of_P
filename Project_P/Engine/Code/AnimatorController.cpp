@@ -213,6 +213,31 @@ const _bool CAnimatorControllerInstance::GetFloat(const wstring& n, _float& out)
     return true;
 }
 
+const _bool CAnimatorControllerInstance::TryGetParamValue(const wstring& n, _float& out) const
+{
+    auto it = m_mRuntimeParams.find(n);
+    if (it == m_mRuntimeParams.end())
+        return false;
+
+    const auto& pv = it->second;
+    switch (pv.type)
+    {
+    case CAnimatorController::PARAM_TYPE::BOOL:
+        out = pv.b ? 1.f : 0.f;
+        return true;
+    case CAnimatorController::PARAM_TYPE::INT:
+        out = static_cast<_float>(pv.i);
+        return true;
+    case CAnimatorController::PARAM_TYPE::FLOAT:
+        out = pv.f;
+        return true;
+    case CAnimatorController::PARAM_TYPE::TRIGGER:
+        out = pv.trigger ? 1.f : 0.f;
+        return true;
+    }
+    return false;
+}
+
 _bool CAnimatorControllerInstance::Evaluate_Condition(const CAnimatorController::Condition& _c) const
 {
     auto it = m_mRuntimeParams.find(_c.paramName);
@@ -322,7 +347,10 @@ void CAnimatorControllerInstance::EnterEntry(CAnimator* _animator)
 
         m_strCurrentState = st->name;
         _animator->Set_PlaybackSpeed(st->speedMul);
-        _animator->Play(st->motionName, tr.blendDuration);
+        if (st->motionType == CAnimatorController::STATE_MOTION_TYPE::BLEND_TREE)
+            _animator->PlayBlendTree(st->blendTree, tr.blendDuration);
+        else
+            _animator->Play(st->motionName, tr.blendDuration);
 
         m_bEntered = true;
         return;
@@ -330,10 +358,13 @@ void CAnimatorControllerInstance::EnterEntry(CAnimator* _animator)
 
     m_strCurrentState = m_pController->Get_EntryState();
     const auto* st = m_pController->Find_State(m_strCurrentState);
-    if (st && !st->motionName.empty())
+    if (st && (st->motionType == CAnimatorController::STATE_MOTION_TYPE::BLEND_TREE || !st->motionName.empty()))
     {
         _animator->Set_PlaybackSpeed(st->speedMul);
-        _animator->Play(st->motionName, 0.f);
+        if (st->motionType == CAnimatorController::STATE_MOTION_TYPE::BLEND_TREE)
+            _animator->PlayBlendTree(st->blendTree, 0.f);
+        else
+            _animator->Play(st->motionName, 0.f);
     }
 
     m_bEntered = true;
@@ -390,7 +421,10 @@ void CAnimatorControllerInstance::Update(CAnimator* _animator, const _float _dt)
             const _float blend = isSelf ? 0.f : tr.blendDuration;
             const _bool  restartIfSame = isSelf ? true : false;
 
-            _animator->Play(nextState->motionName, blend, restartIfSame);
+            if (nextState->motionType == CAnimatorController::STATE_MOTION_TYPE::BLEND_TREE)
+                _animator->PlayBlendTree(nextState->blendTree, blend, restartIfSame);
+            else
+                _animator->Play(nextState->motionName, blend, restartIfSame);
 
             return true;
         };

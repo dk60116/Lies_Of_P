@@ -1277,8 +1277,9 @@ CAnimatorController::AnimatorControllerInitInfo CResources::ReadAnimatorControll
 
 	_uint magic = 0;
 	in.read(reinterpret_cast<char*>(&magic), sizeof(_uint));
-	const _bool hasGraphData = (magic == 0x41434232 || magic == 0x41434233);
-	const _bool hasEntryTransitions = (magic == 0x41434233);
+	const _bool hasGraphData = (magic == 0x41434232 || magic == 0x41434233 || magic == 0x41434234);
+	const _bool hasEntryTransitions = (magic == 0x41434233 || magic == 0x41434234);
+	const _bool hasBlendTree = (magic == 0x41434234);
 	if (magic != 0x41434231 && !hasGraphData)
 	{
 		CDebug::LogError(L"ReadAnimationAnimatoinControllerBufferInfos failed - invalid magic: " + _binFileName);
@@ -1333,6 +1334,32 @@ CAnimatorController::AnimatorControllerInitInfo CResources::ReadAnimatorControll
 		CAnimatorController::State st{};
 		st.name = readWString();
 		st.motionName = readWString();
+		if (hasBlendTree)
+		{
+			_uint motionType = 0;
+			in.read(reinterpret_cast<char*>(&motionType), sizeof(_uint));
+			st.motionType = static_cast<CAnimatorController::STATE_MOTION_TYPE>(motionType);
+			if (st.motionType == CAnimatorController::STATE_MOTION_TYPE::BLEND_TREE)
+			{
+				_uint treeType = 0;
+				in.read(reinterpret_cast<char*>(&treeType), sizeof(_uint));
+				st.blendTree.type = static_cast<CAnimatorController::BLEND_TREE_TYPE>(treeType);
+				st.blendTree.paramX = readWString();
+				st.blendTree.paramY = readWString();
+				_uint childCount = 0;
+				in.read(reinterpret_cast<char*>(&childCount), sizeof(_uint));
+				st.blendTree.children.reserve(childCount);
+				for (_uint c = 0; c < childCount; ++c)
+				{
+					CAnimatorController::State::BlendTreeChild child{};
+					child.motionName = readWString();
+					in.read(reinterpret_cast<char*>(&child.threshold), sizeof(_float));
+					in.read(reinterpret_cast<char*>(&child.position), sizeof(_float2));
+					child.directParam = readWString();
+					st.blendTree.children.emplace_back(move(child));
+				}
+			}
+		}
 
 		in.read(reinterpret_cast<char*>(&st.speedMul), sizeof(_float));
 		if (hasGraphData)

@@ -47,6 +47,30 @@ namespace
         return true;
     }
 
+    bool TryParseBlendTreeType(const string& s, CAnimatorController::BLEND_TREE_TYPE& out)
+    {
+        string v = TrimString(s);
+        for (auto& c : v)
+            c = static_cast<char>(tolower(c));
+
+        if (v == "1d" || v == "one_d" || v == "one-d")
+        {
+            out = CAnimatorController::BLEND_TREE_TYPE::ONE_D;
+            return true;
+        }
+        if (v == "2d" || v == "two_d" || v == "two-d")
+        {
+            out = CAnimatorController::BLEND_TREE_TYPE::TWO_D;
+            return true;
+        }
+        if (v == "direct")
+        {
+            out = CAnimatorController::BLEND_TREE_TYPE::DIRECT;
+            return true;
+        }
+        return false;
+    }
+
     bool TryParseCondition(const string& token, const unordered_map<wstring, CAnimatorController::PARAM_TYPE>& paramTypes, CAnimatorController::Condition& out)
     {
         string trimmed = TrimString(token);
@@ -395,7 +419,61 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
                 string k = TrimString(line.substr(0, eq));
                 string v = TrimString(line.substr(eq + 1));
                 if (k == "motion")
+                {
                     it->second.motionName = CEngineString::StringToWString(v);
+                    it->second.motionType = CAnimatorController::STATE_MOTION_TYPE::CLIP;
+                }
+                else if (k == "blendTree" || k == "blendtree")
+                {
+                    it->second.motionType = CAnimatorController::STATE_MOTION_TYPE::BLEND_TREE;
+                    it->second.blendTree.children.clear();
+                    CAnimatorController::BLEND_TREE_TYPE type = CAnimatorController::BLEND_TREE_TYPE::ONE_D;
+                    if (TryParseBlendTreeType(v, type))
+                        it->second.blendTree.type = type;
+                }
+                else if (k == "param")
+                {
+                    it->second.blendTree.paramX = CEngineString::StringToWString(v);
+                }
+                else if (k == "paramX")
+                {
+                    it->second.blendTree.paramX = CEngineString::StringToWString(v);
+                }
+                else if (k == "paramY")
+                {
+                    it->second.blendTree.paramY = CEngineString::StringToWString(v);
+                }
+                else if (k == "child")
+                {
+                    auto parts = SplitString(v, ",");
+                    for (auto& part : parts)
+                        part = TrimString(part);
+                    if (parts.empty() || parts[0].empty())
+                        continue;
+
+                    CAnimatorController::State::BlendTreeChild child{};
+                    child.motionName = CEngineString::StringToWString(parts[0]);
+                    if (it->second.blendTree.type == CAnimatorController::BLEND_TREE_TYPE::ONE_D)
+                    {
+                        if (parts.size() >= 2)
+                            child.threshold = static_cast<_float>(atof(parts[1].c_str()));
+                    }
+                    else if (it->second.blendTree.type == CAnimatorController::BLEND_TREE_TYPE::TWO_D)
+                    {
+                        if (parts.size() >= 3)
+                        {
+                            child.position.x = static_cast<_float>(atof(parts[1].c_str()));
+                            child.position.y = static_cast<_float>(atof(parts[2].c_str()));
+                        }
+                    }
+                    else if (it->second.blendTree.type == CAnimatorController::BLEND_TREE_TYPE::DIRECT)
+                    {
+                        if (parts.size() >= 2)
+                            child.directParam = CEngineString::StringToWString(parts[1]);
+                    }
+                    it->second.motionType = CAnimatorController::STATE_MOTION_TYPE::BLEND_TREE;
+                    it->second.blendTree.children.push_back(child);
+                }
                 else if (k == "speedMul")
                     it->second.speedMul = static_cast<_float>(atof(v.c_str()));
                 else if (k == "pos")
@@ -507,7 +585,7 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
                 out.write(reinterpret_cast<const char*>(ws.data()), sizeof(wchar_t) * len);
         };
 
-    const _uint magic = 0x41434233; // "ACB3"
+    const _uint magic = 0x41434234;
     out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 
     writeWString(info.controllerName);
@@ -533,6 +611,24 @@ HRESULT CResources::ConvertAnimatorControllerToBinary(const wstring _filePath)
     {
         writeWString(st.name);
         writeWString(st.motionName);
+        _uint motionType = static_cast<_uint>(st.motionType);
+        out.write(reinterpret_cast<const char*>(&motionType), sizeof(_uint));
+        if (st.motionType == CAnimatorController::STATE_MOTION_TYPE::BLEND_TREE)
+        {
+            _uint treeType = static_cast<_uint>(st.blendTree.type);
+            out.write(reinterpret_cast<const char*>(&treeType), sizeof(_uint));
+            writeWString(st.blendTree.paramX);
+            writeWString(st.blendTree.paramY);
+            _uint childCount = static_cast<_uint>(st.blendTree.children.size());
+            out.write(reinterpret_cast<const char*>(&childCount), sizeof(_uint));
+            for (const auto& child : st.blendTree.children)
+            {
+                writeWString(child.motionName);
+                out.write(reinterpret_cast<const char*>(&child.threshold), sizeof(_float));
+                out.write(reinterpret_cast<const char*>(&child.position), sizeof(_float2));
+                writeWString(child.directParam);
+            }
+        }
         out.write(reinterpret_cast<const char*>(&st.speedMul), sizeof(_float));
         out.write(reinterpret_cast<const char*>(&st.pos), sizeof(_float2));
 
