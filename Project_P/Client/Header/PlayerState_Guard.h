@@ -14,6 +14,6 @@ public:
     void Exit() override;
 
 private:
-    _bool m_bExitableTime;
+    _bool m_bExitableTime, m_bExit;
 };
 

@@ -3,6 +3,7 @@
 
 CPlayerState_Guard::CPlayerState_Guard()
 	: m_bExitableTime(false)
+	, m_bExit(false)
 {
 }
 
@@ -30,6 +31,21 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx)
 	}
 
 	{
+		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_Walk_Forward_Start (Animation Clip)");
+
+		const wstring clipName = startClip->Get_ResourceName();
+		const _uint frameCount = startClip->Get_FrameCount();
+
+		CAnimationClip::ActionTrigger at = { 5, L"Start" };
+		startClip->Add_ActionTrigger(at);
+		m_pCtx->Animator()->RegisterActionHandler(L"Start", [this]()
+			{
+				m_pCtx->SetCanMove(true);
+				m_pCtx->SetCanTurn(true);
+			});
+	}
+
+	{
 		CAnimationClip* idleClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_Idle (Animation Clip)");
 
 		{
@@ -38,7 +54,63 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx)
 			m_pCtx->Animator()->RegisterActionHandler(L"CanMoveTime", [this]()
 				{
 					m_pCtx->SetCanMove(true);
-					m_pCtx->SetCanTurn(true);
+				});
+		}
+	}
+
+	{
+		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_Walk_Forward_During (Animation Clip)");
+
+		const wstring clipName = startClip->Get_ResourceName();
+		const _uint frameCount = startClip->Get_FrameCount();
+
+		CAnimationClip::ActionTrigger at = { 1, L"During" };
+		startClip->Add_ActionTrigger(at);
+		m_pCtx->Animator()->RegisterActionHandler(L"During", [this]()
+			{
+			});
+	}
+
+	{
+		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_Walk_Forward_End (Animation Clip)");
+
+		const wstring clipName = startClip->Get_ResourceName();
+		const _uint frameCount = startClip->Get_FrameCount();
+
+		{
+			CAnimationClip::ActionTrigger at = { 1, L"WalkEndStart" };
+			startClip->Add_ActionTrigger(at);
+			m_pCtx->Animator()->RegisterActionHandler(L"WalkEndStart", [this]()
+				{
+				});
+		}
+	}
+
+	{
+		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_End (Animation Clip)");
+
+		const wstring clipName = startClip->Get_ResourceName();
+		const _uint frameCount = startClip->Get_FrameCount();
+
+		{
+			CAnimationClip::ActionTrigger at = { 1, L"EndStart" };
+			startClip->Add_ActionTrigger(at);
+			m_pCtx->Animator()->RegisterActionHandler(L"EndStart", [this]()
+				{
+					m_pCtx->SetCanMove(false);
+				});
+		}
+
+		{
+			CAnimationClip::ActionTrigger at = { 15, L"Exit" };
+			startClip->Add_ActionTrigger(at);
+			m_pCtx->Animator()->RegisterActionHandler(L"Exit", [this]()
+				{
+					if (m_bExit)
+					{
+						m_pCtx->StopMoveImmediate();
+						m_pCtx->SetGuardActive(false);
+					}
 				});
 		}
 	}
@@ -60,14 +132,26 @@ void CPlayerState_Guard::Enter()
 	m_pCtx->Animator()->SetBool(L"isGuard", true);
 
 	m_bExitableTime = false;
+	m_bExit = false;
 }
 
 void CPlayerState_Guard::Update()
 {
 	__super::Update();
 
-	if (!m_pCtx->IsGuardPressed() && m_bExitableTime)
-		m_pCtx->SetGuardActive(false);
+	if (m_bExitableTime)
+	{
+		if (!m_pCtx->IsGuardPressed())
+		{
+			m_bExit = true;
+			m_pCtx->Animator()->SetBool(L"isGuard", false);
+			m_pCtx->StopMoveImmediate();
+		}
+		else if (m_pCtx->IsGuardPressed_Down())
+		{
+			Enter();
+		}
+	}
 }
 
 void CPlayerState_Guard::Exit()
@@ -77,6 +161,5 @@ void CPlayerState_Guard::Exit()
 	m_pCtx->Animator()->SetBool(L"isGuard", false);
 	m_pCtx->SetCanTurn(true);
 	m_pCtx->SetCanMove(true);
-
-	CDebug::LogError("Exit");
+	m_pCtx->SetAnimMoveSpeed(0.f);
 }

@@ -96,4 +96,4 @@ float4 PSMain(VSOut input) : SV_TARGET
     //Ret = float4(gray, gray, gray, 1) / divider;
     
     return baseColor;
-}
+}   

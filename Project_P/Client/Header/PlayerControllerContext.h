@@ -45,6 +45,7 @@ public:
 
 	const _bool IsLightAttackPressed();
 	const _bool IsGuardPressed();
+	const _bool IsGuardPressed_Down();
 
 	vector3 CameraForward() const;
 	_float CameraYawDeg() const;
@@ -104,6 +105,9 @@ public:
 	void SetCanMove(const _bool _value);
 	const _bool IsCanTurn() const;
 	void SetCanTurn(const _bool _value);
+	
+public:
+	void StopMoveImmediate();
 
 public:
 	static _float LengthXZ(const vector3& v)

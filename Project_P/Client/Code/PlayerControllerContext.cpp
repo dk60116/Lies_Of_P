@@ -45,6 +45,11 @@ const _bool CPlayerControllerContext::IsGuardPressed()
 	return 	m_pController->m_mKeyHold[CPlayerController::Guard];
 }
 
+const _bool CPlayerControllerContext::IsGuardPressed_Down()
+{
+	return 	m_pController->m_mKeyDown[CPlayerController::Guard];
+}
+
 vector3 CPlayerControllerContext::CameraForward() const
 {
 	return m_pCam ? m_pCam->Get_ForwardVector() : vector3::forward();
@@ -153,7 +158,7 @@ void CPlayerControllerContext::TickMove()
 
 	const _float curSpeed = PlayerStatus().moveSpeed * m_Cv_Move.m_fMove01;
 	AddPosition(dir * curSpeed * dt);
-
+	
 	SetAnimMoveSpeed(m_Cv_Move.m_fMove01);
 }
 
@@ -418,4 +423,14 @@ const _bool CPlayerControllerContext::IsCanTurn() const
 void CPlayerControllerContext::SetCanTurn(const _bool _value)
 {
 	m_bCanTurn = _value;
+}
+
+void CPlayerControllerContext::StopMoveImmediate()
+{
+	m_Cv_Move.m_bMovePressed = false;
+	m_Cv_Move.m_fMove01 = 0.f;
+	m_Cv_Move.m_vMoveWorldDir = vector3::zero();
+	m_Cv_Move.m_fMoveLockTimer = 0.f;
+
+	SetAnimMoveSpeed(0.f);
 }

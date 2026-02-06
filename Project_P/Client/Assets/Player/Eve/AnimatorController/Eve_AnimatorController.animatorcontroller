@@ -19,11 +19,6 @@ bool IsBattle=false
 trigger BattleEnd
 trigger guard
 
-[state Attack_Light_04]
-motion=Eve_Attack_Light_04
-speedMul=1.000000
-pos=-112,481
-
 [state Run_Forward_Start]
 blendTree=direct
 param=IsBattle
@@ -31,6 +26,11 @@ child=Eve_Run_Forward_Start,0.000000
 child=Eve_BattleRun_Start,1.000000
 speedMul=1.000000
 pos=578,145
+
+[state Attack_Light_04]
+motion=Eve_Attack_Light_04
+speedMul=1.000000
+pos=-112,481
 
 [state Idle]
 blendTree=direct
@@ -105,30 +105,20 @@ motion=Eve_Guard_End
 speedMul=1.000000
 pos=-275,-41
 
-[state Guard_Walk_Forward_Start]
-motion=Eve_Guard_Walk_Forward_Start
-speedMul=1.000000
-pos=-138,-359
-
-[state Guard_Walk_Forward]
-motion=Eve_Guard_Walk_Forward_During
-speedMul=1.000000
-pos=-388,-361
-
 [state Guard_Walk_Start]
 motion=Eve_Guard_Walk_Forward_Start
 speedMul=1.000000
-pos=-708,-196
+pos=-725,-251
 
 [state Guard_Walk_During]
 motion=Eve_Guard_Walk_Forward_During
 speedMul=1.000000
-pos=-988,-121
+pos=-934,-99
 
 [state Guard_Walk_End]
 motion=Eve_Guard_Walk_Forward_End
 speedMul=1.000000
-pos=-841,21
+pos=-722,77
 
 [entry]
 to=Idle
@@ -446,6 +436,7 @@ transitionOffset=0.000000
 
 [transition Guard_End->Idle]
 blend=0.150000
+cond=speed<=0.000000
 exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
@@ -454,41 +445,6 @@ transitionOffset=0.000000
 [transition Guard_Start->Guard_End]
 blend=0.150000
 cond=isGuard==false
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition Guard_Idle->Guard_Walk_Forward_Start]
-blend=0.150000
-cond=speed>0.100000
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition Guard_Walk_Forward_Start->Guard_Walk_Forward]
-blend=0.150000
-exitTime=0.800000
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition Guard_Walk_Forward->Guard_Idle]
-blend=0.150000
-cond=speed<=0.000000
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition Run_TurnR->Guard_Walk_Forward_Start]
-blend=0.500000
-exitTime=1.000000
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition Run_TurnL->Guard_Walk_Forward_Start]
-blend=0.500000
-exitTime=1.000000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -508,51 +464,16 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Guard_Walk_Start->Guard_Walk_During]
-blend=0.150000
-exitTime=0.800000
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
 [transition Guard_Walk_End->Guard_Idle]
 blend=0.150000
 cond=isGuard==true
-exitTime=0.800000
 fixedDuration=false
-transitionDuration=0.150000
+transitionDuration=0.015000
 transitionOffset=0.000000
 
 [transition Guard_Walk_End->Guard_End]
 blend=0.150000
 cond=isGuard==false
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition Guard_Walk_End->Run_Forward_Start]
-blend=0.150000
-cond=speed>0.100000
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition Guard_Walk_Forward_Start->Run_Forward_Start]
-blend=0.150000
-cond=speed>0.100000 && isGuard==false
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition Guard_End->Run_Forward_Start]
-blend=0.150000
-cond=speed>0.100000 && isGuard==false
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition Run_Forward_Start->Guard_End]
-blend=0.150000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -565,30 +486,45 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Guard_Walk_During->Run_Forward_Start]
+[transition Guard_Walk_Start->Guard_Walk_During]
 blend=0.150000
-cond=isGuard==false && speed>0.100000
+exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Guard_Walk_During->Guard_Walk_End]
+[transition Guard_Walk_Start->Guard_Walk_End]
 blend=0.150000
-cond=isGuard==false && speed<=0.000000
+cond=speed<=0.000000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Guard_Walk_During->Guard_End]
+blend=0.150000
+cond=isGuard==false
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
 [transition Guard_Walk_Start->Guard_End]
 blend=0.150000
-cond=speed<=0.000000 && isGuard==false
+cond=isGuard==false
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Guard_Walk_Start->Run_Forward_Start]
+[transition Guard_Walk_During->Guard_Walk_End]
+blend=0.150000
+cond=speed<=0.000000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Guard_End->Run_Forward_Start]
 blend=0.150000
 cond=speed>0.100000
+exitTime=0.250000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
