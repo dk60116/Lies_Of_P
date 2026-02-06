@@ -18,6 +18,7 @@ bool isGuard=false
 bool IsBattle=false
 trigger BattleEnd
 trigger guard
+trigger evade
 
 [state Run_Forward_Start]
 blendTree=direct
@@ -61,6 +62,11 @@ child=Eve_Run_Forward_During,0.000000
 child=Eve_BattleRun_During,1.000000
 speedMul=1.000000
 pos=662,414
+
+[state Evade_Forward]
+motion=Eve_Evade_Forward
+speedMul=1.000000
+pos=-723,242
 
 [state Run_TurnL]
 motion=Eve_Run_TurnL
@@ -158,6 +164,14 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 cond=guard
+
+[any]
+to=Evade_Forward
+blend=0.150000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+cond=evade
 
 [transition Idle->Run_Forward_Start]
 blend=0.150000

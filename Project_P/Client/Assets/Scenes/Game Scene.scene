@@ -49,6 +49,8 @@ Eve_Guard_End : Player/Eve/Animations/Eve_Guard_End.fbx : [Animation Clip]
 Eve_Guard_Walk_Forward_Start : Player/Eve/Animations/Eve_Guard_Walk_Forward_Start.fbx : [Animation Clip]
 Eve_Guard_Walk_Forward_During : Player/Eve/Animations/Eve_Guard_Walk_Forward_During.fbx : [Animation Clip] [Loop]
 Eve_Guard_Walk_Forward_End : Player/Eve/Animations/Eve_Guard_Walk_Forward_End.fbx : [Animation Clip]
+// Eve Animations - Evade
+Eve_Evade_Forward : Player/Eve/Animations/Eve_Evade_Forward.fbx : [Animation Clip]
 // Eve Animator Controller
 Eve_AnimatorController : Player/Eve/AnimatorController/Eve_AnimatorController.animatorcontroller : [Animator Controller]
 // Space

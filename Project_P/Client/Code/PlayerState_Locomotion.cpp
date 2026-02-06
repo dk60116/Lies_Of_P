@@ -28,23 +28,42 @@ void CPlayerState_Locomotion::Enter()
 
 void CPlayerState_Locomotion::Update()
 {
-	__super::Update();
+    __super::Update();
 
-	m_pCtx->TickAttackBuffer();
-	m_pCtx->TickGuardBuffer();
+    m_pCtx->TickAttackBuffer();
+    m_pCtx->TickGuardBuffer();
 
-	if (m_pCtx->IsGuardActive() || m_pCtx->HasGuardBuffered())
-			TransitionTo(m_mChildList[CPlayerController::PlayerState::Guard]);
-	else if (m_pCtx->IsAttackActive() || m_pCtx->HasAttackBuffered())
-		TransitionTo(m_mChildList[CPlayerController::PlayerState::Attack]);
-	else
-		TransitionTo(m_pCtx->IsMovePressed() ? m_mChildList[CPlayerController::PlayerState::Move] : m_mChildList[CPlayerController::PlayerState::Idle]);
+    if (m_pCtx->HasGuardBuffered())
+    {
+        m_pCtx->ConsumeGuardBuffer();
+        TransitionTo(m_mChildList[CPlayerController::PlayerState::Guard]);
+    }
 
-	if (m_pChild)
-		m_pChild->Update();
+    else if (m_pCtx->HasAttackBuffered())
+    {
+        if (m_pCtx->IsGuardActive() && !m_pCtx->IsCanAttack())
+        {
+            m_pCtx->ConsumeAttackBuffer();
+        }
+        else
+        {
+            m_pCtx->ConsumeAttackBuffer();
+            TransitionTo(m_mChildList[CPlayerController::PlayerState::Attack]);
+        }
+    }
+    else if (m_pCtx->IsGuardActive())
+        TransitionTo(m_mChildList[CPlayerController::PlayerState::Guard]);
+    else if (m_pCtx->IsAttackActive())
+        TransitionTo(m_mChildList[CPlayerController::PlayerState::Attack]);
+    else
+        TransitionTo(m_pCtx->IsMovePressed()
+            ? m_mChildList[CPlayerController::PlayerState::Move]
+            : m_mChildList[CPlayerController::PlayerState::Idle]);
 
-	m_pCtx->TickTurn(m_pCtx->PlayerStatus().turnSpeed);
-	m_pCtx->TickMove();
+    if (m_pChild) m_pChild->Update();
+
+    m_pCtx->TickTurn(m_pCtx->PlayerStatus().turnSpeed);
+    m_pCtx->TickMove();
 }
 
 void CPlayerState_Locomotion::Exit()

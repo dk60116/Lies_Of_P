@@ -10,6 +10,7 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_Cv_Battle({})
 	, m_bCanMove(true)
 	, m_bCanTurn(true)
+	, m_bCanAttack(true)
 {
 	m_strName = L"PlayerControllerContext";
 }
@@ -423,6 +424,16 @@ const _bool CPlayerControllerContext::IsCanTurn() const
 void CPlayerControllerContext::SetCanTurn(const _bool _value)
 {
 	m_bCanTurn = _value;
+}
+
+const _bool CPlayerControllerContext::IsCanAttack() const
+{
+	return m_bCanAttack;
+}
+
+void CPlayerControllerContext::SetCanAttack(const _bool _value)
+{
+	m_bCanAttack = _value;
 }
 
 void CPlayerControllerContext::StopMoveImmediate()

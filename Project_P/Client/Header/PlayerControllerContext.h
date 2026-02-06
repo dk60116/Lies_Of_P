@@ -86,16 +86,20 @@ public:
 	void BufferAttack();
 	_bool ConsumeAttackBuffer();
 	_bool HasAttackBuffered() const;
-
 	void SetAttackActive(_bool v);
 	_bool IsAttackActive() const;
 
 	void BufferGuard();
 	_bool ConsumeGuardBuffer();
 	_bool HasGuardBuffered() const;
-
 	void SetGuardActive(_bool v);
 	_bool IsGuardActive() const;
+
+	void BufferEvade();
+	_bool ConsumeEvadeBuffer();
+	_bool HasEvadeBuffered() const;
+	void SetEvadeActive(_bool v);
+	_bool IsEvadeActive() const;
 
 	void TickAttackBuffer();
 	void TickGuardBuffer();
@@ -105,6 +109,8 @@ public:
 	void SetCanMove(const _bool _value);
 	const _bool IsCanTurn() const;
 	void SetCanTurn(const _bool _value);
+	const _bool IsCanAttack() const;
+	void SetCanAttack(const _bool _value);
 	
 public:
 	void StopMoveImmediate();
@@ -137,7 +143,7 @@ private:
 	CPlayerController* m_pController;
 
 private:
-	_bool m_bCanMove, m_bCanTurn;
+	_bool m_bCanMove, m_bCanTurn, m_bCanAttack;
 
 private:
 	CV_MOVE m_Cv_Move;

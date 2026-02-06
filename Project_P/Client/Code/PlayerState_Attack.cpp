@@ -136,6 +136,9 @@ void CPlayerState_Attack::Update()
 {
     __super::Update();
 
+    if (!m_pCtx->IsCanAttack())
+        m_pCtx->SetAttackActive(false);
+
     if (m_pCtx->IsLightAttackPressed())
     {
         if (m_bUnderTerm)

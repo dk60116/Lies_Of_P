@@ -98,11 +98,12 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx)
 			m_pCtx->Animator()->RegisterActionHandler(L"EndStart", [this]()
 				{
 					m_pCtx->SetCanMove(false);
+					m_pCtx->SetCanAttack(true);
 				});
 		}
 
 		{
-			CAnimationClip::ActionTrigger at = { 15, L"Exit" };
+			CAnimationClip::ActionTrigger at = { 10, L"Exit" };
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"Exit", [this]()
 				{
@@ -130,6 +131,7 @@ void CPlayerState_Guard::Enter()
 	m_pCtx->SetAnimMoveSpeed(0.f);
 	m_pCtx->Animator()->SetTrigger(L"guard");
 	m_pCtx->Animator()->SetBool(L"isGuard", true);
+	m_pCtx->SetCanAttack(false);
 
 	m_bExitableTime = false;
 	m_bExit = false;
@@ -147,9 +149,10 @@ void CPlayerState_Guard::Update()
 			m_pCtx->Animator()->SetBool(L"isGuard", false);
 			m_pCtx->StopMoveImmediate();
 		}
-		else if (m_pCtx->IsGuardPressed_Down())
+		else
 		{
-			Enter();
+			if (m_pCtx->IsGuardPressed_Down())
+				Enter();
 		}
 	}
 }
@@ -158,8 +161,10 @@ void CPlayerState_Guard::Exit()
 {
 	__super::Exit();
 
+	m_pCtx->SetGuardActive(false);
 	m_pCtx->Animator()->SetBool(L"isGuard", false);
 	m_pCtx->SetCanTurn(true);
 	m_pCtx->SetCanMove(true);
 	m_pCtx->SetAnimMoveSpeed(0.f);
+	m_pCtx->SetCanAttack(true);
 }

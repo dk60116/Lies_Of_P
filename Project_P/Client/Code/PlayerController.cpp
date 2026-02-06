@@ -42,6 +42,7 @@ HRESULT CPlayerController::Initialize()
 	m_mKeyHold.insert({ Right, false });
 	m_mKeyHold.insert({ Attack, false });
 	m_mKeyHold.insert({ Guard, false });
+	m_mKeyHold.insert({ Evade, false });
 
 	m_mStateList.insert({ PlayerState::Locomotion, new CPlayerState_Locomotion() });
 	m_mStateList.insert({ PlayerState::Idle, new CPlayerState_Idle() });
@@ -203,6 +204,7 @@ void CPlayerController::Update_Key()
 	KEY_CODE key_L = KEY_CODE::A;
 	KEY_CODE key_R = KEY_CODE::D;
 	KEY_CODE key_Guard = KEY_CODE::E;
+	KEY_CODE key_Evade = KEY_CODE::SHIFT;
 
 	_uint mouse0 = 0;
 
@@ -228,4 +230,8 @@ void CPlayerController::Update_Key()
 	m_mKeyHold[Guard] = CInput::GetInstance().GetKey(key_Guard);
 	m_mKeyDown[Guard] = CInput::GetInstance().GetKeyDown(key_Guard);
 	m_mKeyUp[Guard] = CInput::GetInstance().GetKeyUp(key_Guard);
+
+	m_mKeyHold[Evade] = CInput::GetInstance().GetKey(key_Evade);
+	m_mKeyDown[Evade] = CInput::GetInstance().GetKeyDown(key_Evade);
+	m_mKeyUp[Evade] = CInput::GetInstance().GetKeyUp(key_Evade);
 }
