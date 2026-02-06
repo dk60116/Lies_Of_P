@@ -56,7 +56,7 @@ void CPlayerState_Locomotion::Update()
     else if (m_pCtx->IsActionActive(CPlayerController::PlayerState::Attack))
         TransitionTo(m_mChildList[CPlayerController::PlayerState::Attack]);
     else
-        TransitionTo(m_pCtx->IsMovePressed()
+        TransitionTo(m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move)
             ? m_mChildList[CPlayerController::PlayerState::Move]
             : m_mChildList[CPlayerController::PlayerState::Idle]);
 

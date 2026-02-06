@@ -7,6 +7,7 @@
 #include "PlayerState_Move.h"
 #include "PlayerState_Attack.h"
 #include "PlayerState_Guard.h"
+#include "PlayerState_Evade.h"
 
 CPlayerController::CPlayerController()
 	: m_pPlayer(nullptr)
@@ -49,6 +50,7 @@ HRESULT CPlayerController::Initialize()
 	m_mStateList.insert({ PlayerState::Move, new CPlayerState_Move() });
 	m_mStateList.insert({ PlayerState::Attack, new CPlayerState_Attack() });
 	m_mStateList.insert({ PlayerState::Guard, new CPlayerState_Guard() });
+	m_mStateList.insert({ PlayerState::Evade, new CPlayerState_Evade() });
 
 	auto loco = static_cast<CPlayerState_Locomotion*>(Get_PlayerState(PlayerState::Locomotion));
 
@@ -139,7 +141,6 @@ void CPlayerController::Update()
 		m_ctx.BeginTurnTo(desiredYaw);
 	}
 
-	m_ctx.SetMovePressed(hasInput);
 	m_bRunning = hasInput;
 
     m_pRoot->Update();

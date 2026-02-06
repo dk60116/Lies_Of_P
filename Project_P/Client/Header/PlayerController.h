@@ -3,7 +3,8 @@
 
 #include "PlayerControllerTypes.h"
 #include "PlayerControllerContext.h"
-#include "PlayerState.h"
+
+class CPlayerState;
 
 class CPlayerController final : public CComponent
 {

@@ -2,6 +2,7 @@
 
 #include "cpch.h"
 #include "PlayerControllerContext.h"
+#include "PlayerController.h"
 
 class CPlayerControllerContext;
 

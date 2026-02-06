@@ -143,7 +143,7 @@ void CPlayerState_Guard::Update()
 
 	if (m_bExitableTime)
 	{
-		if (!m_pCtx->IsGuardPressed())
+		if (!m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Guard))
 		{
 			m_bExit = true;
 			m_pCtx->Animator()->SetBool(L"isGuard", false);
@@ -151,7 +151,7 @@ void CPlayerState_Guard::Update()
 		}
 		else
 		{
-			if (m_pCtx->IsGuardPressed_Down())
+			if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Guard))
 				Enter();
 		}
 	}

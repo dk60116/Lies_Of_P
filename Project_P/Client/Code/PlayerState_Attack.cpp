@@ -1,5 +1,6 @@
 #include "cpch.h"
 #include "PlayerState_Attack.h"
+#include "PlayerController.h"
 
 CPlayerState_Attack::CPlayerState_Attack()
     : m_bCanContinue(false)
@@ -139,7 +140,7 @@ void CPlayerState_Attack::Update()
     if (!m_pCtx->IsCanAttack())
         m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, false);
 
-    if (m_pCtx->IsLightAttackPressed())
+    if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
     {
         if (m_bUnderTerm)
             m_bPressedContinue = true;
@@ -147,7 +148,7 @@ void CPlayerState_Attack::Update()
             ContinueCombo();
     }
 
-    if (m_pCtx->IsMovePressed() && !m_bUnderLimit)
+    if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Move) && !m_bUnderLimit)
         m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, false);
 }
 

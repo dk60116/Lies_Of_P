@@ -37,12 +37,9 @@ public:
 public:
 	void Bind(CPlayer* _player, CPlayerCamera* _cam, CPlayerController* _controller);
 
-	void SetMovePressed(_bool pressed);
-	const _bool IsMovePressed() const;
-
-	const _bool IsLightAttackPressed();
-	const _bool IsGuardPressed();
-	const _bool IsGuardPressed_Down();
+	const _bool IsKeyPressed_Hold(PlayerState state);
+	const _bool IsKeyPressed_Down(PlayerState state);
+	const _bool IsKeyPressed_UP(PlayerState state);
 
 	vector3 CameraForward() const;
 	_float CameraYawDeg() const;
@@ -94,7 +91,11 @@ public:
 	void SetCanTurn(const _bool _value);
 	const _bool IsCanAttack() const;
 	void SetCanAttack(const _bool _value);
-	
+	const _bool IsCanGuard() const;
+	void SetCanGuard(const _bool _value);
+	const _bool IsCanEvade() const;
+	void SetCanEvade(const _bool _value);
+
 public:
 	void StopMoveImmediate();
 
@@ -126,11 +127,11 @@ private:
 	CPlayerController* m_pController;
 
 private:
-	_bool m_bCanMove, m_bCanTurn, m_bCanAttack;
+	_bool m_bCanMove, m_bCanTurn, m_bCanAttack, m_bCanGuard, m_bCanEvade;
 
 private:
 	CV_MOVE m_Cv_Move;
-	std::map<PlayerState, CONTEXT_VALUE> m_mBattleContext;
+	map<PlayerState, CONTEXT_VALUE> m_mBattleContext;
 
 private:
 	CONTEXT_VALUE* GetBattleContext(PlayerState state);

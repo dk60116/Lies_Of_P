@@ -10,10 +10,13 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_bCanMove(true)
 	, m_bCanTurn(true)
 	, m_bCanAttack(true)
+	, m_bCanGuard(true)
+	, m_bCanEvade(true)
 {
 	m_strName = L"PlayerControllerContext";
 	m_mBattleContext.emplace(PlayerState::Attack, CONTEXT_VALUE{});
 	m_mBattleContext.emplace(PlayerState::Guard, CONTEXT_VALUE{});
+	m_mBattleContext.emplace(PlayerState::Evade, CONTEXT_VALUE{});
 }
 
 CPlayerControllerContext::~CPlayerControllerContext()
@@ -27,29 +30,76 @@ void CPlayerControllerContext::Bind(CPlayer* _player, CPlayerCamera* _cam, CPlay
 	m_pController = _controller;
 }
 
-void CPlayerControllerContext::SetMovePressed(_bool pressed)
+const _bool CPlayerControllerContext::IsKeyPressed_Hold(PlayerState state)
 {
-	m_Cv_Move.m_bMovePressed = pressed;
+	switch (state)
+	{
+	case PlayerState::Move:
+		return m_pController->m_mKeyHold[CPlayerController::Forward] ||
+			m_pController->m_mKeyHold[CPlayerController::Back] ||
+			m_pController->m_mKeyHold[CPlayerController::Left] ||
+			m_pController->m_mKeyHold[CPlayerController::Right];
+	case PlayerState::Attack:
+		return m_pController->m_mKeyHold[CPlayerController::Attack];
+	case PlayerState::Attack_S:
+		return m_pController->m_mKeyHold[CPlayerController::Attack_S];
+	case PlayerState::Guard:
+		return m_pController->m_mKeyHold[CPlayerController::Guard];
+	case PlayerState::Evade:
+		return m_pController->m_mKeyHold[CPlayerController::Evade];
+	default:
+		break;
+	}
+
+	return false;
 }
 
-const _bool CPlayerControllerContext::IsMovePressed() const
+const _bool CPlayerControllerContext::IsKeyPressed_Down(PlayerState state)
 {
-	return m_Cv_Move.m_bMovePressed;
+	switch (state)
+	{
+	case PlayerState::Move:
+		return m_pController->m_mKeyDown[CPlayerController::Forward] ||
+			m_pController->m_mKeyDown[CPlayerController::Back] ||
+			m_pController->m_mKeyDown[CPlayerController::Left] ||
+			m_pController->m_mKeyDown[CPlayerController::Right];
+	case PlayerState::Attack:
+		return m_pController->m_mKeyDown[CPlayerController::Attack];
+	case PlayerState::Attack_S:
+		return m_pController->m_mKeyDown[CPlayerController::Attack_S];
+	case PlayerState::Guard:
+		return m_pController->m_mKeyDown[CPlayerController::Guard];
+	case PlayerState::Evade:
+		return m_pController->m_mKeyDown[CPlayerController::Evade];
+	default:
+		break;
+	}
+
+	return false;
 }
 
-const _bool CPlayerControllerContext::IsLightAttackPressed()
+const _bool CPlayerControllerContext::IsKeyPressed_UP(PlayerState state)
 {
-	return m_pController->m_mKeyDown[CPlayerController::Attack];
-}
+	switch (state)
+	{
+	case PlayerState::Move:
+		return m_pController->m_mKeyUp[CPlayerController::Forward] ||
+			m_pController->m_mKeyUp[CPlayerController::Back] ||
+			m_pController->m_mKeyUp[CPlayerController::Left] ||
+			m_pController->m_mKeyUp[CPlayerController::Right];
+	case PlayerState::Attack:
+		return m_pController->m_mKeyUp[CPlayerController::Attack];
+	case PlayerState::Attack_S:
+		return m_pController->m_mKeyUp[CPlayerController::Attack_S];
+	case PlayerState::Guard:
+		return m_pController->m_mKeyUp[CPlayerController::Guard];
+	case PlayerState::Evade:
+		return m_pController->m_mKeyUp[CPlayerController::Evade];
+	default:
+		break;
+	}
 
-const _bool CPlayerControllerContext::IsGuardPressed()
-{
-	return 	m_pController->m_mKeyHold[CPlayerController::Guard];
-}
-
-const _bool CPlayerControllerContext::IsGuardPressed_Down()
-{
-	return 	m_pController->m_mKeyDown[CPlayerController::Guard];
+	return false;
 }
 
 vector3 CPlayerControllerContext::CameraForward() const
@@ -160,6 +210,8 @@ void CPlayerControllerContext::TickMove()
 
 	const _float curSpeed = PlayerStatus().moveSpeed * m_Cv_Move.m_fMove01;
 	AddPosition(dir * curSpeed * dt);
+
+	CDebug::LogError(m_Cv_Move.m_fMove01);
 	
 	SetAnimMoveSpeed(m_Cv_Move.m_fMove01);
 }
@@ -417,6 +469,26 @@ const _bool CPlayerControllerContext::IsCanAttack() const
 void CPlayerControllerContext::SetCanAttack(const _bool _value)
 {
 	m_bCanAttack = _value;
+}
+
+const _bool CPlayerControllerContext::IsCanGuard() const
+{
+	return m_bCanGuard;
+}
+
+void CPlayerControllerContext::SetCanGuard(const _bool _value)
+{
+	m_bCanGuard = _value;
+}
+
+const _bool CPlayerControllerContext::IsCanEvade() const
+{
+	return m_bCanEvade;
+}
+
+void CPlayerControllerContext::SetCanEvade(const _bool _value)
+{
+	m_bCanEvade = _value;
 }
 
 void CPlayerControllerContext::StopMoveImmediate()

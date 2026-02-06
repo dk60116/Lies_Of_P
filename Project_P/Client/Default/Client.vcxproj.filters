@@ -141,6 +141,9 @@
     <ClInclude Include="..\Header\PlayerState_Guard.h">
       <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\PlayerState_Evade.h">
+      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Code\MainScene.cpp">
@@ -225,6 +228,9 @@
       <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerState_Guard.cpp">
+      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerState_Evade.cpp">
       <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
     </ClCompile>
   </ItemGroup>
