@@ -99,9 +99,9 @@ void CPlayerController::Update()
     }
 
 	if (m_mKeyDown[Guard])
-		m_ctx.BufferGuard();
+		m_ctx.BufferInput(PlayerState::Guard);
     if (m_mKeyDown[Attack])
-        m_ctx.BufferAttack();
+        m_ctx.BufferInput(PlayerState::Attack);
 
     const _int x =
         (m_mKeyHold[Right] ? 1 : 0) +
@@ -113,7 +113,7 @@ void CPlayerController::Update()
 
     const _bool hasInput = (x != 0) || (y != 0);
 
-    const _bool attackLock = m_ctx.IsAttackActive();
+    const _bool attackLock = m_ctx.IsInputActive(PlayerState::Attack);
 
 	if (hasInput)
 	{

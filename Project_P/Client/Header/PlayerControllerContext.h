@@ -1,6 +1,10 @@
 #pragma once
 
 #include "cpch.h"
+#include <map>
+
+class CPlayerController;
+enum class CPlayerController::PlayerState : int;
 
 class CPlayerControllerContext final : public UObject
 {
@@ -30,9 +34,7 @@ private:
 
 	typedef struct ContextValue_Battle
 	{
-		CV_INPUT_BUFFER m_attack;
-		CV_INPUT_BUFFER m_guard;
-		CV_INPUT_BUFFER m_evade;
+		std::map<CPlayerController::PlayerState, CV_INPUT_BUFFER> m_inputBuffers;
 	}CV_BATTLE;
 
 public:
@@ -85,26 +87,12 @@ public:
 	void SetBattle(const _bool _value);
 
 public:
-	void BufferAttack();
-	_bool ConsumeAttackBuffer();
-	_bool HasAttackBuffered() const;
-	void SetAttackActive(_bool v);
-	_bool IsAttackActive() const;
-
-	void BufferGuard();
-	_bool ConsumeGuardBuffer();
-	_bool HasGuardBuffered() const;
-	void SetGuardActive(_bool v);
-	_bool IsGuardActive() const;
-
-	void BufferEvade();
-	_bool ConsumeEvadeBuffer();
-	_bool HasEvadeBuffered() const;
-	void SetEvadeActive(_bool v);
-	_bool IsEvadeActive() const;
-
-	void TickAttackBuffer();
-	void TickGuardBuffer();
+	void BufferInput(CPlayerController::PlayerState state);
+	_bool ConsumeInputBuffer(CPlayerController::PlayerState state);
+	_bool HasInputBuffered(CPlayerController::PlayerState state) const;
+	void SetInputActive(CPlayerController::PlayerState state, _bool v);
+	_bool IsInputActive(CPlayerController::PlayerState state) const;
+	void TickInputBuffer(CPlayerController::PlayerState state);
 
 public:
 	const _bool IsCanMove() const;
@@ -152,10 +140,12 @@ private:
 	CV_BATTLE m_Cv_Battle;
 
 private:
-	void BufferInput(CV_INPUT_BUFFER& input);
-	_bool ConsumeInputBuffer(CV_INPUT_BUFFER& input);
-	_bool HasInputBuffered(const CV_INPUT_BUFFER& input) const;
-	void SetInputActive(CV_INPUT_BUFFER& input, _bool v);
-	_bool IsInputActive(const CV_INPUT_BUFFER& input) const;
-	void TickInputBuffer(CV_INPUT_BUFFER& input);
+	CV_INPUT_BUFFER& GetInputBuffer(CPlayerController::PlayerState state);
+	const CV_INPUT_BUFFER* FindInputBuffer(CPlayerController::PlayerState state) const;
+	void BufferInputState(CV_INPUT_BUFFER& input);
+	_bool ConsumeInputBufferState(CV_INPUT_BUFFER& input);
+	_bool HasInputBufferedState(const CV_INPUT_BUFFER& input) const;
+	void SetInputActiveState(CV_INPUT_BUFFER& input, _bool v);
+	_bool IsInputActiveState(const CV_INPUT_BUFFER& input) const;
+	void TickInputBufferState(CV_INPUT_BUFFER& input);
 };

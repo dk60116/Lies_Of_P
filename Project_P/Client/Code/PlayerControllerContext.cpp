@@ -13,6 +13,8 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_bCanAttack(true)
 {
 	m_strName = L"PlayerControllerContext";
+	m_Cv_Battle.m_inputBuffers.emplace(CPlayerController::PlayerState::Attack, CV_INPUT_BUFFER{});
+	m_Cv_Battle.m_inputBuffers.emplace(CPlayerController::PlayerState::Guard, CV_INPUT_BUFFER{});
 }
 
 CPlayerControllerContext::~CPlayerControllerContext()
@@ -310,89 +312,40 @@ void CPlayerControllerContext::SetBattle(const _bool _value)
 	m_pPlayer->Get_Animator()->SetTrigger(L"BattleEnd");
 }
 
-void CPlayerControllerContext::BufferAttack()
+void CPlayerControllerContext::BufferInput(CPlayerController::PlayerState state)
 {
-	BufferInput(m_Cv_Battle.m_attack);
+	BufferInputState(GetInputBuffer(state));
 }
 
-_bool CPlayerControllerContext::ConsumeAttackBuffer()
+_bool CPlayerControllerContext::ConsumeInputBuffer(CPlayerController::PlayerState state)
 {
-	return ConsumeInputBuffer(m_Cv_Battle.m_attack);
+	return ConsumeInputBufferState(GetInputBuffer(state));
 }
 
-_bool CPlayerControllerContext::HasAttackBuffered() const
+_bool CPlayerControllerContext::HasInputBuffered(CPlayerController::PlayerState state) const
 {
-	return HasInputBuffered(m_Cv_Battle.m_attack);
+	const CV_INPUT_BUFFER* input = FindInputBuffer(state);
+	if (!input)
+		return false;
+	return HasInputBufferedState(*input);
 }
 
-void CPlayerControllerContext::SetAttackActive(_bool v)
+void CPlayerControllerContext::SetInputActive(CPlayerController::PlayerState state, _bool v)
 {
-	SetInputActive(m_Cv_Battle.m_attack, v);
+	SetInputActiveState(GetInputBuffer(state), v);
 }
 
-_bool CPlayerControllerContext::IsAttackActive() const
+_bool CPlayerControllerContext::IsInputActive(CPlayerController::PlayerState state) const
 {
-	return IsInputActive(m_Cv_Battle.m_attack);
+	const CV_INPUT_BUFFER* input = FindInputBuffer(state);
+	if (!input)
+		return false;
+	return IsInputActiveState(*input);
 }
 
-void CPlayerControllerContext::BufferGuard()
+void CPlayerControllerContext::TickInputBuffer(CPlayerController::PlayerState state)
 {
-	BufferInput(m_Cv_Battle.m_guard);
-}
-
-_bool CPlayerControllerContext::ConsumeGuardBuffer()
-{
-	return ConsumeInputBuffer(m_Cv_Battle.m_guard);
-}
-
-_bool CPlayerControllerContext::HasGuardBuffered() const
-{
-	return HasInputBuffered(m_Cv_Battle.m_guard);
-}
-
-void CPlayerControllerContext::SetGuardActive(_bool v)
-{
-	SetInputActive(m_Cv_Battle.m_guard, v);
-}
-
-_bool CPlayerControllerContext::IsGuardActive() const
-{
-	return IsInputActive(m_Cv_Battle.m_guard);
-}
-
-void CPlayerControllerContext::BufferEvade()
-{
-	BufferInput(m_Cv_Battle.m_evade);
-}
-
-_bool CPlayerControllerContext::ConsumeEvadeBuffer()
-{
-	return ConsumeInputBuffer(m_Cv_Battle.m_evade);
-}
-
-_bool CPlayerControllerContext::HasEvadeBuffered() const
-{
-	return HasInputBuffered(m_Cv_Battle.m_evade);
-}
-
-void CPlayerControllerContext::SetEvadeActive(_bool v)
-{
-	SetInputActive(m_Cv_Battle.m_evade, v);
-}
-
-_bool CPlayerControllerContext::IsEvadeActive() const
-{
-	return IsInputActive(m_Cv_Battle.m_evade);
-}
-
-void CPlayerControllerContext::TickAttackBuffer()
-{
-	TickInputBuffer(m_Cv_Battle.m_attack);
-}
-
-void CPlayerControllerContext::TickGuardBuffer()
-{
-	TickInputBuffer(m_Cv_Battle.m_guard);
+	TickInputBufferState(GetInputBuffer(state));
 }
 
 const _bool CPlayerControllerContext::IsCanMove() const
@@ -435,13 +388,26 @@ void CPlayerControllerContext::StopMoveImmediate()
 	SetAnimMoveSpeed(0.f);
 }
 
-void CPlayerControllerContext::BufferInput(CV_INPUT_BUFFER& input)
+CV_INPUT_BUFFER& CPlayerControllerContext::GetInputBuffer(CPlayerController::PlayerState state)
+{
+	return m_Cv_Battle.m_inputBuffers[state];
+}
+
+const CPlayerControllerContext::CV_INPUT_BUFFER* CPlayerControllerContext::FindInputBuffer(CPlayerController::PlayerState state) const
+{
+	auto it = m_Cv_Battle.m_inputBuffers.find(state);
+	if (it == m_Cv_Battle.m_inputBuffers.end())
+		return nullptr;
+	return &it->second;
+}
+
+void CPlayerControllerContext::BufferInputState(CV_INPUT_BUFFER& input)
 {
 	input.m_bBuffered = true;
 	input.m_fBufferT = 0.f;
 }
 
-_bool CPlayerControllerContext::ConsumeInputBuffer(CV_INPUT_BUFFER& input)
+_bool CPlayerControllerContext::ConsumeInputBufferState(CV_INPUT_BUFFER& input)
 {
 	if (!input.m_bBuffered)
 		return false;
@@ -450,22 +416,22 @@ _bool CPlayerControllerContext::ConsumeInputBuffer(CV_INPUT_BUFFER& input)
 	return true;
 }
 
-_bool CPlayerControllerContext::HasInputBuffered(const CV_INPUT_BUFFER& input) const
+_bool CPlayerControllerContext::HasInputBufferedState(const CV_INPUT_BUFFER& input) const
 {
 	return input.m_bBuffered;
 }
 
-void CPlayerControllerContext::SetInputActive(CV_INPUT_BUFFER& input, _bool v)
+void CPlayerControllerContext::SetInputActiveState(CV_INPUT_BUFFER& input, _bool v)
 {
 	input.m_bActive = v;
 }
 
-_bool CPlayerControllerContext::IsInputActive(const CV_INPUT_BUFFER& input) const
+_bool CPlayerControllerContext::IsInputActiveState(const CV_INPUT_BUFFER& input) const
 {
 	return input.m_bActive;
 }
 
-void CPlayerControllerContext::TickInputBuffer(CV_INPUT_BUFFER& input)
+void CPlayerControllerContext::TickInputBufferState(CV_INPUT_BUFFER& input)
 {
 	if (!input.m_bBuffered)
 		return;
