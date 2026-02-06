@@ -67,7 +67,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx)
             ealClip->Add_ActionTrigger(at);
             m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Exit", [this]()
                 {
-                    m_pCtx->SetAttackActive(false);
+                    m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, false);
                     m_pCtx->SetCanTurn(true);
                 });
         }
@@ -114,7 +114,7 @@ void CPlayerState_Attack::Enter()
 {
 	__super::Enter();
 
-    m_pCtx->SetAttackActive(true);
+    m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, true);
 
     m_pCtx->SetBattle(true);
 
@@ -137,7 +137,7 @@ void CPlayerState_Attack::Update()
     __super::Update();
 
     if (!m_pCtx->IsCanAttack())
-        m_pCtx->SetAttackActive(false);
+        m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, false);
 
     if (m_pCtx->IsLightAttackPressed())
     {
@@ -148,7 +148,7 @@ void CPlayerState_Attack::Update()
     }
 
     if (m_pCtx->IsMovePressed() && !m_bUnderLimit)
-        m_pCtx->SetAttackActive(false);
+        m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, false);
 }
 
 void CPlayerState_Attack::Exit()

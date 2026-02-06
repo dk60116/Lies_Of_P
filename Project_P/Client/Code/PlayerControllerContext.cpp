@@ -7,12 +7,13 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_pController(nullptr)
 	, m_pCam(nullptr)
 	, m_Cv_Move({})
-	, m_Cv_Battle({})
 	, m_bCanMove(true)
 	, m_bCanTurn(true)
 	, m_bCanAttack(true)
 {
 	m_strName = L"PlayerControllerContext";
+	m_mBattleContext.emplace(CPlayerController::PlayerState::Attack, CONTEXT_VALUE{});
+	m_mBattleContext.emplace(CPlayerController::PlayerState::Guard, CONTEXT_VALUE{});
 }
 
 CPlayerControllerContext::~CPlayerControllerContext()
@@ -310,100 +311,82 @@ void CPlayerControllerContext::SetBattle(const _bool _value)
 	m_pPlayer->Get_Animator()->SetTrigger(L"BattleEnd");
 }
 
-void CPlayerControllerContext::BufferAttack()
+void CPlayerControllerContext::BufferAction(CPlayerController::PlayerState state)
 {
-	m_Cv_Battle.m_bAttackBuffered = true;
-	m_Cv_Battle.m_fAttackBufferT = 0.f;
-}
-
-_bool CPlayerControllerContext::ConsumeAttackBuffer()
-{
-	if (!m_Cv_Battle.m_bAttackBuffered)
-		return false;
-	m_Cv_Battle.m_bAttackBuffered = false;
-	m_Cv_Battle.m_fAttackBufferT = 0.f;
-	return true;
-}
-
-_bool CPlayerControllerContext::HasAttackBuffered() const
-{
-	return m_Cv_Battle.m_bAttackBuffered;
-}
-
-void CPlayerControllerContext::SetAttackActive(_bool v)
-{
-	m_Cv_Battle.m_bAttackActive = v;
-}
-
-_bool CPlayerControllerContext::IsAttackActive() const
-{
-	return m_Cv_Battle.m_bAttackActive;
-}
-
-void CPlayerControllerContext::BufferGuard()
-{
-	m_Cv_Battle.m_bGuardBuffered = true;
-	m_Cv_Battle.m_fGuardBufferT = 0.f;
-}
-
-_bool CPlayerControllerContext::ConsumeGuardBuffer()
-{
-	if (!m_Cv_Battle.m_bGuardBuffered)
-		return false;
-	m_Cv_Battle.m_bGuardBuffered = false;
-	m_Cv_Battle.m_fGuardBufferT = 0.f;
-	return true;
-}
-
-_bool CPlayerControllerContext::HasGuardBuffered() const
-{
-	return m_Cv_Battle.m_bGuardBuffered;
-}
-
-void CPlayerControllerContext::SetGuardActive(_bool v)
-{
-	m_Cv_Battle.m_bGuardActive = v;
-}
-
-_bool CPlayerControllerContext::IsGuardActive() const
-{
-	return 	m_Cv_Battle.m_bGuardActive;
-}
-
-void CPlayerControllerContext::TickAttackBuffer()
-{
-	if (!m_Cv_Battle.m_bAttackBuffered)
+	auto* ctx = GetBattleContext(state);
+	if (!ctx)
 		return;
-
-	_float dt = DELTA_TIME;
-     
-	dt = std::clamp(dt, 0.f, 0.05f);
-
-	m_Cv_Battle.m_fAttackBufferT += dt;
-
-	if (m_Cv_Battle.m_fAttackBufferT >= m_Cv_Battle.m_fAttackBufferLife)
-	{
-		m_Cv_Battle.m_bAttackBuffered = false;
-		m_Cv_Battle.m_fAttackBufferT = 0.f;
-	}
+	ctx->m_bBuffered = true;
+	ctx->m_fBufferT = 0.f;
 }
 
-void CPlayerControllerContext::TickGuardBuffer()
+_bool CPlayerControllerContext::ConsumeActionBuffer(CPlayerController::PlayerState state)
 {
-	if (!m_Cv_Battle.m_bGuardBuffered)
+	auto* ctx = GetBattleContext(state);
+	if (!ctx || !ctx->m_bBuffered)
+		return false;
+	ctx->m_bBuffered = false;
+	ctx->m_fBufferT = 0.f;
+	return true;
+}
+
+_bool CPlayerControllerContext::HasActionBuffered(CPlayerController::PlayerState state) const
+{
+	auto* ctx = GetBattleContext(state);
+	if (!ctx)
+		return false;
+	return ctx->m_bBuffered;
+}
+
+void CPlayerControllerContext::SetActionActive(CPlayerController::PlayerState state, _bool v)
+{
+	auto* ctx = GetBattleContext(state);
+	if (!ctx)
+		return;
+	ctx->m_bActive = v;
+}
+
+_bool CPlayerControllerContext::IsActionActive(CPlayerController::PlayerState state) const
+{
+	auto* ctx = GetBattleContext(state);
+	if (!ctx)
+		return false;
+	return ctx->m_bActive;
+}
+
+void CPlayerControllerContext::TickActionBuffer(CPlayerController::PlayerState state)
+{
+	auto* ctx = GetBattleContext(state);
+	if (!ctx || !ctx->m_bBuffered)
 		return;
 
 	_float dt = DELTA_TIME;
 
 	dt = std::clamp(dt, 0.f, 0.05f);
 
-	m_Cv_Battle.m_fGuardBufferT += dt;
+	ctx->m_fBufferT += dt;
 
-	if (m_Cv_Battle.m_fGuardBufferT >= m_Cv_Battle.m_fGuardBufferLife)
+	if (ctx->m_fBufferT >= ctx->m_fBufferLife)
 	{
-		m_Cv_Battle.m_bGuardBuffered = false;
-		m_Cv_Battle.m_fGuardBufferT = 0.f;
+		ctx->m_bBuffered = false;
+		ctx->m_fBufferT = 0.f;
 	}
+}
+
+CPlayerControllerContext::CONTEXT_VALUE* CPlayerControllerContext::GetBattleContext(CPlayerController::PlayerState state)
+{
+	auto it = m_mBattleContext.find(state);
+	if (it == m_mBattleContext.end())
+		return nullptr;
+	return &it->second;
+}
+
+const CPlayerControllerContext::CONTEXT_VALUE* CPlayerControllerContext::GetBattleContext(CPlayerController::PlayerState state) const
+{
+	auto it = m_mBattleContext.find(state);
+	if (it == m_mBattleContext.end())
+		return nullptr;
+	return &it->second;
 }
 
 const _bool CPlayerControllerContext::IsCanMove() const

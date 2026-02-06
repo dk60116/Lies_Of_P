@@ -1,6 +1,10 @@
 #pragma once
 
 #include "cpch.h"
+#include <map>
+
+class CPlayerController;
+enum class CPlayerController::PlayerState : int;
 
 class CPlayerControllerContext final : public UObject
 {
@@ -20,18 +24,13 @@ private:
 		_float m_turnDir = 0.f;
 	}CV_MOVE;
 
-	typedef struct ContextValue_Battle
+	typedef struct ContextValue
 	{
-		_bool  m_bAttackActive = false;
-		_bool  m_bAttackBuffered = false;
-		_float m_fAttackBufferT = 0.f;
-		_float m_fAttackBufferLife = 0.25f;
-
-		_bool  m_bGuardActive = false;
-		_bool  m_bGuardBuffered = false;
-		_float m_fGuardBufferT = 0.f;
-		_float m_fGuardBufferLife = 0.25f;
-	}CV_BATTLE;
+		_bool  m_bActive = false;
+		_bool  m_bBuffered = false;
+		_float m_fBufferT = 0.f;
+		_float m_fBufferLife = 0.25f;
+	}CONTEXT_VALUE;
 
 public:
 	CPlayerControllerContext();
@@ -83,26 +82,12 @@ public:
 	void SetBattle(const _bool _value);
 
 public:
-	void BufferAttack();
-	_bool ConsumeAttackBuffer();
-	_bool HasAttackBuffered() const;
-	void SetAttackActive(_bool v);
-	_bool IsAttackActive() const;
-
-	void BufferGuard();
-	_bool ConsumeGuardBuffer();
-	_bool HasGuardBuffered() const;
-	void SetGuardActive(_bool v);
-	_bool IsGuardActive() const;
-
-	void BufferEvade();
-	_bool ConsumeEvadeBuffer();
-	_bool HasEvadeBuffered() const;
-	void SetEvadeActive(_bool v);
-	_bool IsEvadeActive() const;
-
-	void TickAttackBuffer();
-	void TickGuardBuffer();
+	void BufferAction(CPlayerController::PlayerState state);
+	_bool ConsumeActionBuffer(CPlayerController::PlayerState state);
+	_bool HasActionBuffered(CPlayerController::PlayerState state) const;
+	void SetActionActive(CPlayerController::PlayerState state, _bool v);
+	_bool IsActionActive(CPlayerController::PlayerState state) const;
+	void TickActionBuffer(CPlayerController::PlayerState state);
 
 public:
 	const _bool IsCanMove() const;
@@ -147,5 +132,9 @@ private:
 
 private:
 	CV_MOVE m_Cv_Move;
-	CV_BATTLE m_Cv_Battle;
+	std::map<CPlayerController::PlayerState, CONTEXT_VALUE> m_mBattleContext;
+
+private:
+	CONTEXT_VALUE* GetBattleContext(CPlayerController::PlayerState state);
+	const CONTEXT_VALUE* GetBattleContext(CPlayerController::PlayerState state) const;
 };
