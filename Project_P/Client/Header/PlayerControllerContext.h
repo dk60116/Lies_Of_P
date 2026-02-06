@@ -20,17 +20,19 @@ private:
 		_float m_turnDir = 0.f;
 	}CV_MOVE;
 
+	typedef struct ContextValue_InputBuffer
+	{
+		_bool  m_bActive = false;
+		_bool  m_bBuffered = false;
+		_float m_fBufferT = 0.f;
+		_float m_fBufferLife = 0.25f;
+	}CV_INPUT_BUFFER;
+
 	typedef struct ContextValue_Battle
 	{
-		_bool  m_bAttackActive = false;
-		_bool  m_bAttackBuffered = false;
-		_float m_fAttackBufferT = 0.f;
-		_float m_fAttackBufferLife = 0.25f;
-
-		_bool  m_bGuardActive = false;
-		_bool  m_bGuardBuffered = false;
-		_float m_fGuardBufferT = 0.f;
-		_float m_fGuardBufferLife = 0.25f;
+		CV_INPUT_BUFFER m_attack;
+		CV_INPUT_BUFFER m_guard;
+		CV_INPUT_BUFFER m_evade;
 	}CV_BATTLE;
 
 public:
@@ -148,4 +150,12 @@ private:
 private:
 	CV_MOVE m_Cv_Move;
 	CV_BATTLE m_Cv_Battle;
+
+private:
+	void BufferInput(CV_INPUT_BUFFER& input);
+	_bool ConsumeInputBuffer(CV_INPUT_BUFFER& input);
+	_bool HasInputBuffered(const CV_INPUT_BUFFER& input) const;
+	void SetInputActive(CV_INPUT_BUFFER& input, _bool v);
+	_bool IsInputActive(const CV_INPUT_BUFFER& input) const;
+	void TickInputBuffer(CV_INPUT_BUFFER& input);
 };

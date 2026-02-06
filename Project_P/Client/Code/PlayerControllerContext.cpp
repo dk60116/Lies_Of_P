@@ -312,98 +312,87 @@ void CPlayerControllerContext::SetBattle(const _bool _value)
 
 void CPlayerControllerContext::BufferAttack()
 {
-	m_Cv_Battle.m_bAttackBuffered = true;
-	m_Cv_Battle.m_fAttackBufferT = 0.f;
+	BufferInput(m_Cv_Battle.m_attack);
 }
 
 _bool CPlayerControllerContext::ConsumeAttackBuffer()
 {
-	if (!m_Cv_Battle.m_bAttackBuffered)
-		return false;
-	m_Cv_Battle.m_bAttackBuffered = false;
-	m_Cv_Battle.m_fAttackBufferT = 0.f;
-	return true;
+	return ConsumeInputBuffer(m_Cv_Battle.m_attack);
 }
 
 _bool CPlayerControllerContext::HasAttackBuffered() const
 {
-	return m_Cv_Battle.m_bAttackBuffered;
+	return HasInputBuffered(m_Cv_Battle.m_attack);
 }
 
 void CPlayerControllerContext::SetAttackActive(_bool v)
 {
-	m_Cv_Battle.m_bAttackActive = v;
+	SetInputActive(m_Cv_Battle.m_attack, v);
 }
 
 _bool CPlayerControllerContext::IsAttackActive() const
 {
-	return m_Cv_Battle.m_bAttackActive;
+	return IsInputActive(m_Cv_Battle.m_attack);
 }
 
 void CPlayerControllerContext::BufferGuard()
 {
-	m_Cv_Battle.m_bGuardBuffered = true;
-	m_Cv_Battle.m_fGuardBufferT = 0.f;
+	BufferInput(m_Cv_Battle.m_guard);
 }
 
 _bool CPlayerControllerContext::ConsumeGuardBuffer()
 {
-	if (!m_Cv_Battle.m_bGuardBuffered)
-		return false;
-	m_Cv_Battle.m_bGuardBuffered = false;
-	m_Cv_Battle.m_fGuardBufferT = 0.f;
-	return true;
+	return ConsumeInputBuffer(m_Cv_Battle.m_guard);
 }
 
 _bool CPlayerControllerContext::HasGuardBuffered() const
 {
-	return m_Cv_Battle.m_bGuardBuffered;
+	return HasInputBuffered(m_Cv_Battle.m_guard);
 }
 
 void CPlayerControllerContext::SetGuardActive(_bool v)
 {
-	m_Cv_Battle.m_bGuardActive = v;
+	SetInputActive(m_Cv_Battle.m_guard, v);
 }
 
 _bool CPlayerControllerContext::IsGuardActive() const
 {
-	return 	m_Cv_Battle.m_bGuardActive;
+	return IsInputActive(m_Cv_Battle.m_guard);
+}
+
+void CPlayerControllerContext::BufferEvade()
+{
+	BufferInput(m_Cv_Battle.m_evade);
+}
+
+_bool CPlayerControllerContext::ConsumeEvadeBuffer()
+{
+	return ConsumeInputBuffer(m_Cv_Battle.m_evade);
+}
+
+_bool CPlayerControllerContext::HasEvadeBuffered() const
+{
+	return HasInputBuffered(m_Cv_Battle.m_evade);
+}
+
+void CPlayerControllerContext::SetEvadeActive(_bool v)
+{
+	SetInputActive(m_Cv_Battle.m_evade, v);
+}
+
+_bool CPlayerControllerContext::IsEvadeActive() const
+{
+	return IsInputActive(m_Cv_Battle.m_evade);
 }
 
 void CPlayerControllerContext::TickAttackBuffer()
 {
-	if (!m_Cv_Battle.m_bAttackBuffered)
-		return;
-
-	_float dt = DELTA_TIME;
-     
-	dt = std::clamp(dt, 0.f, 0.05f);
-
-	m_Cv_Battle.m_fAttackBufferT += dt;
-
-	if (m_Cv_Battle.m_fAttackBufferT >= m_Cv_Battle.m_fAttackBufferLife)
-	{
-		m_Cv_Battle.m_bAttackBuffered = false;
-		m_Cv_Battle.m_fAttackBufferT = 0.f;
-	}
+	TickInputBuffer(m_Cv_Battle.m_attack);
 }
 
 void CPlayerControllerContext::TickGuardBuffer()
 {
-	if (!m_Cv_Battle.m_bGuardBuffered)
-		return;
-
-	_float dt = DELTA_TIME;
-
-	dt = std::clamp(dt, 0.f, 0.05f);
-
-	m_Cv_Battle.m_fGuardBufferT += dt;
-
-	if (m_Cv_Battle.m_fGuardBufferT >= m_Cv_Battle.m_fGuardBufferLife)
-	{
-		m_Cv_Battle.m_bGuardBuffered = false;
-		m_Cv_Battle.m_fGuardBufferT = 0.f;
-	}
+	TickInputBuffer(m_Cv_Battle.m_guard);
 }
 
 const _bool CPlayerControllerContext::IsCanMove() const
@@ -444,4 +433,52 @@ void CPlayerControllerContext::StopMoveImmediate()
 	m_Cv_Move.m_fMoveLockTimer = 0.f;
 
 	SetAnimMoveSpeed(0.f);
+}
+
+void CPlayerControllerContext::BufferInput(CV_INPUT_BUFFER& input)
+{
+	input.m_bBuffered = true;
+	input.m_fBufferT = 0.f;
+}
+
+_bool CPlayerControllerContext::ConsumeInputBuffer(CV_INPUT_BUFFER& input)
+{
+	if (!input.m_bBuffered)
+		return false;
+	input.m_bBuffered = false;
+	input.m_fBufferT = 0.f;
+	return true;
+}
+
+_bool CPlayerControllerContext::HasInputBuffered(const CV_INPUT_BUFFER& input) const
+{
+	return input.m_bBuffered;
+}
+
+void CPlayerControllerContext::SetInputActive(CV_INPUT_BUFFER& input, _bool v)
+{
+	input.m_bActive = v;
+}
+
+_bool CPlayerControllerContext::IsInputActive(const CV_INPUT_BUFFER& input) const
+{
+	return input.m_bActive;
+}
+
+void CPlayerControllerContext::TickInputBuffer(CV_INPUT_BUFFER& input)
+{
+	if (!input.m_bBuffered)
+		return;
+
+	_float dt = DELTA_TIME;
+
+	dt = std::clamp(dt, 0.f, 0.05f);
+
+	input.m_fBufferT += dt;
+
+	if (input.m_fBufferT >= input.m_fBufferLife)
+	{
+		input.m_bBuffered = false;
+		input.m_fBufferT = 0.f;
+	}
 }
