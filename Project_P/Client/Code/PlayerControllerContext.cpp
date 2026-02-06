@@ -189,7 +189,7 @@ void CPlayerControllerContext::TickMove()
 		return;
 	}
 
-	const _float target01 = m_Cv_Move.m_bMovePressed ? 1.f : 0.f;
+	const _float target01 = IsKeyPressed_Hold(CPlayerController::PlayerState::Move) ? 1.f : 0.f;
 	const _float rate = (target01 > m_Cv_Move.m_fMove01) ? PlayerStatus().moveAccelRate : PlayerStatus().moveDecelRat;
 	const _float maxDelta = rate * dt;
 
@@ -211,8 +211,6 @@ void CPlayerControllerContext::TickMove()
 	const _float curSpeed = PlayerStatus().moveSpeed * m_Cv_Move.m_fMove01;
 	AddPosition(dir * curSpeed * dt);
 
-	CDebug::LogError(m_Cv_Move.m_fMove01);
-	
 	SetAnimMoveSpeed(m_Cv_Move.m_fMove01);
 }
 
@@ -244,7 +242,7 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 
 	m_pPlayer->Get_Animator()->ResetTrigger(L"turn");
 
-	if (!m_Cv_Move.m_bBigTurnLatched && absDelta >= m_Cv_Move.m_fBigTurnDeg && m_Cv_Move.m_bMovePressed)
+	if (!m_Cv_Move.m_bBigTurnLatched && absDelta >= m_Cv_Move.m_fBigTurnDeg && IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
 	{  
 		SetAnimTurn(m_Cv_Move.m_turnDir);
 		m_pPlayer->Get_Animator()->SetTrigger(L"turn");
@@ -493,7 +491,6 @@ void CPlayerControllerContext::SetCanEvade(const _bool _value)
 
 void CPlayerControllerContext::StopMoveImmediate()
 {
-	m_Cv_Move.m_bMovePressed = false;
 	m_Cv_Move.m_fMove01 = 0.f;
 	m_Cv_Move.m_vMoveWorldDir = vector3::zero();
 	m_Cv_Move.m_fMoveLockTimer = 0.f;

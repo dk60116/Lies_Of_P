@@ -23,7 +23,7 @@ public:
 	void Release();
 
 public:
-	CScene* CreateScene(CScene* _newScene, wstring _name);
+	CScene* CreateScene(CScene* _newScene, const wstring& _sceneName);
 	CScene* Get_CrtScene();
 	CScene* Get_TempScene();
 	const map<wstring, CScene*>& Get_SceneList();

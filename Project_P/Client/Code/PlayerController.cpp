@@ -37,14 +37,6 @@ CComponent* CPlayerController::Clone() const
 
 HRESULT CPlayerController::Initialize()
 {
-	m_mKeyHold.insert({ Forward, false });
-	m_mKeyHold.insert({ Back, false });
-	m_mKeyHold.insert({ Left, false });
-	m_mKeyHold.insert({ Right, false });
-	m_mKeyHold.insert({ Attack, false });
-	m_mKeyHold.insert({ Guard, false });
-	m_mKeyHold.insert({ Evade, false });
-
 	m_mStateList.insert({ PlayerState::Locomotion, new CPlayerState_Locomotion() });
 	m_mStateList.insert({ PlayerState::Idle, new CPlayerState_Idle() });
 	m_mStateList.insert({ PlayerState::Move, new CPlayerState_Move() });
@@ -100,10 +92,12 @@ void CPlayerController::Update()
             return;
     }
 
-	if (m_mKeyDown[Guard])
-		m_ctx.BufferAction(PlayerState::Guard);
     if (m_mKeyDown[Attack])
         m_ctx.BufferAction(PlayerState::Attack);
+	if (m_mKeyDown[Guard])
+		m_ctx.BufferAction(PlayerState::Guard);
+	if (m_mKeyDown[Evade])
+		m_ctx.BufferAction(PlayerState::Evade);
 
     const _int x =
         (m_mKeyHold[Right] ? 1 : 0) +
@@ -142,6 +136,12 @@ void CPlayerController::Update()
 	}
 
 	m_bRunning = hasInput;
+
+	if (m_bRunning)
+	{
+		m_ctx.Animator()->SetFloat(L"dirX", x);
+		m_ctx.Animator()->SetFloat(L"dirZ", y);
+	}
 
     m_pRoot->Update();
 }
@@ -205,7 +205,7 @@ void CPlayerController::Update_Key()
 	KEY_CODE key_L = KEY_CODE::A;
 	KEY_CODE key_R = KEY_CODE::D;
 	KEY_CODE key_Guard = KEY_CODE::E;
-	KEY_CODE key_Evade = KEY_CODE::SHIFT;
+	KEY_CODE key_Evade = KEY_CODE::L_SHIFT;
 
 	_uint mouse0 = 0;
 

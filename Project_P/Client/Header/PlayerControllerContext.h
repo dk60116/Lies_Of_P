@@ -9,7 +9,6 @@ class CPlayerControllerContext final : public UObject
 private:
 	typedef struct ContextValue_Move 
 	{
-		_bool  m_bMovePressed = false;
 		_float m_fMove01 = 0.f;
 		vector3 m_vMoveWorldDir = {};
 		_bool m_bBigTurnLatched = false;

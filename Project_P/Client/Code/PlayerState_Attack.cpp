@@ -137,10 +137,7 @@ void CPlayerState_Attack::Update()
 {
     __super::Update();
 
-    if (!m_pCtx->IsCanAttack())
-        m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, false);
-
-    if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
+    if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack))
     {
         if (m_bUnderTerm)
             m_bPressedContinue = true;
@@ -148,7 +145,7 @@ void CPlayerState_Attack::Update()
             ContinueCombo();
     }
 
-    if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Move) && !m_bUnderLimit)
+    if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move) && !m_bUnderLimit)
         m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, false);
 }
 

@@ -43,16 +43,16 @@ void CSceneManager::Release()
 	m_mSceneList.clear();
 }
 
-CScene* CSceneManager::CreateScene(CScene* _newScene, wstring _name)
+CScene* CSceneManager::CreateScene(CScene* _newScene, const wstring& _sceneName)
 {
 	CScene* newScene = dynamic_cast<CScene*>(_newScene);
-	newScene->Set_SceneName(_name);
+	newScene->Set_SceneName(_sceneName);
 
-	m_mSceneList.emplace(_name, newScene);
+	m_mSceneList.emplace(_sceneName, newScene);
 
 	newScene->AddRef();
 
-	string filePath = "../Assets/Scenes/" + CEngineString::WStringToString(_name) + ".scene";
+	string filePath = "../Assets/Scenes/" + CEngineString::WStringToString(_sceneName) + ".scene";
 
 	if (!CResources::FileExists(filePath))
 	{
@@ -60,7 +60,7 @@ CScene* CSceneManager::CreateScene(CScene* _newScene, wstring _name)
 
 		if (outFile.is_open())
 		{
-			outFile << "SceneName : " << CEngineString::WStringToString(_name);
+			outFile << "SceneName : " << CEngineString::WStringToString(_sceneName);
 			outFile.close();
 		}
 	}

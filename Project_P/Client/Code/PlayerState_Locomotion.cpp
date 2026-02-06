@@ -32,13 +32,19 @@ void CPlayerState_Locomotion::Update()
 
     m_pCtx->TickActionBuffer(CPlayerController::PlayerState::Attack);
     m_pCtx->TickActionBuffer(CPlayerController::PlayerState::Guard);
+    m_pCtx->TickActionBuffer(CPlayerController::PlayerState::Evade);
 
-    if (m_pCtx->HasActionBuffered(CPlayerController::PlayerState::Guard))
+
+    if (m_pCtx->HasActionBuffered(CPlayerController::PlayerState::Evade))
+    {
+        m_pCtx->ConsumeActionBuffer(CPlayerController::PlayerState::Evade);
+        TransitionTo(m_mChildList[CPlayerController::PlayerState::Evade]);
+    }
+    else if (m_pCtx->HasActionBuffered(CPlayerController::PlayerState::Guard))
     {
         m_pCtx->ConsumeActionBuffer(CPlayerController::PlayerState::Guard);
         TransitionTo(m_mChildList[CPlayerController::PlayerState::Guard]);
     }
-
     else if (m_pCtx->HasActionBuffered(CPlayerController::PlayerState::Attack))
     {
         if (m_pCtx->IsActionActive(CPlayerController::PlayerState::Guard) && !m_pCtx->IsCanAttack())
@@ -51,6 +57,8 @@ void CPlayerState_Locomotion::Update()
             TransitionTo(m_mChildList[CPlayerController::PlayerState::Attack]);
         }
     }
+    else if (m_pCtx->IsActionActive(CPlayerController::PlayerState::Evade))
+        TransitionTo(m_mChildList[CPlayerController::PlayerState::Evade]);
     else if (m_pCtx->IsActionActive(CPlayerController::PlayerState::Guard))
         TransitionTo(m_mChildList[CPlayerController::PlayerState::Guard]);
     else if (m_pCtx->IsActionActive(CPlayerController::PlayerState::Attack))

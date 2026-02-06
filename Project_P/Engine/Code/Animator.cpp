@@ -879,8 +879,8 @@ void CAnimator::ProcessActionTriggers(CAnimationClip* clip, _float prevTime, _fl
 	};
 
 	const _bool looped = clip->IsLoop();
-	_int currentFrame = calcFrame(currentTime, looped);
-	_int prevFrame = m_iPrevTriggerFrame;
+	_uint currentFrame = calcFrame(currentTime, looped);
+	_uint prevFrame = m_iPrevTriggerFrame;
 	if (prevFrame < 0)
 		prevFrame = currentFrame - 1;
 
@@ -1300,15 +1300,24 @@ void CAnimator::ClearActionHandlers()
 
 const _bool CAnimator::GetBool(const wstring& n, _bool& out) const
 {
-	return m_ControllerInst.GetBool(n, out);
+	_bool r = m_ControllerInst.GetBool(n, out);
+	if (!r)
+		CDebug::LogError(L"Not fount Animation Clip bool Value - \"" + n + L'"' + L": " + m_pGameObject->Get_ObjectNameID());
+	return r;
 }
 
 const _bool CAnimator::GetInt(const wstring& n, _bool& out) const
 {
-	return m_ControllerInst.GetInt(n, out);
+	_bool r = m_ControllerInst.GetInt(n, out);
+	if (!r)
+		CDebug::LogError(L"Not fount Animation Clip Int Value - \"" + n + L'"' + L": " + m_pGameObject->Get_ObjectNameID());
+	return r;
 }
 
 const _bool CAnimator::GetFloat(const wstring& n, _float& out) const
 {
-	return m_ControllerInst.GetFloat(n, out);
+	_bool r = m_ControllerInst.GetFloat(n, out);
+	if (!r)
+		CDebug::LogError(L"Not fount Animation Clip Float Value - \"" + n + L'"' + L": " + m_pGameObject->Get_ObjectNameID());
+	return r;
 }
