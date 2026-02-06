@@ -1,6 +1,7 @@
 #pragma once
 #include "epch.h"
 
+#include "PlayerControllerTypes.h"
 #include "PlayerControllerContext.h"
 #include "PlayerState.h"
 
@@ -11,7 +12,7 @@ class CPlayerController final : public CComponent
 public:
     enum KeyMapping { Forward, Back, Left, Right, Jump, Attack, Attack_S, Guard, Evade };
 
-    enum class PlayerState { Locomotion, Idle, Move, Attack, Attack_S, Guard };
+    using PlayerState = ::PlayerState;
 
 protected:
     CPlayerController();

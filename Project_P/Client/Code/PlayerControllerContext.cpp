@@ -12,8 +12,8 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_bCanAttack(true)
 {
 	m_strName = L"PlayerControllerContext";
-	m_mBattleContext.emplace(CPlayerController::PlayerState::Attack, CONTEXT_VALUE{});
-	m_mBattleContext.emplace(CPlayerController::PlayerState::Guard, CONTEXT_VALUE{});
+	m_mBattleContext.emplace(PlayerState::Attack, CONTEXT_VALUE{});
+	m_mBattleContext.emplace(PlayerState::Guard, CONTEXT_VALUE{});
 }
 
 CPlayerControllerContext::~CPlayerControllerContext()
@@ -311,7 +311,7 @@ void CPlayerControllerContext::SetBattle(const _bool _value)
 	m_pPlayer->Get_Animator()->SetTrigger(L"BattleEnd");
 }
 
-void CPlayerControllerContext::BufferAction(CPlayerController::PlayerState state)
+void CPlayerControllerContext::BufferAction(PlayerState state)
 {
 	auto* ctx = GetBattleContext(state);
 	if (!ctx)
@@ -320,7 +320,7 @@ void CPlayerControllerContext::BufferAction(CPlayerController::PlayerState state
 	ctx->m_fBufferT = 0.f;
 }
 
-_bool CPlayerControllerContext::ConsumeActionBuffer(CPlayerController::PlayerState state)
+_bool CPlayerControllerContext::ConsumeActionBuffer(PlayerState state)
 {
 	auto* ctx = GetBattleContext(state);
 	if (!ctx || !ctx->m_bBuffered)
@@ -330,7 +330,7 @@ _bool CPlayerControllerContext::ConsumeActionBuffer(CPlayerController::PlayerSta
 	return true;
 }
 
-_bool CPlayerControllerContext::HasActionBuffered(CPlayerController::PlayerState state) const
+_bool CPlayerControllerContext::HasActionBuffered(PlayerState state) const
 {
 	auto* ctx = GetBattleContext(state);
 	if (!ctx)
@@ -338,7 +338,7 @@ _bool CPlayerControllerContext::HasActionBuffered(CPlayerController::PlayerState
 	return ctx->m_bBuffered;
 }
 
-void CPlayerControllerContext::SetActionActive(CPlayerController::PlayerState state, _bool v)
+void CPlayerControllerContext::SetActionActive(PlayerState state, _bool v)
 {
 	auto* ctx = GetBattleContext(state);
 	if (!ctx)
@@ -346,7 +346,7 @@ void CPlayerControllerContext::SetActionActive(CPlayerController::PlayerState st
 	ctx->m_bActive = v;
 }
 
-_bool CPlayerControllerContext::IsActionActive(CPlayerController::PlayerState state) const
+_bool CPlayerControllerContext::IsActionActive(PlayerState state) const
 {
 	auto* ctx = GetBattleContext(state);
 	if (!ctx)
@@ -354,7 +354,7 @@ _bool CPlayerControllerContext::IsActionActive(CPlayerController::PlayerState st
 	return ctx->m_bActive;
 }
 
-void CPlayerControllerContext::TickActionBuffer(CPlayerController::PlayerState state)
+void CPlayerControllerContext::TickActionBuffer(PlayerState state)
 {
 	auto* ctx = GetBattleContext(state);
 	if (!ctx || !ctx->m_bBuffered)
@@ -373,7 +373,7 @@ void CPlayerControllerContext::TickActionBuffer(CPlayerController::PlayerState s
 	}
 }
 
-CPlayerControllerContext::CONTEXT_VALUE* CPlayerControllerContext::GetBattleContext(CPlayerController::PlayerState state)
+CPlayerControllerContext::CONTEXT_VALUE* CPlayerControllerContext::GetBattleContext(PlayerState state)
 {
 	auto it = m_mBattleContext.find(state);
 	if (it == m_mBattleContext.end())
@@ -381,7 +381,7 @@ CPlayerControllerContext::CONTEXT_VALUE* CPlayerControllerContext::GetBattleCont
 	return &it->second;
 }
 
-const CPlayerControllerContext::CONTEXT_VALUE* CPlayerControllerContext::GetBattleContext(CPlayerController::PlayerState state) const
+const CPlayerControllerContext::CONTEXT_VALUE* CPlayerControllerContext::GetBattleContext(PlayerState state) const
 {
 	auto it = m_mBattleContext.find(state);
 	if (it == m_mBattleContext.end())

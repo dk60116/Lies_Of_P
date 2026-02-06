@@ -1,10 +1,8 @@
 #pragma once
 
 #include "cpch.h"
+#include "PlayerControllerTypes.h"
 #include <map>
-
-class CPlayerController;
-enum class CPlayerController::PlayerState : int;
 
 class CPlayerControllerContext final : public UObject
 {
@@ -82,12 +80,12 @@ public:
 	void SetBattle(const _bool _value);
 
 public:
-	void BufferAction(CPlayerController::PlayerState state);
-	_bool ConsumeActionBuffer(CPlayerController::PlayerState state);
-	_bool HasActionBuffered(CPlayerController::PlayerState state) const;
-	void SetActionActive(CPlayerController::PlayerState state, _bool v);
-	_bool IsActionActive(CPlayerController::PlayerState state) const;
-	void TickActionBuffer(CPlayerController::PlayerState state);
+	void BufferAction(PlayerState state);
+	_bool ConsumeActionBuffer(PlayerState state);
+	_bool HasActionBuffered(PlayerState state) const;
+	void SetActionActive(PlayerState state, _bool v);
+	_bool IsActionActive(PlayerState state) const;
+	void TickActionBuffer(PlayerState state);
 
 public:
 	const _bool IsCanMove() const;
@@ -132,9 +130,9 @@ private:
 
 private:
 	CV_MOVE m_Cv_Move;
-	std::map<CPlayerController::PlayerState, CONTEXT_VALUE> m_mBattleContext;
+	std::map<PlayerState, CONTEXT_VALUE> m_mBattleContext;
 
 private:
-	CONTEXT_VALUE* GetBattleContext(CPlayerController::PlayerState state);
-	const CONTEXT_VALUE* GetBattleContext(CPlayerController::PlayerState state) const;
+	CONTEXT_VALUE* GetBattleContext(PlayerState state);
+	const CONTEXT_VALUE* GetBattleContext(PlayerState state) const;
 };
