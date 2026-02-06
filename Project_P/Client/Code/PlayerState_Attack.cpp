@@ -25,10 +25,10 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx)
     m_iComboTerm[1] = 13;
     m_iComboTerm[2] = 15;
 
-    m_iComboLimit[0] = 18;
-    m_iComboLimit[1] = 20;
-    m_iComboLimit[2] = 22;
-    m_iComboLimit[3] = 25;
+    m_iComboLimit[0] = 12;
+    m_iComboLimit[1] = 15;
+    m_iComboLimit[2] = 18;
+    m_iComboLimit[3] = 21;
 
     m_iTurnLock[0] = 0;
     m_iTurnLock[1] = 10;
@@ -44,9 +44,10 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx)
         const _uint endFrame = ealClip->Get_NormalizedFrameIndex(0.78f);
         const _uint termFrame = m_iComboTerm[i - 1];
         const _uint limitFrame = m_iComboLimit[i - 1];
+        const _uint turnLockFrame = m_iTurnLock[i - 1];
 
         {
-            CAnimationClip::ActionTrigger at = { 0, L"LightAttack0" + to_wstring(i) + L"_Enter" };
+            CAnimationClip::ActionTrigger at = { 1, L"LightAttack0" + to_wstring(i) + L"_Enter" };
             ealClip->Add_ActionTrigger(at);
             m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Enter", [this]()
                 {
@@ -99,7 +100,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx)
 
         // Turn
         {
-            CAnimationClip::ActionTrigger at = { m_iTurnLock[i], L"LightAttack0" + to_wstring(i) + L"_Turn"};
+            CAnimationClip::ActionTrigger at = { turnLockFrame, L"LightAttack0" + to_wstring(i) + L"_Turn"};
             ealClip->Add_ActionTrigger(at);
             m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Turn", [this]()
                 {
@@ -117,10 +118,11 @@ void CPlayerState_Attack::Enter()
 
     m_pCtx->SetBattle(true);
 
+    m_pCtx->SetCanMove(false);
     m_pCtx->Animator()->SetInt(L"AttackCombo", 0);
     m_pCtx->SetAnimMoveSpeed(0.f);
     m_pCtx->Animator()->SetTrigger(L"Attack");
-    m_pCtx->Animator()->SetBool(L"IsAttack", true);
+    m_pCtx->Animator()->SetBool(L"isAttack", true);
     m_pCtx->Animator()->SetBool(L"comboContinue", false);
 
     m_iCrtCombo = 0;
@@ -151,8 +153,9 @@ void CPlayerState_Attack::Exit()
     __super::Exit();
 
     m_pCtx->Animator()->SetBool(L"comboContinue", false);
-    m_pCtx->Animator()->SetBool(L"IsAttack", false);
+    m_pCtx->Animator()->SetBool(L"isAttack", false);
 
+    m_pCtx->SetCanMove(true);
     m_pCtx->SetCanTurn(true);
 }
 
@@ -162,9 +165,4 @@ void CPlayerState_Attack::ContinueCombo()
         m_pCtx->Animator()->SetBool(L"comboContinue", true);
     else
         Enter();
-}
-
-void CPlayerState_Attack::TurnPlayer()
-{
-    m_pCtx->SetPlayerYaw(m_pCtx->GetCameraYaw());
 }

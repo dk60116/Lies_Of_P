@@ -24,7 +24,6 @@ public:
 
 private:
     void ContinueCombo();
-    void TurnPlayer();
 
 private:
     _bool m_bCanContinue, m_bPressedContinue, m_bUnderTerm, m_bUnderLimit;

@@ -94,9 +94,7 @@ void CPlayerController::Update()
             m_bFSMStarted = true;
         }
         else
-        {
             return;
-        }
     }
 
 	if (m_mKeyDown[Guard])
@@ -128,6 +126,7 @@ void CPlayerController::Update()
 		_float desiredYaw = m_ctx.WrapDeg(camYaw + offsetDeg);
 
 		const _bool onlyBack = (y < 0) && (x == 0) && !m_mKeyHold[Forward];
+
 		if (onlyBack)
 		{
 			moveDir = m_ctx.NormalizeXZ(-f);

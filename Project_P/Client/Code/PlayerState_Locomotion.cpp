@@ -31,13 +31,12 @@ void CPlayerState_Locomotion::Update()
 	__super::Update();
 
 	m_pCtx->TickAttackBuffer();
+	m_pCtx->TickGuardBuffer();
 
-	CDebug::LogError(m_pCtx->HasAttackBuffered());
-
-	if (m_pCtx->IsAttackActive() || m_pCtx->HasAttackBuffered())
+	if (m_pCtx->IsGuardActive() || m_pCtx->HasGuardBuffered())
+			TransitionTo(m_mChildList[CPlayerController::PlayerState::Guard]);
+	else if (m_pCtx->IsAttackActive() || m_pCtx->HasAttackBuffered())
 		TransitionTo(m_mChildList[CPlayerController::PlayerState::Attack]);
-	else if (m_pCtx->IsGuardActive() || m_pCtx->HasGuardBuffered())
-		TransitionTo(m_mChildList[CPlayerController::PlayerState::Guard]);
 	else
 		TransitionTo(m_pCtx->IsMovePressed() ? m_mChildList[CPlayerController::PlayerState::Move] : m_mChildList[CPlayerController::PlayerState::Idle]);
 

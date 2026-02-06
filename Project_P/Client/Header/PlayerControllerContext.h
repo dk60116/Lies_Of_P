@@ -44,6 +44,7 @@ public:
 	const _bool IsMovePressed() const;
 
 	const _bool IsLightAttackPressed();
+	const _bool IsGuardPressed();
 
 	vector3 CameraForward() const;
 	_float CameraYawDeg() const;
@@ -96,8 +97,11 @@ public:
 	_bool IsGuardActive() const;
 
 	void TickAttackBuffer();
+	void TickGuardBuffer();
 
 public:
+	const _bool IsCanMove() const;
+	void SetCanMove(const _bool _value);
 	const _bool IsCanTurn() const;
 	void SetCanTurn(const _bool _value);
 
@@ -129,7 +133,7 @@ private:
 	CPlayerController* m_pController;
 
 private:
-	_bool m_bCanTurn;
+	_bool m_bCanMove, m_bCanTurn;
 
 private:
 	CV_MOVE m_Cv_Move;

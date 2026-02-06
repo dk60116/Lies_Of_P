@@ -4,9 +4,11 @@
 
 CPlayerControllerContext::CPlayerControllerContext()
 	: m_pPlayer(nullptr)
+	, m_pController(nullptr)
 	, m_pCam(nullptr)
 	, m_Cv_Move({})
 	, m_Cv_Battle({})
+	, m_bCanMove(true)
 	, m_bCanTurn(true)
 {
 	m_strName = L"PlayerControllerContext";
@@ -36,6 +38,11 @@ const _bool CPlayerControllerContext::IsMovePressed() const
 const _bool CPlayerControllerContext::IsLightAttackPressed()
 {
 	return m_pController->m_mKeyDown[CPlayerController::Attack];
+}
+
+const _bool CPlayerControllerContext::IsGuardPressed()
+{
+	return 	m_pController->m_mKeyHold[CPlayerController::Guard];
 }
 
 vector3 CPlayerControllerContext::CameraForward() const
@@ -110,17 +117,12 @@ void CPlayerControllerContext::TickMove()
 	if (!m_pPlayer) 
 		return;
 
+	if (!m_bCanMove)
+		return;
+
 	_float dt = DELTA_TIME;
             
 	dt = std::clamp(dt, 0.f, 0.05f);
-
-	if (IsAttackActive())
-	{
-		const _float maxDelta = PlayerStatus().moveDecelRat * dt;
-		m_Cv_Move.m_fMove01 = MoveTowards1D(m_Cv_Move.m_fMove01, 0.f, maxDelta);
-
-		return;
-	}
 
 	if (m_Cv_Move.m_fMoveLockTimer > 0.f)
 	{
@@ -372,11 +374,40 @@ void CPlayerControllerContext::TickAttackBuffer()
 	dt = std::clamp(dt, 0.f, 0.05f);
 
 	m_Cv_Battle.m_fAttackBufferT += dt;
+
 	if (m_Cv_Battle.m_fAttackBufferT >= m_Cv_Battle.m_fAttackBufferLife)
 	{
 		m_Cv_Battle.m_bAttackBuffered = false;
 		m_Cv_Battle.m_fAttackBufferT = 0.f;
 	}
+}
+
+void CPlayerControllerContext::TickGuardBuffer()
+{
+	if (!m_Cv_Battle.m_bGuardBuffered)
+		return;
+
+	_float dt = DELTA_TIME;
+
+	dt = std::clamp(dt, 0.f, 0.05f);
+
+	m_Cv_Battle.m_fGuardBufferT += dt;
+
+	if (m_Cv_Battle.m_fGuardBufferT >= m_Cv_Battle.m_fGuardBufferLife)
+	{
+		m_Cv_Battle.m_bGuardBuffered = false;
+		m_Cv_Battle.m_fGuardBufferT = 0.f;
+	}
+}
+
+const _bool CPlayerControllerContext::IsCanMove() const
+{
+	return m_bCanMove;
+}
+
+void CPlayerControllerContext::SetCanMove(const _bool _value)
+{
+	m_bCanMove = _value;
 }
 
 const _bool CPlayerControllerContext::IsCanTurn() const
