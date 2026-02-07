@@ -58,7 +58,14 @@ _int CAnimationClip::Sample(_float _timeSec, unordered_map<wstring, BoneTransfor
 		return frameIndex;
 
 	double ticks = _timeSec * m_fTicksPerSecond;
-	double time = fmod(ticks, m_fDuration);
+	double time = ticks;
+	if (m_fDuration > 0.0)
+	{
+		if (m_bLoopTime)
+			time = fmod(ticks, m_fDuration);
+		else
+			time = clamp(time, 0.0, m_fDuration);
+	}
 
 	_out.clear();
 	_out.reserve(m_vBoneAnimation.size());

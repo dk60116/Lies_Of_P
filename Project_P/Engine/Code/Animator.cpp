@@ -129,6 +129,8 @@ void CAnimator::Update()
 			if (m_bLoop)
 			{
 				m_fCurrentTime = fmodf(m_fCurrentTime, duration);
+				if (m_fCurrentTime < prevCurrentTime)
+					m_bHasPrevRootMotion = false;
 			}
 			else if (m_fCurrentTime >= duration)
 			{
