@@ -34,9 +34,8 @@ pos=121,258
 [state Run_Forward_Start]
 blendTree=2d
 paramX=isBattle
-child=Eve_Run_Forward_Start,0.000000,1.000000
+child=Eve_SprintForward_Start,0.000000,1.000000
 child=Eve_BattleRun_Start,1.000000,1.000000
-child=Eve_SprintForward_Start,0.000000,2.000000
 speedMul=1.000000
 pos=578,145
 
@@ -49,8 +48,9 @@ pos=-112,481
 blendTree=2d
 paramX=isBattle
 paramY=speed
-child=Eve_SprintForward_During,0.000000,1.000000
+child=Eve_Run_Forward_During,0.000000,1.000000
 child=Eve_BattleRun_During,1.000000,1.000000
+child=Eve_SprintForward_During,0.000000,2.000000
 speedMul=1.000000
 pos=662,414
 
@@ -126,10 +126,11 @@ speedMul=1.000000
 pos=-722,77
 
 [state Evade]
-blendTree=direct
-param=dirX
-child=Eve_SprintForward_During,0.000000
-child=Eve_Evade_Backward,1.000000
+blendTree=2d
+paramX=dirX
+paramY=dirZ
+child=Eve_Evade_Forward,0.000000,1.000000
+child=Eve_Evade_Backward,0.000000,0.000000
 speedMul=1.000000
 pos=-767,269
 
