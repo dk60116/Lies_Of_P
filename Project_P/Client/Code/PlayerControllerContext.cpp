@@ -7,6 +7,7 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_pController(nullptr)
 	, m_pCam(nullptr)
 	, m_Cv_Move({})
+	, m_bSprint(false)
 	, m_bCanMove(true)
 	, m_bCanTurn(true)
 	, m_bCanAttack(true)
@@ -425,6 +426,16 @@ void CPlayerControllerContext::TickActionBuffer(PlayerState state)
 		ctx->m_bBuffered = false;
 		ctx->m_fBufferT = 0.f;
 	}
+}
+
+const _bool CPlayerControllerContext::IsSprint() const
+{
+	return m_bSprint;
+}
+
+void CPlayerControllerContext::SetSprint(const _bool _value)
+{
+	m_bSprint = _value;
 }
 
 CPlayerControllerContext::CONTEXT_VALUE* CPlayerControllerContext::GetBattleContext(PlayerState state)

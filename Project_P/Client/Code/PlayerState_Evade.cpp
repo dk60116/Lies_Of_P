@@ -23,6 +23,15 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx)
 		const _uint frameCount = startClip->Get_FrameCount();
 
 		{
+			CAnimationClip::ActionTrigger at = { 15, L"Evade_Forward_Stop" };
+			startClip->Add_ActionTrigger(at);
+			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Forward_Stop", [this]()
+				{
+					//m_pCtx->SetActionActive(CPlayerController::PlayerState::Evade, false);
+				});
+		}
+
+		{
 			CAnimationClip::ActionTrigger at = { 28, L"Evade_Forward_End" };
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Forward_End", [this]()
@@ -75,6 +84,7 @@ void CPlayerState_Evade::Enter()
 
 	m_pCtx->Animator()->SetTrigger(L"evade");
 
+	m_pCtx->SetCanMove(false);
 	m_pCtx->SetCanAttack(false);
 	m_pCtx->SetCanGuard(false);
 
@@ -97,6 +107,7 @@ void CPlayerState_Evade::Exit()
 	__super::Exit();
 	m_pCtx->SetActionActive(PlayerState::Evade, false);
 
+	m_pCtx->SetCanMove(true);
 	m_pCtx->SetCanAttack(true);
 	m_pCtx->SetCanGuard(true);
 }

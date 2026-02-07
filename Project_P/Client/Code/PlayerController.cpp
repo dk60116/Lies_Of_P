@@ -92,9 +92,11 @@ void CPlayerController::Update()
             return;
     }
 
+	m_ctx.SetSprint(m_mKeyHold[Evade]);
+
     if (m_mKeyDown[Attack] && m_ctx.IsCanAttack())
         m_ctx.BufferAction(PlayerState::Attack);
-	if (m_mKeyHold[Guard] && m_ctx.IsCanGuard())
+	if (m_mKeyHold[Guard] && m_ctx.IsCanGuard() && !m_ctx.IsActionActive(PlayerState::Guard))
 		m_ctx.BufferAction(PlayerState::Guard);
 	if (m_mKeyDown[Evade] && m_ctx.IsCanEvade())
 		m_ctx.BufferAction(PlayerState::Evade);
@@ -141,6 +143,8 @@ void CPlayerController::Update()
 	m_bRunning = hasInput;
 
     m_pRoot->Update();
+
+	_float s = 0;
 }
 
 void CPlayerController::LateUpdate()

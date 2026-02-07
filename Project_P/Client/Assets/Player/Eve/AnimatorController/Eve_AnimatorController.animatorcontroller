@@ -130,7 +130,7 @@ paramY=dirZ
 child=Eve_Evade_Forward,0.000000,1.000000
 child=Eve_Evade_Backward,0.000000,0.000000
 speedMul=1.000000
-pos=-794,271
+pos=-767,269
 
 [entry]
 to=Idle
@@ -551,7 +551,7 @@ transitionOffset=0.000000
 
 [transition Evade->Idle]
 blend=0.150000
-exitTime=0.650000
+exitTime=1.000000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
