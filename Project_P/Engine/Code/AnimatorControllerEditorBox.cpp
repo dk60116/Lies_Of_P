@@ -2364,6 +2364,20 @@ bool CAnimatorControllerEditorBox::RenameParam(int idx, const string& newNameIn,
     for (auto& tr : m_entryTransitions)
         updateConditionString(tr.cond);
 
+    for (auto& kv : m_states)
+    {
+        State& st = kv.second;
+        if (st.blendParamX == oldName)
+            st.blendParamX = sanitized;
+        if (st.blendParamY == oldName)
+            st.blendParamY = sanitized;
+        for (auto& child : st.blendChildren)
+        {
+            if (child.directParam == oldName)
+                child.directParam = sanitized;
+        }
+    }
+
     m_params[idx].name = sanitized;
     return true;
 }
