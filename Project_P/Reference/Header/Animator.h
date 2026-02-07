@@ -40,6 +40,8 @@ public:
 
     void Add_Animation(const wstring& _animName, CAnimationClip* _anim);
 
+    const _bool IsPlaying() const;
+
     void Play();
     void Play(const wstring& _animName, const _float _blendDuration = 0.f, const _bool _restartSame = false);
     void Pause();

@@ -211,8 +211,6 @@ void CPlayerControllerContext::TickMove()
 
 	const _float curSpeed = PlayerStatus().moveSpeed * m_Cv_Move.m_fMove01;
 	AddPosition(dir * curSpeed * dt);
-
-	SetAnimMoveSpeed(m_Cv_Move.m_fMove01);
 }
 
 void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)

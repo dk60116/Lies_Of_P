@@ -458,6 +458,11 @@ void CAnimator::Add_Animation(const wstring& _animName, CAnimationClip* _anim)
 	_anim->AddRef();
 }
 
+const _bool CAnimator::IsPlaying() const
+{
+	return m_bIsPlaying;
+}
+
 void CAnimator::Play()
 {
 	if (!m_pSkinnedRenderer)

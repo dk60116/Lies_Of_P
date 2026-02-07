@@ -16,7 +16,7 @@ void CPlayerState_Move::Initialize(CPlayerControllerContext* _ctx)
         startClip->Add_ActionTrigger(at);
         m_pCtx->Animator()->RegisterActionHandler(L"ExitAbleTime11", [this]()
             {
-                //m_pCtx->Animator()->Stop();
+                m_pCtx->Animator()->Stop();
             });
     }
 }
@@ -36,21 +36,17 @@ void CPlayerState_Move::Update()
 
     m_pCtx->BeginTurnTo(m_pCtx->GetDesiredYawDeg());
 
-    //if (!m_pCtx->IsSprint())
-    //    m_pCtx->SetAnimMoveSpeed(1.f);
-    //else
-    //    m_pCtx->SetAnimMoveSpeed(2.f);
-
     if (!m_pCtx->IsSprint())
         m_pCtx->SetAnimMoveSpeed(1.f);
     else
         m_pCtx->SetAnimMoveSpeed(2.f);
+
+    if (!m_pCtx->Animator()->IsPlaying())
+        m_pCtx->Animator()->Play();
 
     _float s = 0;
     _bool b = 0;
 
     if (m_pCtx->Animator()->GetBool(L"isBattle", b) && m_pCtx->Animator()->GetFloat(L"speed", s))
         CDebug::LogError(to_string((_int)b) + ", " + to_string((_int)s));
-
-    //m_pCtx->Animator()->Play();
 }
