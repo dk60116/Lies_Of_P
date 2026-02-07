@@ -2315,6 +2315,18 @@ bool CAnimatorControllerEditorBox::RenameParam(int idx, const string& newNameIn,
     if (oldName == sanitized)
         return true;
 
+    auto equalsIgnoreCase = [](const string& a, const string& b)
+        {
+            if (a.size() != b.size())
+                return false;
+            for (size_t i = 0; i < a.size(); ++i)
+            {
+                if (tolower(static_cast<unsigned char>(a[i])) != tolower(static_cast<unsigned char>(b[i])))
+                    return false;
+            }
+            return true;
+        };
+
     auto updateConditionString = [&](string& cond)
         {
             if (cond.empty())
@@ -2367,13 +2379,13 @@ bool CAnimatorControllerEditorBox::RenameParam(int idx, const string& newNameIn,
     for (auto& kv : m_states)
     {
         State& st = kv.second;
-        if (st.blendParamX == oldName)
+        if (equalsIgnoreCase(st.blendParamX, oldName))
             st.blendParamX = sanitized;
-        if (st.blendParamY == oldName)
+        if (equalsIgnoreCase(st.blendParamY, oldName))
             st.blendParamY = sanitized;
         for (auto& child : st.blendChildren)
         {
-            if (child.directParam == oldName)
+            if (equalsIgnoreCase(child.directParam, oldName))
                 child.directParam = sanitized;
         }
     }
