@@ -16,4 +16,3 @@ public:
 private:
     _bool m_bExitableTime, m_bExit;
 };
-

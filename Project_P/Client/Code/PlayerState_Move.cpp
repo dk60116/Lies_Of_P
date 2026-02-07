@@ -3,7 +3,6 @@
 
 void CPlayerState_Move::Enter()
 {
-    m_pCtx->SetAnimMoveSpeed(0.2f);
 }
 
 void CPlayerState_Move::Update()
@@ -16,6 +15,14 @@ void CPlayerState_Move::Update()
 
     m_pCtx->BeginTurnTo(m_pCtx->GetDesiredYawDeg());
 
-    if (m_fPassedTime >= 0.5f)
+    if (!m_pCtx->IsSprint())
         m_pCtx->SetAnimMoveSpeed(1.f);
+    else
+        m_pCtx->SetAnimMoveSpeed(2.f);
+
+    _float s = 0;
+    _bool b = 0;
+
+    if (m_pCtx->Animator()->GetBool(L"isBattle", b) && m_pCtx->Animator()->GetFloat(L"speed", s))
+        CDebug::LogError(to_string((_int)b) + ", " + to_string((_int)s));
 }

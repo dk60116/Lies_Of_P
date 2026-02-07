@@ -27,7 +27,7 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx)
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Forward_Stop", [this]()
 				{
-					//m_pCtx->SetActionActive(CPlayerController::PlayerState::Evade, false);
+					m_bIsDash = false;
 				});
 		}
 
@@ -52,7 +52,7 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx)
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Backward_Stop", [this]()
 				{
-					m_pCtx->SetActionActive(CPlayerController::PlayerState::Evade, false);
+					m_bIsDash = false;
 				});
 		}
 
@@ -71,7 +71,6 @@ void CPlayerState_Evade::Enter()
 {
 	__super::Enter();
 
-	m_pCtx->SetBattle(true);
 	m_pCtx->SetActionActive(PlayerState::Evade, true);
 
 	_float x = 0, z = 0;

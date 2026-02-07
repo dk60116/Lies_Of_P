@@ -196,7 +196,7 @@ const _bool CPlayerController::IsBattle() const
 void CPlayerController::SetBattle(const _bool _value)
 {
 	m_bBattleMode = _value;
-	m_pPlayer->Get_Animator()->SetBool(L"IsBattle", m_bBattleMode);
+	m_pPlayer->Get_Animator()->SetBool(L"isBattle", m_bBattleMode);
 }
 
 void CPlayerController::Update_Key()
