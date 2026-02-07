@@ -822,11 +822,11 @@ void CAnimatorControllerEditorBox::RenderInspector()
 
     if (st.blendTreeType == State::BlendTreeType::OneD)
     {
-        auto floatParams = CollectParamNames({ "float" });
+        auto blendParams = CollectParamNames({ "float", "int", "bool" });
         vector<string> options;
-        options.reserve(floatParams.size() + 2);
+        options.reserve(blendParams.size() + 2);
         options.push_back("<None>");
-        for (const auto& name : floatParams)
+        for (const auto& name : blendParams)
             options.push_back(name);
         if (!st.blendParamX.empty() &&
             std::find(options.begin(), options.end(), st.blendParamX) == options.end())
@@ -848,11 +848,11 @@ void CAnimatorControllerEditorBox::RenderInspector()
     }
     else if (st.blendTreeType == State::BlendTreeType::TwoD)
     {
-        auto floatParams = CollectParamNames({ "float" });
+        auto blendParams = CollectParamNames({ "float", "int", "bool" });
         vector<string> options;
-        options.reserve(floatParams.size() + 2);
+        options.reserve(blendParams.size() + 2);
         options.push_back("<None>");
-        for (const auto& name : floatParams)
+        for (const auto& name : blendParams)
             options.push_back(name);
 
         if (!st.blendParamX.empty() &&
@@ -1859,11 +1859,11 @@ void CAnimatorControllerEditorBox::RenderAddStatePopup()
 
             if (m_iNewBlendTreeType == 0)
             {
-                auto floatParams = CollectParamNames({ "float" });
+                auto blendParams = CollectParamNames({ "float", "int", "bool" });
                 vector<string> options;
-                options.reserve(floatParams.size() + 1);
+                options.reserve(blendParams.size() + 1);
                 options.push_back("<None>");
-                for (const auto& name : floatParams)
+                for (const auto& name : blendParams)
                     options.push_back(name);
 
                 const char* preview = (m_newBlendParamX[0] == '\0') ? "<None>" : m_newBlendParamX.data();
@@ -1886,11 +1886,11 @@ void CAnimatorControllerEditorBox::RenderAddStatePopup()
             }
             else if (m_iNewBlendTreeType == 1)
             {
-                auto floatParams = CollectParamNames({ "float" });
+                auto blendParams = CollectParamNames({ "float", "int", "bool" });
                 vector<string> options;
-                options.reserve(floatParams.size() + 1);
+                options.reserve(blendParams.size() + 1);
                 options.push_back("<None>");
-                for (const auto& name : floatParams)
+                for (const auto& name : blendParams)
                     options.push_back(name);
 
                 const char* previewX = (m_newBlendParamX[0] == '\0') ? "<None>" : m_newBlendParamX.data();
