@@ -12,4 +12,11 @@ public:
     void Enter() override;
     void Update() override;
     void Exit() override;
+
+private:
+    vector2 m_vStartDirection;
+    _bool m_bIsDash;
+    _bool m_bForward;
+
+    _bool m_bAttackBuffer, m_bGuardBffer;
 };

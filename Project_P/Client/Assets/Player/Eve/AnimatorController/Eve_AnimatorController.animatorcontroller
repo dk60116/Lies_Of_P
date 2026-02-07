@@ -22,6 +22,15 @@ trigger evade
 float dirX=0
 float dirZ=0
 
+[state Idle]
+blendTree=direct
+param=IsBattle
+directBlend=0.300000
+child=Eve_Idle,0.000000
+child=Eve_BattleIdle,1.000000
+speedMul=1.000000
+pos=121,258
+
 [state Run_Forward_Start]
 blendTree=direct
 param=IsBattle
@@ -35,19 +44,13 @@ motion=Eve_Attack_Light_04
 speedMul=1.000000
 pos=-112,481
 
-[state Idle]
+[state Run_Forward]
 blendTree=direct
 param=IsBattle
-directBlend=0.300000
-child=Eve_Idle,0.000000
-child=Eve_BattleIdle,1.000000
+child=Eve_Run_Forward_During,0.000000
+child=Eve_BattleRun_During,1.000000
 speedMul=1.000000
-pos=121,258
-
-[state Attack_Light_01]
-motion=Eve_Attack_Light_01
-speedMul=1.000000
-pos=-357,160
+pos=662,414
 
 [state Run_End]
 blendTree=direct
@@ -57,13 +60,10 @@ child=Eve_BattleRun_End,1.000000
 speedMul=1.000000
 pos=407,373
 
-[state Run_Forward]
-blendTree=direct
-param=IsBattle
-child=Eve_Run_Forward_During,0.000000
-child=Eve_BattleRun_During,1.000000
+[state Attack_Light_01]
+motion=Eve_Attack_Light_01
 speedMul=1.000000
-pos=662,414
+pos=-357,160
 
 [state Run_TurnL]
 motion=Eve_Run_TurnL
@@ -127,7 +127,7 @@ pos=-722,77
 blendTree=2d
 paramX=dirX
 paramY=dirZ
-child=Eve_Evade_Forward,0.000000,-1.000000
+child=Eve_Evade_Forward,0.000000,1.000000
 child=Eve_Evade_Backward,0.000000,0.000000
 speedMul=1.000000
 pos=-794,271

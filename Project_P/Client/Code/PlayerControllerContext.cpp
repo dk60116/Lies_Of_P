@@ -366,6 +366,10 @@ void CPlayerControllerContext::BufferAction(PlayerState state)
 	auto* ctx = GetBattleContext(state);
 	if (!ctx)
 		return;
+
+	if (IsActionActive(PlayerState::Evade) && (state == PlayerState::Attack || state == PlayerState::Guard))
+		return;
+
 	ctx->m_bBuffered = true;
 	ctx->m_fBufferT = 0.f;
 }

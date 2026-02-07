@@ -92,11 +92,11 @@ void CPlayerController::Update()
             return;
     }
 
-    if (m_mKeyDown[Attack])
+    if (m_mKeyDown[Attack] && m_ctx.IsCanAttack())
         m_ctx.BufferAction(PlayerState::Attack);
-	if (m_mKeyDown[Guard])
+	if (m_mKeyHold[Guard] && m_ctx.IsCanGuard())
 		m_ctx.BufferAction(PlayerState::Guard);
-	if (m_mKeyDown[Evade])
+	if (m_mKeyDown[Evade] && m_ctx.IsCanEvade())
 		m_ctx.BufferAction(PlayerState::Evade);
 
     const _int x =
@@ -106,6 +106,9 @@ void CPlayerController::Update()
     const _int y =
         (m_mKeyHold[Forward] ? 1 : 0) +
         (m_mKeyHold[Back] ? -1 : 0);
+
+	m_ctx.Animator()->SetFloat(L"dirX", static_cast<_float>(x));
+	m_ctx.Animator()->SetFloat(L"dirZ", static_cast<_float>(y));
 
     const _bool hasInput = (x != 0) || (y != 0);
 
@@ -136,12 +139,6 @@ void CPlayerController::Update()
 	}
 
 	m_bRunning = hasInput;
-
-	if (m_bRunning)
-	{
-		m_ctx.Animator()->SetFloat(L"dirX", x);
-		m_ctx.Animator()->SetFloat(L"dirZ", y);
-	}
 
     m_pRoot->Update();
 }
