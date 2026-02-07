@@ -116,6 +116,8 @@ void CAnimator::Update()
 	const _float dt = DELTA_TIME;	
 	const _float prevCurrentTime = m_fCurrentTime;
 	const _float prevNextTime = m_fNextTime;
+	_bool loopedCurrent = false;
+	_bool loopedNext = false;
 
 	if (m_bIsPlaying && (m_pCrtAnimation || m_bBlendTreeActive))
 	{
@@ -129,6 +131,8 @@ void CAnimator::Update()
 			if (m_bLoop)
 			{
 				m_fCurrentTime = fmodf(m_fCurrentTime, duration);
+				if (m_fCurrentTime < prevCurrentTime)
+					loopedCurrent = true;
 			}
 			else if (m_fCurrentTime >= duration)
 			{
@@ -158,7 +162,11 @@ void CAnimator::Update()
 		if (nextDur > 0.f)
 		{
 			if (m_bNextBlendTreeActive ? IsBlendTreeLoop(*m_pNextBlendTree) : m_pNextAnimation->IsLoop())
+			{
 				m_fNextTime = fmodf(m_fNextTime, nextDur);
+				if (m_fNextTime < prevNextTime)
+					loopedNext = true;
+			}
 			else if (m_fNextTime >= nextDur)
 				m_fNextTime = nextDur;
 
@@ -172,6 +180,9 @@ void CAnimator::Update()
 
 	if (m_pController)
 		m_ControllerInst.Update(this, dt);
+
+	if (loopedCurrent || loopedNext)
+		m_bHasPrevRootMotion = false;
 
 	UpdateDirectBlendState(m_directBlendCurrent, m_bBlendTreeActive ? m_pBlendTree : nullptr, dt);
 	UpdateDirectBlendState(m_directBlendNext, m_bNextBlendTreeActive ? m_pNextBlendTree : nullptr, dt);
