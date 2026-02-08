@@ -14,9 +14,9 @@ public:
     void Exit() override;
 
 private:
-    vector2 m_vStartDirection;
+    vector2 m_vStartDirection, m_vDuringDirection;
     _bool m_bIsDash;
-    _bool m_bForward;
+    _bool m_bInputDir;
 
     _bool m_bAttackBuffer, m_bGuardBffer;
 };

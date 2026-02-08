@@ -87,6 +87,7 @@ public:
 
 public:
 	const _bool IsSprint() const;
+	const _bool IsBigTurn() const;
 	void SetSprint(const _bool _value);
 
 	const _bool IsCanMove() const;
@@ -131,7 +132,7 @@ private:
 	CPlayerController* m_pController;
 
 private:
-	_bool m_bSprint;
+	_bool m_bSprint, m_bBigTurn;
 	_bool m_bCanMove, m_bCanTurn, m_bCanAttack, m_bCanGuard, m_bCanEvade;
 
 private:

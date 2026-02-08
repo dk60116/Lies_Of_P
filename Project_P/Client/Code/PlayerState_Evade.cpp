@@ -3,8 +3,9 @@
 
 CPlayerState_Evade::CPlayerState_Evade()
 	: m_vStartDirection({})
+	, m_vDuringDirection({})
 	, m_bIsDash(false)
-	, m_bForward(false)
+	, m_bInputDir(false)
 	, m_bAttackBuffer(false)
 	, m_bGuardBffer(false)
 {
@@ -18,6 +19,9 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx)
 {
 	__super::Initialize(_ctx);
 
+	const _uint stopTime = 12;
+	const _uint endTime = 20;
+
 	{
 		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Evade_Forward (Animation Clip)");
 
@@ -25,10 +29,12 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx)
 		const _uint frameCount = startClip->Get_FrameCount();
 
 		{
-			CAnimationClip::ActionTrigger at = { 12, L"Evade_Forward_Stop" };
+			CAnimationClip::ActionTrigger at = { stopTime, L"Evade_Forward_Stop" };
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Forward_Stop", [this]()
 				{
+					m_pCtx->SetCanTurn(false);
+
 					m_bIsDash = false;
 
 					if (m_bGuardBffer)
@@ -46,7 +52,7 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx)
 		}
 
 		{
-			CAnimationClip::ActionTrigger at = { 28, L"Evade_Forward_End" };
+			CAnimationClip::ActionTrigger at = { endTime, L"Evade_Forward_End" };
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Forward_End", [this]()
 				{
@@ -62,10 +68,12 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx)
 		const _uint frameCount = startClip->Get_FrameCount();
 
 		{
-			CAnimationClip::ActionTrigger at = { 12, L"Evade_Backward_Stop" };
+			CAnimationClip::ActionTrigger at = { stopTime, L"Evade_Backward_Stop" };
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Backward_Stop", [this]()
 				{
+					m_pCtx->SetCanTurn(false);
+
 					m_bIsDash = false;
 
 					if (m_bGuardBffer)
@@ -83,7 +91,7 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx)
 		}
 
 		{
-			CAnimationClip::ActionTrigger at = { 28, L"Evade_Backward_End" };
+			CAnimationClip::ActionTrigger at = { endTime, L"Evade_Backward_End" };
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Backward_End", [this]()
 				{
@@ -104,7 +112,7 @@ void CPlayerState_Evade::Enter()
 	if (m_pCtx->Animator()->GetFloat(L"dirX", x) && m_pCtx->Animator()->GetFloat(L"dirZ", z))
 	{
 		m_vStartDirection = vector2(x, z);
-		m_bForward = m_vStartDirection.y != 0.f;
+		m_bInputDir = m_vStartDirection.y != 0.f;
 	}
 
 	m_pCtx->Animator()->SetTrigger(L"evade");
@@ -117,6 +125,11 @@ void CPlayerState_Evade::Enter()
 
 	m_bAttackBuffer = false;
 	m_bGuardBffer = false;
+
+	m_pCtx->Animator()->GetBool(L"isInputDir", m_bInputDir);
+
+	m_pCtx->Animator()->SetFloat(L"dirX", m_vStartDirection.x);
+	m_pCtx->Animator()->SetFloat(L"dirZ", m_vStartDirection.y);
 }
 
 void CPlayerState_Evade::Update()
@@ -124,15 +137,15 @@ void CPlayerState_Evade::Update()
 	__super::Update();
 
 	if (m_bIsDash)
-		m_pCtx->AddPosition(m_pCtx->PlayerForward() * DELTA_TIME * 9.f * (m_bForward ? 1.f : -1.f));
-
-	m_pCtx->Animator()->SetFloat(L"dirX", m_vStartDirection.x);
-	m_pCtx->Animator()->SetFloat(L"dirZ", m_vStartDirection.y);
+		m_pCtx->AddPosition(m_pCtx->PlayerForward() * DELTA_TIME * 9.f * (m_bInputDir ? 1.f : -1.f));
 
 	if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack))
 		m_bAttackBuffer = true;
 	if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Guard))
 		m_bGuardBffer = true;
+
+	if (m_pCtx->IsBigTurn())
+		m_pCtx->SetActionActive(CPlayerController::PlayerState::Evade, false);
 }
 
 void CPlayerState_Evade::Exit()
@@ -141,6 +154,7 @@ void CPlayerState_Evade::Exit()
 	m_pCtx->SetActionActive(PlayerState::Evade, false);
 
 	m_pCtx->SetCanMove(true);
+	m_pCtx->SetCanTurn(true);
 	m_pCtx->SetCanAttack(true);
 	m_pCtx->SetCanGuard(true);
 }

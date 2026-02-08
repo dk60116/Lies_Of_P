@@ -38,8 +38,6 @@ CComponent* CPlayerController::Clone() const
 
 HRESULT CPlayerController::Initialize()
 {
-
-
 	m_mStateList.insert({ PlayerState::Locomotion, new CPlayerState_Locomotion() });
 	m_mStateList.insert({ PlayerState::Idle, new CPlayerState_Idle() });
 	m_mStateList.insert({ PlayerState::Move, new CPlayerState_Move() });
@@ -121,6 +119,8 @@ void CPlayerController::Update()
 	m_ctx.Animator()->SetFloat(L"dirZ", static_cast<_float>(y));
 
     const _bool hasInput = (x != 0) || (y != 0);
+
+	m_ctx.Animator()->SetBool(L"isInputDir", x + y != 0);
 
     const _bool attackLock = m_ctx.IsActionActive(PlayerState::Attack);
 

@@ -8,6 +8,7 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_pCam(nullptr)
 	, m_Cv_Move({})
 	, m_bSprint(false)
+	, m_bBigTurn(false)
 	, m_bCanMove(true)
 	, m_bCanTurn(true)
 	, m_bCanAttack(true)
@@ -218,7 +219,7 @@ void CPlayerControllerContext::TickMove()
 	AddPosition(dir * curSpeed * dt);
 }
 
-void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
+void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float _stopEpsDeg)
 {
 	if (!m_pPlayer) 
 		return;
@@ -241,15 +242,18 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 	_float delta = DeltaAngleDeg(curYaw, m_Cv_Move.m_targetYaw);
 	_float absDelta = fabsf(delta);
 
-	if (m_Cv_Move.m_turnDir == 0.f && absDelta >= stopEpsDeg)
+	if (m_Cv_Move.m_turnDir == 0.f && absDelta >= _stopEpsDeg)
 		m_Cv_Move.m_turnDir = (delta > 0.f) ? 1.f : -1.f;
 
 	m_pPlayer->Get_Animator()->ResetTrigger(L"turn");
+
+	m_bBigTurn = false;
 
 	if (!m_Cv_Move.m_bBigTurnLatched && absDelta >= m_Cv_Move.m_fBigTurnDeg && IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
 	{  
 		SetAnimTurn(m_Cv_Move.m_turnDir);
 		m_pPlayer->Get_Animator()->SetTrigger(L"turn");
+		m_bBigTurn = true;
 
 		StartMoveLock(PlayerStatus().bigTurnStopSec);
 
@@ -262,7 +266,7 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float stopEpsDeg)
 	_float newYaw = WrapDeg(curYaw + delta * t);
 	tr->Set_EulerAngles(e.x, newYaw, e.z);
 
-	if (fabsf(DeltaAngleDeg(tr->Get_EulerAngles().y, m_Cv_Move.m_targetYaw)) < stopEpsDeg)
+	if (fabsf(DeltaAngleDeg(tr->Get_EulerAngles().y, m_Cv_Move.m_targetYaw)) < _stopEpsDeg)
 	{
 		tr->Set_EulerAngles(e.x, m_Cv_Move.m_targetYaw, e.z);
 		m_Cv_Move.m_bTurning = false;
@@ -434,6 +438,11 @@ void CPlayerControllerContext::TickActionBuffer(PlayerState state)
 const _bool CPlayerControllerContext::IsSprint() const
 {
 	return m_bSprint;
+}
+
+const _bool CPlayerControllerContext::IsBigTurn() const
+{
+	return m_bBigTurn;
 }
 
 void CPlayerControllerContext::SetSprint(const _bool _value)

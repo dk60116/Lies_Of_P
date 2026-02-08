@@ -42,6 +42,7 @@ Eve_SprintForward_Start : Player/Eve/Animations/Eve_SprintForward_Start.fbx :  [
 Eve_SprintForward_During : Player/Eve/Animations/Eve_SprintForward_During.fbx : [Animation Clip] [Loop]
 Eve_SprintToRun : Player/Eve/Animations/Eve_SprintToRun.fbx : [Animation Clip]
 Eve_BattleSprintForward_During : Player/Eve/Animations/Eve_BattleSprintForward_During.fbx : [Animation Clip] [Loop]
+Eve_BattleSprint_Start : Player/Eve/Animations/Eve_BattleSprint_Start.fbx : [Animation Clip]
 Eve_BattleSprintToRun : Player/Eve/Animations/Eve_BattleSprintToRun.fbx : [Animation Clip]
 Eve_SprintTurn_L : Player/Eve/Animations/Eve_SprintTurn_L.fbx : [Animation Clip]
 Eve_SprintTurn_R : Player/Eve/Animations/Eve_SprintTurn_R.fbx : [Animation Clip]

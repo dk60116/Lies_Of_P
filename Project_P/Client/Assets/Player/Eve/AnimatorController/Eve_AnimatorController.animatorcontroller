@@ -23,6 +23,7 @@ float dirX=0
 float dirZ=0
 trigger sprintToRun
 bool sprintEnd=false
+bool isInputDir=false
 
 [state Idle]
 blendTree=direct
@@ -41,9 +42,11 @@ pos=-112,481
 [state Run_Forward_Start]
 blendTree=2d
 paramX=isBattle
+paramY=speed
 child=Eve_SprintForward_Start,0.000000,2.000000
 child=Eve_BattleRun_Start,1.000000,1.000000
 child=Eve_Run_Forward_Start,0.000000,1.000000
+child=Eve_BattleSprint_Start,1.000000,2.000000
 speedMul=1.000000
 pos=578,145
 
@@ -118,7 +121,7 @@ param=isBattle
 child=Eve_SprintToRun,0.000000
 child=Eve_BattleSprintToRun,1.000000
 speedMul=1.000000
-pos=793,547
+pos=873,494
 
 [state Guard_Start]
 motion=Eve_Guard_Start
@@ -129,14 +132,6 @@ pos=-102,-180
 motion=Eve_Guard_Idle
 speedMul=1.000000
 pos=-387,-206
-
-[state IdleTo_Battle_End]
-blendTree=direct
-param=speed
-directBlend=0.150000
-child=Eve_BattleEnd,0.000000
-speedMul=1.000000
-pos=196,511
 
 [state Guard_End]
 motion=Eve_Guard_End
@@ -159,13 +154,20 @@ speedMul=1.000000
 pos=-722,77
 
 [state Evade]
-blendTree=2d
-paramX=dirX
-paramY=dirZ
-child=Eve_Evade_Forward,0.000000,1.000000
-child=Eve_Evade_Backward,0.000000,0.000000
+blendTree=direct
+param=isInputDir
+child=Eve_Evade_Forward,1.000000
+child=Eve_Evade_Backward,0.000000
 speedMul=1.000000
 pos=-767,269
+
+[state IdleToBattle_End]
+blendTree=direct
+param=speed
+directBlend=0.150000
+child=Eve_BattleEnd,0.000000
+speedMul=1.000000
+pos=196,511
 
 [entry]
 to=Idle
@@ -461,21 +463,21 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Idle->IdleTo_Battle_End]
+[transition Idle->IdleToBattle_End]
 blend=0.150000
 cond=isBattle==false && BattleEnd
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition IdleTo_Battle_End->Idle]
+[transition IdleToBattle_End->Idle]
 blend=0.150000
 exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition IdleTo_Battle_End->Run_Forward_Start]
+[transition IdleToBattle_End->Run_Forward_Start]
 blend=0.150000
 cond=speed>0.100000
 fixedDuration=false
@@ -632,6 +634,27 @@ transitionOffset=0.000000
 blend=0.150000
 cond=speed<=0.000000
 exitTime=0.200000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_TurnL->SprintEnd]
+blend=0.150000
+cond=speed<=0.000000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_TurnR->SprintEnd]
+blend=0.150000
+cond=speed<=0.000000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition SprintEnd->IdleToBattle_End]
+blend=0.150000
+cond=isBattle==false && BattleEnd
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

@@ -15,7 +15,7 @@ void CPlayerState_Idle::Update()
 
 	if (m_pCtx->IsBattle())
 	{
-		if (m_fPassedTime >= 3.f)
+		if (m_fPassedTime >= 4.f)
 			m_pCtx->SetBattle(false);
 	}
 
