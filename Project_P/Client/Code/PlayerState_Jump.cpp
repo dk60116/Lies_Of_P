@@ -17,7 +17,6 @@ void CPlayerState_Jump::Initialize(CPlayerControllerContext* _ctx, const CPlayer
 			m_pCtx->Animator()->RegisterActionHandler(L"Jump_Down", [this]()
 				{
 					m_pCtx->Animator()->SetBool(L"isJump", false);
-					ExitState();
 				});
 		}
 	}
