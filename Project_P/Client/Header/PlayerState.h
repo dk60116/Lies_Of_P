@@ -18,9 +18,6 @@ public:
     virtual void Update() PURE;
 
 protected:
-    void ExitState();
-
-protected:
     CPlayerControllerContext* m_pCtx;
     CPlayerController::PlayerState m_eStateType;
     _float m_fPassedTime;

@@ -36,8 +36,3 @@ void CPlayerState::Update()
 {
 	m_fPassedTime += DELTA_TIME;
 }
-
-void CPlayerState::ExitState()
-{
-	Exit();
-}

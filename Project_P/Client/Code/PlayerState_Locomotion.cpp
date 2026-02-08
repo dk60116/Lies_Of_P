@@ -67,50 +67,96 @@ void CPlayerState_Locomotion::Update()
 {
     __super::Update();
 
-    m_pCtx->TickActionBuffer(CPlayerController::PlayerState::Attack);
-    m_pCtx->TickActionBuffer(CPlayerController::PlayerState::Guard);
-    m_pCtx->TickActionBuffer(CPlayerController::PlayerState::Evade);
-    m_pCtx->TickActionBuffer(CPlayerController::PlayerState::Jump);
+    // 1) 버퍼 타이머는 반복으로 Tick
+    static const std::array<CPlayerController::PlayerState, 4> kTickStates =
+    {
+        CPlayerController::PlayerState::Attack,
+        CPlayerController::PlayerState::Guard,
+        CPlayerController::PlayerState::Evade,
+        CPlayerController::PlayerState::Jump
+    };
 
-    if (m_pCtx->HasActionBuffered(CPlayerController::PlayerState::Jump))
-    {
-        m_pCtx->ConsumeActionBuffer(CPlayerController::PlayerState::Jump);
-        TransitionTo(m_mChildList[CPlayerController::PlayerState::Jump]);
-    }
-    else if (m_pCtx->HasActionBuffered(CPlayerController::PlayerState::Evade))
-    {
-        m_pCtx->ConsumeActionBuffer(CPlayerController::PlayerState::Evade);
-        TransitionTo(m_mChildList[CPlayerController::PlayerState::Evade]);
-    }
-    else if (m_pCtx->HasActionBuffered(CPlayerController::PlayerState::Guard))
-    {
-        m_pCtx->ConsumeActionBuffer(CPlayerController::PlayerState::Guard);
-        TransitionTo(m_mChildList[CPlayerController::PlayerState::Guard]);
-    }
-    else if (m_pCtx->HasActionBuffered(CPlayerController::PlayerState::Attack))
-    {
-        if (m_pCtx->IsActionActive(CPlayerController::PlayerState::Guard) && !m_pCtx->IsCanAttack())
-        {
-            m_pCtx->ConsumeActionBuffer(CPlayerController::PlayerState::Attack);
-        }
-        else
-        {
-            m_pCtx->ConsumeActionBuffer(CPlayerController::PlayerState::Attack);
-            TransitionTo(m_mChildList[CPlayerController::PlayerState::Attack]);
-        }
-    }
-    else if (m_pCtx->IsActionActive(CPlayerController::PlayerState::Evade))
-        TransitionTo(m_mChildList[CPlayerController::PlayerState::Evade]);
-    else if (m_pCtx->IsActionActive(CPlayerController::PlayerState::Guard))
-        TransitionTo(m_mChildList[CPlayerController::PlayerState::Guard]);
-    else if (m_pCtx->IsActionActive(CPlayerController::PlayerState::Attack))
-        TransitionTo(m_mChildList[CPlayerController::PlayerState::Attack]);
-    else if (m_pCtx->HasActionBuffered(CPlayerController::PlayerState::Jump))
-        TransitionTo(m_mChildList[CPlayerController::PlayerState::Jump]);
-    else
-        TransitionTo(m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move) ? m_mChildList[CPlayerController::PlayerState::Move] : m_mChildList[CPlayerController::PlayerState::Idle]);
+    for (TRAVERSAL_ITER(kTickStates, it))
+        m_pCtx->TickActionBuffer(*it);
 
-    if (m_pChild) m_pChild->Update();
+    CPlayerState* next = nullptr;
+    bool handled = false;
+
+    static const array<CPlayerController::PlayerState, 4> kBufferedPriority =
+    {
+        CPlayerController::PlayerState::Jump,
+        CPlayerController::PlayerState::Evade,
+        CPlayerController::PlayerState::Guard,
+        CPlayerController::PlayerState::Attack
+    };
+
+    for (TRAVERSAL_ITER(kBufferedPriority, it))
+    {
+        const auto st = *it;
+
+        if (!m_pCtx->HasActionBuffered(st))
+            continue;
+
+        if (st == CPlayerController::PlayerState::Attack &&
+            m_pCtx->IsActionActive(CPlayerController::PlayerState::Guard) &&
+            !m_pCtx->IsCanAttack())
+        {
+            m_pCtx->ConsumeActionBuffer(st);
+            handled = true;
+            break;
+        }
+
+        m_pCtx->ConsumeActionBuffer(st);
+
+        auto f = m_mChildList.find(st);
+        if (f != m_mChildList.end())
+            next = f->second;
+
+        handled = true;
+        break;
+    }
+
+    if (!handled)
+    {
+        static const array<CPlayerController::PlayerState, 4> kActivePriority =
+        {
+            CPlayerController::PlayerState::Evade,
+            CPlayerController::PlayerState::Guard,
+            CPlayerController::PlayerState::Attack,
+            CPlayerController::PlayerState::Jump
+        };
+
+        for (TRAVERSAL_ITER(kActivePriority, it))
+        {
+            const auto st = *it;
+
+            if (!m_pCtx->IsActionActive(st))
+                continue;
+
+            auto f = m_mChildList.find(st);
+            if (f != m_mChildList.end())
+                next = f->second;
+
+            handled = true;
+            break;
+        }
+    }
+
+    if (!handled)
+    {
+        const auto st = m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move)
+            ? CPlayerController::PlayerState::Move
+            : CPlayerController::PlayerState::Idle;
+
+        auto f = m_mChildList.find(st);
+        if (f != m_mChildList.end())
+            next = f->second;
+    }
+
+    TransitionTo(next);
+
+    if (m_pChild)
+        m_pChild->Update();
 
     m_pCtx->TickTurn(m_pCtx->PlayerStatus().turnSpeed);
     m_pCtx->TickMove();
