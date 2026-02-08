@@ -21,6 +21,8 @@ trigger guard
 trigger evade
 float dirX=0
 float dirZ=0
+trigger sprintToRun
+bool sprintEnd=false
 
 [state Idle]
 blendTree=direct
@@ -31,18 +33,19 @@ child=Eve_BattleIdle,1.000000
 speedMul=1.000000
 pos=121,258
 
-[state Run_Forward_Start]
-blendTree=2d
-paramX=isBattle
-child=Eve_SprintForward_Start,0.000000,1.000000
-child=Eve_BattleRun_Start,1.000000,1.000000
-speedMul=1.000000
-pos=578,145
-
 [state Attack_Light_04]
 motion=Eve_Attack_Light_04
 speedMul=1.000000
 pos=-112,481
+
+[state Run_Forward_Start]
+blendTree=2d
+paramX=isBattle
+child=Eve_SprintForward_Start,0.000000,2.000000
+child=Eve_BattleRun_Start,1.000000,1.000000
+child=Eve_Run_Forward_Start,0.000000,1.000000
+speedMul=1.000000
+pos=578,145
 
 [state Run_Forward]
 blendTree=2d
@@ -51,14 +54,16 @@ paramY=speed
 child=Eve_Run_Forward_During,0.000000,1.000000
 child=Eve_BattleRun_During,1.000000,1.000000
 child=Eve_SprintForward_During,0.000000,2.000000
+child=Eve_BattleSprintForward_During,1.000000,2.000000
 speedMul=1.000000
 pos=662,414
 
 [state Run_End]
-blendTree=direct
-param=isBattle
-child=Eve_Run_Forward_End,0.000000
-child=Eve_BattleRun_End,1.000000
+blendTree=2d
+paramX=isBattle
+paramY=speed
+child=Eve_Run_Forward_End,0.000000,1.000000
+child=Eve_BattleRun_End,1.000000,1.000000
 speedMul=1.000000
 pos=407,373
 
@@ -68,12 +73,32 @@ speedMul=1.000000
 pos=-357,160
 
 [state Run_TurnL]
-motion=Eve_Run_TurnL
+blendTree=2d
+paramX=isBattle
+paramY=speed
+child=Eve_Run_TurnL,0.000000,1.000000
+child=Eve_BattleRun_TurnL,0.000000,1.000000
+child=Eve_SprintTurn_L,0.000000,2.000000
+child=Eve_BattleSprintTurn_L,1.000000,2.000000
 speedMul=1.000000
 pos=305,-292
 
+[state SprintEnd]
+blendTree=direct
+param=isBattle
+child=Eve_Sprint_End,0.000000
+child=Eve_BattleSprint_End,1.000000
+speedMul=1.000000
+pos=870,359
+
 [state Run_TurnR]
-motion=Eve_Run_TurnR
+blendTree=2d
+paramX=isBattle
+paramY=speed
+child=Eve_Run_TurnR,0.000000,1.000000
+child=Eve_BattleRun_TurnR,1.000000,1.000000
+child=Eve_SprintTurn_R,1.000000,2.000000
+child=Eve_BattleSprintTurn_R,1.000000,2.000000
 speedMul=1.000000
 pos=655,-169
 
@@ -86,6 +111,14 @@ pos=-408,341
 motion=Eve_Attack_Light_03
 speedMul=1.000000
 pos=-411,492
+
+[state SprintToRun]
+blendTree=direct
+param=isBattle
+child=Eve_SprintToRun,0.000000
+child=Eve_BattleSprintToRun,1.000000
+speedMul=1.000000
+pos=793,547
 
 [state Guard_Start]
 motion=Eve_Guard_Start
@@ -198,7 +231,7 @@ transitionOffset=0.000000
 
 [transition Run_Forward->Run_End]
 blend=0.150000
-cond=speed<=0.000000
+cond=speed<=0.000000 && sprintEnd==false
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -299,7 +332,7 @@ transitionOffset=0.000000
 [transition Attack_Light_02->Run_Forward_Start]
 blend=0.200000
 cond=speed>0.100000
-exitTime=0.100000
+exitTime=0.150000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -486,13 +519,6 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Guard_Walk_End->Guard_Idle]
-blend=0.150000
-cond=isGuard==true
-fixedDuration=false
-transitionDuration=0.015000
-transitionOffset=0.000000
-
 [transition Guard_Walk_End->Guard_End]
 blend=0.150000
 cond=isGuard==false
@@ -554,6 +580,58 @@ transitionOffset=0.000000
 [transition Evade->Idle]
 blend=0.150000
 exitTime=0.600000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition SprintToRun->Run_Forward]
+blend=0.150000
+exitTime=0.800000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_Forward->SprintToRun]
+blend=0.150000
+cond=sprintToRun
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_Forward->SprintEnd]
+blend=0.150000
+cond=sprintEnd==true && speed<=0.000000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition SprintEnd->Idle]
+blend=0.150000
+exitTime=0.800000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition SprintEnd->Run_Forward_Start]
+blend=0.150000
+cond=speed>=1.000000
+exitTime=0.150000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_Light_04->Attack_Light_01]
+blend=0.150000
+cond=comboContinue==true
+exitTime=0.150000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Guard_Walk_End->Guard_Idle]
+blend=0.150000
+cond=speed<=0.000000
+exitTime=0.200000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

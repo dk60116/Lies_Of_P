@@ -11,6 +11,7 @@ public:
 public:
     void SetChildren(const unordered_map<CPlayerController::PlayerState, CPlayerState*> _childList);
 
+    void Initialize(CPlayerControllerContext* _context) override;
     void Enter() override;
     void Update() override;
     void Exit() override;

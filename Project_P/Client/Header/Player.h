@@ -17,7 +17,8 @@ public:
 	{
 		_int maxHp = 6;
 		_int crtHp = 0;
-		_float moveSpeed = 3.f;
+		_float runSpeed = 3.f;
+		_float sprintSpeed = 4.2f;
 		_float backWalkRatio = 0.7f;
 		_float moveAccelRate = 4.f;
 		_float moveDecelRat = 1.5f;

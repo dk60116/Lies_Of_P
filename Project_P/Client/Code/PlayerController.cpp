@@ -17,6 +17,7 @@ CPlayerController::CPlayerController()
 	, m_pRoot(nullptr)
 	, m_bRunning(false)
 	, m_bBattleMode(false)
+	, m_fPrevSpeed(0.f)
 {
 }
 
@@ -37,6 +38,8 @@ CComponent* CPlayerController::Clone() const
 
 HRESULT CPlayerController::Initialize()
 {
+
+
 	m_mStateList.insert({ PlayerState::Locomotion, new CPlayerState_Locomotion() });
 	m_mStateList.insert({ PlayerState::Idle, new CPlayerState_Idle() });
 	m_mStateList.insert({ PlayerState::Move, new CPlayerState_Move() });
@@ -101,6 +104,11 @@ void CPlayerController::Update()
 	if (m_mKeyDown[Evade] && m_ctx.IsCanEvade())
 		m_ctx.BufferAction(PlayerState::Evade);
 
+	_float speed = 0.f;
+
+	if (m_ctx.Animator()->GetFloat(L"speed", speed))
+		m_ctx.Animator()->SetBool(L"sprintEnd", m_fPrevSpeed == 2);
+
     const _int x =
         (m_mKeyHold[Right] ? 1 : 0) +
         (m_mKeyHold[Left] ? -1 : 0);
@@ -144,7 +152,7 @@ void CPlayerController::Update()
 
     m_pRoot->Update();
 
-	_float s = 0;
+	m_fPrevSpeed = speed;
 }
 
 void CPlayerController::LateUpdate()

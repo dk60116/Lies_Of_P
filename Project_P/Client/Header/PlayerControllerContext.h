@@ -36,6 +36,8 @@ public:
 public:
 	void Bind(CPlayer* _player, CPlayerCamera* _cam, CPlayerController* _controller);
 
+	const _bool IsRunning() const;
+
 	const _bool IsKeyPressed_Hold(PlayerState state);
 	const _bool IsKeyPressed_Down(PlayerState state);
 	const _bool IsKeyPressed_UP(PlayerState state);

@@ -16,6 +16,43 @@ void CPlayerState_Locomotion::SetChildren(const unordered_map<CPlayerController:
 	m_mChildList = _childList;
 }
 
+void CPlayerState_Locomotion::Initialize(CPlayerControllerContext* _context)
+{
+    __super::Initialize(_context);
+
+    {
+        CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Sprint_End (Animation Clip)");
+
+        const wstring clipName = startClip->Get_ResourceName();
+        const _uint frameCount = startClip->Get_FrameCount();
+
+        {
+            CAnimationClip::ActionTrigger at = { 1, L"SprintEndStart" };
+            startClip->Add_ActionTrigger(at);
+            m_pCtx->Animator()->RegisterActionHandler(L"SprintEndStart", [this]()
+                {
+                    m_pCtx->StopMoveImmediate();
+                });
+        }
+    }
+
+    {
+        CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_BattleSprint_End (Animation Clip)");
+
+        const wstring clipName = startClip->Get_ResourceName();
+        const _uint frameCount = startClip->Get_FrameCount();
+
+        {
+            CAnimationClip::ActionTrigger at = { 1, L"BattleSprintEndStart" };
+            startClip->Add_ActionTrigger(at);
+            m_pCtx->Animator()->RegisterActionHandler(L"BattleSprintEndStart", [this]()
+                {
+                    m_pCtx->StopMoveImmediate();
+                });
+        }
+    }
+}
+
 void CPlayerState_Locomotion::Enter()
 {
 	__super::Enter();

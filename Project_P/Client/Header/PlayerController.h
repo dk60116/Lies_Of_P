@@ -63,4 +63,7 @@ private:
 private:
     _bool m_bRunning;
     _bool m_bBattleMode;
+
+private:
+    _float m_fPrevSpeed;
 };

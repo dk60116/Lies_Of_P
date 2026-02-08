@@ -31,6 +31,11 @@ void CPlayerControllerContext::Bind(CPlayer* _player, CPlayerCamera* _cam, CPlay
 	m_pController = _controller;
 }
 
+const _bool CPlayerControllerContext::IsRunning() const
+{
+	return m_pController->IsRunning();
+}
+
 const _bool CPlayerControllerContext::IsKeyPressed_Hold(PlayerState state)
 {
 	switch (state)
@@ -209,7 +214,7 @@ void CPlayerControllerContext::TickMove()
 		dir = vector3(0.f, 0.f, 0.f); 
 	}
 
-	const _float curSpeed = PlayerStatus().moveSpeed * m_Cv_Move.m_fMove01;
+	const _float curSpeed = PlayerStatus().runSpeed * m_Cv_Move.m_fMove01;
 	AddPosition(dir * curSpeed * dt);
 }
 

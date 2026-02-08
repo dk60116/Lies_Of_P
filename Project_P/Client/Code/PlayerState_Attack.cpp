@@ -92,7 +92,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx)
         {
             CAnimationClip::ActionTrigger at = { limitFrame, L"LightAttack0" + to_wstring(i) + L"_Limit" };
             ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Limit", [this, clipName]()
+            m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Limit", [this]()
                 {
                     m_bCanContinue = false;
                     m_bUnderLimit = false;
@@ -131,6 +131,7 @@ void CPlayerState_Attack::Enter()
     m_bPressedContinue = false;
     m_bUnderTerm = true;
     m_bUnderLimit = true;
+    m_bLastContinue = false;
 }
 
 void CPlayerState_Attack::Update()
@@ -143,6 +144,21 @@ void CPlayerState_Attack::Update()
             m_bPressedContinue = true;
         else
             ContinueCombo();
+    }
+
+    if (m_iCrtCombo >= 4)
+    {
+        if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack) && m_bUnderLimit)
+        {
+            m_bLastContinue = true;
+            return;
+        }
+
+        if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack) && !m_bUnderLimit)
+        {
+            Enter();
+            return;
+        }
     }
 
     if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move) && !m_bUnderLimit)
@@ -162,8 +178,16 @@ void CPlayerState_Attack::Exit()
 
 void CPlayerState_Attack::ContinueCombo()
 {
+    if (m_bLastContinue)
+    {
+        Enter();
+        return;
+    }
+
     if (m_bCanContinue)
+    {
         m_pCtx->Animator()->SetBool(L"comboContinue", true);
+    }
     else
         Enter();
 }

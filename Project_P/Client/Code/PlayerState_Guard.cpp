@@ -155,6 +155,14 @@ void CPlayerState_Guard::Update()
 				Enter();
 		}
 	}
+
+	if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Guard))
+	{
+		if (m_pCtx->IsRunning())
+			m_pCtx->SetAnimMoveSpeed(1.f);
+		else
+			m_pCtx->StopMoveImmediate();
+	}
 }
 
 void CPlayerState_Guard::Exit()
