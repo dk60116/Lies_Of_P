@@ -16,9 +16,9 @@ void CPlayerState_Locomotion::SetChildren(const unordered_map<CPlayerController:
 	m_mChildList = _childList;
 }
 
-void CPlayerState_Locomotion::Initialize(CPlayerControllerContext* _context)
+void CPlayerState_Locomotion::Initialize(CPlayerControllerContext* _ctx, const CPlayerController::PlayerState _type)
 {
-    __super::Initialize(_context);
+    __super::Initialize(_ctx, _type);
 
     {
         CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Sprint_End (Animation Clip)");
@@ -70,9 +70,14 @@ void CPlayerState_Locomotion::Update()
     m_pCtx->TickActionBuffer(CPlayerController::PlayerState::Attack);
     m_pCtx->TickActionBuffer(CPlayerController::PlayerState::Guard);
     m_pCtx->TickActionBuffer(CPlayerController::PlayerState::Evade);
+    m_pCtx->TickActionBuffer(CPlayerController::PlayerState::Jump);
 
-
-    if (m_pCtx->HasActionBuffered(CPlayerController::PlayerState::Evade))
+    if (m_pCtx->HasActionBuffered(CPlayerController::PlayerState::Jump))
+    {
+        m_pCtx->ConsumeActionBuffer(CPlayerController::PlayerState::Jump);
+        TransitionTo(m_mChildList[CPlayerController::PlayerState::Jump]);
+    }
+    else if (m_pCtx->HasActionBuffered(CPlayerController::PlayerState::Evade))
     {
         m_pCtx->ConsumeActionBuffer(CPlayerController::PlayerState::Evade);
         TransitionTo(m_mChildList[CPlayerController::PlayerState::Evade]);
@@ -100,10 +105,10 @@ void CPlayerState_Locomotion::Update()
         TransitionTo(m_mChildList[CPlayerController::PlayerState::Guard]);
     else if (m_pCtx->IsActionActive(CPlayerController::PlayerState::Attack))
         TransitionTo(m_mChildList[CPlayerController::PlayerState::Attack]);
+    else if (m_pCtx->HasActionBuffered(CPlayerController::PlayerState::Jump))
+        TransitionTo(m_mChildList[CPlayerController::PlayerState::Jump]);
     else
-        TransitionTo(m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move)
-            ? m_mChildList[CPlayerController::PlayerState::Move]
-            : m_mChildList[CPlayerController::PlayerState::Idle]);
+        TransitionTo(m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move) ? m_mChildList[CPlayerController::PlayerState::Move] : m_mChildList[CPlayerController::PlayerState::Idle]);
 
     if (m_pChild) m_pChild->Update();
 

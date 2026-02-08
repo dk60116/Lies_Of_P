@@ -17,7 +17,7 @@ private:
     };
 
 public:
-    void Initialize(CPlayerControllerContext* _ctx) override;
+    void Initialize(CPlayerControllerContext* _ctx, const CPlayerController::PlayerState _type) override;
     void Enter() override;
     void Update() override;
     void Exit() override;

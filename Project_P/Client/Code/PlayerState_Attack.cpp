@@ -18,9 +18,9 @@ CPlayerState_Attack::~CPlayerState_Attack()
 {
 }
 
-void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx)
+void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlayerController::PlayerState _type)
 {
-    __super::Initialize(_ctx);
+    __super::Initialize(_ctx, _type);
 
     m_iComboTerm[0] = 8;
     m_iComboTerm[1] = 13;
@@ -114,8 +114,6 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx)
 void CPlayerState_Attack::Enter()
 {
 	__super::Enter();
-
-    m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, true);
 
     m_pCtx->SetBattle(true);
 

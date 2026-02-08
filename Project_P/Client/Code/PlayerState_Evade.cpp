@@ -15,9 +15,9 @@ CPlayerState_Evade::~CPlayerState_Evade()
 {
 }
 
-void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx)
+void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx, const CPlayerController::PlayerState _type)
 {
-	__super::Initialize(_ctx);
+	__super::Initialize(_ctx, _type);
 
 	const _uint stopTime = 12;
 	const _uint endTime = 20;
@@ -105,8 +105,6 @@ void CPlayerState_Evade::Enter()
 {
 	__super::Enter();
 
-	m_pCtx->SetActionActive(PlayerState::Evade, true);
-
 	_float x = 0, z = 0;
 
 	if (m_pCtx->Animator()->GetFloat(L"dirX", x) && m_pCtx->Animator()->GetFloat(L"dirZ", z))
@@ -151,7 +149,6 @@ void CPlayerState_Evade::Update()
 void CPlayerState_Evade::Exit()
 {
 	__super::Exit();
-	m_pCtx->SetActionActive(PlayerState::Evade, false);
 
 	m_pCtx->SetCanMove(true);
 	m_pCtx->SetCanTurn(true);

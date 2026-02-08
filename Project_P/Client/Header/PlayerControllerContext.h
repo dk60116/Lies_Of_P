@@ -100,6 +100,8 @@ public:
 	void SetCanGuard(const _bool _value);
 	const _bool IsCanEvade() const;
 	void SetCanEvade(const _bool _value);
+	const _bool IsCanJump() const;
+	void SetCanJump(const _bool _value);
 
 public:
 	void StopMoveImmediate();
@@ -133,7 +135,7 @@ private:
 
 private:
 	_bool m_bSprint, m_bBigTurn;
-	_bool m_bCanMove, m_bCanTurn, m_bCanAttack, m_bCanGuard, m_bCanEvade;
+	_bool m_bCanMove, m_bCanTurn, m_bCanAttack, m_bCanGuard, m_bCanEvade, m_bCanJump;
 
 private:
 	CV_MOVE m_Cv_Move;

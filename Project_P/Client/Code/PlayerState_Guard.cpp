@@ -11,9 +11,9 @@ CPlayerState_Guard::~CPlayerState_Guard()
 {
 }
 
-void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx)
+void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx, const CPlayerController::PlayerState _type)
 {
-	__super::Initialize(_ctx);
+	__super::Initialize(_ctx, _type);
 
 	{
 		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_Start (Animation Clip)");
@@ -40,7 +40,7 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx)
 		startClip->Add_ActionTrigger(at);
 		m_pCtx->Animator()->RegisterActionHandler(L"Start", [this]()
 			{
-				m_pCtx->SetCanMove(true);
+				m_pCtx-> SetCanMove(true);
 				m_pCtx->SetCanTurn(true);
 			});
 	}
@@ -93,9 +93,9 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx)
 		const _uint frameCount = startClip->Get_FrameCount();
 
 		{
-			CAnimationClip::ActionTrigger at = { 1, L"EndStart" };
+			CAnimationClip::ActionTrigger at = { 1, L"Guard_EndStart" };
 			startClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"EndStart", [this]()
+			m_pCtx->Animator()->RegisterActionHandler(L"Guard_EndStart", [this]()
 				{
 					m_pCtx->SetCanMove(false);
 					m_pCtx->SetCanAttack(true);
@@ -103,9 +103,9 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx)
 		}
 
 		{
-			CAnimationClip::ActionTrigger at = { 10, L"Exit" };
+			CAnimationClip::ActionTrigger at = { 10, L"Guard_Exit" };
 			startClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"Exit", [this]()
+			m_pCtx->Animator()->RegisterActionHandler(L"Guard_Exit", [this]()
 				{
 					if (m_bExit)
 					{
@@ -120,8 +120,6 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx)
 void CPlayerState_Guard::Enter()
 {
 	__super::Enter();
-
-	m_pCtx->SetActionActive(CPlayerController::PlayerState::Guard, true);
 
 	m_pCtx->SetCanMove(false);
 	m_pCtx->SetCanTurn(true);
@@ -169,7 +167,6 @@ void CPlayerState_Guard::Exit()
 {
 	__super::Exit();
 
-	m_pCtx->SetActionActive(CPlayerController::PlayerState::Guard, false);
 	m_pCtx->Animator()->SetBool(L"isGuard", false);
 	m_pCtx->SetCanTurn(true);
 	m_pCtx->SetCanMove(true);

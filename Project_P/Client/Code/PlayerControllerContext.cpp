@@ -14,11 +14,12 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_bCanAttack(true)
 	, m_bCanGuard(true)
 	, m_bCanEvade(true)
+	, m_bCanJump(true)
 {
 	m_strName = L"PlayerControllerContext";
-	m_mBattleContext.emplace(PlayerState::Attack, CONTEXT_VALUE{});
-	m_mBattleContext.emplace(PlayerState::Guard, CONTEXT_VALUE{});
-	m_mBattleContext.emplace(PlayerState::Evade, CONTEXT_VALUE{});
+
+	for (_int i = 0; i < static_cast<_int>(PlayerState::Count); ++i)
+		m_mBattleContext.emplace(static_cast<PlayerState>(i), CONTEXT_VALUE{});
 }
 
 CPlayerControllerContext::~CPlayerControllerContext()
@@ -514,6 +515,16 @@ const _bool CPlayerControllerContext::IsCanEvade() const
 void CPlayerControllerContext::SetCanEvade(const _bool _value)
 {
 	m_bCanEvade = _value;
+}
+
+const _bool CPlayerControllerContext::IsCanJump() const
+{
+	return m_bCanJump;
+}
+
+void CPlayerControllerContext::SetCanJump(const _bool _value)
+{
+	m_bCanJump = _value;
 }
 
 void CPlayerControllerContext::StopMoveImmediate()

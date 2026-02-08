@@ -8,6 +8,7 @@
 #include "PlayerState_Attack.h"
 #include "PlayerState_Guard.h"
 #include "PlayerState_Evade.h"
+#include "PlayerState_Jump.h"
 
 CPlayerController::CPlayerController()
 	: m_pPlayer(nullptr)
@@ -44,6 +45,7 @@ HRESULT CPlayerController::Initialize()
 	m_mStateList.insert({ PlayerState::Attack, new CPlayerState_Attack() });
 	m_mStateList.insert({ PlayerState::Guard, new CPlayerState_Guard() });
 	m_mStateList.insert({ PlayerState::Evade, new CPlayerState_Evade() });
+	m_mStateList.insert({ PlayerState::Jump, new CPlayerState_Jump() });
 
 	auto loco = static_cast<CPlayerState_Locomotion*>(Get_PlayerState(PlayerState::Locomotion));
 
@@ -68,7 +70,7 @@ void CPlayerController::Start()
 		m_ctx.Bind(m_pPlayer, m_pPlayerCam, this);
 
 	for (TRAVERSAL_ITER(m_mStateList, it))
-		(*it).second->Initialize(&m_ctx);
+		(*it).second->Initialize(&m_ctx, (*it).first);
 
 	if (m_pPlayer && m_pPlayerCam && m_pRoot)
 	{
@@ -95,6 +97,8 @@ void CPlayerController::Update()
 
 	m_ctx.SetSprint(m_mKeyHold[Evade]);
 
+	if (m_mKeyDown[Jump] && m_ctx.IsCanJump())
+		m_ctx.BufferAction(PlayerState::Jump);
     if (m_mKeyDown[Attack] && m_ctx.IsCanAttack())
         m_ctx.BufferAction(PlayerState::Attack);
 	if (m_mKeyHold[Guard] && m_ctx.IsCanGuard() && !m_ctx.IsActionActive(PlayerState::Guard))
@@ -215,6 +219,7 @@ void CPlayerController::Update_Key()
 	KEY_CODE key_R = KEY_CODE::D;
 	KEY_CODE key_Guard = KEY_CODE::E;
 	KEY_CODE key_Evade = KEY_CODE::L_SHIFT;
+	KEY_CODE key_Jump = KEY_CODE::SPACE;
 
 	_uint mouse0 = 0;
 
@@ -244,4 +249,8 @@ void CPlayerController::Update_Key()
 	m_mKeyHold[Evade] = CInput::GetInstance().GetKey(key_Evade);
 	m_mKeyDown[Evade] = CInput::GetInstance().GetKeyDown(key_Evade);
 	m_mKeyUp[Evade] = CInput::GetInstance().GetKeyUp(key_Evade);
+
+	m_mKeyHold[Jump] = CInput::GetInstance().GetKey(key_Jump);
+	m_mKeyDown[Jump] = CInput::GetInstance().GetKeyDown(key_Jump);
+	m_mKeyUp[Jump] = CInput::GetInstance().GetKeyUp(key_Jump);
 }

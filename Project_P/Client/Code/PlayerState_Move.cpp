@@ -10,9 +10,9 @@ CPlayerState_Move::~CPlayerState_Move()
 {
 }
 
-void CPlayerState_Move::Initialize(CPlayerControllerContext* _ctx)
+void CPlayerState_Move::Initialize(CPlayerControllerContext* _ctx, const CPlayerController::PlayerState _type)
 {
-    __super::Initialize(_ctx);
+    __super::Initialize(_ctx, _type);
 
 
     {
