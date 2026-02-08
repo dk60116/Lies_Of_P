@@ -14,7 +14,6 @@ void CPlayerState_Move::Initialize(CPlayerControllerContext* _ctx, const CPlayer
 {
     __super::Initialize(_ctx, _type);
 
-
     {
         CAnimationClip* clip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_SprintForward_During (Animation Clip)");
 
