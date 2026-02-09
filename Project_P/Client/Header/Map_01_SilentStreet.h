@@ -13,5 +13,6 @@ public:
 
 public:
 	HRESULT Initialize() override;
+	void Awake() override;
 };
 

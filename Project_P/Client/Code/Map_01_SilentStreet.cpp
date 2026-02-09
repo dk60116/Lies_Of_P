@@ -33,5 +33,16 @@ HRESULT CMap_01_SilentStreet::Initialize()
 		CreateObject(MapObjectType::Building);
 	}
 
+	m_vObjectList[1].renderers[0]->CreateMeshInstancing(10);
+
+	for (size_t i = 0; i < 10; ++i)
+	{
+		m_vObjectList[1].renderers[0]->SetInstancingPosition(i, vector3(50.f * i, 0.f, 0.f));
+	}
+
 	return S_OK;
+}
+
+void CMap_01_SilentStreet::Awake()
+{
 }
