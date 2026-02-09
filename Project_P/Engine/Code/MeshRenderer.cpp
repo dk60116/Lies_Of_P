@@ -99,13 +99,29 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 		return;
 	}
 
+	CMeshBuffer* pBuffer = m_pMeshFilter->Get_MeshBuffer();
+	if (!pBuffer)
+		return;
+
+	// World / View / Projection 행렬 계산
+
+	vector3 cPos = _cam->Get_Transform()->Get_Position();
+	_float3 camPos = cPos.toFloat3();
+	_matrix matWorld = Get_Transform()->Get_WorldMatrix();
+	_matrix matView = _cam->Get_ViewMatrix();
+	_matrix matProj = _cam->Get_ProjectionMatrix();
+
 	UpdateInstanceBuffer(matWorld);
+
+	// 셰이더 + 텍스처 + 상수 버퍼 바인딩
+	m_pMaterial->Bind_Matrix(matWorld);
+	m_pMaterial->Bind_Camera(camPos, matView, matProj, 0);
 
 	if (m_bInstancing && m_iInstanceCount > 0)
 		pBuffer->Render_Instanced(m_iInstanceCount);
 	else
 		pBuffer->Render();
-	CMeshBuffer* pBuffer = m_pMeshFilter->Get_MeshBuffer();
+}
 
 void CMeshRenderer::CreateMeshInstancing(_uint _count)
 {
@@ -203,24 +219,6 @@ _matrix CMeshRenderer::BuildInstanceWorld(const InstanceTransform& _transform) c
 	_matrix rotMat = XMMatrixRotationQuaternion(rot.toXMVector());
 	_matrix transMat = XMMatrixTranslation(_transform.position.x, _transform.position.y, _transform.position.z);
 	return scaleMat * rotMat * transMat;
-}
-
-	if (!pBuffer)
-		return;
-
-	// World / View / Projection 행렬 계산
-
-	vector3 cPos = _cam->Get_Transform()->Get_Position();
-	_float3 camPos = cPos.toFloat3();
-	_matrix matWorld = Get_Transform()->Get_WorldMatrix();
-	_matrix matView = _cam->Get_ViewMatrix();
-	_matrix matProj = _cam->Get_ProjectionMatrix();
-
-	// 셰이더 + 텍스처 + 상수 버퍼 바인딩
-	m_pMaterial->Bind_Matrix(matWorld);
-	m_pMaterial->Bind_Camera(camPos, matView, matProj, 0);
-
-	pBuffer->Render();
 }
 
 void CMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const CLight::ShadowMatrices& _shadowMatrix)
