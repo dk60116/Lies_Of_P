@@ -25,10 +25,6 @@ HRESULT CGameScene::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
-	CGameObject* cube = Add_GameObject(L"Cube");
-	CMeshRenderer* cubeMesh = cube->AddComponent<CMeshRenderer>();
-	cubeMesh->Get_MeshFilter()->Set_MeshBuffer(CResources::GetInstance().LoadOnGame<CMeshBuffer>(L"Cube (Mesh Buffer)"));
-
 	CGameObject* cameraObject = Add_GameObject(L"Player Camera");
 	m_pPlayerCamera = cameraObject->AddComponent<CPlayerCamera>();
 
@@ -47,10 +43,6 @@ HRESULT CGameScene::Initialize()
 
 	CGameObject* playerObj = Add_GameObject(L"Player");
 	m_pPlayer = playerObj->AddComponent<CPlayer>();
-
-	CGameObject* cube2 = Add_GameObject(L"Cube");
-	CMeshRenderer* cubeMesh2 = cube2->AddComponent<CMeshRenderer>();
-	cubeMesh2->Get_MeshFilter()->Set_MeshBuffer(CResources::GetInstance().LoadOnGame<CMeshBuffer>(L"Cube (Mesh Buffer)"));
 
 	CGameObject* mapObj = Add_GameObject(L"Map");
 	mapObj->AddComponent<CMap_01_SilentStreet>();
