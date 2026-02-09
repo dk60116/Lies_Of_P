@@ -891,7 +891,7 @@ void CAnimator::ProcessActionTriggers(CAnimationClip* clip, _float prevTime, _fl
 
 	if (looped && currentFrame < prevFrame)
 	{
-		const _int lastFrame = static_cast<_int>(floor(totalTicks));
+		const _uint lastFrame = static_cast<_int>(floor(totalTicks));
 		for (const auto& trigger : triggers)
 		{
 			if (trigger.actionName.empty())

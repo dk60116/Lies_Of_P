@@ -118,6 +118,8 @@ void CPlayerState_Attack::Enter()
     m_pCtx->SetBattle(true);
 
     m_pCtx->SetCanMove(false);
+    m_pCtx->SetCanJump(false);
+
     m_pCtx->Animator()->SetInt(L"AttackCombo", 0);
     m_pCtx->SetAnimMoveSpeed(0.f);
     m_pCtx->Animator()->SetTrigger(L"Attack");
@@ -161,6 +163,9 @@ void CPlayerState_Attack::Update()
 
     if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move) && !m_bUnderLimit)
         m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, false);
+
+    if (m_pCtx->IsBigTurn())
+        Exit();
 }
 
 void CPlayerState_Attack::Exit()
@@ -172,6 +177,7 @@ void CPlayerState_Attack::Exit()
 
     m_pCtx->SetCanMove(true);
     m_pCtx->SetCanTurn(true);
+    m_pCtx->SetCanJump(true);
 }
 
 void CPlayerState_Attack::ContinueCombo()

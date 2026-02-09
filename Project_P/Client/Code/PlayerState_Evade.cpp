@@ -118,6 +118,7 @@ void CPlayerState_Evade::Enter()
 	m_pCtx->SetCanMove(false);
 	m_pCtx->SetCanAttack(false);
 	m_pCtx->SetCanGuard(false);
+	m_pCtx->SetCanJump(false);
 
 	m_bIsDash = true;
 
@@ -143,7 +144,7 @@ void CPlayerState_Evade::Update()
 		m_bGuardBffer = true;
 
 	if (m_pCtx->IsBigTurn())
-		m_pCtx->SetActionActive(CPlayerController::PlayerState::Evade, false);
+		Exit();
 }
 
 void CPlayerState_Evade::Exit()
@@ -154,4 +155,5 @@ void CPlayerState_Evade::Exit()
 	m_pCtx->SetCanTurn(true);
 	m_pCtx->SetCanAttack(true);
 	m_pCtx->SetCanGuard(true);
+	m_pCtx->SetCanJump(true);
 }

@@ -70,6 +70,10 @@ Eve_Jump_Start : Player/Eve/Animations/Eve_Jump_Start.fbx : [Animation Clip]
 Eve_Jump_End : Player/Eve/Animations/Eve_Jump_End.fbx : [Animation Clip]
 Eve_JumpForward_Start : Player/Eve/Animations/Eve_JumpForward_Start.fbx : [Animation Clip]
 Eve_JumpForward_End : Player/Eve/Animations/Eve_JumpForward_End.fbx : [Animation Clip]
+Eve_Battle_Jump_Start : Player/Eve/Animations/Eve_Battle_Jump_Start.fbx : [Animation Clip]
+Eve_Battle_Jump_End : Player/Eve/Animations/Eve_Battle_Jump_End.fbx : [Animation Clip]
+Eve_Battle_JumpForward_Start : Player/Eve/Animations/Eve_Battle_JumpForward_Start.fbx : [Animation Clip]
+Eve_Battle_JumpForward_End : Player/Eve/Animations/Eve_Battle_JumpForward_End.fbx : [Animation Clip]
 // Eve Animator Controller
 Eve_AnimatorController : Player/Eve/AnimatorController/Eve_AnimatorController.animatorcontroller : [Animator Controller]
 // Space

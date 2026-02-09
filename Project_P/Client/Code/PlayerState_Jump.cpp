@@ -14,39 +14,8 @@ void CPlayerState_Jump::Initialize(CPlayerControllerContext* _ctx, const CPlayer
 {
 	__super::Initialize(_ctx, _type);
 
-	{
-		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Jump_Start (Animation Clip)");
-
-		const wstring clipName = startClip->Get_ResourceName();
-		const _uint frameCount = startClip->Get_FrameCount();
-
-		{
-			CAnimationClip::ActionTrigger at = { 1, L"Jump_Start" };
-			startClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"Jump_Start", [this]()
-				{
-					CDebug::LogError("JStart");
-					m_bExitable = true;
-				});
-		}
-	}
-
-	{
-		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_JumpForward_Start (Animation Clip)");
-
-		const wstring clipName = startClip->Get_ResourceName();
-		const _uint frameCount = startClip->Get_FrameCount();
-
-		{
-			CAnimationClip::ActionTrigger at = { 1, L"JumpF_Start" };
-			startClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"JumpF_Start", [this]()
-				{
-					CDebug::LogError("JFStart");
-					m_bExitable = true;
-				});
-		}
-	}
+	const _uint downTime = 13;
+	const _uint EndTime = 50;
 
 	{
 		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Jump_End (Animation Clip)");
@@ -55,7 +24,7 @@ void CPlayerState_Jump::Initialize(CPlayerControllerContext* _ctx, const CPlayer
 		const _uint frameCount = startClip->Get_FrameCount();
 
 		{
-			CAnimationClip::ActionTrigger at = { 13, L"Jump_Down" };
+			CAnimationClip::ActionTrigger at = { downTime, L"Jump_Down" };
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"Jump_Down", [this]()
 				{
@@ -64,7 +33,7 @@ void CPlayerState_Jump::Initialize(CPlayerControllerContext* _ctx, const CPlayer
 		}
 
 		{
-			CAnimationClip::ActionTrigger at = { 55, L"Jump_End" };
+			CAnimationClip::ActionTrigger at = { EndTime, L"Jump_End" };
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"Jump_End", [this]()
 				{
@@ -80,17 +49,7 @@ void CPlayerState_Jump::Initialize(CPlayerControllerContext* _ctx, const CPlayer
 		const _uint frameCount = startClip->Get_FrameCount();
 
 		{
-			CAnimationClip::ActionTrigger at = { 1, L"JumF_Start" };
-			startClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"JumpF_Start", [this]()
-				{
-					CDebug::LogError("JFStart");
-					m_bExitable = true;
-				});
-		}
-
-		{
-			CAnimationClip::ActionTrigger at = { 13, L"JumpForward_Down" };
+			CAnimationClip::ActionTrigger at = { downTime, L"JumpForward_Down" };
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"JumpForward_Down", [this]()
 				{
@@ -99,9 +58,59 @@ void CPlayerState_Jump::Initialize(CPlayerControllerContext* _ctx, const CPlayer
 		}
 
 		{
-			CAnimationClip::ActionTrigger at = { 55, L"JumpForward_End" };
+			CAnimationClip::ActionTrigger at = { EndTime, L"JumpForward_End" };
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"JumpForward_End", [this]()
+				{
+					Exit();
+				});
+		}
+	}
+
+	{
+		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Battle_Jump_End (Animation Clip)");
+
+		const wstring clipName = startClip->Get_ResourceName();
+		const _uint frameCount = startClip->Get_FrameCount();
+
+		{
+			CAnimationClip::ActionTrigger at = { downTime, L"Battle_Jump_Down" };
+			startClip->Add_ActionTrigger(at);
+			m_pCtx->Animator()->RegisterActionHandler(L"Battle_Jump_Down", [this]()
+				{
+					m_bExitable = true;
+				});
+		}
+
+		{
+			CAnimationClip::ActionTrigger at = { EndTime, L"Battle_Jump_End" };
+			startClip->Add_ActionTrigger(at);
+			m_pCtx->Animator()->RegisterActionHandler(L"Battle_Jump_End", [this]()
+				{
+					Exit();
+				});
+		}
+	}
+
+	{
+		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Battle_JumpForward_End (Animation Clip)");
+
+		const wstring clipName = startClip->Get_ResourceName();
+		const _uint frameCount = startClip->Get_FrameCount();
+
+		{
+			CAnimationClip::ActionTrigger at = { downTime, L"Battle_JumpForward_Down" };
+			startClip->Add_ActionTrigger(at);
+			m_pCtx->Animator()->RegisterActionHandler(L"Battle_JumpForward_Down", [this]()
+				{
+					m_bExitable = true;
+				});
+		}
+
+		{
+			CAnimationClip::ActionTrigger at = { EndTime, L"Battle_JumpForward_End" };
+			startClip->Add_ActionTrigger(at);
+			m_pCtx->Animator()->RegisterActionHandler(L"Battle_JumpForward_End", [this]()
 				{
 					Exit();
 				});
@@ -132,9 +141,9 @@ void CPlayerState_Jump::Update()
 	{
 		if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
 			Exit();
+		if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Jump))
+			Enter();
 	}
-
-	CDebug::LogError(m_pCtx->Animator()->GetNormalizedTime());
 }
 
 void CPlayerState_Jump::Exit()

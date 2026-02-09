@@ -55,6 +55,8 @@ const _bool CPlayerControllerContext::IsKeyPressed_Hold(PlayerState state)
 		return m_pController->m_mKeyHold[CPlayerController::Guard];
 	case PlayerState::Evade:
 		return m_pController->m_mKeyHold[CPlayerController::Evade];
+	case PlayerState::Jump:
+		return m_pController->m_mKeyHold[CPlayerController::Jump];
 	default:
 		break;
 	}
@@ -79,6 +81,8 @@ const _bool CPlayerControllerContext::IsKeyPressed_Down(PlayerState state)
 		return m_pController->m_mKeyDown[CPlayerController::Guard];
 	case PlayerState::Evade:
 		return m_pController->m_mKeyDown[CPlayerController::Evade];
+	case PlayerState::Jump:
+		return m_pController->m_mKeyDown[CPlayerController::Jump];
 	default:
 		break;
 	}
@@ -103,6 +107,8 @@ const _bool CPlayerControllerContext::IsKeyPressed_UP(PlayerState state)
 		return m_pController->m_mKeyUp[CPlayerController::Guard];
 	case PlayerState::Evade:
 		return m_pController->m_mKeyUp[CPlayerController::Evade];
+	case PlayerState::Jump:
+		return m_pController->m_mKeyUp[CPlayerController::Jump];
 	default:
 		break;
 	}
