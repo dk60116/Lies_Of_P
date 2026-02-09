@@ -33,13 +33,36 @@ public:
 	virtual const _float GetScaleFactor() const PURE;
 	void SetCastShadow(const _bool _on);
 
+public:
+	void CreateMeshInstancing(const _uint _count);
+	void SetInstancingPosition(const _uint _index, const vector3& _pos);
+	void SetInstancingRotation(const _uint _index, const vector3& _rot);
+	void SetInstancingSize(const _uint _index, const vector3& _size);
+
+	const _bool IsInstancingEnabled() const;
+	const _uint GetInstanceCount() const;
+
+protected:
+	void Bind_InstanceBuffer(const _matrix& _baseWorld);
+
 protected:
 	CMaterial* m_pMaterial;
 	CMaterial* m_pOutlineMat;
 
 	_float m_fSclaeFactor;
 	_bool m_bCastShadow;
+
+	_bool m_bUseInstancing;
+	_uint m_iInstanceCount;
+	ID3D11Buffer* m_pInstanceBuffer;
+
+	struct InstanceTransform
+	{
+		vector3 position = vector3::zero();
+		vector3 rotation = vector3::zero();
+		vector3 scale = vector3::one();
+	};
+	vector<InstanceTransform> m_vInstanceTransforms;
 };
 
 NS_END
-

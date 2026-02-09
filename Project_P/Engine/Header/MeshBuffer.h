@@ -71,6 +71,7 @@ private:
 
 public:
 	void Render();
+	void Render_Instanced(const _uint _instanceCount);
 
 public:
 	const _float Get_ScaleFactor() const;
@@ -93,4 +94,3 @@ protected:
 };
 
 NS_END
-

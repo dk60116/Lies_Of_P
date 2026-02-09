@@ -26,6 +26,13 @@ cbuffer PerBones : register(b3)
     float4x4 gBones[512];
 };
 
+cbuffer PerInstance : register(b4)
+{
+    float4x4 gInstanceWorlds[128];
+    uint gInstanceCount;
+    float3 gInstancePadding;
+};
+
 cbuffer PerCustomValue : register(b10)
 {
     float gOcculusion;
@@ -69,7 +76,7 @@ struct PSOut
     float4 Material : SV_Target3;
 };
 
-VSOut VSMain(VSIn v)
+VSOut VSMain(VSIn v, uint instanceID : SV_InstanceID)
 {
     VSOut o;
 
@@ -99,10 +106,17 @@ VSOut VSMain(VSIn v)
         }
     }
 
-    float4 posW4 = mul(skinnedPos, world);
+    float4x4 worldMat = world;
 
-    float3 N = normalize(mul(skinnedN, (float3x3) world));
-    float3 T = normalize(mul(skinnedT, (float3x3) world));
+    if (gInstanceCount > 0 && instanceID < gInstanceCount)
+    {
+        worldMat = gInstanceWorlds[instanceID];
+    }
+
+    float4 posW4 = mul(skinnedPos, worldMat);
+
+    float3 N = normalize(mul(skinnedN, (float3x3) worldMat));
+    float3 T = normalize(mul(skinnedT, (float3x3) worldMat));
 
     T = normalize(T - N * dot(T, N));
 

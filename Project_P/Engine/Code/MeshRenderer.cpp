@@ -92,13 +92,13 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 		return;
 	}
 
-	// MeshBuffer 가져오기
+	// MeshBuffer 
 	CMeshBuffer* pBuffer = m_pMeshFilter->Get_MeshBuffer();
 
 	if (!pBuffer)
 		return;
 
-	// World / View / Projection 행렬 계산
+	// World / View / Projection  
 
 	vector3 cPos = _cam->Get_Transform()->Get_Position();
 	_float3 camPos = cPos.toFloat3();
@@ -106,11 +106,19 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 	_matrix matView = _cam->Get_ViewMatrix();
 	_matrix matProj = _cam->Get_ProjectionMatrix();
 
-	// 셰이더 + 텍스처 + 상수 버퍼 바인딩
+	// 甄 + 灣처 +   琯
 	m_pMaterial->Bind_Matrix(matWorld);
 	m_pMaterial->Bind_Camera(camPos, matView, matProj, 0);
 
-	pBuffer->Render();
+	Bind_InstanceBuffer(matWorld);
+	if (IsInstancingEnabled())
+	{
+		pBuffer->Render_Instanced(GetInstanceCount());
+	}
+	else
+	{
+		pBuffer->Render();
+	}
 }
 
 void CMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const CLight::ShadowMatrices& _shadowMatrix)
@@ -138,7 +146,7 @@ void CMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const CLight:
 	_matrix matView = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(&_shadowMatrix.view));
 	_matrix matProj = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(&_shadowMatrix.proj));
 
-	// Shadow depth는 camPos 의미 없으므로 더미
+	// Shadow depth camPos 퓜 퓐 
 	_float3 dummyPos = { 0.f, 0.f, 0.f };
 
 	_shadowDepthMat->Bind_Matrix(matWorld);
