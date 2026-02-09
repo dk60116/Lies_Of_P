@@ -46,23 +46,8 @@ HRESULT CGameScene::Initialize()
 	CGameObject* playerObj = Add_GameObject(L"Player");
 	m_pPlayer = playerObj->AddComponent<CPlayer>();
 
-	CGameObject* vahMedoh_BodyObj = Add_GameObject(L"VahMedoh_Body");
-	vahMedoh_BodyObj->CreateMeshHierachy(CResources::GetInstance().LoadMeshBuffersOnScene(L"VahMedoh (MeshBuffer)"), 0.01f);
-
-	//CGameObject* wolfObject = Add_GameObject(L"Wolf");
-	//CWolf* woolf = wolfObject->AddComponent<CWolf>();
-	//m_vMonsters.push_back(woolf);
-
-	//if (wolfObject)
-	//{
-	//	for (_uint i = 0; i < 2; ++i)
-	//	{
-	//		CGameObject* cloneWolf = CGameObject::Instantiate(wolfObject);
-	//		m_vMonsters.push_back(cloneWolf->GetComponent<CWolf>());
-	//	}
-	//}
-
-	//m_pPlayer->Set_Focus(wolfObject->Get_Transform());
+	CGameObject* vahMedoh_BodyObj = Add_GameObject(L"Terrain01");
+	vahMedoh_BodyObj->CreateMeshHierachy(CResources::GetInstance().LoadMeshBuffersOnScene(L"Map01_Terrain (MeshBuffer)"), 0.01f);
 
 	return S_OK;
 }
@@ -81,15 +66,6 @@ void CGameScene::Update()
 		CGameManager::GetInstance().Set_NexScene(L"Main Scene");
 		CSceneManager::GetInstance().LoadScene(L"Loading Scene");
 	}
-
-	//if (CInput::GetInstance().GetKeyDown(L))
-	//	m_vMonsters[2]->Get_Animator()->Play(L"Idle", 0.1f);
-	//if (CInput::GetInstance().GetKeyDown(K))
-	//	m_vMonsters[2]->Get_Animator()->Play(L"Run", 0.1f);
-	//if (CInput::GetInstance().GetKeyDown(J))
-	//	m_vMonsters[2]->Get_Animator()->Play(L"Attack01", 0.1f);
-	//if (CInput::GetInstance().GetKeyDown(H))
-	//	m_vMonsters[2]->Get_Animator()->Play(L"Find", 0.1f);
 }
 
 void CGameScene::SceneRelease()
