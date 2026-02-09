@@ -677,10 +677,17 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			else
 			{
 				CRectTransform* rect = obj->GetComponent<CRectTransform>();
-				rect->Set_Pivot(info.rectInfo.pivot);
-				rect->Set_AnchorsMin(info.rectInfo.anchorMin);
-				rect->Set_AnchorsMax(info.rectInfo.anchorMax);
-				rect->Set_WidthHeight(info.rectInfo.widthHeight);
+				if (rect)
+				{
+					rect->Set_Pivot(info.rectInfo.pivot);
+					rect->Set_AnchorsMin(info.rectInfo.anchorMin);
+					rect->Set_AnchorsMax(info.rectInfo.anchorMax);
+					rect->Set_WidthHeight(info.rectInfo.widthHeight);
+				}
+				else
+				{
+					tf->Set_LocalScale(info.localScale);
+				}
 			}
 
 			tf->Set_LocalQuaternion(info.localQuaternion);
@@ -713,10 +720,17 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				else
 				{
 					CRectTransform* rect = obj->GetComponent<CRectTransform>();
-					rect->Set_Pivot(info.rectInfo.pivot);
-					rect->Set_AnchorsMin(info.rectInfo.anchorMin);
-					rect->Set_AnchorsMax(info.rectInfo.anchorMax);
-					rect->Set_WidthHeight(info.rectInfo.widthHeight);
+					if (rect)
+					{
+						rect->Set_Pivot(info.rectInfo.pivot);
+						rect->Set_AnchorsMin(info.rectInfo.anchorMin);
+						rect->Set_AnchorsMax(info.rectInfo.anchorMax);
+						rect->Set_WidthHeight(info.rectInfo.widthHeight);
+					}
+					else
+					{
+						tf->Set_LocalScale(info.localScale);
+					}
 				}
 
 				tf->Set_LocalQuaternion(info.localQuaternion);
@@ -736,10 +750,17 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				else
 				{
 					CRectTransform* rect = obj->GetComponent<CRectTransform>();
-					rect->Set_Pivot((*it1).rectInfo.pivot);
-					rect->Set_AnchorsMin((*it1).rectInfo.anchorMin);
-					rect->Set_AnchorsMax((*it1).rectInfo.anchorMax);
-					rect->Set_WidthHeight((*it1).rectInfo.widthHeight);
+					if (rect)
+					{
+						rect->Set_Pivot((*it1).rectInfo.pivot);
+						rect->Set_AnchorsMin((*it1).rectInfo.anchorMin);
+						rect->Set_AnchorsMax((*it1).rectInfo.anchorMax);
+						rect->Set_WidthHeight((*it1).rectInfo.widthHeight);
+					}
+					else
+					{
+						tf->Set_LocalScale((*it1).localScale);
+					}
 				}
 
 				tf->Set_LocalQuaternion((*it1).localQuaternion);
