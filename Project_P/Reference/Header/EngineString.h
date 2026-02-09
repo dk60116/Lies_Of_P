@@ -23,5 +23,7 @@ public:
 	static wstring Erase(const wstring& _wstr, const wstring& _target);
 	static string Replace(const string& _str, const string& _dest, const string& _target);
 	static wstring Replace(const wstring& _wstr, const wstring& _dest, const wstring& _target);
+	static string To2(const _int _i);
+	static wstring ToW2(const _int _i);
 };
 

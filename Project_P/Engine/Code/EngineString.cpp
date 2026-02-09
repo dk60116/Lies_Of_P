@@ -195,3 +195,15 @@ wstring CEngineString::Replace(const wstring& _wstr, const wstring& _dest, const
 
     return result;
 }
+
+string CEngineString::To2(const _int _i)
+{
+    return string();
+}
+
+wstring CEngineString::ToW2(const _int _i)
+{
+    wchar_t buf[16]{};
+    swprintf_s(buf, L"%02u", (unsigned)_i);
+    return buf;
+}

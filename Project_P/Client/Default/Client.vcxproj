@@ -147,6 +147,7 @@
     <ClInclude Include="..\Header\Behaviour_Idle.h" />
     <ClInclude Include="..\Header\Behaviour_Patrole.h" />
     <ClInclude Include="..\Header\Behaviour_Tracking.h" />
+    <ClInclude Include="..\Header\Map_01_SilentStreet.h" />
     <ClInclude Include="..\Header\PlayerState_Attack.h" />
     <ClInclude Include="..\Header\PlayerState_Evade.h" />
     <ClInclude Include="..\Header\PlayerState_Guard.h" />
@@ -186,6 +187,7 @@
     <ClCompile Include="..\Code\GameScene.cpp" />
     <ClCompile Include="..\Code\LoadingScene.cpp" />
     <ClCompile Include="..\Code\MainScene.cpp" />
+    <ClCompile Include="..\Code\Map_01_SilentStreet.cpp" />
     <ClCompile Include="..\Code\Monster.cpp" />
     <ClCompile Include="..\Code\MonsterBehaviour.cpp" />
     <ClCompile Include="..\Code\MonsterController.cpp" />

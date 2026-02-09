@@ -4,6 +4,7 @@
 #include "PlayerCamera.h"
 #include "PlayerHUD.h"
 #include "Wolf.h"
+#include "Map_01_SilentStreet.h"
 
 CGameScene::CGameScene()
 	: m_pPlayerCamera(nullptr)
@@ -11,6 +12,7 @@ CGameScene::CGameScene()
 	, m_pPlayer(nullptr)
 	, m_pHUD(nullptr)
 	, m_vMonsters({})
+	, m_pMap(nullptr)
 {
 }
 
@@ -50,11 +52,8 @@ HRESULT CGameScene::Initialize()
 	CMeshRenderer* cubeMesh2 = cube2->AddComponent<CMeshRenderer>();
 	cubeMesh2->Get_MeshFilter()->Set_MeshBuffer(CResources::GetInstance().LoadOnGame<CMeshBuffer>(L"Cube (Mesh Buffer)"));
 
-
-	CGameObject* vahMedoh_BodyObj_00 = Add_GameObject(L"Stage_01_Building_00");
-	vahMedoh_BodyObj_00->CreateMeshHierachy(CResources::GetInstance().LoadMeshBuffersOnScene(L"Stage01_Bulding_00 (MeshBuffer)"), 0.01f);
-	CGameObject* vahMedoh_BodyObj = Add_GameObject(L"Stage_01_Building_01");
-	vahMedoh_BodyObj->CreateMeshHierachy(CResources::GetInstance().LoadMeshBuffersOnScene(L"Stage01_Bulding_01 (MeshBuffer)"), 0.01f);
+	CGameObject* mapObj = Add_GameObject(L"Map");
+	mapObj->AddComponent<CMap_01_SilentStreet>();
 
 	return S_OK;
 }

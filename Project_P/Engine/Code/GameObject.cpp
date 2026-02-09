@@ -373,27 +373,21 @@ vector<CMeshRenderer*> CGameObject::CreateMeshHierachy(vector<MeshBundle> _meshI
 		if (!child || !child->Get_Transform())
 			continue;
 
-		// Hierarchy
 		child->Get_Transform()->SetParent(parentTransform);
 
-		// Local transform defaults (원하면 여기서 position/rotation도 초기화 가능)
 		child->Get_Transform()->Set_LocalScale(_scaleFactor);
 
-		// Renderer
 		CMeshRenderer* ren = child->AddComponent<CMeshRenderer>();
 		if (!ren || !ren->Get_MeshFilter())
 			continue;
 
 		renderers.push_back(ren);
 
-		// Mesh
 		ren->Get_MeshFilter()->Set_MeshBuffer(mb.meshBuffer);
 
-		// Material
 		CMaterial* mat = CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferLit (Material)");
 		ren->Set_Material(mat);
 
-		// Texture (optional)
 		if (mb.texture && ren->Get_Material())
 			ren->Get_Material()->Set_Texture(mb.texture, 0);
 	}

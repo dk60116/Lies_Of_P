@@ -153,6 +153,9 @@
     <ClInclude Include="..\Header\SceneMap.h">
       <Filter>Scripts\Object\Map</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\Map_01_SilentStreet.h">
+      <Filter>Scripts\Object\Map</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Code\MainScene.cpp">
@@ -246,6 +249,9 @@
       <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\SceneMap.cpp">
+      <Filter>Scripts\Object\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\Map_01_SilentStreet.cpp">
       <Filter>Scripts\Object\Map</Filter>
     </ClCompile>
   </ItemGroup>
