@@ -596,7 +596,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 2;
+	const _uint version = 3;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -617,6 +617,12 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 		out.write(reinterpret_cast<const char*>(&nameSize), sizeof(_uint));
 		if (nameSize > 0)
 			out.write(reinterpret_cast<const char*>(info.objName.data()), sizeof(wchar_t) * nameSize);
+
+		_uint pathSize = static_cast<_uint>(info.objPath.size());
+		out.write(reinterpret_cast<const char*>(&pathSize), sizeof(_uint));
+		if (pathSize > 0)
+			out.write(reinterpret_cast<const char*>(info.objPath.data()), sizeof(wchar_t) * pathSize);
+
 		out.write(reinterpret_cast<const char*>(&info.localPos), sizeof(_float3));
 		out.write(reinterpret_cast<const char*>(&info.localQuaternion), sizeof(_float4));
 		out.write(reinterpret_cast<const char*>(&info.localScale), sizeof(_float3));
@@ -695,6 +701,22 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 		}
 		else
 			info.objName = L"";
+
+		if (version >= 3)
+		{
+			_uint pathSize = 0;
+			in.read(reinterpret_cast<char*>(&pathSize), sizeof(_uint));
+			if (pathSize > 0)
+			{
+				wstring temp(pathSize, L'\0');
+				in.read(reinterpret_cast<char*>(&temp[0]), sizeof(wchar_t) * pathSize);
+				info.objPath = move(temp);
+			}
+			else
+			{
+				info.objPath = L"";
+			}
+		}
 
 		_float3 pos = {};
 		in.read(reinterpret_cast<char*>(&info.localPos), sizeof(_float3));

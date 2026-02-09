@@ -599,6 +599,29 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 {
 	vector<SCENETRANSFORMINFO> result = {};
 
+	auto buildPath = [](CGameObject* obj)
+	{
+		vector<wstring> names;
+		CTransform* current = obj->Get_Transform();
+		while (current)
+		{
+			CGameObject* currentObj = current->Get_GameObject();
+			if (currentObj)
+				names.push_back(currentObj->Get_ObjectName());
+			current = current->Get_Parent();
+		}
+
+		wstring path = L"";
+		for (auto it = names.rbegin(); it != names.rend(); ++it)
+		{
+			if (!path.empty())
+				path += L"/";
+			path += *it;
+		}
+
+		return path;
+	};
+
 	_uint i = 0;
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
@@ -610,6 +633,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		info.objID = (*it)->m_iUniqueID;
 		info.objGuid = (*it)->Get_Guid();
 		info.objName = (*it)->m_strGameObjectName;
+		info.objPath = buildPath(*it);
 		vector3 pos = tf->Get_LocalPosition();
 		info.localPos = pos;
 		const quaternion quat = tf->Get_LocalQuaternion();
@@ -644,20 +668,73 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 
 void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 {
-	unordered_map<wstring, SCENETRANSFORMINFO> infoByGuid;
-	infoByGuid.reserve(_infoList.size());
-	unordered_map<wstring, vector<size_t>> infoByName;
-	infoByName.reserve(_infoList.size());
+	unordered_map<wstring, size_t> infoIndexByGuid;
+	unordered_map<wstring, size_t> infoIndexByPath;
+	infoIndexByGuid.reserve(_infoList.size());
+	infoIndexByPath.reserve(_infoList.size());
+	unordered_map<wstring, vector<size_t>> infoIndicesByName;
+	infoIndicesByName.reserve(_infoList.size());
 	vector<_bool> usedInfo(_infoList.size(), false);
 
 	for (size_t i = 0; i < _infoList.size(); ++i)
 	{
 		const auto& info = _infoList[i];
 		if (!info.objGuid.empty())
-			infoByGuid.emplace(info.objGuid, info);
+			infoIndexByGuid.emplace(info.objGuid, i);
+		if (!info.objPath.empty())
+			infoIndexByPath.emplace(info.objPath, i);
 		if (!info.objName.empty())
-			infoByName[info.objName].push_back(i);
+			infoIndicesByName[info.objName].push_back(i);
 	}
+
+	auto buildPath = [](CGameObject* obj)
+	{
+		vector<wstring> names;
+		CTransform* current = obj->Get_Transform();
+		while (current)
+		{
+			CGameObject* currentObj = current->Get_GameObject();
+			if (currentObj)
+				names.push_back(currentObj->Get_ObjectName());
+			current = current->Get_Parent();
+		}
+
+		wstring path = L"";
+		for (auto it = names.rbegin(); it != names.rend(); ++it)
+		{
+			if (!path.empty())
+				path += L"/";
+			path += *it;
+		}
+
+		return path;
+	};
+
+	auto applyInfo = [](CGameObject* obj, const SCENETRANSFORMINFO& info)
+	{
+		CTransform* tf = obj->Get_Transform();
+
+		if (!info.isRect)
+			tf->Set_LocalScale(info.localScale);
+		else
+		{
+			CRectTransform* rect = obj->GetComponent<CRectTransform>();
+			if (rect)
+			{
+				rect->Set_Pivot(info.rectInfo.pivot);
+				rect->Set_AnchorsMin(info.rectInfo.anchorMin);
+				rect->Set_AnchorsMax(info.rectInfo.anchorMax);
+				rect->Set_WidthHeight(info.rectInfo.widthHeight);
+			}
+			else
+			{
+				tf->Set_LocalScale(info.localScale);
+			}
+		}
+
+		tf->Set_LocalQuaternion(info.localQuaternion);
+		tf->Set_LocalPosition(info.localPos);
+	};
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
@@ -666,37 +743,29 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		if (obj->m_iUniqueID == 0)
 			continue;
 
-		auto guidIter = infoByGuid.find(obj->Get_Guid());
-		if (guidIter != infoByGuid.end())
+		auto guidIter = infoIndexByGuid.find(obj->Get_Guid());
+		if (guidIter != infoIndexByGuid.end() && !usedInfo[guidIter->second])
 		{
-			const auto& info = guidIter->second;
-			CTransform* tf = obj->Get_Transform();
-
-			if (!info.isRect)
-				tf->Set_LocalScale(info.localScale);
-			else
-			{
-				CRectTransform* rect = obj->GetComponent<CRectTransform>();
-				if (rect)
-				{
-					rect->Set_Pivot(info.rectInfo.pivot);
-					rect->Set_AnchorsMin(info.rectInfo.anchorMin);
-					rect->Set_AnchorsMax(info.rectInfo.anchorMax);
-					rect->Set_WidthHeight(info.rectInfo.widthHeight);
-				}
-				else
-				{
-					tf->Set_LocalScale(info.localScale);
-				}
-			}
-
-			tf->Set_LocalQuaternion(info.localQuaternion);
-			tf->Set_LocalPosition(info.localPos);
+			const auto& info = _infoList[guidIter->second];
+			applyInfo(obj, info);
+			usedInfo[guidIter->second] = true;
 			continue;
 		}
 
-		auto nameIter = infoByName.find(obj->Get_ObjectName());
-		if (nameIter != infoByName.end())
+		const wstring path = buildPath(obj);
+		auto pathIter = infoIndexByPath.find(path);
+		if (pathIter != infoIndexByPath.end() && !usedInfo[pathIter->second])
+		{
+			const auto& info = _infoList[pathIter->second];
+			if (!info.objGuid.empty())
+				obj->m_strGuid = info.objGuid;
+			applyInfo(obj, info);
+			usedInfo[pathIter->second] = true;
+			continue;
+		}
+
+		auto nameIter = infoIndicesByName.find(obj->Get_ObjectName());
+		if (nameIter != infoIndicesByName.end())
 		{
 			auto& indices = nameIter->second;
 			size_t matchedIndex = indices.size();
@@ -713,58 +782,9 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			if (matchedIndex < _infoList.size())
 			{
 				const auto& info = _infoList[matchedIndex];
-				CTransform* tf = obj->Get_Transform();
-
-				if (!info.isRect)
-					tf->Set_LocalScale(info.localScale);
-				else
-				{
-					CRectTransform* rect = obj->GetComponent<CRectTransform>();
-					if (rect)
-					{
-						rect->Set_Pivot(info.rectInfo.pivot);
-						rect->Set_AnchorsMin(info.rectInfo.anchorMin);
-						rect->Set_AnchorsMax(info.rectInfo.anchorMax);
-						rect->Set_WidthHeight(info.rectInfo.widthHeight);
-					}
-					else
-					{
-						tf->Set_LocalScale(info.localScale);
-					}
-				}
-
-				tf->Set_LocalQuaternion(info.localQuaternion);
-				tf->Set_LocalPosition(info.localPos);
-				continue;
-			}
-		}
-
-		for (TRAVERSAL_ITER(_infoList, it1))
-		{
-			if ((*it1).objID == obj->m_iUniqueID)
-			{
-				CTransform* tf = obj->Get_Transform();
-
-				if (!(*it1).isRect)
-					tf->Set_LocalScale((*it1).localScale);
-				else
-				{
-					CRectTransform* rect = obj->GetComponent<CRectTransform>();
-					if (rect)
-					{
-						rect->Set_Pivot((*it1).rectInfo.pivot);
-						rect->Set_AnchorsMin((*it1).rectInfo.anchorMin);
-						rect->Set_AnchorsMax((*it1).rectInfo.anchorMax);
-						rect->Set_WidthHeight((*it1).rectInfo.widthHeight);
-					}
-					else
-					{
-						tf->Set_LocalScale((*it1).localScale);
-					}
-				}
-
-				tf->Set_LocalQuaternion((*it1).localQuaternion);
-				tf->Set_LocalPosition((*it1).localPos);
+				if (!info.objGuid.empty())
+					obj->m_strGuid = info.objGuid;
+				applyInfo(obj, info);
 			}
 		}
 	}

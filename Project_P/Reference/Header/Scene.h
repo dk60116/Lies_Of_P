@@ -26,6 +26,7 @@ public:
         _uint objID = 0;
         wstring objGuid = L"";
         wstring objName = L"";
+        wstring objPath = L"";
         _float3 localPos = {};
         _float4 localQuaternion = {};
         _float3 localScale = {};
