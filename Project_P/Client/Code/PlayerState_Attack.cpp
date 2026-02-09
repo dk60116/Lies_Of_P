@@ -22,9 +22,9 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
 {
     __super::Initialize(_ctx, _type);
 
-    m_iComboTerm[0] = 8;
-    m_iComboTerm[1] = 13;
-    m_iComboTerm[2] = 15;
+    m_iComboTerm[0] = 6;
+    m_iComboTerm[1] = 8;
+    m_iComboTerm[2] = 12;
 
     m_iComboLimit[0] = 12;
     m_iComboLimit[1] = 15;

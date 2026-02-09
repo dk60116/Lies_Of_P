@@ -78,5 +78,7 @@ Eve_Battle_JumpForward_End : Player/Eve/Animations/Eve_Battle_JumpForward_End.fb
 Eve_AnimatorController : Player/Eve/AnimatorController/Eve_AnimatorController.animatorcontroller : [Animator Controller]
 // Space
 VahMedoh : Map/VahMedoh/VahMedoh_Body.fbx : [Mesh] [Material]
+// Space - Map01
+Map01_Terrain : Map/Map01/Map01_Terrain.fbx : [Mesh]
 // UI
 HeartBar : UI/HUDUI/HeartBar.png : [Texture]

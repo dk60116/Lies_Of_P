@@ -40,13 +40,13 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 					if (m_bGuardBffer)
 					{
 						m_pCtx->SetActionActive(CPlayerController::PlayerState::Guard, true);
-						m_pCtx->SetActionActive(CPlayerController::PlayerState::Evade, false);
+						Exit();
 						return;
 					}
 					if (m_bAttackBuffer)
 					{
 						m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, true);
-						m_pCtx->SetActionActive(CPlayerController::PlayerState::Evade, false);
+						Exit();
 					}
 				});
 		}
@@ -79,13 +79,13 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 					if (m_bGuardBffer)
 					{
 						m_pCtx->SetActionActive(CPlayerController::PlayerState::Guard, true);
-						m_pCtx->SetActionActive(CPlayerController::PlayerState::Evade, false);
+						Exit();
 						return;
 					}
 					if (m_bAttackBuffer)
 					{
 						m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, true);
-						m_pCtx->SetActionActive(CPlayerController::PlayerState::Evade, false);
+						Exit();
 					}
 				});
 		}
@@ -95,7 +95,7 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Backward_End", [this]()
 				{
-					m_pCtx->SetActionActive(CPlayerController::PlayerState::Evade, false);
+					Exit();
 				});
 		}
 	}
