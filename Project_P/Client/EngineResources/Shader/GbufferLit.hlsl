@@ -36,6 +36,14 @@ cbuffer PerCustomValue : register(b10)
     float2 gOffset;
 };
 
+cbuffer PerInstance : register(b11)
+{
+    uint useInstancing;
+    uint instanceCount;
+    float2 instancePadding;
+    float4x4 instanceWorlds[256];
+};
+
 Texture2D gTexture   : register(t0);
 Texture2D gNormalMap : register(t1); 
 Texture2D gORMMap : register(t2);
@@ -69,13 +77,22 @@ struct PSOut
     float4 Material : SV_Target3;
 };
 
-VSOut VSMain(VSIn v)
+VSOut VSMain(VSIn v, uint instanceId : SV_InstanceID)
 {
     VSOut o;
 
     float4 skinnedPos = float4(v.posL, 1.0f);
     float3 skinnedN   = v.normalL;
     float3 skinnedT   = v.tangentL;
+
+    float4x4 worldMatrix = world;
+    if (useInstancing != 0)
+    {
+        uint idx = instanceId;
+        if (instanceCount > 0)
+            idx = min(instanceId, instanceCount - 1);
+        worldMatrix = instanceWorlds[idx];
+    }
 
     if (boneCount != 0)
     {
@@ -99,10 +116,10 @@ VSOut VSMain(VSIn v)
         }
     }
 
-    float4 posW4 = mul(skinnedPos, world);
+    float4 posW4 = mul(skinnedPos, worldMatrix);
 
-    float3 N = normalize(mul(skinnedN, (float3x3) world));
-    float3 T = normalize(mul(skinnedT, (float3x3) world));
+    float3 N = normalize(mul(skinnedN, (float3x3) worldMatrix));
+    float3 T = normalize(mul(skinnedT, (float3x3) worldMatrix));
 
     T = normalize(T - N * dot(T, N));
 

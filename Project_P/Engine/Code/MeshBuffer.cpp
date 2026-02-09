@@ -84,7 +84,7 @@ HRESULT CMeshBuffer::Initialize(const wstring& _name, const wstring& _filePath, 
 
     ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 
-    // VertexBuffer ª˝º∫
+    // VertexBuffer ÏÉùÏÑ±
     D3D11_BUFFER_DESC vbDesc = {};
     vbDesc.ByteWidth = static_cast<_uint>(info.desc.vertexSize * info.desc.vertextCount);
     vbDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -97,7 +97,7 @@ HRESULT CMeshBuffer::Initialize(const wstring& _name, const wstring& _filePath, 
 
     hr = device->CreateBuffer(&vbDesc, &vbData, &m_pVertexBuffer);
 
-    // IndexBuffer ª˝º∫
+    // IndexBuffer ÏÉùÏÑ±
     if (info.desc.indexCount > 0 && info.indices.size() > 0)
     {
         D3D11_BUFFER_DESC ibDesc = {};
@@ -147,7 +147,7 @@ HRESULT CMeshBuffer::Initialize_Custom(MeshBufferInitiaizeInfo _info, void* _des
 
     ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 
-    // VertexBuffer ª˝º∫
+    // VertexBuffer ÏÉùÏÑ±
     D3D11_BUFFER_DESC vbDesc = {};
     vbDesc.ByteWidth = static_cast<_uint>(_info.desc.vertexSize * _info.desc.vertextCount);
     vbDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -160,7 +160,7 @@ HRESULT CMeshBuffer::Initialize_Custom(MeshBufferInitiaizeInfo _info, void* _des
 
     hr = device->CreateBuffer(&vbDesc, &vbData, &m_pVertexBuffer);
 
-    // IndexBuffer ª˝º∫
+    // IndexBuffer ÏÉùÏÑ±
     if (_info.desc.indexCount > 0 && _info.indices.size() > 0)
     {
         D3D11_BUFFER_DESC ibDesc = {};
@@ -245,6 +245,40 @@ void CMeshBuffer::Render()
         CGraphicDevice::GetInstance().Get_Context()->DrawIndexed(m_sInfo.indexCount, 0, 0);
     else
         CGraphicDevice::GetInstance().Get_Context()->Draw(m_sInfo.vertextCount, 0);
+}
+
+void CMeshBuffer::Render_Instanced(const _uint _instanceCount)
+{
+    if (_instanceCount == 0)
+    {
+        Render();
+        return;
+    }
+
+    if (!m_pVertexBuffer)
+    {
+        CDebug::LogError("Mesh buffer failed render - No vertex buffer");
+        return;
+    }
+
+    _uint stride = m_sInfo.vertexSize;
+    _uint offset = 0;
+
+    CGraphicDevice::GetInstance().Get_Context()->IASetVertexBuffers
+    (
+        0, 1, &m_pVertexBuffer, &stride, &offset
+    );
+
+    if (m_pIndexBuffer)
+        CGraphicDevice::GetInstance().Get_Context()->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+    if (!m_sInfo.useDeviceTopology)
+        CGraphicDevice::GetInstance().Get_Context()->IASetPrimitiveTopology(m_sInfo.topology);
+
+    if (m_pIndexBuffer)
+        CGraphicDevice::GetInstance().Get_Context()->DrawIndexedInstanced(m_sInfo.indexCount, _instanceCount, 0, 0, 0);
+    else
+        CGraphicDevice::GetInstance().Get_Context()->DrawInstanced(m_sInfo.vertextCount, _instanceCount, 0, 0);
 }
 
 CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateLine()
@@ -353,37 +387,37 @@ CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateCube()
 
     VertexTexNormalTangentBuffer cubeVertices[24] =
     {
-            // æ’(-Z)
+            // Ïïû(-Z)
             {{-length, -length, -length}, { 0,  0, -1}, {f100, f066}, {1, 0, 0}},
             {{ length, -length, -length}, { 0,  0, -1}, {f075, f066}, {1, 0, 0}},
             {{ length,  length, -length}, { 0,  0, -1}, {f075, f033}, {1, 0, 0}},
             {{-length,  length, -length}, { 0,  0, -1}, {f100, f033}, {1, 0, 0}},
 
-            // µ⁄(+Z)                                   
+            // Îí§(+Z)                                   
             {{ length, -length,  length}, { 0,  0,  1}, {f050, f066}, {-1 ,0 ,0}},
             {{-length, -length,  length}, { 0,  0,  1}, {f025, f066}, {-1 ,0 ,0}},
             {{-length,  length,  length}, { 0,  0,  1}, {f025, f033}, {-1 ,0 ,0}},
             {{ length,  length,  length}, { 0,  0,  1}, {f050, f033}, {-1 ,0 ,0}},
 
-            // øﬁ¬ (-X)                                   
+            // ÏôºÏ™Ω(-X)                                   
             {{-length, -length,  length}, {-1,  0,  0}, {f025, f066}, {0, 0, -1}},
             {{-length, -length, -length}, {-1,  0,  0}, {f000, f066}, {0, 0, -1}},
             {{-length,  length, -length}, {-1,  0,  0}, {f000, f033}, {0, 0, -1}},
             {{-length,  length,  length}, {-1,  0,  0}, {f025, f033}, {0, 0, -1}},
 
-            // ø¿∏•¬ (+X)                                   
+            // Ïò§Î•∏Ï™Ω(+X)                                   
             {{ length, -length, -length}, { 1,  0,  0}, {f075, f066}, {0, 0, 1}},
             {{ length, -length,  length}, { 1,  0,  0}, {f050, f066}, {0, 0, 1}},
             {{ length,  length,  length}, { 1,  0,  0}, {f050, f033}, {0, 0, 1}},
             {{ length,  length, -length}, { 1,  0,  0}, {f075, f033}, {0, 0, 1}},
 
-            // ¿ß(+Y)                    
+            // ÏúÑ(+Y)                    
             {{-length,  length, -length}, { 0,  1,  0}, {f025, f000}, {1, 0, 0}},
             {{ length,  length, -length}, { 0,  1,  0}, {f050, f000}, {1, 0, 0}},
             {{ length,  length,  length}, { 0,  1,  0}, {f050, f033}, {1, 0, 0}},
             {{-length,  length,  length}, { 0,  1,  0}, {f025, f033}, {1, 0, 0}},
 
-            // æ∆∑°(-Y)                      
+            // ÏïÑÎûò(-Y)                      
             {{-length, -length,  length}, { 0, -1,  0}, {f025, f066}, {1, 0, 0}},
             {{ length, -length,  length}, { 0, -1,  0}, {f050, f066}, {1, 0, 0}},
             {{ length, -length, -length}, { 0, -1,  0}, {f050, f100}, {1, 0, 0}},
@@ -392,12 +426,12 @@ CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateCube()
 
     static _uint cubeIndices[36] =
     {
-        2,1,0, 3,2,0,   // æ’
-        6,5,4, 7,6,4,   // µ⁄
-        10,9,8,11,10,8,  // øﬁ
-        14,13,12,15,14,12,// ø¿
-        18,17,16,19,18,16,// ¿ß
-        22,21,20,23,22,20 // æ∆∑°
+        2,1,0, 3,2,0,   // Ïïû
+        6,5,4, 7,6,4,   // Îí§
+        10,9,8,11,10,8,  // Ïôº
+        14,13,12,15,14,12,// Ïò§
+        18,17,16,19,18,16,// ÏúÑ
+        22,21,20,23,22,20 // ÏïÑÎûò
     };
 
     CMeshBuffer::MESHBUFFERDESC desc{};
@@ -461,21 +495,21 @@ CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateTriangle()
 
     VTX triVerts[3] =
     {
-        // ¿ß¬  ≤¿¡˛¡°
+        // ÏúÑÏ™Ω Íº≠ÏßìÏ†ê
         {
             {0.f, length, 0.f},       // Position
             {0.f, 0.f, -1.f},         // Normal
             {0.5f, 0.f},              // UV
             {1.f, 0.f, 0.f}           // Tangent
         },
-        // ø¿∏•¬  æ∆∑° ≤¿¡˛¡°
+        // Ïò§Î•∏Ï™Ω ÏïÑÎûò Íº≠ÏßìÏ†ê
         {
             {length, -length, 0.f},
             {0.f, 0.f, -1.f},
             {1.f, 1.f},
             {1.f, 0.f, 0.f}
         },
-        // øﬁ¬  æ∆∑° ≤¿¡˛¡°
+        // ÏôºÏ™Ω ÏïÑÎûò Íº≠ÏßìÏ†ê
         {
             {-length, -length, 0.f},
             {0.f, 0.f, -1.f},
@@ -484,7 +518,7 @@ CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateTriangle()
         }
     };
 
-    // ¿Œµ¶Ω∫ (0-1-2)
+    // Ïù∏Îç±Ïä§ (0-1-2)
     _uint triIndices[3] = { 0, 1, 2 };
 
     info.buffer.assign(reinterpret_cast<uint8_t*>(triVerts), reinterpret_cast<uint8_t*>(triVerts) + sizeof(triVerts));

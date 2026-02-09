@@ -4,6 +4,9 @@
 CMeshRenderer::CMeshRenderer()
 	: CRenderer{}
 	, m_pMeshFilter(nullptr)
+	, m_pInstanceBuffer(nullptr)
+	, m_iInstanceCount(0)
+	, m_bInstancing(false)
 {
 	m_strName = L"Mesh Renderer";
 }
@@ -22,6 +25,9 @@ CComponent* CMeshRenderer::Clone() const
 	CMeshRenderer* clone = new CMeshRenderer();
 
 	clone->m_bCastShadow = this->m_bCastShadow;
+	clone->m_bInstancing = this->m_bInstancing;
+	clone->m_iInstanceCount = this->m_iInstanceCount;
+	clone->m_vInstanceTransforms = this->m_vInstanceTransforms;
 
 	return clone;
 }
@@ -70,6 +76,7 @@ void CMeshRenderer::OnDestroy()
 	__super::OnDestroy();
 
 	Safe_Release(m_pMeshFilter);
+	Safe_Release(m_pInstanceBuffer);
 }
 
 void CMeshRenderer::Render_WithCamera(CCamera* _cam)
@@ -92,13 +99,116 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 		return;
 	}
 
-	// MeshBuffer °¡Á®¿À±â
+	UpdateInstanceBuffer(matWorld);
+
+	if (m_bInstancing && m_iInstanceCount > 0)
+		pBuffer->Render_Instanced(m_iInstanceCount);
+	else
+		pBuffer->Render();
 	CMeshBuffer* pBuffer = m_pMeshFilter->Get_MeshBuffer();
+
+void CMeshRenderer::CreateMeshInstancing(_uint _count)
+{
+	if (_count == 0)
+	{
+		m_bInstancing = false;
+		m_iInstanceCount = 0;
+		m_vInstanceTransforms.clear();
+		return;
+	}
+
+	if (_count > 256)
+		_count = 256;
+
+	m_bInstancing = true;
+	m_iInstanceCount = _count;
+	m_vInstanceTransforms.assign(_count, InstanceTransform{ vector3::zero(), vector3::zero(), vector3::one() });
+
+	CreateInstanceBuffer();
+}
+
+void CMeshRenderer::SetInstancingPosition(_uint _index, const vector3& _position)
+{
+	if (_index >= m_vInstanceTransforms.size())
+		return;
+
+	m_vInstanceTransforms[_index].position = _position;
+}
+
+void CMeshRenderer::SetInstancingRotation(_uint _index, const vector3& _rotation)
+{
+	if (_index >= m_vInstanceTransforms.size())
+		return;
+
+	m_vInstanceTransforms[_index].rotation = _rotation;
+}
+
+void CMeshRenderer::SetInstancingSize(_uint _index, const vector3& _size)
+{
+	if (_index >= m_vInstanceTransforms.size())
+		return;
+
+	m_vInstanceTransforms[_index].scale = _size;
+}
+
+void CMeshRenderer::UpdateInstanceBuffer(const _matrix& _baseWorld)
+{
+	CreateInstanceBuffer();
+
+	if (!m_pInstanceBuffer)
+		return;
+
+	InstanceCB buffer = {};
+	buffer.useInstancing = m_bInstancing && m_iInstanceCount > 0;
+	buffer.instanceCount = m_bInstancing ? m_iInstanceCount : 0;
+
+	if (!m_bInstancing || m_iInstanceCount == 0)
+	{
+		buffer.instanceWorlds[0] = XMMatrixTranspose(_baseWorld);
+	}
+	else
+	{
+		const _uint count = min(m_iInstanceCount, static_cast<_uint>(m_vInstanceTransforms.size()));
+		for (_uint i = 0; i < count; ++i)
+		{
+			_matrix world = BuildInstanceWorld(m_vInstanceTransforms[i]);
+			world = world * _baseWorld;
+			buffer.instanceWorlds[i] = XMMatrixTranspose(world);
+		}
+	}
+
+	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
+	context->UpdateSubresource(m_pInstanceBuffer, 0, nullptr, &buffer, 0, 0);
+	context->VSSetConstantBuffers(11, 1, &m_pInstanceBuffer);
+}
+
+void CMeshRenderer::CreateInstanceBuffer()
+{
+	if (m_pInstanceBuffer)
+		return;
+
+	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
+	D3D11_BUFFER_DESC desc = {};
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	desc.ByteWidth = sizeof(InstanceCB);
+	device->CreateBuffer(&desc, nullptr, &m_pInstanceBuffer);
+}
+
+_matrix CMeshRenderer::BuildInstanceWorld(const InstanceTransform& _transform) const
+{
+	_vector scale = XMVectorSet(_transform.scale.x, _transform.scale.y, _transform.scale.z, 0.f);
+	_matrix scaleMat = XMMatrixScalingFromVector(scale);
+	quaternion rot = _transform.rotation.to_quaternion();
+	_matrix rotMat = XMMatrixRotationQuaternion(rot.toXMVector());
+	_matrix transMat = XMMatrixTranslation(_transform.position.x, _transform.position.y, _transform.position.z);
+	return scaleMat * rotMat * transMat;
+}
 
 	if (!pBuffer)
 		return;
 
-	// World / View / Projection Çà·Ä °è»ê
+	// World / View / Projection í–‰ë ¬ ê³„ì‚°
 
 	vector3 cPos = _cam->Get_Transform()->Get_Position();
 	_float3 camPos = cPos.toFloat3();
@@ -106,7 +216,7 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 	_matrix matView = _cam->Get_ViewMatrix();
 	_matrix matProj = _cam->Get_ProjectionMatrix();
 
-	// ¼ÎÀÌ´õ + ÅØ½ºÃ³ + »ó¼ö ¹öÆÛ ¹ÙÀÎµù
+	// ì…°ì´ë” + í…ìŠ¤ì²˜ + ìƒìˆ˜ ë²„í¼ ë°”ì¸ë”©
 	m_pMaterial->Bind_Matrix(matWorld);
 	m_pMaterial->Bind_Camera(camPos, matView, matProj, 0);
 
@@ -138,7 +248,7 @@ void CMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const CLight:
 	_matrix matView = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(&_shadowMatrix.view));
 	_matrix matProj = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(&_shadowMatrix.proj));
 
-	// Shadow depth´Â camPos ÀÇ¹Ì ¾øÀ¸¹Ç·Î ´õ¹Ì
+	// Shadow depthëŠ” camPos ì˜ë¯¸ ì—†ìœ¼ë¯€ë¡œ ë”ë¯¸
 	_float3 dummyPos = { 0.f, 0.f, 0.f };
 
 	_shadowDepthMat->Bind_Matrix(matWorld);

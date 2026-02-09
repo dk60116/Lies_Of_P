@@ -183,7 +183,7 @@ namespace Engine
         }
     };
 
-    // ¿¬»êÀÚ ¿À¹ö·Îµù
+    // ì—°ì‚°ì ì˜¤ë²„ë¡œë”©
     inline vector2 operator+(const vector2& lhs, const vector2& rhs)
     {
         return vector2(lhs.x + rhs.x, lhs.y + rhs.y);
@@ -375,7 +375,7 @@ namespace Engine
         }
     };
 
-    // ¿¬»êÀÚ ¿À¹ö·Îµù
+    // ì—°ì‚°ì ì˜¤ë²„ë¡œë”©
     inline vector2Int operator+(const vector2Int& lhs, const vector2Int& rhs)
     {
         return vector2Int(lhs.x + rhs.x, lhs.y + rhs.y);
@@ -817,7 +817,7 @@ namespace Engine
         }
     };
 
-    // ¿¬»êÀÚ ¿À¹ö·Îµù
+    // ì—°ì‚°ì ì˜¤ë²„ë¡œë”©
     inline vector3Int operator+(const vector3Int& lhs, const vector3Int& rhs)
     {
         return vector3Int(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z);
@@ -1001,7 +1001,7 @@ namespace Engine
         {
             float dot = _q1.x * _q2.x + _q1.y * _q2.y + _q1.z * _q2.z + _q1.w * _q2.w;
 
-            // ¸¸¾à dot < 0ÀÌ¸é ¹İ´ë¹æÇâ ÄõÅÍ´Ï¾ğÀ» »ç¿ë (´ÜÀÏ ÇØ ¼±ÅÃ)
+            // ë§Œì•½ dot < 0ì´ë©´ ë°˜ëŒ€ë°©í–¥ ì¿¼í„°ë‹ˆì–¸ì„ ì‚¬ìš© (ë‹¨ì¼ í•´ ì„ íƒ)
             quaternion q2b = _q2;
             if (dot < 0.0f)
             {
@@ -1359,6 +1359,14 @@ namespace Engine
     struct ImageCB
     {
         _float4 values;
+    };
+
+    struct InstanceCB
+    {
+        _uint useInstancing;
+        _uint instanceCount;
+        _float2 padding;
+        _float4x4 instanceWorlds[256];
     };
 #pragma endregion
 

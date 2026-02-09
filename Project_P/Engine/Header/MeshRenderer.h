@@ -33,14 +33,33 @@ public:
 	void Render_Outline(CCamera* _cam) override;
 
 public:
+	void CreateMeshInstancing(_uint _count);
+	void SetInstancingPosition(_uint _index, const vector3& _position);
+	void SetInstancingRotation(_uint _index, const vector3& _rotation);
+	void SetInstancingSize(_uint _index, const vector3& _size);
+
 	CMeshFilter* Get_MeshFilter();
 	CMeshBuffer* Get_MeshBuffer() override;
 
 	const _float GetScaleFactor() const override;
 
 private:
+	struct InstanceTransform
+	{
+		vector3 position;
+		vector3 rotation;
+		vector3 scale;
+	};
+
+	void UpdateInstanceBuffer(const _matrix& _baseWorld);
+	void CreateInstanceBuffer();
+	_matrix BuildInstanceWorld(const InstanceTransform& _transform) const;
+
 	CMeshFilter* m_pMeshFilter;
+	vector<InstanceTransform> m_vInstanceTransforms;
+	ID3D11Buffer* m_pInstanceBuffer;
+	_uint m_iInstanceCount;
+	_bool m_bInstancing;
 };
 
 NS_END
-
