@@ -8,6 +8,7 @@ CSkinnedMeshRenderer::CSkinnedMeshRenderer()
 	, m_vBones({})
 	, m_vRootBone({})
 	, m_pBoneMatrixBuffer(nullptr)
+	, m_pInstanceBuffer(nullptr)
 {
 	m_strName = L"Skinned Mesh Renderer";
 }
@@ -48,6 +49,10 @@ CComponent* CSkinnedMeshRenderer::Clone() const
 	if (clone->m_pBoneMatrixBuffer)
 		clone->m_pBoneMatrixBuffer->AddRef();
 
+	clone->m_pInstanceBuffer = this->m_pInstanceBuffer;
+	if (clone->m_pInstanceBuffer)
+		clone->m_pInstanceBuffer->AddRef();
+
 	return clone;
 }
 
@@ -58,7 +63,16 @@ HRESULT CSkinnedMeshRenderer::Initialize()
 
 	auto mat = m_pMaterial;
 
-	// º» Çà·Ä »ó¼ö ¹öÆÛ »ý¼º 
+	desc = {};
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	desc.ByteWidth = sizeof(InstanceCB);
+
+	if (FAILED(m_pDevice->CreateBuffer(&desc, nullptr, &m_pInstanceBuffer)))
+		return E_FAIL;
+
+	Safe_Release(m_pInstanceBuffer);
+	// ë³¸ í–‰ë ¬ ìƒìˆ˜ ë²„í¼ ìƒì„± 
 	D3D11_BUFFER_DESC desc = {};
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	desc.ByteWidth = sizeof(_matrix) * MAX_BONE;
@@ -192,6 +206,8 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 	_matrix matView = _cam->Get_ViewMatrix();
 	_matrix matProj = _cam->Get_ProjectionMatrix();
 
+	UpdateInstanceBuffer(matWorld);
+
 	const _uint boneCount = min<_uint>(static_cast<_uint>(m_vBones.size()), MAX_BONE);
 
 	_matrix boneMatrices[MAX_BONE];
@@ -212,20 +228,20 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 		if (!m_vBones[i])
 			continue;
 
-		// ÇöÀç º» ¿ùµå
+		// í˜„ìž¬ ë³¸ ì›”ë“œ
 		_matrix boneWorld = m_vBones[i]->Get_WorldMatrix();
 
-		// ¿ª ¹ÙÀÎµå Æ÷Áî(Offset)
-		// (m_vBoneOffsetMatricesÀÇ ÀÎµ¦½º°¡ m_vBones¿Í µ¿ÀÏÇÑ ¼ø¼­¶ó´Â ÀüÁ¦)
+		// ì—­ ë°”ì¸ë“œ í¬ì¦ˆ(Offset)
+		// (m_vBoneOffsetMatricesì˜ ì¸ë±ìŠ¤ê°€ m_vBonesì™€ ë™ì¼í•œ ìˆœì„œë¼ëŠ” ì „ì œ)
 		_matrix invBindPose = XMMatrixIdentity();
 		invBindPose = XMLoadFloat4x4(&m_pMeshBuffer->m_vBoneOffsetMatrices[i]);
 
-		// boneÀ» mesh local·Î º¯È¯
-		// (boneWorld * meshWorldInv) : boneWorld ¡æ meshLocal
+		// boneì„ mesh localë¡œ ë³€í™˜
+		// (boneWorld * meshWorldInv) : boneWorld â†’ meshLocal
 		_matrix boneMeshLocal = boneWorld * meshWorldInv;
 
-		// ÃÖÁ¾ º» Çà·Ä
-		// (invBindPose * currentBone) ÇüÅÂ À¯Áö
+		// ìµœì¢… ë³¸ í–‰ë ¬
+		// (invBindPose * currentBone) í˜•íƒœ ìœ ì§€
 		boneMatrices[i] = XMMatrixTranspose(invBindPose * boneMeshLocal);
 	}
 
@@ -248,7 +264,36 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 		return;
 	}
 
-	// 6) Material bind (boneCount´Â Å¬·¥ÇÁÇÑ °ªÀ¸·Î)
+	m_pContext->VSSetConstantBuffers(11, 1, &m_pInstanceBuffer);
+void CSkinnedMeshRenderer::UpdateInstanceBuffer(const _matrix& _baseWorld)
+{
+	CreateInstanceBuffer();
+
+	if (!m_pInstanceBuffer)
+		return;
+
+	InstanceCB buffer = {};
+	buffer.useInstancing = 0;
+	buffer.instanceCount = 0;
+	XMStoreFloat4x4(&buffer.instanceWorlds[0], XMMatrixTranspose(_baseWorld));
+
+	m_pContext->UpdateSubresource(m_pInstanceBuffer, 0, nullptr, &buffer, 0, 0);
+}
+
+void CSkinnedMeshRenderer::CreateInstanceBuffer()
+{
+	if (m_pInstanceBuffer)
+		return;
+
+	D3D11_BUFFER_DESC desc = {};
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	desc.ByteWidth = sizeof(InstanceCB);
+
+	m_pDevice->CreateBuffer(&desc, nullptr, &m_pInstanceBuffer);
+}
+
+	// 6) Material bind (boneCountëŠ” í´ëž¨í”„í•œ ê°’ìœ¼ë¡œ)
 	m_pMaterial->Bind_Matrix(matWorld);
 	m_pMaterial->Bind_Camera(camPos, matView, matProj, boneCount);
 

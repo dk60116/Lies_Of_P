@@ -53,12 +53,16 @@ public:
 	const _float GetScaleFactor() const override;
 
 private:
+	void UpdateInstanceBuffer(const _matrix& _baseWorld);
+	void CreateInstanceBuffer();
+
+private:
 	CSkinnedMeshBuffer* m_pMeshBuffer;
 	vector<CTransform*> m_vBones;
 	vector<CTransform*> m_vRootBone;
 
 	ID3D11Buffer* m_pBoneMatrixBuffer;
+	ID3D11Buffer* m_pInstanceBuffer;
 };
 
 NS_END
-
