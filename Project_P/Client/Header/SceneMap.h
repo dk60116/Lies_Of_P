@@ -5,7 +5,7 @@
 class CSceneMap abstract : public CComponent
 {
 protected:
-	CPlayer();
-	~CPlayer();
+	CSceneMap();
+	~CSceneMap();
 };
 

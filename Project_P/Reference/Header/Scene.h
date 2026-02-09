@@ -24,6 +24,7 @@ public:
     typedef struct ObjectsTransformInfo
     {
         _uint objID = 0;
+        wstring objGuid = L"";
         wstring objName = L"";
         _float3 localPos = {};
         _float4 localQuaternion = {};
