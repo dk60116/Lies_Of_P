@@ -646,11 +646,17 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 {
 	unordered_map<wstring, SCENETRANSFORMINFO> infoByGuid;
 	infoByGuid.reserve(_infoList.size());
+	unordered_map<wstring, vector<size_t>> infoByName;
+	infoByName.reserve(_infoList.size());
+	vector<_bool> usedInfo(_infoList.size(), false);
 
-	for (const auto& info : _infoList)
+	for (size_t i = 0; i < _infoList.size(); ++i)
 	{
+		const auto& info = _infoList[i];
 		if (!info.objGuid.empty())
 			infoByGuid.emplace(info.objGuid, info);
+		if (!info.objName.empty())
+			infoByName[info.objName].push_back(i);
 	}
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
@@ -680,6 +686,43 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			tf->Set_LocalQuaternion(info.localQuaternion);
 			tf->Set_LocalPosition(info.localPos);
 			continue;
+		}
+
+		auto nameIter = infoByName.find(obj->Get_ObjectName());
+		if (nameIter != infoByName.end())
+		{
+			auto& indices = nameIter->second;
+			size_t matchedIndex = indices.size();
+			for (size_t i = 0; i < indices.size(); ++i)
+			{
+				if (!usedInfo[indices[i]])
+				{
+					matchedIndex = indices[i];
+					usedInfo[indices[i]] = true;
+					break;
+				}
+			}
+
+			if (matchedIndex < _infoList.size())
+			{
+				const auto& info = _infoList[matchedIndex];
+				CTransform* tf = obj->Get_Transform();
+
+				if (!info.isRect)
+					tf->Set_LocalScale(info.localScale);
+				else
+				{
+					CRectTransform* rect = obj->GetComponent<CRectTransform>();
+					rect->Set_Pivot(info.rectInfo.pivot);
+					rect->Set_AnchorsMin(info.rectInfo.anchorMin);
+					rect->Set_AnchorsMax(info.rectInfo.anchorMax);
+					rect->Set_WidthHeight(info.rectInfo.widthHeight);
+				}
+
+				tf->Set_LocalQuaternion(info.localQuaternion);
+				tf->Set_LocalPosition(info.localPos);
+				continue;
+			}
 		}
 
 		for (TRAVERSAL_ITER(_infoList, it1))
