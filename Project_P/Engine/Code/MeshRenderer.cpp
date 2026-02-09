@@ -180,7 +180,7 @@ void CMeshRenderer::UpdateInstanceBuffer(const _matrix& _baseWorld)
 
 	if (!m_bInstancing || m_iInstanceCount == 0)
 	{
-		buffer.instanceWorlds[0] = XMMatrixTranspose(_baseWorld);
+		XMStoreFloat4x4(&buffer.instanceWorlds[0], XMMatrixTranspose(_baseWorld));
 	}
 	else
 	{
@@ -189,7 +189,7 @@ void CMeshRenderer::UpdateInstanceBuffer(const _matrix& _baseWorld)
 		{
 			_matrix world = BuildInstanceWorld(m_vInstanceTransforms[i]);
 			world = world * _baseWorld;
-			buffer.instanceWorlds[i] = XMMatrixTranspose(world);
+			XMStoreFloat4x4(&buffer.instanceWorlds[i], XMMatrixTranspose(world));
 		}
 	}
 
