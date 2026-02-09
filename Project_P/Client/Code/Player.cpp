@@ -127,14 +127,14 @@ HRESULT CPlayer::Initialize()
 
 void CPlayer::Awake()
 {
-	m_pHeadObj->Get_Transform()->Set_PositionY(Get_Transform()->Get_Position().y);
 	CTransform* headSlot = Get_Transform()->Find_ChildRecursive(L"Bip001-Head");
 	m_pHeadObj->Get_Transform()->SetParent(headSlot);
+	m_pHeadObj->Get_Transform()->Set_LocalPosition(vector3(0.012f, -151.302f, -11.860f));
+	m_pHeadObj->Get_Transform()->Set_LocalEulerAngles(vector3(-4.5f, 180.f, 0.f));
 	m_pHairObj->Get_Transform()->SetParent(m_pHeadObj->Get_Transform());
 	m_pHairObj->Get_Transform()->Set_LocalPosition(vector3::up() * 3.02f);
+	m_pHairObj->Get_Transform()->Set_LocalEulerAngles(vector3::zero());
 	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp;
-
-	Get_Transform()->Set_PositionY(0.37f);
 
 	//m_vBodySuits[4]->Get_GameObject()->SetActive(false);
 }

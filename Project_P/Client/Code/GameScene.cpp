@@ -46,6 +46,11 @@ HRESULT CGameScene::Initialize()
 	CGameObject* playerObj = Add_GameObject(L"Player");
 	m_pPlayer = playerObj->AddComponent<CPlayer>();
 
+	CGameObject* cube2 = Add_GameObject(L"Cube");
+	CMeshRenderer* cubeMesh2 = cube2->AddComponent<CMeshRenderer>();
+	cubeMesh2->Get_MeshFilter()->Set_MeshBuffer(CResources::GetInstance().LoadOnGame<CMeshBuffer>(L"Cube (Mesh Buffer)"));
+
+
 	CGameObject* vahMedoh_BodyObj_00 = Add_GameObject(L"Stage_01_Building_00");
 	vahMedoh_BodyObj_00->CreateMeshHierachy(CResources::GetInstance().LoadMeshBuffersOnScene(L"Stage01_Bulding_00 (MeshBuffer)"), 0.01f);
 	CGameObject* vahMedoh_BodyObj = Add_GameObject(L"Stage_01_Building_01");
