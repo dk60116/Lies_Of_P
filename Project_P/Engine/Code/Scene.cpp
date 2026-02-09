@@ -1,6 +1,7 @@
 #include "epch.h"
 #include "Scene.h"
 #include "EditorCamera.h"
+#include <unordered_map>
 
 CScene::CScene()
 	: m_iSceneIndex(0)
@@ -607,6 +608,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		CTransform* tf = (*it)->Get_Transform();
 
 		info.objID = (*it)->m_iUniqueID;
+		info.objGuid = (*it)->Get_Guid();
 		info.objName = (*it)->m_strGameObjectName;
 		vector3 pos = tf->Get_LocalPosition();
 		info.localPos = pos;
@@ -642,12 +644,43 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 
 void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 {
+	unordered_map<wstring, SCENETRANSFORMINFO> infoByGuid;
+	infoByGuid.reserve(_infoList.size());
+
+	for (const auto& info : _infoList)
+	{
+		if (!info.objGuid.empty())
+			infoByGuid.emplace(info.objGuid, info);
+	}
+
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
 		CGameObject* obj = *it;
 
 		if (obj->m_iUniqueID == 0)
 			continue;
+
+		auto guidIter = infoByGuid.find(obj->Get_Guid());
+		if (guidIter != infoByGuid.end())
+		{
+			const auto& info = guidIter->second;
+			CTransform* tf = obj->Get_Transform();
+
+			if (!info.isRect)
+				tf->Set_LocalScale(info.localScale);
+			else
+			{
+				CRectTransform* rect = obj->GetComponent<CRectTransform>();
+				rect->Set_Pivot(info.rectInfo.pivot);
+				rect->Set_AnchorsMin(info.rectInfo.anchorMin);
+				rect->Set_AnchorsMax(info.rectInfo.anchorMax);
+				rect->Set_WidthHeight(info.rectInfo.widthHeight);
+			}
+
+			tf->Set_LocalQuaternion(info.localQuaternion);
+			tf->Set_LocalPosition(info.localPos);
+			continue;
+		}
 
 		for (TRAVERSAL_ITER(_infoList, it1))
 		{

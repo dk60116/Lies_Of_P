@@ -1,8 +1,27 @@
 #include "epch.h"
 #include "GameObject.h"
+#include <objbase.h>
+
+namespace
+{
+	wstring GenerateGuidString()
+	{
+		GUID guid = {};
+		if (FAILED(CoCreateGuid(&guid)))
+			return L"";
+
+		wchar_t buffer[39] = {};
+		if (StringFromGUID2(guid, buffer, 39) == 0)
+			return L"";
+
+		return wstring(buffer);
+	}
+}
+
 
 CGameObject::CGameObject(const wstring _name, ID3D11Device* _pDevice, ID3D11DeviceContext* _pContext)
 	: m_iUniqueID(999999)
+	, m_strGuid(GenerateGuidString())
 	, m_strGameObjectName(L"")
 	, m_bActive(true)
 	, m_bActive_Origin(true)
@@ -22,6 +41,7 @@ CGameObject::CGameObject(const wstring _name, ID3D11Device* _pDevice, ID3D11Devi
 
 CGameObject::CGameObject(const CGameObject& _rhs)
 	: m_iUniqueID(999999)
+	, m_strGuid(GenerateGuidString())
 	, m_strGameObjectName(_rhs.m_strGameObjectName + L" (Clone)")
 	, m_bActive(_rhs.m_bActive)
 	, m_bPrevActive(_rhs.m_bPrevActive)
@@ -356,7 +376,7 @@ vector<CMeshRenderer*> CGameObject::CreateMeshHierachy(vector<MeshBundle> _meshI
 		// Hierarchy
 		child->Get_Transform()->SetParent(parentTransform);
 
-		// Local transform defaults (¿øÇÏ¸é ¿©±â¼­ position/rotationµµ ÃÊ±âÈ­ °¡´É)
+		// Local transform defaults (ì›í•˜ë©´ ì—¬ê¸°ì„œ position/rotationë„ ì´ˆê¸°í™” ê°€ëŠ¥)
 		child->Get_Transform()->Set_LocalScale(_scaleFactor);
 
 		// Renderer
@@ -485,6 +505,11 @@ vector<CSkinnedMeshRenderer*> CGameObject::CreateSkinnedMeshHierachy(vector<Skin
 const _uint CGameObject::Get_UniqueID() const
 {
 	return m_iUniqueID;
+}
+
+const wstring& CGameObject::Get_Guid() const
+{
+	return m_strGuid;
 }
 
 const wstring CGameObject::Get_ObjectName() const

@@ -595,7 +595,11 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 		return E_FAIL;
 	}
 
+	const _uint magic = 0x53434E32;
+	const _uint version = 2;
 	_uint count = static_cast<_uint>(_infoList.size());
+	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
+	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&count), sizeof(_uint));
 
 	for (_uint i = 0; i < count; ++i)
@@ -604,9 +608,15 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 
 		out.write(reinterpret_cast<const char*>(&info.objID), sizeof(_uint));
 
+		_uint guidSize = static_cast<_uint>(info.objGuid.size());
+		out.write(reinterpret_cast<const char*>(&guidSize), sizeof(_uint));
+		if (guidSize > 0)
+			out.write(reinterpret_cast<const char*>(info.objGuid.data()), sizeof(wchar_t) * guidSize);
+
 		_uint nameSize = static_cast<_uint>(info.objName.size());
 		out.write(reinterpret_cast<const char*>(&nameSize), sizeof(_uint));
-		out.write(reinterpret_cast<const char*>(info.objName.data()), sizeof(wchar_t) * nameSize);
+		if (nameSize > 0)
+			out.write(reinterpret_cast<const char*>(info.objName.data()), sizeof(wchar_t) * nameSize);
 		out.write(reinterpret_cast<const char*>(&info.localPos), sizeof(_float3));
 		out.write(reinterpret_cast<const char*>(&info.localQuaternion), sizeof(_float4));
 		out.write(reinterpret_cast<const char*>(&info.localScale), sizeof(_float3));
@@ -641,7 +651,19 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 		return {};
 
 	_uint count = 0;
-	in.read(reinterpret_cast<char*>(&count), sizeof(_uint));
+	_uint version = 1;
+	_uint firstValue = 0;
+	in.read(reinterpret_cast<char*>(&firstValue), sizeof(_uint));
+
+	if (firstValue == 0x53434E32)
+	{
+		in.read(reinterpret_cast<char*>(&version), sizeof(_uint));
+		in.read(reinterpret_cast<char*>(&count), sizeof(_uint));
+	}
+	else
+	{
+		count = firstValue;
+	}
 
 	for (_uint i = 0; i < count; ++i)
 	{
@@ -650,6 +672,18 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 		_uint objId = 0;
 		in.read(reinterpret_cast<char*>(&objId), sizeof(_uint));
 		info.objID = objId;
+
+		if (version >= 2)
+		{
+			_uint guidSize = 0;
+			in.read(reinterpret_cast<char*>(&guidSize), sizeof(_uint));
+			if (guidSize > 0)
+			{
+				wstring temp(guidSize, L'\0');
+				in.read(reinterpret_cast<char*>(&temp[0]), sizeof(wchar_t) * guidSize);
+				info.objGuid = move(temp);
+			}
+		}
 
 		_uint nameSize = 0;
 		in.read(reinterpret_cast<char*>(&nameSize), sizeof(_uint));
