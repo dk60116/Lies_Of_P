@@ -58,7 +58,7 @@ HRESULT CSkinnedMeshRenderer::Initialize()
 
 	auto mat = m_pMaterial;
 
-	// 본 행렬 상수 버퍼 생성 
+	//      
 	D3D11_BUFFER_DESC desc = {};
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	desc.ByteWidth = sizeof(_matrix) * MAX_BONE;
@@ -212,20 +212,20 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 		if (!m_vBones[i])
 			continue;
 
-		// 현재 본 월드
+		//   
 		_matrix boneWorld = m_vBones[i]->Get_WorldMatrix();
 
-		// 역 바인드 포즈(Offset)
-		// (m_vBoneOffsetMatrices의 인덱스가 m_vBones와 동일한 순서라는 전제)
+		//  琯 (Offset)
+		// (m_vBoneOffsetMatrices 琯 m_vBones   )
 		_matrix invBindPose = XMMatrixIdentity();
 		invBindPose = XMLoadFloat4x4(&m_pMeshBuffer->m_vBoneOffsetMatrices[i]);
 
-		// bone을 mesh local로 변환
-		// (boneWorld * meshWorldInv) : boneWorld → meshLocal
+		// bone mesh local 환
+		// (boneWorld * meshWorldInv) : boneWorld  meshLocal
 		_matrix boneMeshLocal = boneWorld * meshWorldInv;
 
-		// 최종 본 행렬
-		// (invBindPose * currentBone) 형태 유지
+		//   
+		// (invBindPose * currentBone)  
 		boneMatrices[i] = XMMatrixTranspose(invBindPose * boneMeshLocal);
 	}
 
@@ -248,7 +248,9 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 		return;
 	}
 
-	// 6) Material bind (boneCount는 클램프한 값으로)
+	Bind_InstanceBuffer(matWorld);
+
+	// 6) Material bind (boneCount 클 )
 	m_pMaterial->Bind_Matrix(matWorld);
 	m_pMaterial->Bind_Camera(camPos, matView, matProj, boneCount);
 
@@ -324,6 +326,7 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 	m_pContext->Unmap(m_pBoneMatrixBuffer, 0);
 
 	_float3 dummyPos = { 0.f, 0.f, 0.f };
+	Bind_InstanceBuffer(matWorld);
 	_shadowDepthMat->Bind_Matrix(matWorld);
 	_shadowDepthMat->Bind_Camera(dummyPos, matView, matProj, boneCount);
 

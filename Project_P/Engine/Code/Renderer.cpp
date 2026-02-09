@@ -107,7 +107,6 @@ void CRenderer::CreateMeshInstancing(const _uint _count)
 		m_bUseInstancing = false;
 		m_iInstanceCount = 0;
 		m_vInstanceTransforms.clear();
-		Safe_Release(m_pInstanceBuffer);
 		return;
 	}
 
@@ -189,7 +188,7 @@ void CRenderer::Bind_InstanceBuffer(const _matrix& _baseWorld)
 			);
 			_matrix rotMat = XMMatrixRotationRollPitchYawFromVector(rotVec);
 			_matrix transMat = XMMatrixTranslation(tr.position.x, tr.position.y, tr.position.z);
-			_matrix worldMat = scaleMat * rotMat * transMat * _baseWorld;
+			_matrix worldMat = _baseWorld * scaleMat * rotMat * transMat;
 			cb.worlds[i] = XMMatrixTranspose(worldMat);
 		}
 	}
