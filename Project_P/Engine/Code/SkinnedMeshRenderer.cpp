@@ -258,7 +258,10 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 	m_pContext->VSSetConstantBuffers(3, 1, &m_pBoneMatrixBuffer);
 
 	// 8) Draw
-	m_pMeshBuffer->Render();
+	if (IsInstancingEnabled())
+		m_pMeshBuffer->Render_Instanced(GetInstanceCount());
+	else
+		m_pMeshBuffer->Render();
 }
 
 void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const CLight::ShadowMatrices& _shadowMatrix)
@@ -332,7 +335,10 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 
 	m_pContext->VSSetConstantBuffers(3, 1, &m_pBoneMatrixBuffer);
 
-	m_pMeshBuffer->Render();
+	if (IsInstancingEnabled())
+		m_pMeshBuffer->Render_Instanced(GetInstanceCount());
+	else
+		m_pMeshBuffer->Render();
 }
 
 void CSkinnedMeshRenderer::Render_Outline(CCamera* _cam)

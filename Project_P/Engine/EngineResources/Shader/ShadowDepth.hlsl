@@ -28,6 +28,13 @@ cbuffer PerBones : register(b3)
     float4x4 gBones[512];
 };
 
+cbuffer PerInstance : register(b4)
+{
+    float4x4 gInstanceWorlds[128];
+    uint gInstanceCount;
+    float3 gInstancePadding;
+};
+
 cbuffer PerCustomValue : register(b10)
 {
     float gSmoothness;
@@ -54,7 +61,7 @@ struct VSOut
     float2 uv : TEXCOORD0;
 };
 
-VSOut VSMain(VSIn v)
+VSOut VSMain(VSIn v, uint instanceID : SV_InstanceID)
 {
     VSOut o;
 
@@ -78,7 +85,11 @@ VSOut VSMain(VSIn v)
         }
     }
 
-    float4 posW = mul(skinnedPos, world);
+    float4x4 worldMat = world;
+    if (gInstanceCount > 0 && instanceID < gInstanceCount)
+        worldMat = gInstanceWorlds[instanceID];
+
+    float4 posW = mul(skinnedPos, worldMat);
     float4 posV = mul(posW, view);
     o.posH = mul(posV, proj);
 

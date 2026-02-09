@@ -152,7 +152,15 @@ void CMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const CLight:
 	_shadowDepthMat->Bind_Matrix(matWorld);
 	_shadowDepthMat->Bind_Camera(dummyPos, matView, matProj, 0);
 
-	pBuffer->Render();
+	Bind_InstanceBuffer(matWorld);
+	if (IsInstancingEnabled())
+	{
+		pBuffer->Render_Instanced(GetInstanceCount());
+	}
+	else
+	{
+		pBuffer->Render();
+	}
 }
 
 void CMeshRenderer::Render_Outline(CCamera* _cam)
