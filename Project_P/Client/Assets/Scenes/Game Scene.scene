@@ -80,5 +80,7 @@ Eve_AnimatorController : Player/Eve/AnimatorController/Eve_AnimatorController.an
 VahMedoh : Map/VahMedoh/VahMedoh_Body.fbx : [Mesh] [Material]
 // Space - Map01
 Map01_Terrain : Map/Map01/Map01_Terrain.fbx : [Mesh]
+Stage01_Bulding_00 : Map/Map01/Stage01_Bulding_00.fbx : [Mesh]
+Stage01_Bulding_01 : Map/Map01/Stage01_Bulding_01.fbx : [Mesh]
 // UI
 HeartBar : UI/HUDUI/HeartBar.png : [Texture]

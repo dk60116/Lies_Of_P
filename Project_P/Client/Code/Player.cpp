@@ -127,11 +127,11 @@ HRESULT CPlayer::Initialize()
 
 void CPlayer::Awake()
 {
-	Get_Transform()->Set_PositionY(-2.864f);
-	m_pHeadObj->Get_Transform()->Set_PositionY(-2.875f);
+	Get_Transform()->Set_PositionY(0.37f);
+	m_pHeadObj->Get_Transform()->Set_PositionY(Get_Transform()->Get_Position().y);
 	CTransform* headSlot = Get_Transform()->Find_ChildRecursive(L"Bip001-Head");
 	m_pHeadObj->Get_Transform()->SetParent(headSlot);
-	m_pHairObj->Get_Transform()->Set_PositionY(0.155f);
+	m_pHairObj->Get_Transform()->Set_PositionY(Get_Transform()->Get_Position().y + 3.02f);
 	m_pHairObj->Get_Transform()->SetParent(m_pHeadObj->Get_Transform());
 	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp;
 

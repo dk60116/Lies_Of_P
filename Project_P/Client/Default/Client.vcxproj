@@ -167,6 +167,7 @@
     <ClInclude Include="..\Header\PlayerHUD.h" />
     <ClInclude Include="..\Header\PlayerState.h" />
     <ClInclude Include="..\Header\PlayerState_Idle.h" />
+    <ClInclude Include="..\Header\SceneMap.h" />
     <ClInclude Include="..\Header\Weapon.h" />
     <ClInclude Include="..\Header\Wolf.h" />
     <ClInclude Include="..\Header\WoodenSword.h" />
@@ -201,6 +202,7 @@
     <ClCompile Include="..\Code\PlayerState_Jump.cpp" />
     <ClCompile Include="..\Code\PlayerState_Locomotion.cpp" />
     <ClCompile Include="..\Code\PlayerState_Move.cpp" />
+    <ClCompile Include="..\Code\SceneMap.cpp" />
     <ClCompile Include="..\Code\Weapon.cpp" />
     <ClCompile Include="..\Code\Wolf.cpp" />
     <ClCompile Include="..\Code\WoodenSword.cpp" />

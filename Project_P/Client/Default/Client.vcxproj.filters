@@ -49,6 +49,9 @@
     <Filter Include="Scripts\Object\Player\FSM\PlayerState">
       <UniqueIdentifier>{8427fb53-39a6-4782-a2ef-a82be4d2a2b1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Scripts\Object\Map">
+      <UniqueIdentifier>{b71280a1-9ac2-4980-af1a-3a1756cb5a34}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Header\MainScene.h">
@@ -147,6 +150,9 @@
     <ClInclude Include="..\Header\PlayerState_Jump.h">
       <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\SceneMap.h">
+      <Filter>Scripts\Object\Map</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Code\MainScene.cpp">
@@ -238,6 +244,9 @@
     </ClCompile>
     <ClCompile Include="..\Code\PlayerState_Jump.cpp">
       <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\SceneMap.cpp">
+      <Filter>Scripts\Object\Map</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

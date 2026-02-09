@@ -46,8 +46,10 @@ HRESULT CGameScene::Initialize()
 	CGameObject* playerObj = Add_GameObject(L"Player");
 	m_pPlayer = playerObj->AddComponent<CPlayer>();
 
-	CGameObject* vahMedoh_BodyObj = Add_GameObject(L"Terrain01");
-	vahMedoh_BodyObj->CreateMeshHierachy(CResources::GetInstance().LoadMeshBuffersOnScene(L"Map01_Terrain (MeshBuffer)"), 0.01f);
+	CGameObject* vahMedoh_BodyObj_00 = Add_GameObject(L"Stage_01_Building_00");
+	vahMedoh_BodyObj_00->CreateMeshHierachy(CResources::GetInstance().LoadMeshBuffersOnScene(L"Stage01_Bulding_00 (MeshBuffer)"), 0.01f);
+	CGameObject* vahMedoh_BodyObj = Add_GameObject(L"Stage_01_Building_01");
+	vahMedoh_BodyObj->CreateMeshHierachy(CResources::GetInstance().LoadMeshBuffersOnScene(L"Stage01_Bulding_01 (MeshBuffer)"), 0.01f);
 
 	return S_OK;
 }
