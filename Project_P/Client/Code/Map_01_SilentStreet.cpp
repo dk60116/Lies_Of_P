@@ -28,10 +28,19 @@ HRESULT CMap_01_SilentStreet::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
-	for (_int i = 0; i < 6; ++i)
+	for (_int i = 0; i < 7; ++i)
 		CreateObject(MapObjectType::Building);
 	for (_int i = 0; i < 2; ++i)
 		CreateObject(MapObjectType::Floor);
+
+	auto rendersB6 = m_vBuildingList[6].renderers;
+
+	for (TRAVERSAL_ITER(rendersB6, it))
+	{
+		(*it)->CreateMeshInstancing(2);
+		(*it)->SetInstancingPosition(1, vector3::forward() * 4.f);
+		(*it)->SetInstancingRotation(1, vector3::up() * -90.f);
+	}
 
 	m_vFloorList[1].renderers[0]->CreateMeshInstancing(2);
 	m_vFloorList[1].renderers[0]->SetInstancingPosition(1, vector3(-52.8f, 0.f, -4.f));

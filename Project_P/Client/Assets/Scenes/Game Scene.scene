@@ -84,6 +84,7 @@ Stage01_Building_02 : Map/Map01/Building_2/Stage01_Building_02.fbx : [Mesh]
 Stage01_Building_03 : Map/Map01/Building_3/Stage01_Building_03.fbx : [Mesh]
 Stage01_Building_04 : Map/Map01/Building_4/Stage01_Building_04.fbx : [Mesh]
 Stage01_Building_05 : Map/Map01/Building_5/Stage01_Building_05.fbx : [Mesh]
+Stage01_Building_06 : Map/Map01/Building_6/Stage01_Building_06.fbx : [Mesh]
 // Floor
 Stage01_Floor_00 : Map/Map01/Floor_0/Stage01_Floor_00.fbx : [Mesh]
 Stage01_Floor_01 : Map/Map01/Floor_1/Stage01_Floor_01.fbx : [Mesh]
