@@ -141,6 +141,36 @@ HRESULT CResources::ConvertFBXToMeshBufferData(const wstring _filePath)
 		desc.vertexSize = sizeof(VTX);
 		desc.vertextCount = static_cast<_uint>(vertices.size());
 		desc.indexCount = static_cast<_uint>(indices.size());
+		if (!vertices.empty())
+		{
+			_float3 minPoint = vertices[0].position;
+			_float3 maxPoint = vertices[0].position;
+
+			for (const auto& vertex : vertices)
+			{
+				minPoint.x = min(minPoint.x, vertex.position.x);
+				minPoint.y = min(minPoint.y, vertex.position.y);
+				minPoint.z = min(minPoint.z, vertex.position.z);
+
+				maxPoint.x = max(maxPoint.x, vertex.position.x);
+				maxPoint.y = max(maxPoint.y, vertex.position.y);
+				maxPoint.z = max(maxPoint.z, vertex.position.z);
+			}
+
+			desc.boundingBox.Center =
+			{
+				(minPoint.x + maxPoint.x) * 0.5f,
+				(minPoint.y + maxPoint.y) * 0.5f,
+				(minPoint.z + maxPoint.z) * 0.5f
+			};
+
+			desc.boundingBox.Extents =
+			{
+				(maxPoint.x - minPoint.x) * 0.5f,
+				(maxPoint.y - minPoint.y) * 0.5f,
+				(maxPoint.z - minPoint.z) * 0.5f
+			};
+		}
 
 		info.buffer.assign(reinterpret_cast<const uint8_t*>(vertices.data()),
 			reinterpret_cast<const uint8_t*>(vertices.data()) +
@@ -304,6 +334,36 @@ HRESULT CResources::ConvertFBXToSkinnedBufferData(const wstring _filePath)
 		desc.vertexSize = sizeof(VTX);
 		desc.vertextCount = static_cast<_uint>(vertices.size());
 		desc.indexCount = static_cast<_uint>(indices.size());
+		if (!vertices.empty())
+		{
+			_float3 minPoint = vertices[0].position;
+			_float3 maxPoint = vertices[0].position;
+
+			for (const auto& vertex : vertices)
+			{
+				minPoint.x = min(minPoint.x, vertex.position.x);
+				minPoint.y = min(minPoint.y, vertex.position.y);
+				minPoint.z = min(minPoint.z, vertex.position.z);
+
+				maxPoint.x = max(maxPoint.x, vertex.position.x);
+				maxPoint.y = max(maxPoint.y, vertex.position.y);
+				maxPoint.z = max(maxPoint.z, vertex.position.z);
+			}
+
+			desc.boundingBox.Center =
+			{
+				(minPoint.x + maxPoint.x) * 0.5f,
+				(minPoint.y + maxPoint.y) * 0.5f,
+				(minPoint.z + maxPoint.z) * 0.5f
+			};
+
+			desc.boundingBox.Extents =
+			{
+				(maxPoint.x - minPoint.x) * 0.5f,
+				(maxPoint.y - minPoint.y) * 0.5f,
+				(maxPoint.z - minPoint.z) * 0.5f
+			};
+		}
 
 		info.buffer.assign(reinterpret_cast<const uint8_t*>(vertices.data()),
 			reinterpret_cast<const uint8_t*>(vertices.data()) +
