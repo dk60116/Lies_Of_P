@@ -30,8 +30,9 @@ namespace
 		if (!meshBuffer)
 			return;
 
-		const CMeshBuffer::MESHBUFFERDESC& desc = meshBuffer->Get_Info();
-		const BoundingBox& localBox = desc.boundingBox;
+		BoundingBox localBox = meshBuffer->Get_Info().boundingBox;
+		if (skinnedRenderer)
+			skinnedRenderer->TryGetDeformedBoundingBox(localBox);
 
 		_vector center = XMLoadFloat3(&localBox.Center);
 		_vector extents = XMLoadFloat3(&localBox.Extents);
@@ -69,7 +70,7 @@ namespace
 			{0,4}, {1,5}, {2,6}, {3,7}
 		};
 
-		_vector camPosV = camera->Get_Transform()->Get_Position().toXMVECTOR();
+		_vector camPosV = camera->Get_Transform()->Get_Position().toXMVector();
 		_float3 camPos = {};
 		XMStoreFloat3(&camPos, camPosV);
 		_matrix view = camera->Get_ViewMatrix();

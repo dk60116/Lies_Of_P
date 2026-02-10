@@ -62,6 +62,7 @@ public:
 private:
 	static void FillBoneWeightsAndIndices(const aiMesh* mesh, vector<VertexSkinnedBuffer>& vertices);
 	const _float4x4& Get_BoneOffsetMatrix(const _uint _index);
+	_bool CalculateDeformedBoundingBox(const vector<CTransform*>& _bones, const _matrix& _meshWorldInv, BoundingBox& _outBox) const;
 
 private:
 	vector<wstring> m_vBoneNames;

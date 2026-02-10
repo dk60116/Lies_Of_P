@@ -48,6 +48,7 @@ public:
 	vector<CTransform*>& GetRootBons();
 	const wstring Get_RootBoneName(const _int _index) const;
 	void AddRootBone(CTransform* _tf);
+	_bool TryGetDeformedBoundingBox(BoundingBox& _outBox) const;
 
 public:
 	const _float GetScaleFactor() const override;

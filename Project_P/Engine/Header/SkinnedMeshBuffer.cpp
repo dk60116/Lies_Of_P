@@ -78,7 +78,7 @@ HRESULT CSkinnedMeshBuffer::Initiailize_Custom(SkinnedBufferInitiaizeInfo _info,
     }
 
     m_vBoneNames = _info.boneNames;
-    m_vBoneOffsetMatrices = _info.boneOffsetMatrices; // ½ºÅ² º» offset
+    m_vBoneOffsetMatrices = _info.boneOffsetMatrices; // ìŠ¤í‚¨ ë³¸ offset
 
     _float4x4 identity;
     XMStoreFloat4x4(&identity, DirectX::XMMatrixIdentity());
@@ -87,17 +87,17 @@ HRESULT CSkinnedMeshBuffer::Initiailize_Custom(SkinnedBufferInitiaizeInfo _info,
     {
         const auto& name = node.name;
 
-        // ÀÌ¹Ì Á¸ÀçÇÏ¸é ÆĞ½º
+        // ì´ë¯¸ ì¡´ì¬í•˜ë©´ íŒ¨ìŠ¤
         if (find(m_vBoneNames.begin(),
             m_vBoneNames.end(),
             name) != m_vBoneNames.end())
             continue;
 
-        // ÀÌ¸§ Ãß°¡
+        // ì´ë¦„ ì¶”ê°€
         m_vBoneNames.push_back(name);
 
-        // ¿ÀÇÁ¼Â Çà·Ä:
-        //  - ½ºÅ² °¡ÁßÄ¡ ¾ø´Â º»ÀÌ¹Ç·Î ´ÜÀ§Çà·ÄÀÌ¸é ÃæºĞ
+        // ì˜¤í”„ì…‹ í–‰ë ¬:
+        //  - ìŠ¤í‚¨ ê°€ì¤‘ì¹˜ ì—†ëŠ” ë³¸ì´ë¯€ë¡œ ë‹¨ìœ„í–‰ë ¬ì´ë©´ ì¶©ë¶„
         m_vBoneOffsetMatrices.push_back(identity);
     }
     return S_OK;
@@ -161,7 +161,92 @@ void CSkinnedMeshBuffer::FillBoneWeights(VertexSkinnedBuffer& _targetBuffer, con
         }
     }
 
-    // 4°³ ²Ë Ã¡´Ù¸é °¡Àå ÀÛÀº weightÀ» ´ëÃ¼
+_bool CSkinnedMeshBuffer::CalculateDeformedBoundingBox(const vector<CTransform*>& _bones, const _matrix& _meshWorldInv, BoundingBox& _outBox) const
+{
+    if (!m_pVertexSysMem || m_sInfo.vertexSize != sizeof(VertexSkinnedBuffer) || m_sInfo.vertextCount == 0)
+        return false;
+
+    const _uint boneCount = min<_uint>(static_cast<_uint>(_bones.size()), static_cast<_uint>(m_vBoneOffsetMatrices.size()));
+
+    vector<_matrix> boneMatrices(boneCount, XMMatrixIdentity());
+
+    for (_uint i = 0; i < boneCount; ++i)
+    {
+        if (!_bones[i])
+            continue;
+
+        const _matrix boneWorld = _bones[i]->Get_WorldMatrix();
+        const _matrix invBindPose = XMLoadFloat4x4(&m_vBoneOffsetMatrices[i]);
+        const _matrix boneMeshLocal = boneWorld * _meshWorldInv;
+        boneMatrices[i] = invBindPose * boneMeshLocal;
+    }
+
+    const auto* vertices = reinterpret_cast<const VertexSkinnedBuffer*>(m_pVertexSysMem);
+
+    _float3 minPoint = { FLT_MAX, FLT_MAX, FLT_MAX };
+    _float3 maxPoint = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
+
+    bool hasValidVertex = false;
+
+    for (_uint i = 0; i < m_sInfo.vertextCount; ++i)
+    {
+        const auto& v = vertices[i];
+        const _vector pos = XMVectorSet(v.position.x, v.position.y, v.position.z, 1.f);
+
+        _vector skinned = XMVectorZero();
+        _float totalWeight = 0.f;
+
+        for (_uint j = 0; j < 4; ++j)
+        {
+            const _uint boneIdx = v.boneIndices[j];
+            const _float weight = v.boneWeights[j];
+
+            if (weight <= 0.f || boneIdx >= boneCount)
+                continue;
+
+            const _vector transformed = XMVector3Transform(pos, boneMatrices[boneIdx]);
+            skinned += transformed * weight;
+            totalWeight += weight;
+        }
+
+        if (totalWeight <= 0.f)
+            skinned = pos;
+
+        _float3 p = {};
+        XMStoreFloat3(&p, skinned);
+
+        minPoint.x = min(minPoint.x, p.x);
+        minPoint.y = min(minPoint.y, p.y);
+        minPoint.z = min(minPoint.z, p.z);
+
+        maxPoint.x = max(maxPoint.x, p.x);
+        maxPoint.y = max(maxPoint.y, p.y);
+        maxPoint.z = max(maxPoint.z, p.z);
+
+        hasValidVertex = true;
+    }
+
+    if (!hasValidVertex)
+        return false;
+
+    _outBox.Center =
+    {
+        (minPoint.x + maxPoint.x) * 0.5f,
+        (minPoint.y + maxPoint.y) * 0.5f,
+        (minPoint.z + maxPoint.z) * 0.5f
+    };
+
+    _outBox.Extents =
+    {
+        (maxPoint.x - minPoint.x) * 0.5f,
+        (maxPoint.y - minPoint.y) * 0.5f,
+        (maxPoint.z - minPoint.z) * 0.5f
+    };
+
+    return true;
+}
+
+    // 4ê°œ ê½‰ ì°¼ë‹¤ë©´ ê°€ì¥ ì‘ì€ weightì„ ëŒ€ì²´
     _uint minIndex = 0;
     for (int i = 1; i < 4; ++i)
     {
@@ -183,7 +268,7 @@ const _float4x4& CSkinnedMeshBuffer::Get_BoneOffsetMatrix(const _uint _index)
 
 void CSkinnedMeshBuffer::FillBoneWeightsAndIndices(const aiMesh* mesh, vector<VertexSkinnedBuffer>& vertices)
 {
-    // º» ÀÎµ¦½º/°¡ÁßÄ¡ ÇÒ´ç
+    // ë³¸ ì¸ë±ìŠ¤/ê°€ì¤‘ì¹˜ í• ë‹¹
     for (_uint i = 0; i < mesh->mNumBones; ++i)
     {
         const aiBone* bone = mesh->mBones[i];
@@ -209,10 +294,10 @@ void CSkinnedMeshBuffer::FillBoneWeightsAndIndices(const aiMesh* mesh, vector<Ve
         }
     }
 
-    // °¢ ¹öÅØ½ºÀÇ °¡ÁßÄ¡¸¦ Å« ¼ø¼­·Î Á¤·Ä + ÀÎµ¦½º ÇÔ²² Á¤·Ä
+    // ê° ë²„í…ìŠ¤ì˜ ê°€ì¤‘ì¹˜ë¥¼ í° ìˆœì„œë¡œ ì •ë ¬ + ì¸ë±ìŠ¤ í•¨ê»˜ ì •ë ¬
     for (auto& v : vertices)
     {
-        // °¡ÁßÄ¡¿Í ÀÎµ¦½º¸¦ ½ÖÀ¸·Î ¸ğÀ½
+        // ê°€ì¤‘ì¹˜ì™€ ì¸ë±ìŠ¤ë¥¼ ìŒìœ¼ë¡œ ëª¨ìŒ
         vector<pair<_uint, float>> bonePairs;
         for (int k = 0; k < 4; ++k)
         {
@@ -220,14 +305,14 @@ void CSkinnedMeshBuffer::FillBoneWeightsAndIndices(const aiMesh* mesh, vector<Ve
                 bonePairs.emplace_back(v.boneIndices[k], v.boneWeights[k]);
         }
 
-        // Å« °¡ÁßÄ¡ ¼øÀ¸·Î Á¤·Ä
+        // í° ê°€ì¤‘ì¹˜ ìˆœìœ¼ë¡œ ì •ë ¬
         sort(bonePairs.begin(), bonePairs.end(),
             [](const pair<_uint, float>& a, const pair<_uint, float>& b)
             {
                 return a.second > b.second;
             });
 
-        // ´Ù½Ã ¹è¿­¿¡ º¹»ç
+        // ë‹¤ì‹œ ë°°ì—´ì— ë³µì‚¬
         for (_uint k = 0; k < 4; ++k)
         {
             if (k < bonePairs.size())
@@ -242,7 +327,7 @@ void CSkinnedMeshBuffer::FillBoneWeightsAndIndices(const aiMesh* mesh, vector<Ve
             }
         }
 
-        // Á¤±ÔÈ­
+        // ì •ê·œí™”
         _float sum = v.boneWeights[0] + v.boneWeights[1] + v.boneWeights[2] + v.boneWeights[3];
         if (sum > 0.0f)
         {

@@ -418,6 +418,18 @@ void CSkinnedMeshRenderer::AddRootBone(CTransform* _tf)
 	}
 }
 
+_bool CSkinnedMeshRenderer::TryGetDeformedBoundingBox(BoundingBox& _outBox) const
+{
+	if (!m_pMeshBuffer)
+		return false;
+
+	_matrix meshWorldInv = XMMatrixIdentity();
+	if (m_pGameObject && m_pGameObject->Get_Transform())
+		meshWorldInv = XMMatrixInverse(nullptr, m_pGameObject->Get_Transform()->Get_WorldMatrix());
+
+	return m_pMeshBuffer->CalculateDeformedBoundingBox(m_vBones, meshWorldInv, _outBox);
+}
+
 const _float CSkinnedMeshRenderer::GetScaleFactor() const
 {
 	return m_pMeshBuffer->Get_ScaleFactor();
