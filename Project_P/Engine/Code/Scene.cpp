@@ -3,6 +3,95 @@
 #include "EditorCamera.h"
 #include <unordered_map>
 
+namespace
+{
+	bool ProjectWorldToScreen(const _vector& worldPos, const _matrix& viewProj, const D3D11_VIEWPORT& vp, ImVec2& out)
+	{
+		_vector clip = XMVector4Transform(worldPos, viewProj);
+		_float w = XMVectorGetW(clip);
+		if (w <= 0.0001f)
+			return false;
+
+		_vector ndc = clip / w;
+		_float x = XMVectorGetX(ndc);
+		_float y = XMVectorGetY(ndc);
+		_float z = XMVectorGetZ(ndc);
+		if (x < -1.f || x > 1.f || y < -1.f || y > 1.f || z < 0.f || z > 1.f)
+			return false;
+
+		out.x = vp.TopLeftX + (x * 0.5f + 0.5f) * vp.Width;
+		out.y = vp.TopLeftY + (-y * 0.5f + 0.5f) * vp.Height;
+		return true;
+	}
+
+	void DrawSelectedMeshBoundingBox(CCamera* camera)
+	{
+		if (!camera)
+			return;
+
+		CGameObject* selected = CEditor::GetInstance().Get_SelectedGameObject();
+		if (!selected)
+			return;
+
+		CMeshBuffer* meshBuffer = nullptr;
+		if (CMeshRenderer* meshRenderer = selected->GetComponent<CMeshRenderer>())
+			meshBuffer = meshRenderer->Get_MeshBuffer();
+		else if (CSkinnedMeshRenderer* skinnedRenderer = selected->GetComponent<CSkinnedMeshRenderer>())
+			meshBuffer = skinnedRenderer->Get_MeshBuffer();
+
+		if (!meshBuffer)
+			return;
+
+		const CMeshBuffer::MESHBUFFERDESC& desc = meshBuffer->Get_Info();
+		const BoundingBox& localBox = desc.boundingBox;
+
+		_vector center = XMLoadFloat3(&localBox.Center);
+		_vector extents = XMLoadFloat3(&localBox.Extents);
+
+		_vector offsets[8] =
+		{
+			XMVectorSet(-1.f, -1.f, -1.f, 0.f),
+			XMVectorSet( 1.f, -1.f, -1.f, 0.f),
+			XMVectorSet( 1.f,  1.f, -1.f, 0.f),
+			XMVectorSet(-1.f,  1.f, -1.f, 0.f),
+			XMVectorSet(-1.f, -1.f,  1.f, 0.f),
+			XMVectorSet( 1.f, -1.f,  1.f, 0.f),
+			XMVectorSet( 1.f,  1.f,  1.f, 0.f),
+			XMVectorSet(-1.f,  1.f,  1.f, 0.f)
+		};
+
+		_matrix world = selected->Get_Transform()->Get_WorldMatrix();
+		_matrix viewProj = world * camera->Get_ViewMatrix() * camera->Get_ProjectionMatrix();
+
+		const D3D11_VIEWPORT* vpPtr = CGraphicDevice::GetInstance().Get_CurrentViewport();
+		if (!vpPtr)
+			return;
+		D3D11_VIEWPORT vp = *vpPtr;
+
+		ImVec2 projected[8] = {};
+		for (_uint i = 0; i < 8; ++i)
+		{
+			_vector localCorner = center + XMVectorMultiply(offsets[i], extents);
+			if (!ProjectWorldToScreen(localCorner, viewProj, vp, projected[i]))
+				return;
+		}
+
+		constexpr _uint edges[12][2] =
+		{
+			{0,1}, {1,2}, {2,3}, {3,0},
+			{4,5}, {5,6}, {6,7}, {7,4},
+			{0,4}, {1,5}, {2,6}, {3,7}
+		};
+
+		ImDrawList* drawList = ImGui::GetBackgroundDrawList();
+		if (!drawList)
+			return;
+
+		for (const auto& edge : edges)
+			drawList->AddLine(projected[edge[0]], projected[edge[1]], IM_COL32(255, 255, 255, 255), 1.5f);
+	}
+}
+
 CScene::CScene()
 	: m_iSceneIndex(0)
 	, m_pDevice(nullptr)
@@ -420,6 +509,7 @@ void CScene::Render_Editor()
 	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
 	m_pEditorCamera->RenderDisplay();
+	DrawSelectedMeshBoundingBox(m_pEditorCamera);
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->Render_Gizmo();
