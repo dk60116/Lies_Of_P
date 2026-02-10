@@ -170,6 +170,28 @@ void CRenderer::Bind_InstanceBuffer(const _matrix& _baseWorld)
 		return;
 
 	InstanceCB cb = {};
+	_vector baseScaleVec = XMVectorSet(1.f, 1.f, 1.f, 0.f);
+	_vector dummyRotationQuat = XMQuaternionIdentity();
+	_vector baseTranslationVec = XMVectorZero();
+	XMMatrixDecompose(&baseScaleVec, &dummyRotationQuat, &baseTranslationVec, _baseWorld);
+
+	vector3 basePosition = vector3::zero();
+	vector3 baseRotation = vector3::zero();
+	if (m_pGameObject && m_pGameObject->Get_Transform())
+	{
+		basePosition = m_pGameObject->Get_Transform()->Get_Position();
+		baseRotation = m_pGameObject->Get_Transform()->Get_EulerAngles();
+	}
+	else
+	{
+		_float3 basePos3 = {};
+		XMStoreFloat3(&basePos3, baseTranslationVec);
+		basePosition = vector3(basePos3.x, basePos3.y, basePos3.z);
+	}
+
+	_float3 baseScale3 = {};
+	XMStoreFloat3(&baseScale3, baseScaleVec);
+	vector3 baseScale(baseScale3.x, baseScale3.y, baseScale3.z);
 
 	size_t count = 0;
 	if (IsInstancingEnabled())
@@ -179,16 +201,24 @@ void CRenderer::Bind_InstanceBuffer(const _matrix& _baseWorld)
 		for (size_t i = 0; i < count; ++i)
 		{
 			const auto& tr = m_vInstanceTransforms[i];
-			_matrix scaleMat = XMMatrixScaling(tr.scale.x, tr.scale.y, tr.scale.z);
+			const vector3 finalScale = vector3(
+				baseScale.x * tr.scale.x,
+				baseScale.y * tr.scale.y,
+				baseScale.z * tr.scale.z
+			);
+			const vector3 finalRotation = baseRotation + tr.rotation;
+			const vector3 finalPosition = basePosition + tr.position;
+
+			_matrix scaleMat = XMMatrixScaling(finalScale.x, finalScale.y, finalScale.z);
 			_vector rotVec = XMVectorSet(
-				XMConvertToRadians(tr.rotation.x),
-				XMConvertToRadians(tr.rotation.y),
-				XMConvertToRadians(tr.rotation.z),
+				XMConvertToRadians(finalRotation.x),
+				XMConvertToRadians(finalRotation.y),
+				XMConvertToRadians(finalRotation.z),
 				0.f
 			);
 			_matrix rotMat = XMMatrixRotationRollPitchYawFromVector(rotVec);
-			_matrix transMat = XMMatrixTranslation(tr.position.x, tr.position.y, tr.position.z);
-			_matrix worldMat = _baseWorld * scaleMat * rotMat * transMat;
+			_matrix transMat = XMMatrixTranslation(finalPosition.x, finalPosition.y, finalPosition.z);
+			_matrix worldMat = scaleMat * rotMat * transMat;
 			cb.worlds[i] = XMMatrixTranspose(worldMat);
 		}
 	}
