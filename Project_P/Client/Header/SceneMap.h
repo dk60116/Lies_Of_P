@@ -5,7 +5,7 @@
 class CSceneMap abstract : public CComponent
 {
 public:
-	enum class MapObjectType { Building, Prop };
+	enum class MapObjectType { Building, Floor, Prop };
 
 	struct MapObject
 	{
@@ -33,6 +33,6 @@ protected:
 	_uint m_iMapIndex;
 	wstring m_strMapName;
 	CTransform* m_pParentTF;
-	vector<MapObject> m_vObjectList;
+	vector<MapObject> m_vBuildingList, m_vFloorList, m_vPropList;
 };
 

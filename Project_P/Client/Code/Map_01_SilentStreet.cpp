@@ -28,10 +28,10 @@ HRESULT CMap_01_SilentStreet::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
-	for (_int i = 0; i < 3; ++i)
-	{
+	for (_int i = 0; i < 6; ++i)
 		CreateObject(MapObjectType::Building);
-	}
+	for (_int i = 0; i < 1; ++i)
+		CreateObject(MapObjectType::Floor);
 
 	return S_OK;
 }

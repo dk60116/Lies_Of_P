@@ -5,7 +5,9 @@ CSceneMap::CSceneMap()
 	: m_iMapIndex(0)
 	, m_strMapName({})
 	, m_pParentTF(nullptr)
-	, m_vObjectList({})
+	, m_vBuildingList({})
+	, m_vFloorList({})
+	, m_vPropList({})
 {
 }
 
@@ -47,7 +49,22 @@ const wstring& CSceneMap::GetMapName()
 
 void CSceneMap::CreateObject(const MapObjectType _type)
 {
-	_int index = static_cast<_int>(m_vObjectList.size());
+	_int index = 0;
+
+	switch (_type)
+	{
+	case MapObjectType::Building:
+		index = static_cast<_int>(m_vBuildingList.size());
+		break;
+	case MapObjectType::Floor:
+		index = static_cast<_int>(m_vFloorList.size());
+		break;
+	case MapObjectType::Prop:
+		index = static_cast<_int>(m_vPropList.size());
+		break;
+	default:
+		break;
+	}
 
 	wstring typeName = {};
 
@@ -55,6 +72,9 @@ void CSceneMap::CreateObject(const MapObjectType _type)
 	{
 	case MapObjectType::Building:
 		typeName = L"Building";
+		break;
+	case MapObjectType::Floor:
+		typeName = L"Floor";
 		break;
 	case MapObjectType::Prop:
 		typeName = L"Prop";
@@ -70,7 +90,7 @@ void CSceneMap::CreateObject(const MapObjectType _type)
 
 	for (size_t i = 0; i < renders.size(); ++i)
 	{
-		renders[i]->Get_Material()->Set_FloatValue(L"gRoughness", 0.7f);
+		renders[i]->Get_Material()->Set_FloatValue(L"gRoughness", 0.4f);
 		renders[i]->Get_Material()->Set_FloatValue(L"gMetallic", 0.3f);
 
 		CTexture* td = CResources::GetInstance().LoadOnScene<CTexture>(spawnName + L'_' + L"TD" + L'_' + to_wstring(i) + L" (Texture)");
@@ -89,5 +109,5 @@ void CSceneMap::CreateObject(const MapObjectType _type)
 	mapObjStruct.type = _type;
 	mapObjStruct.renderers = renders;
 
-	m_vObjectList.push_back(mapObjStruct);
+	m_vBuildingList.push_back(mapObjStruct);
 }
