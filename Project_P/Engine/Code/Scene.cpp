@@ -62,7 +62,7 @@ namespace
 			{0,4}, {1,5}, {2,6}, {3,7}
 		};
 
-		_vector camPosV = camera->Get_Transform()->Get_Position().toXMVECTOR();
+		_vector camPosV = camera->Get_Transform()->Get_Position().toXMVector();
 		_float3 camPos = {};
 		XMStoreFloat3(&camPos, camPosV);
 		_matrix view = camera->Get_ViewMatrix();
