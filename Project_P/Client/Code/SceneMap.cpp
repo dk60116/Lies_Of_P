@@ -109,5 +109,18 @@ void CSceneMap::CreateObject(const MapObjectType _type)
 	mapObjStruct.type = _type;
 	mapObjStruct.renderers = renders;
 
-	m_vBuildingList.push_back(mapObjStruct);
+	switch (_type)
+	{
+	case MapObjectType::Building:
+		m_vBuildingList.push_back(mapObjStruct);
+		break;
+	case MapObjectType::Floor:
+		m_vFloorList.push_back(mapObjStruct);
+		break;
+	case MapObjectType::Prop:
+		m_vPropList.push_back(mapObjStruct);
+		break;
+	default:
+		break;
+	}
 }

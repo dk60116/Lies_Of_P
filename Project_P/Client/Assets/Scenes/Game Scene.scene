@@ -86,6 +86,7 @@ Stage01_Building_04 : Map/Map01/Building_4/Stage01_Building_04.fbx : [Mesh]
 Stage01_Building_05 : Map/Map01/Building_5/Stage01_Building_05.fbx : [Mesh]
 // Floor
 Stage01_Floor_00 : Map/Map01/Floor_0/Stage01_Floor_00.fbx : [Mesh]
+Stage01_Floor_01 : Map/Map01/Floor_1/Stage01_Floor_01.fbx : [Mesh]
 // Space -Map01 Texture
 Stage01_Building_00_TD_0 : Map/Map01/Building_0/Stage01_Building_00_TD_0.png : [Texture]
 Stage01_Building_00_TN_0 : Map/Map01/Building_0/Stage01_Building_00_TN_0.png : [Texture]
@@ -129,5 +130,8 @@ Stage01_Floor_00_TD_0 : Map/Map01/Floor_0/Stage01_Floor_00_TD_0.png : [Texture]
 Stage01_Floor_00_TN_0 : Map/Map01/Floor_0/Stage01_Floor_00_TN_0.png : [Texture]
 Stage01_Floor_00_TD_1 : Map/Map01/Floor_0/Stage01_Floor_00_TD_1.png : [Texture]
 Stage01_Floor_00_TN_1 : Map/Map01/Floor_0/Stage01_Floor_00_TN_1.png : [Texture]
+// 02
+Stage01_Floor_01_TD_0 : Map/Map01/Floor_1/Stage01_Floor_01_TD_0.png : [Texture]
+Stage01_Floor_01_TN_0 : Map/Map01/Floor_1/Stage01_Floor_01_TN_0.png : [Texture]
 // UI
 HeartBar : UI/HUDUI/HeartBar.png : [Texture]
