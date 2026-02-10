@@ -64,9 +64,22 @@ void CSceneMap::CreateObject(const MapObjectType _type)
 	}
 
 	CGameObject* mapObj = m_pGameObject->Get_Scene()->Add_GameObject(typeName + CEngineString::ToW2(index));
-	wstring spawnName = L"Stage" + CEngineString::ToW2(m_iMapIndex) + L'_' + typeName + L'_' + CEngineString::ToW2(index) + L" (MeshBuffer)";
+	wstring spawnName = L"Stage" + CEngineString::ToW2(m_iMapIndex) + L'_' + typeName + L'_' + CEngineString::ToW2(index);
 	CDebug::LogError(L"n: " + spawnName);
-	vector<CMeshRenderer*> renders = mapObj->CreateMeshHierachy(CResources::GetInstance().LoadMeshBuffersOnScene(spawnName), 0.01f);
+	vector<CMeshRenderer*> renders = mapObj->CreateMeshHierachy(CResources::GetInstance().LoadMeshBuffersOnScene(spawnName + L" (MeshBuffer)"), 0.01f);
+
+	for (size_t i = 0; i < renders.size(); ++i)
+	{
+		renders[i]->Get_Material()->Set_FloatValue(L"gRoughness", 0.7f);
+		renders[i]->Get_Material()->Set_FloatValue(L"gMetallic", 0.3f);
+
+		CTexture* td = CResources::GetInstance().LoadOnScene<CTexture>(spawnName + L'_' + L"TD" + L'_' + to_wstring(i) + L" (Texture)");
+		if (td)
+			renders[i]->Get_Material()->Set_Texture(td);
+		CTexture* tn = CResources::GetInstance().LoadOnScene<CTexture>(spawnName + L'_' + L"TN" + L'_' + to_wstring(i) + L" (Texture)");
+		if (tn)
+			renders[i]->Get_Material()->Set_Texture(tn, 1);
+	}
 
 	mapObj->Get_Transform()->SetParent(m_pParentTF);
 	mapObj->Get_Transform()->Set_LocalScale(1.f);

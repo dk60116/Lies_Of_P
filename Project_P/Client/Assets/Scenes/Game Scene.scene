@@ -76,11 +76,28 @@ Eve_Battle_JumpForward_Start : Player/Eve/Animations/Eve_Battle_JumpForward_Star
 Eve_Battle_JumpForward_End : Player/Eve/Animations/Eve_Battle_JumpForward_End.fbx : [Animation Clip]
 // Eve Animator Controller
 Eve_AnimatorController : Player/Eve/AnimatorController/Eve_AnimatorController.animatorcontroller : [Animator Controller]
-// Space
-VahMedoh : Map/VahMedoh/VahMedoh_Body.fbx : [Mesh] [Material]
 // Space - Map01
-Map01_Terrain : Map/Map01/Map01_Terrain.fbx : [Mesh]
-Stage01_Building_00 : Map/Map01/Stage01_Building_00.fbx : [Mesh]
-Stage01_Building_01 : Map/Map01/Stage01_Building_01.fbx : [Mesh]
+Stage01_Building_00 : Map/Map01/Building_0/Stage01_Building_00.fbx : [Mesh]
+Stage01_Building_01 : Map/Map01/Building_1/Stage01_Building_01.fbx : [Mesh]
+Stage01_Building_02 : Map/Map01/Building_2/Stage01_Building_02.fbx : [Mesh]
+// Space -Map01 Texture
+Stage01_Building_00_TD_0 : Map/Map01/Building_0/Stage01_Building_00_TD_0.png : [Texture]
+Stage01_Building_00_TN_0 : Map/Map01/Building_0/Stage01_Building_00_TN_0.png : [Texture]
+Stage01_Building_00_TD_1 : Map/Map01/Building_0/Stage01_Building_00_TD_1.png : [Texture]
+Stage01_Building_00_TN_1 : Map/Map01/Building_0/Stage01_Building_00_TN_1.png : [Texture]
+Stage01_Building_00_TD_2 : Map/Map01/Building_0/Stage01_Building_00_TD_2.png : [Texture]
+Stage01_Building_00_TN_2 : Map/Map01/Building_0/Stage01_Building_00_TN_2.png : [Texture]
+Stage01_Building_00_TD_3 : Map/Map01/Building_0/Stage01_Building_00_TD_3.png : [Texture]
+Stage01_Building_00_TN_3 : Map/Map01/Building_0/Stage01_Building_00_TN_3.png : [Texture]
+// 01
+Stage01_Building_01_TD_0 : Map/Map01/Building_1/Stage01_Building_01_TD_0.png : [Texture]
+Stage01_Building_01_TN_0 : Map/Map01/Building_1/Stage01_Building_01_TN_0.png : [Texture]
+// 02
+Stage01_Building_02_TD_0 : Map/Map01/Building_2/Stage01_Building_02_TD_0.png : [Texture]
+Stage01_Building_02_TN_0 : Map/Map01/Building_2/Stage01_Building_02_TN_0.png : [Texture]
+Stage01_Building_02_TD_1 : Map/Map01/Building_2/Stage01_Building_02_TD_1.png : [Texture]
+Stage01_Building_02_TN_1 : Map/Map01/Building_2/Stage01_Building_02_TN_1.png : [Texture]
+Stage01_Building_02_TD_2 : Map/Map01/Building_2/Stage01_Building_02_TD_2.png : [Texture]
+Stage01_Building_02_TN_2 : Map/Map01/Building_2/Stage01_Building_02_TN_2.png : [Texture]
 // UI
 HeartBar : UI/HUDUI/HeartBar.png : [Texture]
