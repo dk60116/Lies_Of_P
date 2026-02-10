@@ -21,10 +21,17 @@ namespace
 			return;
 
 		CMeshBuffer* meshBuffer = nullptr;
+		_matrix objectWorld = selected->Get_Transform()->Get_WorldMatrix();
 		if (CMeshRenderer* meshRenderer = selected->GetComponent<CMeshRenderer>())
 			meshBuffer = meshRenderer->Get_MeshBuffer();
 		else if (CSkinnedMeshRenderer* skinnedRenderer = selected->GetComponent<CSkinnedMeshRenderer>())
+		{
 			meshBuffer = skinnedRenderer->Get_MeshBuffer();
+
+			vector<CTransform*>& rootBones = skinnedRenderer->GetRootBons();
+			if (!rootBones.empty() && rootBones[0])
+				objectWorld = rootBones[0]->Get_WorldMatrix();
+		}
 
 		if (!meshBuffer)
 			return;
@@ -48,7 +55,6 @@ namespace
 		};
 
 		_vector worldCorners[8] = {};
-		_matrix objectWorld = selected->Get_Transform()->Get_WorldMatrix();
 		for (_uint i = 0; i < 8; ++i)
 		{
 			_vector localCorner = center + XMVectorMultiply(offsets[i], extents);
