@@ -163,8 +163,6 @@ void CSkinnedMeshBuffer::FillBoneWeights(VertexSkinnedBuffer& _targetBuffer, con
 
 
 
-void CSkinnedMeshBuffer::FillBoneWeightsAndIndices(const aiMesh* mesh, vector<VertexSkinnedBuffer>& vertices)
-{
     //  ε/ġ Ҵ
     for (_uint i = 0; i < mesh->mNumBones; ++i)
     {
