@@ -62,6 +62,12 @@ _int CAnimationClip::Sample(_float _timeSec, unordered_map<wstring, BoneTransfor
 	if (m_bLoopTime)
 	{
 		time = fmod(ticks, m_fDuration);
+
+		if (time < 0.0)
+			time += m_fDuration;
+
+		if (ticks > 0.0 && fabs(time) <= 1e-8)
+			time = m_fDuration;
 	}
 	else
 	{
@@ -83,28 +89,11 @@ _int CAnimationClip::Sample(_float _timeSec, unordered_map<wstring, BoneTransfor
 		size_t i1 = 0, i2 = 0;
 		while (i2 < keys.size() && time >= keys[i2].timeStamp) { i1 = i2++; }
 
-		double startTime = keys[i1].timeStamp;
-		double endTime = startTime;
-
 		if (i2 >= keys.size())
-		{
-			if (m_bLoopTime && keys.size() > 1)
-			{
-				i2 = 0;
-				endTime = m_fDuration + keys[i2].timeStamp;
-			}
-			else
-			{
-				i2 = i1;
-			}
-		}
+			i2 = i1;
 
-		if (endTime == startTime)
-			endTime = keys[i2].timeStamp;
-
-		const _float span = static_cast<_float>(endTime - startTime);
-		const _float blendTime = static_cast<_float>(time - startTime);
-		const _float t = span > 0.f ? clamp(blendTime / span, 0.f, 1.f) : 0.f;
+		const _float span = float(keys[i2].timeStamp - keys[i1].timeStamp);
+		const _float t = span > 0.f ? clamp(float((time - keys[i1].timeStamp) / span), 0.f, 1.f) : 0.f;
 
 		BoneTransform bt;
 		XMStoreFloat3
