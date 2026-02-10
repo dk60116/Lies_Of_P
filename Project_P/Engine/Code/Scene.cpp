@@ -21,12 +21,17 @@ namespace
 			return;
 
 		CMeshBuffer* meshBuffer = nullptr;
+		_float scaleFactor = 1.f;
 		_matrix objectWorld = selected->Get_Transform()->Get_WorldMatrix();
 		if (CMeshRenderer* meshRenderer = selected->GetComponent<CMeshRenderer>())
+		{
 			meshBuffer = meshRenderer->Get_MeshBuffer();
+			scaleFactor = meshRenderer->GetScaleFactor();
+		}
 		else if (CSkinnedMeshRenderer* skinnedRenderer = selected->GetComponent<CSkinnedMeshRenderer>())
 		{
 			meshBuffer = skinnedRenderer->Get_MeshBuffer();
+			scaleFactor = skinnedRenderer->GetScaleFactor();
 
 			vector<CTransform*>& rootBones = skinnedRenderer->GetRootBons();
 			if (!rootBones.empty() && rootBones[0])
@@ -39,8 +44,8 @@ namespace
 		const CMeshBuffer::MESHBUFFERDESC& desc = meshBuffer->Get_Info();
 		const BoundingBox& localBox = desc.boundingBox;
 
-		_vector center = XMLoadFloat3(&localBox.Center);
-		_vector extents = XMLoadFloat3(&localBox.Extents);
+		_vector center = XMVectorScale(XMLoadFloat3(&localBox.Center), scaleFactor);
+		_vector extents = XMVectorScale(XMLoadFloat3(&localBox.Extents), scaleFactor);
 
 		_vector offsets[8] =
 		{
