@@ -187,8 +187,8 @@ void CRenderer::Bind_InstanceBuffer(const _matrix& _baseWorld)
 				0.f
 			);
 			_matrix rotMat = XMMatrixRotationRollPitchYawFromVector(rotVec);
-			_matrix worldMat = _baseWorld * scaleMat * rotMat;
-			worldMat.r[3] = XMVectorAdd(worldMat.r[3], XMVectorSet(tr.position.x, tr.position.y, tr.position.z, 0.f));
+			_matrix transMat = XMMatrixTranslation(tr.position.x, tr.position.y, tr.position.z);
+			_matrix worldMat = scaleMat * rotMat * transMat * _baseWorld;
 			cb.worlds[i] = XMMatrixTranspose(worldMat);
 		}
 	}
