@@ -33,9 +33,15 @@ HRESULT CMap_01_SilentStreet::Initialize()
 	for (_int i = 0; i < 2; ++i)
 		CreateObject(MapObjectType::Floor);
 
-	m_vFloorList[1].renderers[0]->CreateMeshInstancing(2);
-	m_vFloorList[1].renderers[0]->SetInstancingPosition(1, vector3(-34.8f, 3.315f, 10.72f));
-	m_vFloorList[1].renderers[0]->SetInstancingRotation(1, vector3(-19.8f, 66.82f, 1.48f));
+	for (auto* renderer : m_vFloorList[1].renderers)
+	{
+		if (!renderer)
+			continue;
+
+		renderer->CreateMeshInstancing(2);
+		renderer->SetInstancingPosition(1, vector3(-34.8f, 3.315f, 10.72f));
+		renderer->SetInstancingRotation(1, vector3(-19.8f, 66.82f, 1.48f));
+	}
 
 	return S_OK;
 }
