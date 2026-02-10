@@ -19,6 +19,7 @@ public:
 		_uint vertexSize = 0;
 		_uint vertextCount = 0;
 		_uint indexCount = 0;
+		BoundingBox boundingBox = {};
 	}MESHBUFFERDESC;
 
 	struct MeshBufferInitiaizeInfo

@@ -42,11 +42,14 @@ HRESULT CGameScene::Initialize()
 	CGameObject* hudObject = Add_GameObject(L"Player HUD");
 	m_pHUD = hudObject->AddComponent<CPlayerHUD>();
 
+	CGameObject* bb = Add_GameObject(L"BB");
+	bb->CreateMeshHierachy(CResources::GetInstance().LoadMeshBuffersOnScene(L"Stage01_Building_06 (MeshBuffer)"), 0.01f);
+
 	CGameObject* playerObj = Add_GameObject(L"Player");
 	m_pPlayer = playerObj->AddComponent<CPlayer>();
 
-	CGameObject* mapObj = Add_GameObject(L"Map");
-	mapObj->AddComponent<CMap_01_SilentStreet>();
+	//CGameObject* mapObj = Add_GameObject(L"Map");
+	//mapObj->AddComponent<CMap_01_SilentStreet>();
 
 	return S_OK;
 }

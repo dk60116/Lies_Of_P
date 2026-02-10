@@ -28,9 +28,11 @@ HRESULT CMap_01_SilentStreet::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
-	for (_int i = 0; i < 7; ++i)
+	return E_FAIL;
+
+	for (_int i = 0; i < 1; ++i)
 		CreateObject(MapObjectType::Building);
-	for (_int i = 0; i < 2; ++i)
+	for (_int i = 0; i < 0; ++i)
 		CreateObject(MapObjectType::Floor);
 
 	auto rendersB6 = m_vBuildingList[6].renderers;
