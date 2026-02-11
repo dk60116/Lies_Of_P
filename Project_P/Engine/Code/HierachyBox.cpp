@@ -133,6 +133,10 @@ void CHierachyBox::Render()
 		ImGuiWindowFlags_NoCollapse
 	);
 
+	m_hierarchyFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+	if (m_hierarchyFocused && ImGui::IsKeyPressed(ImGuiKey_Delete, false))
+		RequestDeleteObject(editor.Get_SelectedGameObject());
+
 	ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 6.f);
 
 	if (currentScene)
@@ -179,6 +183,24 @@ void CHierachyBox::Render()
 
 void CHierachyBox::OnDestroy()
 {
+}
+
+void CHierachyBox::RequestDeleteObject(CGameObject* _obj)
+{
+	if (!_obj)
+		return;
+
+	CScene* scene = CSceneManager::GetInstance().Get_CrtScene();
+	if (!scene)
+		return;
+
+	if (_obj == CEditor::GetInstance().Get_SelectedGameObject())
+	{
+		CEditor::GetInstance().Set_SelectedGameObject(nullptr);
+		CEditor::GetInstance().MoveTo_SelectedGameObject(nullptr);
+	}
+
+	scene->Request_DestroyGameObject(_obj);
 }
 
 bool CHierachyBox::ObjectMatchesFilter(CGameObject* _obj, const std::string& filterLower) const
@@ -265,6 +287,10 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& f
 				m_openToSelected = true;
 			}
 		}
+
+		if (ImGui::MenuItem("Delete"))
+			RequestDeleteObject(_obj);
+
 		ImGui::EndPopup();
 	}
 

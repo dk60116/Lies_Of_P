@@ -24,6 +24,7 @@ private:
 
 private:
 	void RenderObjectHierarchy(CGameObject* _obj, const std::string& filterLower);
+	void RequestDeleteObject(CGameObject* _obj);
 	bool ObjectMatchesFilter(CGameObject* _obj, const std::string& filterLower) const;
 	bool IsAncestorOfSelected(CGameObject* _obj, CGameObject* selected) const;
 
@@ -32,6 +33,7 @@ private:
 	CGameObject* m_lastSelectedGameObject = nullptr;
 	bool m_scrollToSelected = false;
 	bool m_openToSelected = false;
+	bool m_hierarchyFocused = false;
 };
 
 NS_END

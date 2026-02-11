@@ -163,6 +163,7 @@ CScene::CScene()
 	, m_mSkinnedBoneList({})
 	, m_mTempSkinnedBoneList({})
 	, m_lObjectList({})
+	, m_vPendingDestroyGameObjects({})
 	, m_lCameraList({})
 	, m_lLightList({})
 	, m_lCanvasList({})
@@ -396,6 +397,7 @@ void CScene::Start()
 
 void CScene::Update_Editor()
 {
+	Process_PendingDestroyGameObjects();
 	PickObjectInEditor_End();
 	PickObjectInEditor_Start();
 
@@ -721,6 +723,7 @@ void CScene::SceneRelease()
 	m_mSkinnedBundleList.clear();
 	m_mSkinnedBoneList.clear();
 	m_vCloneResourceList.clear();
+	m_vPendingDestroyGameObjects.clear();
 
 	Safe_Release(m_pDevice);
 	Safe_Release(m_pContext);
@@ -1214,6 +1217,98 @@ CGameObject* CScene::Add_GameObject(wstring _name)
 	newObj->Set_Scene(this);
 
 	return newObj;
+}
+
+void CScene::Request_DestroyGameObject(CGameObject* _gameObject)
+{
+	if (!_gameObject)
+		return;
+
+	if (_gameObject->m_iUniqueID == 0)
+		return;
+
+	if (m_pEditorCamera && _gameObject == m_pEditorCamera->Get_GameObject())
+		return;
+
+	if (find(m_vPendingDestroyGameObjects.begin(), m_vPendingDestroyGameObjects.end(), _gameObject) != m_vPendingDestroyGameObjects.end())
+		return;
+
+	m_vPendingDestroyGameObjects.push_back(_gameObject);
+}
+
+void CScene::Process_PendingDestroyGameObjects()
+{
+	if (m_vPendingDestroyGameObjects.empty())
+		return;
+
+	CEditor& editor = CEditor::GetInstance();
+	CGameObject* selected = editor.Get_SelectedGameObject();
+
+	for (CGameObject* target : m_vPendingDestroyGameObjects)
+	{
+		if (!target)
+			continue;
+
+		auto objectIt = find(m_lObjectList.begin(), m_lObjectList.end(), target);
+		if (objectIt == m_lObjectList.end())
+			continue;
+
+		CTransform* targetTransform = target->Get_Transform();
+		if (targetTransform)
+		{
+			if (selected)
+			{
+				CTransform* selectedTransform = selected->Get_Transform();
+				while (selectedTransform)
+				{
+					if (selectedTransform == targetTransform)
+					{
+						selected = nullptr;
+						break;
+					}
+					selectedTransform = selectedTransform->Get_Parent();
+				}
+			}
+
+			if (targetTransform->Get_Parent())
+				targetTransform->SetParent(nullptr);
+
+			vector<CTransform*> descendants;
+			descendants.push_back(targetTransform);
+			for (size_t i = 0; i < descendants.size(); ++i)
+			{
+				for (auto* child : descendants[i]->Get_ChldList())
+					descendants.push_back(child);
+			}
+
+			for (auto it = descendants.rbegin(); it != descendants.rend(); ++it)
+			{
+				CTransform* tr = *it;
+				if (!tr)
+					continue;
+				CGameObject* obj = tr->Get_GameObject();
+				if (!obj)
+					continue;
+				m_mObjectOfId.erase(obj->m_iUniqueID);
+				m_lObjectList.remove(obj);
+				Safe_Release(obj);
+			}
+		}
+		else
+		{
+			m_mObjectOfId.erase(target->m_iUniqueID);
+			m_lObjectList.remove(target);
+			Safe_Release(target);
+		}
+	}
+
+	if (!selected)
+	{
+		editor.Set_SelectedGameObject(nullptr);
+		editor.MoveTo_SelectedGameObject(nullptr);
+	}
+
+	m_vPendingDestroyGameObjects.clear();
 }
 
 list<CGameObject*>& CScene::Get_ObjectList()

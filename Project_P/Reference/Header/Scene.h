@@ -86,6 +86,7 @@ public:
     void Add_TempSkinnedMeshBone(const wstring& _name, vector<CSkinnedMeshBuffer::SKINNEDSKELETAL> _resource);
     class CEngineResource* Add_CloneResourece(CEngineResource* _resource);
     class CGameObject* Add_GameObject(wstring _name);
+    void Request_DestroyGameObject(class CGameObject* _gameObject);
     list<CGameObject*>& Get_ObjectList();
     vector<CGameObject*> Get_RootObjects();
     vector<CRenderer*> Get_MeshObjects();
@@ -127,6 +128,9 @@ protected:
     ID3D11DeviceContext* m_pContext;
 
 private:
+    void Process_PendingDestroyGameObjects();
+
+private:
     void PickObjectInEditor_Start();
     void PickObjectInEditor_End();
 
@@ -136,6 +140,7 @@ protected:
     EnviromentSettings m_sEnviromentSettings;
     class CSkyBox* m_pSkyBox;
     list <CGameObject*> m_lObjectList;
+    vector<CGameObject*> m_vPendingDestroyGameObjects;
     list <CCamera*> m_lCameraList;
     list <CLight*> m_lLightList;
     list<CCanvas*> m_lCanvasList;
