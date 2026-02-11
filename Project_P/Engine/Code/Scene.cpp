@@ -61,11 +61,38 @@ namespace
 		};
 
 		_vector worldCorners[8] = {};
-		for (_uint i = 0; i < 8; ++i)
+		if (skinnedRenderer)
 		{
-			_vector localCorner = center + XMVectorMultiply(offsets[i], extents);
-			_vector scaledCorner = XMVectorScale(localCorner, scaleFactor);
-			worldCorners[i] = XMVector3Transform(scaledCorner, objectWorld);
+			_float3 minBound = {};
+			_float3 maxBound = {};
+			if (skinnedRenderer->TryGetAnimatedWorldBounds(minBound, maxBound))
+			{
+				worldCorners[0] = XMVectorSet(minBound.x, minBound.y, minBound.z, 1.f);
+				worldCorners[1] = XMVectorSet(maxBound.x, minBound.y, minBound.z, 1.f);
+				worldCorners[2] = XMVectorSet(maxBound.x, maxBound.y, minBound.z, 1.f);
+				worldCorners[3] = XMVectorSet(minBound.x, maxBound.y, minBound.z, 1.f);
+				worldCorners[4] = XMVectorSet(minBound.x, minBound.y, maxBound.z, 1.f);
+				worldCorners[5] = XMVectorSet(maxBound.x, minBound.y, maxBound.z, 1.f);
+				worldCorners[6] = XMVectorSet(maxBound.x, maxBound.y, maxBound.z, 1.f);
+				worldCorners[7] = XMVectorSet(minBound.x, maxBound.y, maxBound.z, 1.f);
+			}
+			else
+			{
+				for (_uint i = 0; i < 8; ++i)
+				{
+					_vector localCorner = center + XMVectorMultiply(offsets[i], extents);
+					worldCorners[i] = XMVector3Transform(localCorner, objectWorld);
+				}
+			}
+		}
+		else
+		{
+			for (_uint i = 0; i < 8; ++i)
+			{
+				_vector localCorner = center + XMVectorMultiply(offsets[i], extents);
+				_vector scaledCorner = XMVectorScale(localCorner, scaleFactor);
+				worldCorners[i] = XMVector3Transform(scaledCorner, objectWorld);
+			}
 		}
 
 		constexpr _uint edges[12][2] =

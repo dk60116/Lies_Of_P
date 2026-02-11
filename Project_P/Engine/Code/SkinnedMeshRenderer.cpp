@@ -133,6 +133,78 @@ const _float4x4& CSkinnedMeshRenderer::Get_BoneOffsetMatrix(const _uint _index) 
 	return m_pMeshBuffer->Get_BoneOffsetMatrix(_index);
 }
 
+
+_bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3& _outMax) const
+{
+	if (!m_pMeshBuffer || !m_pMeshBuffer->m_pVertexSysMem)
+		return false;
+
+	const CMeshBuffer::MESHBUFFERDESC& info = m_pMeshBuffer->Get_Info();
+	if (info.vertexSize != sizeof(VertexSkinnedBuffer) || info.vertextCount == 0)
+		return false;
+
+	auto* vertices = static_cast<const VertexSkinnedBuffer*>(m_pMeshBuffer->m_pVertexSysMem);
+
+	const _uint boneCount = min<_uint>(static_cast<_uint>(m_vBones.size()), m_pMeshBuffer->Get_BoneCount());
+	if (boneCount == 0)
+		return false;
+
+	_matrix meshWorldInv = XMMatrixIdentity();
+	if (m_pGameObject && m_pGameObject->Get_Transform())
+	{
+		_matrix meshWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
+		meshWorldInv = XMMatrixInverse(nullptr, meshWorld);
+	}
+
+	vector<_matrix> skinMats(boneCount, XMMatrixIdentity());
+	for (_uint i = 0; i < boneCount; ++i)
+	{
+		if (!m_vBones[i])
+			continue;
+
+		_matrix invBindPose = XMLoadFloat4x4(&m_pMeshBuffer->m_vBoneOffsetMatrices[i]);
+		_matrix boneWorld = m_vBones[i]->Get_WorldMatrix();
+		_matrix boneMeshLocal = boneWorld * meshWorldInv;
+		skinMats[i] = invBindPose * boneMeshLocal;
+	}
+
+	_vector minV = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 0.f);
+	_vector maxV = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 0.f);
+	_bool hasPoint = false;
+
+	for (_uint v = 0; v < info.vertextCount; ++v)
+	{
+		const VertexSkinnedBuffer& src = vertices[v];
+		_vector p = XMVectorSet(src.position.x, src.position.y, src.position.z, 1.f);
+		_vector skinned = XMVectorZero();
+		_float totalW = 0.f;
+
+		for (_uint k = 0; k < 4; ++k)
+		{
+			const _uint idx = src.boneIndices[k];
+			const _float w = src.boneWeights[k];
+			if (w <= 0.f || idx >= boneCount)
+				continue;
+
+			skinned += XMVector3Transform(p, skinMats[idx]) * w;
+			totalW += w;
+		}
+
+		if (totalW <= 0.f)
+			continue;
+
+		hasPoint = true;
+		minV = XMVectorMin(minV, skinned);
+		maxV = XMVectorMax(maxV, skinned);
+	}
+
+	if (!hasPoint)
+		return false;
+
+	XMStoreFloat3(&_outMin, minV);
+	XMStoreFloat3(&_outMax, maxV);
+	return true;
+}
 void CSkinnedMeshRenderer::CreateBoneHierachy(const vector<CSkinnedMeshBuffer::SKINNEDSKELETAL>& nodes, _int nodeIdx, CTransform* parentTf)
 {
 	const auto& n = nodes[nodeIdx];
