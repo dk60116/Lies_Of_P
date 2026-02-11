@@ -32,6 +32,7 @@ public:
 	const wstring Get_BoneName(const _uint _index) const;
 	CTransform* Get_BoneTransform(const _uint _index) const;
 	const _float4x4& Get_BoneOffsetMatrix(const _uint _index) const;
+	_bool TryGetAnimatedWorldBounds(_float3& _outMin, _float3& _outMax) const;
 
 	void CreateBoneHierachy(const vector<CSkinnedMeshBuffer::SKINNEDSKELETAL>& nodes, _int nodeIdx, CTransform* parentTf);
 
@@ -61,4 +62,3 @@ private:
 };
 
 NS_END
-
