@@ -3,9 +3,57 @@
 
 #include <algorithm>
 #include <cctype>
+#include <unordered_set>
 
 namespace
 {
+	wstring GenerateUniqueEmptyName(CScene* scene)
+	{
+		if (!scene)
+			return L"GameObject";
+
+		unordered_set<wstring> existingNames;
+		for (auto* obj : scene->Get_ObjectList())
+		{
+			if (obj)
+				existingNames.insert(obj->Get_ObjectName());
+		}
+
+		const wstring baseName = L"GameObject";
+		if (existingNames.find(baseName) == existingNames.end())
+			return baseName;
+
+		for (_uint i = 1; i < 1000000; ++i)
+		{
+			const wstring candidate = baseName + L" (" + to_wstring(i) + L")";
+			if (existingNames.find(candidate) == existingNames.end())
+				return candidate;
+		}
+
+		return baseName + L" (New)";
+	}
+
+	CGameObject* CreateEmptyObject(CScene* scene, CGameObject* parent)
+	{
+		if (!scene)
+			return nullptr;
+
+		CGameObject* newObject = scene->Add_GameObject(GenerateUniqueEmptyName(scene));
+		if (!newObject)
+			return nullptr;
+
+		if (parent)
+		{
+			newObject->Get_Transform()->SetParent(parent->Get_Transform());
+			newObject->Get_Transform()->Set_LocalPosition(vector3::zero());
+			newObject->Get_Transform()->Set_LocalQuaternion(quaternion::identity());
+			newObject->Get_Transform()->Set_LocalScale(1.f);
+		}
+
+		CEditor::GetInstance().Set_SelectedGameObject(newObject);
+		return newObject;
+	}
+
 	string ToLowerCopy(string value)
 	{
 		transform(value.begin(), value.end(), value.begin(),
@@ -91,6 +139,20 @@ void CHierachyBox::Render()
 	{
 		ImGui::InputTextWithHint("##HierarchySearch", "Search...", m_searchBuffer.data(), m_searchBuffer.size());
 		ImGui::Separator();
+
+		if (ImGui::BeginPopupContextWindow("HierarchyContextMenu", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+		{
+			if (ImGui::MenuItem("Create Empty"))
+			{
+				if (CGameObject* created = CreateEmptyObject(currentScene, nullptr))
+				{
+					m_lastSelectedGameObject = created;
+					m_scrollToSelected = true;
+					m_openToSelected = true;
+				}
+			}
+			ImGui::EndPopup();
+		}
 
 		const string filterText = TrimCopy(m_searchBuffer.data());
 		const string filterLower = ToLowerCopy(filterText);
@@ -191,6 +253,20 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& f
 
 	if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
 		editor.Set_SelectedGameObject(_obj);
+
+	if (ImGui::BeginPopupContextItem(("HierarchyItemContext##" + to_string(reinterpret_cast<size_t>(_obj))).c_str()))
+	{
+		if (ImGui::MenuItem("Create Empty"))
+		{
+			if (CGameObject* created = CreateEmptyObject(CSceneManager::GetInstance().Get_CrtScene(), _obj))
+			{
+				m_lastSelectedGameObject = created;
+				m_scrollToSelected = true;
+				m_openToSelected = true;
+			}
+		}
+		ImGui::EndPopup();
+	}
 
 	if (_obj == selectedObject && m_scrollToSelected)
 	{
