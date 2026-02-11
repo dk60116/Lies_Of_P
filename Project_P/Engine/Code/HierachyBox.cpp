@@ -147,7 +147,7 @@ void CHierachyBox::Render()
 		{
 			m_lastSelectedGameObject = selectedObject;
 			m_scrollToSelected = selectedObject != nullptr;
-			m_openToSelected = selectedObject != nullptr;
+			m_openToSelected = false;
 		}
 
 		if (ImGui::BeginChild("HierarchyScrollRegion", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar))
@@ -264,6 +264,18 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filte
 				m_scrollToSelected = true;
 				m_openToSelected = true;
 			}
+		}
+
+		if (ImGui::MenuItem("Delete"))
+		{
+			if (editor.Get_SelectedGameObject() == _obj)
+				editor.Set_SelectedGameObject(nullptr);
+
+			_obj->Destroy();
+			ImGui::EndPopup();
+			if (_obj == selectedObject)
+				m_scrollToSelected = false;
+			return;
 		}
 		ImGui::EndPopup();
 	}
