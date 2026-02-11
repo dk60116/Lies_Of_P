@@ -109,8 +109,6 @@ void CSkinnedMeshRenderer::OnDestroy()
 	
 	m_vBones.clear();
 	m_vRootBone.clear();
-
-	m_vBones.clear();
 }
 
 const _uint CSkinnedMeshRenderer::Get_BoneCount() const

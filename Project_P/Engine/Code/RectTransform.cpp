@@ -215,14 +215,11 @@ void CRectTransform::Render_Gizmo()
 void CRectTransform::OnDestroy()
 {
     __super::OnDestroy();
-
-    Safe_Release(m_pUI);
 }
 
 void CRectTransform::Set_UI(CUI* _pUI)
 {
     m_pUI = _pUI;
-    m_pUI->AddRef();
 }
 
 void CRectTransform::SetParent(CTransform* _parent)
