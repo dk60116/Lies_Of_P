@@ -100,15 +100,18 @@ public:
     CCamera* Get_EditorCamera() const;
     const list <CCamera*>& Get_CameraList();
     CCamera* Add_Camera(CCamera* _camera);
+    void Remove_Camera(CCamera* _camera);
 
     const list<class CLight*>& Get_LightList();
     CLight* Add_Light(CLight* _light);
+    void Remove_Light(CLight* _light);
 
     vector<_matrix>& Get_LightData();
 
     class CCanvas* Get_Canvas(const _int _index) const;
     const list <CCanvas*>& Get_CanvasList();
     CCanvas* Add_Canvas(CCanvas* _canvas);
+    void Remove_Canvas(CCanvas* _canvas);
 
     HRESULT SaveScene(const wstring& _filePath);
     const _uint Get_UniqueObjectCount() const;
@@ -121,6 +124,7 @@ public:
 
 protected:
     HRESULT PreLoadResources();
+    void RemoveRegistryComponents(CGameObject* _object);
 
 protected:
     ID3D11Device* m_pDevice;

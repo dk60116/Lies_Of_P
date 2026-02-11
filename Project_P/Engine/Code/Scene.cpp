@@ -1236,6 +1236,21 @@ void CScene::Request_DestroyGameObject(CGameObject* _gameObject)
 	m_vPendingDestroyGameObjects.push_back(_gameObject);
 }
 
+void CScene::RemoveRegistryComponents(CGameObject* _object)
+{
+	if (!_object)
+		return;
+
+	if (CCamera* camera = _object->GetComponent<CCamera>())
+		Remove_Camera(camera);
+
+	if (CLight* light = _object->GetComponent<CLight>())
+		Remove_Light(light);
+
+	if (CCanvas* canvas = _object->GetComponent<CCanvas>())
+		Remove_Canvas(canvas);
+}
+
 void CScene::Process_PendingDestroyGameObjects()
 {
 	if (m_vPendingDestroyGameObjects.empty())
@@ -1289,6 +1304,7 @@ void CScene::Process_PendingDestroyGameObjects()
 				CGameObject* obj = tr->Get_GameObject();
 				if (!obj)
 					continue;
+				RemoveRegistryComponents(obj);
 				m_mObjectOfId.erase(obj->m_iUniqueID);
 				m_lObjectList.remove(obj);
 				Safe_Release(obj);
@@ -1296,6 +1312,7 @@ void CScene::Process_PendingDestroyGameObjects()
 		}
 		else
 		{
+			RemoveRegistryComponents(target);
 			m_mObjectOfId.erase(target->m_iUniqueID);
 			m_lObjectList.remove(target);
 			Safe_Release(target);
@@ -1412,6 +1429,14 @@ CCamera* CScene::Add_Camera(CCamera* _camera)
 	return m_lCameraList.back();
 }
 
+void CScene::Remove_Camera(CCamera* _camera)
+{
+	if (!_camera)
+		return;
+
+	m_lCameraList.remove(_camera);
+}
+
 const list<CLight*>& CScene::Get_LightList()
 {
 	return m_lLightList;
@@ -1425,6 +1450,14 @@ CLight* CScene::Add_Light(CLight* _light)
 	m_lLightList.push_back(_light);
 
 	return m_lLightList.back();
+}
+
+void CScene::Remove_Light(CLight* _light)
+{
+	if (!_light)
+		return;
+
+	m_lLightList.remove(_light);
 }
 
 vector<_matrix>& CScene::Get_LightData()
@@ -1464,6 +1497,15 @@ CCanvas* CScene::Add_Canvas(CCanvas* _canvas)
 	m_lCanvasList.back()->AddRef();
 
 	return m_lCanvasList.back();
+}
+
+void CScene::Remove_Canvas(CCanvas* _canvas)
+{
+	if (!_canvas)
+		return;
+
+	m_lCanvasList.remove(_canvas);
+	Safe_Release(_canvas);
 }
 
 HRESULT CScene::SaveScene(const wstring& _filePath)
