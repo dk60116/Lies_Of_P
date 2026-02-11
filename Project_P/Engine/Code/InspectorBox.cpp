@@ -147,6 +147,203 @@ static CTexture* LoadInspectorTextureResource(const string& relPath)
     return resources.CreateGameResource<CTexture>(resourceName, CEngineString::StringToWString(relPath));
 }
 
+struct TexturePickerState
+{
+    _bool open = false;
+    CMaterial* material = nullptr;
+    _int slotIndex = -1;
+    string selectedFolder = "All";
+    string searchText;
+};
+
+static TexturePickerState g_texturePickerState;
+
+static void OpenTexturePicker(CMaterial* material, const _int slotIndex)
+{
+    if (!material || slotIndex < 0)
+        return;
+
+    g_texturePickerState.open = true;
+    g_texturePickerState.material = material;
+    g_texturePickerState.slotIndex = slotIndex;
+}
+
+static vector<string> CollectTextureFolders(const vector<string>& files)
+{
+    unordered_set<string> unique;
+    vector<string> folders;
+
+    unique.insert("All");
+    folders.push_back("All");
+
+    for (const string& file : files)
+    {
+        string folder = fs::path(file).parent_path().string();
+        std::replace(folder.begin(), folder.end(), '\\', '/');
+        if (folder.empty())
+            continue;
+
+        string cumulative;
+        vector<string> parts = SplitBySlash(folder);
+        for (const string& part : parts)
+        {
+            if (!cumulative.empty())
+                cumulative += "/";
+            cumulative += part;
+
+            if (unique.insert(cumulative).second)
+                folders.push_back(cumulative);
+        }
+    }
+
+    sort(folders.begin() + 1, folders.end());
+    return folders;
+}
+
+static void AddFolderPathToTree(PathTreeNode& root, const string& folderPath)
+{
+    if (folderPath.empty() || folderPath == "All")
+        return;
+
+    vector<string> segments = SplitBySlash(folderPath);
+    PathTreeNode* node = &root;
+
+    for (const string& segment : segments)
+        node = &node->children[segment];
+}
+
+static void RenderFolderTreeRecursive(const PathTreeNode& node, const string& currentPath, string& selectedFolder)
+{
+    for (const auto& childPair : node.children)
+    {
+        const string& name = childPair.first;
+        const PathTreeNode& child = childPair.second;
+
+        string nodePath = currentPath.empty() ? name : currentPath + "/" + name;
+        const bool isSelected = (selectedFolder == nodePath);
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+        if (child.children.empty())
+            flags |= ImGuiTreeNodeFlags_Leaf;
+        if (isSelected)
+            flags |= ImGuiTreeNodeFlags_Selected;
+
+        const bool opened = ImGui::TreeNodeEx(nodePath.c_str(), flags, "%s", name.c_str());
+        if (ImGui::IsItemClicked())
+            selectedFolder = nodePath;
+
+        if (opened)
+        {
+            if (!child.children.empty())
+                RenderFolderTreeRecursive(child, nodePath, selectedFolder);
+            ImGui::TreePop();
+        }
+    }
+}
+
+static void RenderTexturePickerWindow()
+{
+    if (!g_texturePickerState.open)
+        return;
+
+    ImGui::SetNextWindowSize(ImVec2(900.f, 600.f), ImGuiCond_FirstUseEver);
+
+    if (!ImGui::Begin("Texture Picker", &g_texturePickerState.open))
+    {
+        ImGui::End();
+        return;
+    }
+
+    if (!g_texturePickerState.material || g_texturePickerState.slotIndex < 0)
+    {
+        g_texturePickerState.open = false;
+        ImGui::End();
+        return;
+    }
+
+    vector<string> textureFiles = CollectTextureRelativeFiles();
+    vector<string> folders = CollectTextureFolders(textureFiles);
+
+    if (g_texturePickerState.selectedFolder.empty())
+        g_texturePickerState.selectedFolder = "All";
+
+    ImGui::InputText("Search", &g_texturePickerState.searchText);
+
+    ImGui::Separator();
+
+    ImGui::BeginChild("##TextureFolderPane", ImVec2(230.f, 0.f), true);
+    if (ImGui::Selectable("All", g_texturePickerState.selectedFolder == "All"))
+        g_texturePickerState.selectedFolder = "All";
+
+    PathTreeNode folderRoot;
+    for (const string& folderPath : folders)
+        AddFolderPathToTree(folderRoot, folderPath);
+
+    RenderFolderTreeRecursive(folderRoot, "", g_texturePickerState.selectedFolder);
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+
+    ImGui::BeginChild("##TextureThumbnailPane", ImVec2(0.f, 0.f), true);
+
+    const string searchFilter = CEditor::ToLowerCopy(g_texturePickerState.searchText);
+
+    const float thumbnailSize = 72.f;
+    const float cellWidth = 120.f;
+    const float panelWidth = ImGui::GetContentRegionAvail().x;
+    const _int columns = std::max(1, static_cast<_int>(panelWidth / cellWidth));
+    _int columnIndex = 0;
+
+    for (const string& relPath : textureFiles)
+    {
+        string normalizedPath = relPath;
+        std::replace(normalizedPath.begin(), normalizedPath.end(), '\\', '/');
+        const string lowerPath = CEditor::ToLowerCopy(normalizedPath);
+        string parentFolder = fs::path(normalizedPath).parent_path().string();
+        std::replace(parentFolder.begin(), parentFolder.end(), '\\', '/');
+
+        if (g_texturePickerState.selectedFolder != "All")
+        {
+            if (parentFolder != g_texturePickerState.selectedFolder && parentFolder.rfind(g_texturePickerState.selectedFolder + "/", 0) != 0)
+                continue;
+        }
+
+        if (!searchFilter.empty() && lowerPath.find(searchFilter) == string::npos)
+            continue;
+
+        ImGui::PushID(relPath.c_str());
+        CTexture* texture = LoadInspectorTextureResource(relPath);
+
+        _bool selected = false;
+        if (texture && texture->Get_SRV())
+            selected = ImGui::ImageButton("##TexThumb", ImTextureRef((ImTextureID)(intptr_t)texture->Get_SRV()), ImVec2(thumbnailSize, thumbnailSize));
+        else
+            selected = ImGui::Button("Select", ImVec2(thumbnailSize, thumbnailSize));
+
+        if (selected)
+        {
+            g_texturePickerState.material->Set_Texture(texture, g_texturePickerState.slotIndex);
+            g_texturePickerState.open = false;
+            ImGui::PopID();
+            break;
+        }
+
+        string fileName = fs::path(relPath).filename().string();
+        if (fileName.size() > 18)
+            fileName = fileName.substr(0, 15) + "...";
+        ImGui::TextWrapped("%s", fileName.c_str());
+
+        ++columnIndex;
+        if (columnIndex % columns != 0)
+            ImGui::SameLine();
+
+        ImGui::PopID();
+    }
+
+    ImGui::EndChild();
+
+    ImGui::End();
+}
+
 static string NormalizeSlashPath(const string& path)
 {
     string result = path;
@@ -526,6 +723,8 @@ void CInspectorBox::Render()
         RenderSelectedAssetInfo(editor.Get_SelectedAssetPath());
         RenderSelectedAssetPreview(editor.Get_SelectedAssetPath());
     }
+
+    RenderTexturePickerWindow();
 
 	ImGui::End();
 }
@@ -948,9 +1147,7 @@ void CInspectorBox::RenderMeshRendererComponent(CMeshRenderer* _meshRenderer)
             ImGui::TextUnformatted("Shader: None");
         }
 
-        vector<string> textureFiles = CollectTextureRelativeFiles();
-
-        if (ImGui::Button("텍스쳐 추가"))
+        if (ImGui::Button("Add"))
             material->Set_Texture(nullptr, static_cast<_int>(material->Get_TextureCount()));
 
         ImGui::TextUnformatted("Textures:");
@@ -967,37 +1164,21 @@ void CInspectorBox::RenderMeshRendererComponent(CMeshRenderer* _meshRenderer)
                 string textureName = texture ? CEngineString::WStringToString(texture->Get_ResourceName()) : "None";
 
                 ImGui::PushID(static_cast<int>(i));
+                _bool openPicker = false;
+
                 if (texture && texture->Get_SRV())
-                    ImGui::Image(ImTextureRef((ImTextureID)(intptr_t)texture->Get_SRV()), ImVec2(20.f, 20.f));
+                    openPicker = ImGui::ImageButton("##TextureThumb", ImTextureRef((ImTextureID)(intptr_t)texture->Get_SRV()), ImVec2(20.f, 20.f));
                 else
-                    ImGui::Dummy(ImVec2(20.f, 20.f));
+                    openPicker = ImGui::Button("Select", ImVec2(52.f, 20.f));
+
+                if (openPicker)
+                    OpenTexturePicker(material, static_cast<_int>(i));
 
                 ImGui::SameLine();
-                ImGui::Text("[%u]", i);
-                ImGui::SameLine();
-
-                const string comboLabel = "##TextureSlot" + to_string(i);
-                if (ImGui::BeginCombo(comboLabel.c_str(), textureName.c_str()))
-                {
-                    const bool noneSelected = (texture == nullptr);
-                    if (ImGui::Selectable("None", noneSelected))
-                        material->Set_Texture(nullptr, static_cast<_int>(i));
-
-                    for (const string& relPath : textureFiles)
-                    {
-                        const bool selected = (textureName == relPath);
-                        if (ImGui::Selectable(relPath.c_str(), selected))
-                        {
-                            CTexture* selectedTexture = LoadInspectorTextureResource(relPath);
-                            material->Set_Texture(selectedTexture, static_cast<_int>(i));
-                        }
-                    }
-
-                    ImGui::EndCombo();
-                }
+                ImGui::Text("[%u] %s", i, textureName.c_str());
 
                 ImGui::SameLine();
-                if (ImGui::Button("제거"))
+                if (ImGui::Button("Remove"))
                 {
                     material->Remove_Texture(static_cast<_int>(i));
                     ImGui::PopID();
@@ -1006,8 +1187,8 @@ void CInspectorBox::RenderMeshRendererComponent(CMeshRenderer* _meshRenderer)
 
                 ImGui::PopID();
             }
-
         }
+
     }
     else
     {
