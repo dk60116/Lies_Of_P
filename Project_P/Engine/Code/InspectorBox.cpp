@@ -734,23 +734,23 @@ void CInspectorBox::RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _m
                 ImGui::SetItemDefaultFocus();
         }
 
-        if (ImGui::TreeNode("Assets .fbx"))
-        {
-            if (ImGui::BeginChild("##fbx_tree_box", ImVec2(0.f, 180.f), true))
-                RenderPathTreeList(fbxFiles, "fbx_tree_", _meshFilter, "(No .fbx files)");
-            ImGui::EndChild();
-            ImGui::TreePop();
-        }
-
-        if (ImGui::TreeNode("BinaryAssets .meshdata"))
-        {
-            if (ImGui::BeginChild("##meshdata_tree_box", ImVec2(0.f, 180.f), true))
-                RenderPathTreeList(meshDataFiles, "meshdata_tree_", _meshFilter, "(No .meshdata files)");
-            ImGui::EndChild();
-            ImGui::TreePop();
-        }
-
         ImGui::EndCombo();
+    }
+
+    if (ImGui::TreeNode("Assets .fbx"))
+    {
+        if (ImGui::BeginChild("##fbx_tree_box", ImVec2(0.f, 180.f), true))
+            RenderPathTreeList(fbxFiles, "fbx_tree_", _meshFilter, "(No .fbx files)");
+        ImGui::EndChild();
+        ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNode("BinaryAssets .meshdata"))
+    {
+        if (ImGui::BeginChild("##meshdata_tree_box", ImVec2(0.f, 180.f), true))
+            RenderPathTreeList(meshDataFiles, "meshdata_tree_", _meshFilter, "(No .meshdata files)");
+        ImGui::EndChild();
+        ImGui::TreePop();
     }
 }
 
