@@ -22,18 +22,14 @@ namespace
 
 		CMeshBuffer* meshBuffer = nullptr;
 		CSkinnedMeshRenderer* skinnedRenderer = nullptr;
-		_float scaleFactor = 1.f;
 		_matrix objectWorld = selected->Get_Transform()->Get_WorldMatrix();
 		if (CMeshRenderer* meshRenderer = selected->GetComponent<CMeshRenderer>())
 		{
 			meshBuffer = meshRenderer->Get_MeshBuffer();
-			if (meshBuffer)
-				scaleFactor = meshRenderer->GetScaleFactor();
 		}
 		else if ((skinnedRenderer = selected->GetComponent<CSkinnedMeshRenderer>()))
 		{
 			meshBuffer = skinnedRenderer->Get_MeshBuffer();
-			scaleFactor = 1.f;
 
 			vector<CTransform*>& rootBones = skinnedRenderer->GetRootBons();
 			if (!rootBones.empty() && rootBones[0])
@@ -91,8 +87,7 @@ namespace
 			for (_uint i = 0; i < 8; ++i)
 			{
 				_vector localCorner = center + XMVectorMultiply(offsets[i], extents);
-				_vector scaledCorner = XMVectorScale(localCorner, scaleFactor);
-				worldCorners[i] = XMVector3Transform(scaledCorner, objectWorld);
+				worldCorners[i] = XMVector3Transform(localCorner, objectWorld);
 			}
 		}
 
