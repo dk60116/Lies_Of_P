@@ -149,10 +149,11 @@ _bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3&
 	if (boneCount == 0)
 		return false;
 
+	_matrix meshWorld = XMMatrixIdentity();
 	_matrix meshWorldInv = XMMatrixIdentity();
 	if (m_pGameObject && m_pGameObject->Get_Transform())
 	{
-		_matrix meshWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
+		meshWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
 		meshWorldInv = XMMatrixInverse(nullptr, meshWorld);
 	}
 
@@ -194,10 +195,11 @@ _bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3&
 			continue;
 
 		skinned = XMVectorScale(skinned, 1.f / totalW);
+		_vector worldSkinned = XMVector3Transform(skinned, meshWorld);
 
 		hasPoint = true;
-		minV = XMVectorMin(minV, skinned);
-		maxV = XMVectorMax(maxV, skinned);
+		minV = XMVectorMin(minV, worldSkinned);
+		maxV = XMVectorMax(maxV, worldSkinned);
 	}
 
 	if (!hasPoint)
