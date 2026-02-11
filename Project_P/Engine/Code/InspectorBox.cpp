@@ -62,6 +62,18 @@ struct PathTreeNode
     string fullPath;
 };
 
+
+struct PendingMeshSelection
+{
+    CGameObject* obj = nullptr;
+    CMeshFilter* meshFilter = nullptr;
+    string relPath;
+    _bool selectedMeshData = false;
+    _bool requested = false;
+};
+
+static PendingMeshSelection g_pendingMeshSelection;
+
 static vector<string> SplitBySlash(const string& input)
 {
     vector<string> parts;
@@ -183,6 +195,27 @@ static _bool RemoveFirstMeshRendererComponent(CGameObject* obj)
     return false;
 }
 
+
+static _bool RemoveSpecificMeshFilterComponent(CGameObject* obj, CMeshFilter* meshFilter)
+{
+    if (!obj || !meshFilter)
+        return false;
+
+    list<CComponent*>& components = obj->Get_ComponentList();
+    for (auto it = components.begin(); it != components.end(); ++it)
+    {
+        if ((*it) == meshFilter)
+        {
+            meshFilter->OnDestroy();
+            Safe_Release(meshFilter);
+            components.erase(it);
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static void ApplyMeshSelectionToObject(CGameObject* obj, CMeshFilter* meshFilter, const string& relPath, const _bool selectedMeshData)
 {
     if (!obj || !meshFilter)
@@ -216,6 +249,7 @@ static void ApplyMeshSelectionToObject(CGameObject* obj, CMeshFilter* meshFilter
 
         meshFilter->Set_MeshBuffer(nullptr);
         RemoveFirstMeshRendererComponent(obj);
+        RemoveSpecificMeshFilterComponent(obj, meshFilter);
         obj->CreateMeshHierachy(bundles, 0.01f);
         return;
     }
@@ -250,7 +284,56 @@ static void ApplyMeshSelectionToObject(CGameObject* obj, CMeshFilter* meshFilter
 
     meshFilter->Set_MeshBuffer(nullptr);
     RemoveFirstMeshRendererComponent(obj);
+    RemoveSpecificMeshFilterComponent(obj, meshFilter);
     obj->CreateMeshHierachy(bundles, 0.01f);
+}
+
+static void QueueMeshSelectionRequest(CGameObject* obj, CMeshFilter* meshFilter, const string& relPath, const _bool selectedMeshData)
+{
+    if (!obj || !meshFilter)
+        return;
+
+    if (selectedMeshData)
+    {
+        ApplyMeshSelectionToObject(obj, meshFilter, relPath, selectedMeshData);
+        return;
+    }
+
+    g_pendingMeshSelection.obj = obj;
+    g_pendingMeshSelection.meshFilter = meshFilter;
+    g_pendingMeshSelection.relPath = relPath;
+    g_pendingMeshSelection.selectedMeshData = selectedMeshData;
+    g_pendingMeshSelection.requested = true;
+    ImGui::OpenPopup("ConfirmFBXSelection");
+}
+
+static void RenderMeshSelectionConfirmPopup()
+{
+    if (!g_pendingMeshSelection.requested)
+        return;
+
+    if (ImGui::BeginPopupModal("ConfirmFBXSelection", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::TextUnformatted("Apply selected FBX mesh to current object?");
+        ImGui::Separator();
+        ImGui::TextWrapped("%s", g_pendingMeshSelection.relPath.c_str());
+
+        if (ImGui::Button("Confirm", ImVec2(120.f, 0.f)))
+        {
+            ApplyMeshSelectionToObject(g_pendingMeshSelection.obj, g_pendingMeshSelection.meshFilter, g_pendingMeshSelection.relPath, g_pendingMeshSelection.selectedMeshData);
+            g_pendingMeshSelection = {};
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120.f, 0.f)))
+        {
+            g_pendingMeshSelection = {};
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
 }
 
 static void RenderPathTreeRecursive(const PathTreeNode& node, const string& idPrefix, CGameObject* obj, CMeshFilter* meshFilter, const _bool selectedMeshData)
@@ -264,7 +347,7 @@ static void RenderPathTreeRecursive(const PathTreeNode& node, const string& idPr
         {
             const string label = name + "##" + idPrefix + child.fullPath;
             if (ImGui::Selectable(label.c_str(), false))
-                ApplyMeshSelectionToObject(obj, meshFilter, child.fullPath, selectedMeshData);
+                QueueMeshSelectionRequest(obj, meshFilter, child.fullPath, selectedMeshData);
             continue;
         }
 
@@ -912,6 +995,8 @@ void CInspectorBox::RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _m
         ImGui::EndChild();
         ImGui::TreePop();
     }
+
+    RenderMeshSelectionConfirmPopup();
 }
 
 void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
