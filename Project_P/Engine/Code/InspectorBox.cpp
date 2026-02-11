@@ -892,6 +892,17 @@ void CInspectorBox::RenderMeshRendererComponent(CMeshRenderer* _meshRenderer)
     if (!_meshRenderer)
         return;
 
+    CMaterial* material = _meshRenderer->Get_Material();
+    if (material)
+    {
+        string materialName = CEngineString::WStringToString(material->Get_ResourceName());
+        ImGui::Text("Material: %s", materialName.c_str());
+    }
+    else
+    {
+        ImGui::TextUnformatted("Material: None");
+    }
+
     CMeshFilter* meshFilter = _meshRenderer->Get_MeshFilter();
     if (!meshFilter)
     {
