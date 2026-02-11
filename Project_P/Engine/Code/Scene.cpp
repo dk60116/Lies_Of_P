@@ -64,8 +64,8 @@ namespace
 		_vector worldCorners[8] = {};
 		if (skinnedRenderer && skinnedRenderer->Get_BoneCount() > 0)
 		{
-			_vector minPoint = XMVectorSet(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), 0.f);
-			_vector maxPoint = XMVectorSet(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), 0.f);
+			_vector minPoint = XMVectorSet((std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)(), 0.f);
+			_vector maxPoint = XMVectorSet(-(std::numeric_limits<float>::max)(), -(std::numeric_limits<float>::max)(), -(std::numeric_limits<float>::max)(), 0.f);
 
 			const _uint boneCount = skinnedRenderer->Get_BoneCount();
 			_bool hasSkinnedPoint = false;
