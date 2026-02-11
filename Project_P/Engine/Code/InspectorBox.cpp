@@ -530,10 +530,8 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
     if (!_obj)
         return;
 
-    if (!ImGui::Button("Add Component"))
-        return;
-
-    ImGui::OpenPopup("AddComponentPopup");
+    if (ImGui::Button("Add Component"))
+        ImGui::OpenPopup("AddComponentPopup");
 
     if (!ImGui::BeginPopup("AddComponentPopup"))
         return;
