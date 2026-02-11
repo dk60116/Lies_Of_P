@@ -11,7 +11,7 @@ public:
         _float lookHeightOffset = 3.f;
         _float zoomMin = 2.f;
         _float zoomMax = 10.f;
-        _float trackingSpeed = 10.f; // 각도 보간을 위해 속도를 조금 높이는 것 추천 (기존 2.f -> 10.f)
+        _float trackingSpeed = 10.f;
         _float firstZoomSensor = 4.f;
         _float pitchMin = -35.f;
         _float pitchMax = 70.f;
@@ -20,7 +20,7 @@ public:
 
 protected:
     CPlayerCamera();
-    virtual ~CPlayerCamera(); // 가상 소멸자 권장
+    ~CPlayerCamera();
 
 public:
     static CPlayerCamera* Create();
