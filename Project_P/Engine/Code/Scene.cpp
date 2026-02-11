@@ -1438,11 +1438,57 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 		wstring format;
 	};
 
+	unordered_map<wstring, SceneResourceEntry> previousEntries;
+	{
+		ifstream prev(_filePath);
+		string line;
+		while (getline(prev, line))
+		{
+			if (line.empty() || CEngineString::Contains(line, "//") || !CEngineString::Contains(line, " : "))
+				continue;
+
+			auto split = CEngineString::Split(line, " : ");
+			if (split.size() < 3)
+				continue;
+
+			SceneResourceEntry e = {};
+			e.name = CEngineString::StringToWString(split[0]);
+			e.path = normalizePath(CEngineString::StringToWString(split[1]));
+			e.format = CEngineString::StringToWString(split[2]);
+			previousEntries[e.name] = e;
+		}
+	}
+
 	unordered_map<wstring, SceneResourceEntry> entries;
+
+	auto trimResourceSuffix = [](const wstring& resourceName)
+	{
+		static const vector<wstring> suffixes =
+		{
+			L" (Texture)",
+			L" (MeshBuffer)",
+			L" (Animation Clip)",
+			L" (Animator Controller)",
+			L" (Material)",
+			L" (SkyBox)"
+		};
+
+		for (const auto& suffix : suffixes)
+		{
+			if (resourceName.size() >= suffix.size())
+			{
+				size_t pos = resourceName.size() - suffix.size();
+				if (resourceName.compare(pos, suffix.size(), suffix) == 0)
+					return resourceName.substr(0, pos);
+			}
+		}
+
+		return resourceName;
+	};
 
 	auto addEntry = [&](const wstring& name, const wstring& path, const wstring& format)
 	{
-		if (name.empty() || path.empty())
+		if (name.empty())
 			return;
 
 		SceneResourceEntry entry = {};
@@ -1450,10 +1496,46 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 		entry.path = normalizePath(path);
 		entry.format = format;
 
-		if (entry.path.empty())
+		if (entry.path.empty() || entry.format.empty())
+		{
+			auto it = previousEntries.find(name);
+			if (it != previousEntries.end())
+			{
+				if (entry.path.empty())
+					entry.path = it->second.path;
+				if (entry.format.empty())
+					entry.format = it->second.format;
+			}
+		}
+
+		if (entry.path.empty() || entry.format.empty())
 			return;
 
-		entries[entry.name] = entry;
+		entries[name] = entry;
+	};
+
+	auto addResourceWithName = [&](const wstring& sceneName, CEngineResource* resource)
+	{
+		if (!resource || sceneName.empty())
+			return;
+
+		wstring format = L"";
+		if (dynamic_cast<CTexture*>(resource))
+			format = L"[Texture]";
+		else if (dynamic_cast<CSkinnedMeshBuffer*>(resource))
+			format = L"[Skinned Mesh]";
+		else if (dynamic_cast<CMeshBuffer*>(resource))
+			format = L"[Mesh]";
+		else if (auto clip = dynamic_cast<CAnimationClip*>(resource))
+		{
+			format = L"[Animation Clip]";
+			if (clip->IsLoop())
+				format += L" [Loop]";
+		}
+		else if (dynamic_cast<CAnimatorController*>(resource))
+			format = L"[Animator Controller]";
+
+		addEntry(sceneName, resource->Get_FilePath(), format);
 	};
 
 	auto addResource = [&](CEngineResource* resource)
@@ -1461,27 +1543,8 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 		if (!resource)
 			return;
 
-		const wstring resourceName = resource->Get_ResourceName();
-		const wstring filePath = resource->Get_FilePath();
-
-		if (filePath.empty())
-			return;
-
-		if (dynamic_cast<CTexture*>(resource))
-			addEntry(resourceName, filePath, L"[Texture]");
-		else if (dynamic_cast<CSkinnedMeshBuffer*>(resource))
-			addEntry(resourceName, filePath, L"[Skinned Mesh]");
-		else if (dynamic_cast<CMeshBuffer*>(resource))
-			addEntry(resourceName, filePath, L"[Mesh]");
-		else if (auto clip = dynamic_cast<CAnimationClip*>(resource))
-		{
-			wstring format = L"[Animation Clip]";
-			if (clip->IsLoop())
-				format += L" [Loop]";
-			addEntry(resourceName, filePath, format);
-		}
-		else if (dynamic_cast<CAnimatorController*>(resource))
-			addEntry(resourceName, filePath, L"[Animator Controller]");
+		const wstring sceneName = trimResourceSuffix(resource->Get_ResourceName());
+		addResourceWithName(sceneName, resource);
 	};
 
 	for (CGameObject* obj : m_lObjectList)
@@ -1511,8 +1574,8 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 
 			if (auto animator = dynamic_cast<CAnimator*>(component))
 			{
-				for (auto& [key, clip] : animator->Get_AnimationClipList())
-					addResource(clip);
+				for (auto& [clipName, clip] : animator->Get_AnimationClipList())
+					addResourceWithName(clipName, clip);
 			}
 		}
 	}
