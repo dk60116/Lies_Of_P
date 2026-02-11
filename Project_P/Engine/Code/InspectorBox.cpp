@@ -16,6 +16,8 @@
 #include "Text.h"
 
 #include <algorithm>
+#include <chrono>
+#include <fstream>
 #include <iomanip>
 #include <map>
 #include <sstream>
@@ -93,7 +95,165 @@ static void AddPathToTree(PathTreeNode& root, const string& relPath)
     node->fullPath = relPath;
 }
 
-static void RenderPathTreeRecursive(const PathTreeNode& node, const string& idPrefix, CMeshFilter* meshFilter)
+
+
+static string NormalizeSlashPath(const string& path)
+{
+    string result = path;
+    std::replace(result.begin(), result.end(), '\\', '/');
+    return result;
+}
+
+static string BuildMeshDataBaseName(const string& assetRelPath)
+{
+    const string normalized = NormalizeSlashPath(assetRelPath);
+    const size_t slash = normalized.find_last_of('/');
+    const string fileName = (slash == string::npos) ? normalized : normalized.substr(slash + 1);
+    const string folderPart = (slash == string::npos) ? string() : normalized.substr(0, slash);
+    const size_t folderSlash = folderPart.find_last_of('/');
+    const string folder = folderPart.empty() ? string("Root") : folderPart.substr(folderSlash == string::npos ? 0 : folderSlash + 1);
+    const size_t dot = fileName.find_last_of('.');
+    const string stem = (dot == string::npos) ? fileName : fileName.substr(0, dot);
+    return folder + "_" + stem;
+}
+
+static string MakeUniqueSceneEntryName(const string& base)
+{
+    const auto now = std::chrono::system_clock::now().time_since_epoch();
+    const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+    return base + "_Auto_" + to_string(ms);
+}
+
+static _bool EnsureSceneMeshEntry(const fs::path& scenePath, const string& assetRelPath, string& outEntryName)
+{
+    ifstream in(scenePath);
+    if (!in.is_open())
+        return false;
+
+    const string normalizedTarget = NormalizeSlashPath(assetRelPath);
+    string line;
+
+    while (getline(in, line))
+    {
+
+        if (line.empty() || CEngineString::Contains(line, "//") || !CEngineString::Contains(line, " : "))
+            continue;
+
+        vector<string> parts = CEngineString::Split(line, " : ");
+        if (parts.size() < 2)
+            continue;
+
+        const string filePath = NormalizeSlashPath(parts[1]);
+        if (filePath != normalizedTarget)
+            continue;
+
+        outEntryName = parts[0];
+        return true;
+    }
+
+    in.close();
+
+    outEntryName = MakeUniqueSceneEntryName(BuildMeshDataBaseName(normalizedTarget));
+
+    ofstream out(scenePath, ios::app);
+    if (!out.is_open())
+        return false;
+
+    out << outEntryName << " : " << normalizedTarget << " : [Mesh]" << "\n";
+    return true;
+}
+
+static _bool RemoveFirstMeshRendererComponent(CGameObject* obj)
+{
+    if (!obj)
+        return false;
+
+    list<CComponent*>& components = obj->Get_ComponentList();
+    for (auto it = components.begin(); it != components.end(); ++it)
+    {
+        if (CMeshRenderer* meshRenderer = dynamic_cast<CMeshRenderer*>(*it))
+        {
+            meshRenderer->OnDestroy();
+            Safe_Release(meshRenderer);
+            components.erase(it);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static void ApplyMeshSelectionToObject(CGameObject* obj, CMeshFilter* meshFilter, const string& relPath, const _bool selectedMeshData)
+{
+    if (!obj || !meshFilter)
+        return;
+
+    CScene* scene = CSceneManager::GetInstance().Get_CrtScene();
+    if (!scene)
+        return;
+
+    const string normalizedRelPath = NormalizeSlashPath(relPath);
+    string sceneEntryName = selectedMeshData ? fs::path(normalizedRelPath).stem().string() : string();
+
+    if (!selectedMeshData)
+    {
+        const fs::path scenePath = fs::path("../Assets/Scenes") / (CEngineString::WStringToString(scene->Get_SceneName()) + ".scene");
+        if (!EnsureSceneMeshEntry(scenePath, normalizedRelPath, sceneEntryName))
+            return;
+    }
+
+    const string expectedMeshDataFile = sceneEntryName + ".meshdata";
+    const fs::path expectedMeshDataPath = fs::path("BinaryAssets/MeshData") / expectedMeshDataFile;
+    const _bool meshDataExistsInitially = fs::exists(expectedMeshDataPath);
+
+    const wstring sceneMeshResourceName = CEngineString::StringToWString(sceneEntryName + " (MeshBuffer)");
+
+    if (meshDataExistsInitially)
+    {
+        vector<MeshBundle> bundles = CResources::GetInstance().LoadMeshBuffersOnScene(sceneMeshResourceName);
+        if (bundles.empty())
+            return;
+
+        meshFilter->Set_MeshBuffer(nullptr);
+        RemoveFirstMeshRendererComponent(obj);
+        obj->CreateMeshHierachy(bundles, 0.01f);
+        return;
+    }
+
+    if (selectedMeshData)
+        return;
+
+    CResources::GetInstance().ConvertFBXToMeshBufferData(CEngineString::StringToWString(normalizedRelPath));
+
+    const string convertedBase = BuildMeshDataBaseName(normalizedRelPath);
+    const fs::path convertedMeshDataPath = fs::path("BinaryAssets/MeshData") / (convertedBase + ".meshdata");
+    if (!fs::exists(convertedMeshDataPath))
+        return;
+
+    if (convertedMeshDataPath != expectedMeshDataPath)
+    {
+        error_code ec;
+        fs::copy_file(convertedMeshDataPath, expectedMeshDataPath, fs::copy_options::overwrite_existing, ec);
+        if (ec)
+            return;
+    }
+
+    vector<CMeshBuffer::MeshBufferInitiaizeInfo> meshInfos = CResources::GetInstance().ReadMeshBufferInfos(CEngineString::StringToWString(expectedMeshDataFile));
+    if (meshInfos.empty())
+        return;
+
+    CResources::GetInstance().CreateSceneMeshBundle(sceneMeshResourceName, meshInfos, FILTER_MESHBUFFER | FILTER_MATERIAL, nullptr, false);
+
+    vector<MeshBundle> bundles = CResources::GetInstance().LoadMeshBuffersOnScene(sceneMeshResourceName);
+    if (bundles.empty())
+        return;
+
+    meshFilter->Set_MeshBuffer(nullptr);
+    RemoveFirstMeshRendererComponent(obj);
+    obj->CreateMeshHierachy(bundles, 0.01f);
+}
+
+static void RenderPathTreeRecursive(const PathTreeNode& node, const string& idPrefix, CGameObject* obj, CMeshFilter* meshFilter, const _bool selectedMeshData)
 {
     for (const auto& childPair : node.children)
     {
@@ -104,7 +264,7 @@ static void RenderPathTreeRecursive(const PathTreeNode& node, const string& idPr
         {
             const string label = name + "##" + idPrefix + child.fullPath;
             if (ImGui::Selectable(label.c_str(), false))
-                meshFilter->Set_MeshBuffer(nullptr);
+                ApplyMeshSelectionToObject(obj, meshFilter, child.fullPath, selectedMeshData);
             continue;
         }
 
@@ -112,13 +272,13 @@ static void RenderPathTreeRecursive(const PathTreeNode& node, const string& idPr
         const string label = name + "##" + idPrefix + nodeKey;
         if (ImGui::TreeNode(label.c_str()))
         {
-            RenderPathTreeRecursive(child, idPrefix, meshFilter);
+            RenderPathTreeRecursive(child, idPrefix, obj, meshFilter, selectedMeshData);
             ImGui::TreePop();
         }
     }
 }
 
-static void RenderPathTreeList(const vector<string>& files, const string& idPrefix, CMeshFilter* meshFilter, const string& emptyText)
+static void RenderPathTreeList(const vector<string>& files, const string& idPrefix, CGameObject* obj, CMeshFilter* meshFilter, const _bool selectedMeshData, const string& emptyText)
 {
     if (files.empty())
     {
@@ -130,7 +290,7 @@ static void RenderPathTreeList(const vector<string>& files, const string& idPref
     for (const string& relPath : files)
         AddPathToTree(root, relPath);
 
-    RenderPathTreeRecursive(root, idPrefix, meshFilter);
+    RenderPathTreeRecursive(root, idPrefix, obj, meshFilter, selectedMeshData);
 }
 
 CInspectorBox::CInspectorBox()
@@ -740,7 +900,7 @@ void CInspectorBox::RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _m
     if (ImGui::TreeNode("Assets .fbx"))
     {
         if (ImGui::BeginChild("##fbx_tree_box", ImVec2(0.f, 180.f), true))
-            RenderPathTreeList(fbxFiles, "fbx_tree_", _meshFilter, "(No .fbx files)");
+            RenderPathTreeList(fbxFiles, "fbx_tree_", _obj, _meshFilter, false, "(No .fbx files)");
         ImGui::EndChild();
         ImGui::TreePop();
     }
@@ -748,7 +908,7 @@ void CInspectorBox::RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _m
     if (ImGui::TreeNode("BinaryAssets .meshdata"))
     {
         if (ImGui::BeginChild("##meshdata_tree_box", ImVec2(0.f, 180.f), true))
-            RenderPathTreeList(meshDataFiles, "meshdata_tree_", _meshFilter, "(No .meshdata files)");
+            RenderPathTreeList(meshDataFiles, "meshdata_tree_", _obj, _meshFilter, true, "(No .meshdata files)");
         ImGui::EndChild();
         ImGui::TreePop();
     }
