@@ -13,6 +13,7 @@
 #include "Canvas.h"
 #include "Terrain.h"
 
+#include <algorithm>
 #include <iomanip>
 #include <sstream>
 
@@ -515,14 +516,105 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
         if (!component)
             continue;
 
-        const string componentName = CEngineString::WStringToString(component->Get_UName());
+        string componentName = CEngineString::WStringToString(component->Get_UName());
         if (componentName.empty())
             continue;
 
-        ImGui::BulletText("%s", componentName.c_str());
+        const string headerLabel = componentName + "##" + to_string(reinterpret_cast<uintptr_t>(component));
+        if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            if (CMeshRenderer* meshRenderer = dynamic_cast<CMeshRenderer*>(component))
+                RenderMeshRendererComponent(meshRenderer);
+
+            if (CMeshFilter* meshFilter = dynamic_cast<CMeshFilter*>(component))
+                RenderMeshFilterComponent(_obj, meshFilter);
+        }
     }
 
     ShowAddComponentMenu(_obj);
+}
+
+void CInspectorBox::RenderMeshRendererComponent(CMeshRenderer* _meshRenderer)
+{
+    if (!_meshRenderer)
+        return;
+
+    CMeshFilter* meshFilter = _meshRenderer->Get_MeshFilter();
+    if (!meshFilter)
+    {
+        ImGui::TextUnformatted("MeshFilter: None");
+        return;
+    }
+
+    ImGui::TextUnformatted("MeshFilter: Linked");
+
+    CMeshBuffer* meshBuffer = meshFilter->Get_MeshBuffer();
+    if (!meshBuffer)
+    {
+        ImGui::TextUnformatted("MeshBuffer: None");
+        return;
+    }
+
+    string meshName = CEngineString::WStringToString(meshBuffer->Get_ResourceName());
+    ImGui::Text("MeshBuffer: %s", meshName.c_str());
+}
+
+void CInspectorBox::RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _meshFilter)
+{
+    if (!_obj || !_meshFilter)
+        return;
+
+    vector<pair<string, CMeshBuffer*>> meshOptions;
+    CResources& resources = CResources::GetInstance();
+
+    for (auto& entry : resources.m_mGameResourceList)
+    {
+        CMeshBuffer* meshBuffer = dynamic_cast<CMeshBuffer*>(entry.second);
+        if (!meshBuffer)
+            continue;
+
+        string resourceName = CEngineString::WStringToString(meshBuffer->Get_ResourceName());
+        meshOptions.push_back({ resourceName, meshBuffer });
+    }
+
+    sort(meshOptions.begin(), meshOptions.end(), [](const auto& a, const auto& b)
+    {
+        return a.first < b.first;
+    });
+
+    CMeshBuffer* currentMeshBuffer = _meshFilter->Get_MeshBuffer();
+    string currentName = "None";
+    _int currentIndex = -1;
+
+    for (_uint i = 0; i < meshOptions.size(); ++i)
+    {
+        if (meshOptions[i].second == currentMeshBuffer)
+        {
+            currentIndex = static_cast<_int>(i);
+            currentName = meshOptions[i].first;
+            break;
+        }
+    }
+
+    const string comboLabel = "MeshBuffer##" + to_string(_obj->Get_UniqueID()) + "_" + to_string(reinterpret_cast<uintptr_t>(_meshFilter));
+
+    if (ImGui::BeginCombo(comboLabel.c_str(), currentName.c_str()))
+    {
+        if (ImGui::Selectable("None", currentMeshBuffer == nullptr))
+            _meshFilter->Set_MeshBuffer(nullptr);
+
+        for (_uint i = 0; i < meshOptions.size(); ++i)
+        {
+            const bool selected = (static_cast<_int>(i) == currentIndex);
+            if (ImGui::Selectable(meshOptions[i].first.c_str(), selected))
+                _meshFilter->Set_MeshBuffer(meshOptions[i].second);
+
+            if (selected)
+                ImGui::SetItemDefaultFocus();
+        }
+
+        ImGui::EndCombo();
+    }
 }
 
 void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
