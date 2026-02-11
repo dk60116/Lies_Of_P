@@ -111,9 +111,7 @@ void CCanvas::OnDestroy()
 void CCanvas::Add_UIObject(CUI* _ui)
 {
 	if (_ui)
-	{
 		m_lUIObjectList.push_back(_ui);
-	}
 }
 
 void CCanvas::Remove_UIObject(CUI* _ui)

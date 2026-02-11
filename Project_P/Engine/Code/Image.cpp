@@ -90,6 +90,7 @@ void CImage::OnDestroy()
 	__super::OnDestroy();
 
 	Safe_Release(m_pTexture);
+	Safe_Release(m_pImageBuffer);
 }
 
 const CImage::FillMethod CImage::Get_FillMethod() const
