@@ -289,6 +289,8 @@ CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateLine()
     desc.vertexSize = sizeof(VertexTexNormalTangentBuffer);
     desc.vertextCount = _countof(lineVertices);
     desc.indexCount = 0;
+    desc.boundingBox.Center = _float3(0.f, 0.f, 0.f);
+    desc.boundingBox.Extents = _float3(length, 0.f, 0.f);
 
     info.buffer.assign(reinterpret_cast<uint8_t*>(lineVertices), reinterpret_cast<uint8_t*>(lineVertices) + sizeof(lineVertices));
 
@@ -320,6 +322,8 @@ CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateLineRect()
     desc.vertexSize = sizeof(VertexTexNormalTangentBuffer);
     desc.vertextCount = _countof(rectVertices);
     desc.indexCount = 0;
+    desc.boundingBox.Center = _float3(0.f, 0.f, 0.f);
+    desc.boundingBox.Extents = _float3(length, length, 0.f);
 
     info.buffer.assign(reinterpret_cast<uint8_t*>(rectVertices), reinterpret_cast<uint8_t*>(rectVertices) + sizeof(rectVertices));
     info.desc = desc;
@@ -351,6 +355,8 @@ CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateRect()
     desc.vertexSize = sizeof(VertexTexColorBuffer);
     desc.vertextCount = _countof(quadVertices);
     desc.indexCount = _countof(quadIndices);
+    desc.boundingBox.Center = _float3(0.f, 0.f, 0.f);
+    desc.boundingBox.Extents = _float3(length, length, 0.f);
 
     info.buffer.assign(reinterpret_cast<uint8_t*>(quadVertices), reinterpret_cast<uint8_t*>(quadVertices) + sizeof(quadVertices));
     info.indices.assign(begin(quadIndices), end(quadIndices));
@@ -470,6 +476,8 @@ CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateQuad()
     desc.vertexSize = sizeof(VertexTexNormalTangentBuffer);
     desc.vertextCount = _countof(quadVertices);
     desc.indexCount = _countof(quadIndices);
+    desc.boundingBox.Center = _float3(0.f, 0.f, 0.f);
+    desc.boundingBox.Extents = _float3(length, length, 0.f);
 
     info.buffer.assign(reinterpret_cast<uint8_t*>(quadVertices),reinterpret_cast<uint8_t*>(quadVertices) + sizeof(quadVertices));
     info.indices.assign(begin(quadIndices), end(quadIndices));
@@ -522,6 +530,8 @@ CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateTriangle()
     desc.vertexSize = sizeof(VTX);
     desc.vertextCount = _countof(triVerts);
     desc.indexCount = _countof(triIndices);
+    desc.boundingBox.Center = _float3(0.f, 0.f, 0.f);
+    desc.boundingBox.Extents = _float3(length, length, 0.f);
 
     info.desc = desc;
 
