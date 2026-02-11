@@ -140,20 +140,6 @@ void CHierachyBox::Render()
 		ImGui::InputTextWithHint("##HierarchySearch", "Search...", m_searchBuffer.data(), m_searchBuffer.size());
 		ImGui::Separator();
 
-		if (ImGui::BeginPopupContextWindow("HierarchyContextMenu", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
-		{
-			if (ImGui::MenuItem("Create Empty"))
-			{
-				if (CGameObject* created = CreateEmptyObject(currentScene, nullptr))
-				{
-					m_lastSelectedGameObject = created;
-					m_scrollToSelected = true;
-					m_openToSelected = true;
-				}
-			}
-			ImGui::EndPopup();
-		}
-
 		const string filterText = TrimCopy(m_searchBuffer.data());
 		const string filterLower = ToLowerCopy(filterText);
 		CGameObject* selectedObject = editor.Get_SelectedGameObject();
@@ -168,6 +154,20 @@ void CHierachyBox::Render()
 		{
 			for (auto& obj : currentScene->Get_RootObjects())
 				RenderObjectHierarchy(obj, filterLower);
+
+			if (ImGui::BeginPopupContextWindow("HierarchyScrollContextMenu", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+			{
+				if (ImGui::MenuItem("Create Empty"))
+				{
+					if (CGameObject* created = CreateEmptyObject(currentScene, nullptr))
+					{
+						m_lastSelectedGameObject = created;
+						m_scrollToSelected = true;
+						m_openToSelected = true;
+					}
+				}
+				ImGui::EndPopup();
+			}
 		}
 		ImGui::EndChild();
 	}
