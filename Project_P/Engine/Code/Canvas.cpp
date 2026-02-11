@@ -100,6 +100,8 @@ void CCanvas::Render()
 
 void CCanvas::OnDestroy()
 {
+	__super::OnDestroy();
+
 	Safe_Release(m_pRectTransform);
 	m_lUIObjectList.clear();
 }
