@@ -935,6 +935,90 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			}
 		}
 	}
+
+	auto splitPath = [](const wstring& path)
+	{
+		vector<wstring> parts;
+		size_t start = 0;
+		while (start < path.size())
+		{
+			size_t slash = path.find(L'/', start);
+			if (slash == wstring::npos)
+				slash = path.size();
+			if (slash > start)
+				parts.push_back(path.substr(start, slash - start));
+			start = slash + 1;
+		}
+		return parts;
+	};
+
+	auto findObjectByPath = [&](const wstring& path)
+	{
+		for (TRAVERSAL_ITER(m_lObjectList, itObj))
+		{
+			CGameObject* obj = *itObj;
+			if (obj->m_iUniqueID == 0)
+				continue;
+			if (buildPath(obj) == path)
+				return obj;
+		}
+		return static_cast<CGameObject*>(nullptr);
+	};
+
+	_bool createdAny = true;
+	while (createdAny)
+	{
+		createdAny = false;
+		for (size_t i = 0; i < _infoList.size(); ++i)
+		{
+			if (usedInfo[i])
+				continue;
+
+			const auto& info = _infoList[i];
+			if (info.objPath.empty())
+				continue;
+
+			if (findObjectByPath(info.objPath))
+			{
+				usedInfo[i] = true;
+				continue;
+			}
+
+			vector<wstring> parts = splitPath(info.objPath);
+			if (parts.empty())
+				continue;
+
+			wstring parentPath;
+			for (size_t partIdx = 0; partIdx + 1 < parts.size(); ++partIdx)
+			{
+				if (!parentPath.empty())
+					parentPath += L"/";
+				parentPath += parts[partIdx];
+			}
+
+			CGameObject* parentObj = nullptr;
+			if (!parentPath.empty())
+			{
+				parentObj = findObjectByPath(parentPath);
+				if (!parentObj)
+					continue;
+			}
+
+			CGameObject* newObj = Add_GameObject(parts.back());
+			if (!newObj)
+				continue;
+
+			if (parentObj)
+				newObj->Get_Transform()->SetParent(parentObj->Get_Transform());
+
+			if (!info.objGuid.empty())
+				newObj->m_strGuid = info.objGuid;
+
+			applyInfo(newObj, info);
+			usedInfo[i] = true;
+			createdAny = true;
+		}
+	}
 }
 
 CEngineResource* CScene::Add_Resource(const wstring& _name, CEngineResource* _resource)
