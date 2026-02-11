@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <iomanip>
+#include <map>
 #include <sstream>
 
 static vector<string> CollectRelativeFilesByExtension(const fs::path& root, const string& extension)
@@ -50,6 +51,86 @@ static vector<string> CollectRelativeFilesByExtension(const fs::path& root, cons
 
     sort(files.begin(), files.end());
     return files;
+}
+
+struct PathTreeNode
+{
+    map<string, PathTreeNode> children;
+    _bool isFile = false;
+    string fullPath;
+};
+
+static vector<string> SplitBySlash(const string& input)
+{
+    vector<string> parts;
+    size_t start = 0;
+
+    while (start <= input.size())
+    {
+        const size_t pos = input.find('/', start);
+        const size_t len = (pos == string::npos) ? input.size() - start : pos - start;
+        if (len > 0)
+            parts.push_back(input.substr(start, len));
+
+        if (pos == string::npos)
+            break;
+
+        start = pos + 1;
+    }
+
+    return parts;
+}
+
+static void AddPathToTree(PathTreeNode& root, const string& relPath)
+{
+    vector<string> segments = SplitBySlash(relPath);
+    PathTreeNode* node = &root;
+
+    for (const string& segment : segments)
+        node = &node->children[segment];
+
+    node->isFile = true;
+    node->fullPath = relPath;
+}
+
+static void RenderPathTreeRecursive(const PathTreeNode& node, const string& idPrefix, CMeshFilter* meshFilter)
+{
+    for (const auto& childPair : node.children)
+    {
+        const string& name = childPair.first;
+        const PathTreeNode& child = childPair.second;
+
+        if (child.children.empty() && child.isFile)
+        {
+            const string label = name + "##" + idPrefix + child.fullPath;
+            if (ImGui::Selectable(label.c_str(), false))
+                meshFilter->Set_MeshBuffer(nullptr);
+            continue;
+        }
+
+        const string nodeKey = child.fullPath.empty() ? name : child.fullPath;
+        const string label = name + "##" + idPrefix + nodeKey;
+        if (ImGui::TreeNode(label.c_str()))
+        {
+            RenderPathTreeRecursive(child, idPrefix, meshFilter);
+            ImGui::TreePop();
+        }
+    }
+}
+
+static void RenderPathTreeList(const vector<string>& files, const string& idPrefix, CMeshFilter* meshFilter, const string& emptyText)
+{
+    if (files.empty())
+    {
+        ImGui::Selectable(emptyText.c_str(), false, ImGuiSelectableFlags_Disabled);
+        return;
+    }
+
+    PathTreeNode root;
+    for (const string& relPath : files)
+        AddPathToTree(root, relPath);
+
+    RenderPathTreeRecursive(root, idPrefix, meshFilter);
 }
 
 CInspectorBox::CInspectorBox()
@@ -653,34 +734,16 @@ void CInspectorBox::RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _m
                 ImGui::SetItemDefaultFocus();
         }
 
-        ImGui::SeparatorText("Assets .fbx");
-        if (fbxFiles.empty())
+        if (ImGui::TreeNode("Assets .fbx"))
         {
-            ImGui::Selectable("(No .fbx files)", false, ImGuiSelectableFlags_Disabled);
-        }
-        else
-        {
-            for (_uint i = 0; i < fbxFiles.size(); ++i)
-            {
-                const string itemLabel = fbxFiles[i] + "##fbx_" + to_string(i);
-                if (ImGui::Selectable(itemLabel.c_str(), false))
-                    _meshFilter->Set_MeshBuffer(nullptr);
-            }
+            RenderPathTreeList(fbxFiles, "fbx_tree_", _meshFilter, "(No .fbx files)");
+            ImGui::TreePop();
         }
 
-        ImGui::SeparatorText("BinaryAssets .meshdata");
-        if (meshDataFiles.empty())
+        if (ImGui::TreeNode("BinaryAssets .meshdata"))
         {
-            ImGui::Selectable("(No .meshdata files)", false, ImGuiSelectableFlags_Disabled);
-        }
-        else
-        {
-            for (_uint i = 0; i < meshDataFiles.size(); ++i)
-            {
-                const string itemLabel = meshDataFiles[i] + "##meshdata_" + to_string(i);
-                if (ImGui::Selectable(itemLabel.c_str(), false))
-                    _meshFilter->Set_MeshBuffer(nullptr);
-            }
+            RenderPathTreeList(meshDataFiles, "meshdata_tree_", _meshFilter, "(No .meshdata files)");
+            ImGui::TreePop();
         }
 
         ImGui::EndCombo();
