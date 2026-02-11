@@ -656,7 +656,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 3;
+	const _uint version = 4;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -695,6 +695,16 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 			out.write(reinterpret_cast<const char*>(&info.rectInfo.pivot), sizeof(_float2));
 			out.write(reinterpret_cast<const char*>(&info.rectInfo.anchorMin), sizeof(_float2));
 			out.write(reinterpret_cast<const char*>(&info.rectInfo.anchorMax), sizeof(_float2));
+		}
+
+		_uint componentCount = static_cast<_uint>(info.componentNames.size());
+		out.write(reinterpret_cast<const char*>(&componentCount), sizeof(_uint));
+		for (const auto& componentName : info.componentNames)
+		{
+			_uint componentNameSize = static_cast<_uint>(componentName.size());
+			out.write(reinterpret_cast<const char*>(&componentNameSize), sizeof(_uint));
+			if (componentNameSize > 0)
+				out.write(reinterpret_cast<const char*>(componentName.data()), sizeof(wchar_t) * componentNameSize);
 		}
 	}
 
@@ -793,6 +803,26 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 			in.read(reinterpret_cast<char*>(&info.rectInfo.pivot), sizeof(_float2));
 			in.read(reinterpret_cast<char*>(&info.rectInfo.anchorMin), sizeof(_float2));
 			in.read(reinterpret_cast<char*>(&info.rectInfo.anchorMax), sizeof(_float2));
+		}
+
+		if (version >= 4)
+		{
+			_uint componentCount = 0;
+			in.read(reinterpret_cast<char*>(&componentCount), sizeof(_uint));
+			info.componentNames.reserve(componentCount);
+			for (_uint c = 0; c < componentCount; ++c)
+			{
+				_uint componentNameSize = 0;
+				in.read(reinterpret_cast<char*>(&componentNameSize), sizeof(_uint));
+				if (componentNameSize > 0)
+				{
+					wstring componentName(componentNameSize, L'\0');
+					in.read(reinterpret_cast<char*>(&componentName[0]), sizeof(wchar_t) * componentNameSize);
+					info.componentNames.push_back(move(componentName));
+				}
+				else
+					info.componentNames.push_back(L"");
+			}
 		}
 
 		resultInfo.push_back(info);

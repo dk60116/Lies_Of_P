@@ -18,6 +18,7 @@ protected:
 
 public:
 	const wstring& Get_ResourceName() const;
+	const wstring& Get_FilePath() const;
 	void Set_ResourceName(const wstring& _name);
 
 protected:

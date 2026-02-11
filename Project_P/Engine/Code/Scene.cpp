@@ -1,6 +1,13 @@
 #include "epch.h"
 #include "Scene.h"
 #include "EditorCamera.h"
+#include "MeshFilter.h"
+#include "Renderer.h"
+#include "Material.h"
+#include "Texture.h"
+#include "Animator.h"
+#include "AnimationClip.h"
+#include "AnimatorController.h"
 #include <unordered_map>
 
 namespace
@@ -438,8 +445,8 @@ void CScene::Update_Editor()
 	{
 		if (CInput::GetInstance().GetKeyDown_Editor(S))
 		{
-			wstring path = L"BinaryAssets/SceneData/" + m_strSceneName + L".scenedata";
-			CResources::GetInstance().SaveSceneObjectTransformInfos(path, Convert_ObjectsTransformInfo());
+			wstring scenePath = L"../Assets/Scenes/" + m_strSceneName + L".scene";
+			SaveScene(scenePath);
 		}
 	}
 }
@@ -823,6 +830,17 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			rectInfo.anchorMax = rect->Get_Anchors().max;
 
 			info.rectInfo = rectInfo;
+		}
+
+		for (CComponent* component : (*it)->Get_ComponentList())
+		{
+			if (!component)
+				continue;
+
+			if (dynamic_cast<CTransform*>(component) || dynamic_cast<CRectTransform*>(component))
+				continue;
+
+			info.componentNames.push_back(component->Get_UName());
 		}
 
 		if (i > 0 && !(*it)->m_bIsBoneTransform)
@@ -1400,6 +1418,136 @@ CCanvas* CScene::Add_Canvas(CCanvas* _canvas)
 
 HRESULT CScene::SaveScene(const wstring& _filePath)
 {
+	wstring sceneDataPath = L"BinaryAssets/SceneData/" + m_strSceneName + L".scenedata";
+	if (FAILED(CResources::GetInstance().SaveSceneObjectTransformInfos(sceneDataPath, Convert_ObjectsTransformInfo())))
+		return E_FAIL;
+
+	auto normalizePath = [](wstring path)
+	{
+		path = CEngineString::Replace(path, L"\\", L"/");
+		const wstring prefix = L"../Assets/";
+		if (path.rfind(prefix, 0) == 0)
+			path = path.substr(prefix.size());
+		return path;
+	};
+
+	struct SceneResourceEntry
+	{
+		wstring name;
+		wstring path;
+		wstring format;
+	};
+
+	unordered_map<wstring, SceneResourceEntry> entries;
+
+	auto addEntry = [&](const wstring& name, const wstring& path, const wstring& format)
+	{
+		if (name.empty() || path.empty())
+			return;
+
+		SceneResourceEntry entry = {};
+		entry.name = name;
+		entry.path = normalizePath(path);
+		entry.format = format;
+
+		if (entry.path.empty())
+			return;
+
+		entries[entry.name] = entry;
+	};
+
+	auto addResource = [&](CEngineResource* resource)
+	{
+		if (!resource)
+			return;
+
+		const wstring resourceName = resource->Get_ResourceName();
+		const wstring filePath = resource->Get_FilePath();
+
+		if (filePath.empty())
+			return;
+
+		if (dynamic_cast<CTexture*>(resource))
+			addEntry(resourceName, filePath, L"[Texture]");
+		else if (dynamic_cast<CSkinnedMeshBuffer*>(resource))
+			addEntry(resourceName, filePath, L"[Skinned Mesh]");
+		else if (dynamic_cast<CMeshBuffer*>(resource))
+			addEntry(resourceName, filePath, L"[Mesh]");
+		else if (auto clip = dynamic_cast<CAnimationClip*>(resource))
+		{
+			wstring format = L"[Animation Clip]";
+			if (clip->IsLoop())
+				format += L" [Loop]";
+			addEntry(resourceName, filePath, format);
+		}
+		else if (dynamic_cast<CAnimatorController*>(resource))
+			addEntry(resourceName, filePath, L"[Animator Controller]");
+	};
+
+	for (CGameObject* obj : m_lObjectList)
+	{
+		if (!obj)
+			continue;
+
+		for (CComponent* component : obj->Get_ComponentList())
+		{
+			if (!component)
+				continue;
+
+			if (CMeshFilter* meshFilter = dynamic_cast<CMeshFilter*>(component))
+				addResource(meshFilter->Get_MeshBuffer());
+
+			if (CRenderer* renderer = dynamic_cast<CRenderer*>(component))
+			{
+				CMaterial* material = renderer->Get_Material();
+				addResource(material);
+
+				if (material)
+				{
+					for (_uint i = 0; i < material->Get_TextureCount(); ++i)
+						addResource(material->Get_Texture(static_cast<_int>(i)));
+				}
+			}
+
+			if (auto animator = dynamic_cast<CAnimator*>(component))
+			{
+				for (auto& [key, clip] : animator->Get_AnimationClipList())
+					addResource(clip);
+			}
+		}
+	}
+
+	vector<SceneResourceEntry> sortedEntries;
+	sortedEntries.reserve(entries.size());
+	for (auto& [key, value] : entries)
+		sortedEntries.push_back(value);
+
+	sort(sortedEntries.begin(), sortedEntries.end(), [](const SceneResourceEntry& a, const SceneResourceEntry& b)
+	{
+		return a.name < b.name;
+	});
+
+	ofstream out(_filePath);
+	if (!out.is_open())
+	{
+		CDebug::LogError(L"SaveScene failed - can not open: " + _filePath);
+		return E_FAIL;
+	}
+
+	out << "SceneName : " << CEngineString::WStringToString(m_strSceneName) << "\n";
+	for (const auto& entry : sortedEntries)
+	{
+		out
+			<< CEngineString::WStringToString(entry.name)
+			<< " : "
+			<< CEngineString::WStringToString(entry.path)
+			<< " : "
+			<< CEngineString::WStringToString(entry.format)
+			<< "\n";
+	}
+
+	out.close();
+
 	return S_OK;
 }
 

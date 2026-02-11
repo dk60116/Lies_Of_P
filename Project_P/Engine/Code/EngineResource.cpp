@@ -25,6 +25,11 @@ const wstring& CEngineResource::Get_ResourceName() const
 	return m_strResourceName;
 }
 
+const wstring& CEngineResource::Get_FilePath() const
+{
+	return m_strFilePath;
+}
+
 void CEngineResource::Set_ResourceName(const wstring& _name)
 {
 	m_strResourceName = _name;

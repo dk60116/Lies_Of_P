@@ -32,6 +32,7 @@ public:
         _float3 localScale = {};
         _bool isRect = false;
         SCENERECTINFO rectInfo = {};
+        vector<wstring> componentNames = {};
     }SCENETRANSFORMINFO;
 
 public:
