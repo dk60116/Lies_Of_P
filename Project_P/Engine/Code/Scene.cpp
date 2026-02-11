@@ -33,7 +33,7 @@ namespace
 		else if ((skinnedRenderer = selected->GetComponent<CSkinnedMeshRenderer>()))
 		{
 			meshBuffer = skinnedRenderer->Get_MeshBuffer();
-			scaleFactor = skinnedRenderer->GetScaleFactor();
+			scaleFactor = 1.f;
 
 			vector<CTransform*>& rootBones = skinnedRenderer->GetRootBons();
 			if (!rootBones.empty() && rootBones[0])
@@ -46,8 +46,8 @@ namespace
 		const CMeshBuffer::MESHBUFFERDESC& desc = meshBuffer->Get_Info();
 		const BoundingBox& localBox = desc.boundingBox;
 
-		_vector center = XMVectorScale(XMLoadFloat3(&localBox.Center), scaleFactor);
-		_vector extents = XMVectorScale(XMLoadFloat3(&localBox.Extents), scaleFactor);
+		_vector center = XMLoadFloat3(&localBox.Center);
+		_vector extents = XMLoadFloat3(&localBox.Extents);
 
 		_vector offsets[8] =
 		{
@@ -92,7 +92,8 @@ namespace
 				for (_uint i = 0; i < 8; ++i)
 				{
 					_vector localCorner = center + XMVectorMultiply(offsets[i], extents);
-					worldCorners[i] = XMVector3Transform(localCorner, objectWorld);
+					_vector scaledCorner = XMVectorScale(localCorner, scaleFactor);
+					worldCorners[i] = XMVector3Transform(scaledCorner, objectWorld);
 				}
 			}
 			else
@@ -112,7 +113,8 @@ namespace
 			for (_uint i = 0; i < 8; ++i)
 			{
 				_vector localCorner = center + XMVectorMultiply(offsets[i], extents);
-				worldCorners[i] = XMVector3Transform(localCorner, objectWorld);
+				_vector scaledCorner = XMVectorScale(localCorner, scaleFactor);
+				worldCorners[i] = XMVector3Transform(scaledCorner, objectWorld);
 			}
 		}
 
