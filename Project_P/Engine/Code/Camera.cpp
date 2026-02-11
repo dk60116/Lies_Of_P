@@ -246,6 +246,9 @@ void CCamera::OnDestroy()
 
 	Safe_Release(m_pPickStaging);
 	Safe_Release(m_pMainLight);
+
+	if (auto scene = CSceneManager::GetInstance().Get_CrtScene())
+		scene->Remove_Camera(this);
 }
 
 _matrix CCamera::Get_ViewMatrix() const

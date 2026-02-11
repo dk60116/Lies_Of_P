@@ -59,6 +59,7 @@ public:
     virtual void Render_Editor();
     virtual void Render_Game();
     virtual void SceneRelease();
+    virtual void EndFrame();
 
 protected:
     void RenderSkyBox(class CCamera* _camera);
@@ -100,6 +101,7 @@ public:
     CCamera* Get_EditorCamera() const;
     const list <CCamera*>& Get_CameraList();
     CCamera* Add_Camera(CCamera* _camera);
+    void Remove_Camera(CCamera* _camera);
 
     const list<class CLight*>& Get_LightList();
     CLight* Add_Light(CLight* _light);

@@ -399,6 +399,15 @@ void CScene::Update_Editor()
 	PickObjectInEditor_End();
 	PickObjectInEditor_Start();
 
+	if (CInput::GetInstance().GetKeyDown_Editor(KEY_DELETE))
+	{
+		if (auto selected = CEditor::GetInstance().Get_SelectedGameObject())
+		{
+			selected->Destroy();
+			CEditor::GetInstance().Set_SelectedGameObject(nullptr);
+		}
+	}
+
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->Update_Editor();
 
@@ -724,6 +733,22 @@ void CScene::SceneRelease()
 
 	Safe_Release(m_pDevice);
 	Safe_Release(m_pContext);
+}
+
+void CScene::EndFrame()
+{
+	for (auto it = m_lObjectList.begin(); it != m_lObjectList.end(); )
+	{
+		CGameObject* obj = *it;
+
+		if (obj && obj->m_bKill)
+		{
+			Safe_Release(obj);
+			it = m_lObjectList.erase(it); 
+		}
+		else
+			++it;
+	}
 }
 
 void CScene::RenderSkyBox(CCamera* _camera)
@@ -1315,6 +1340,12 @@ CCamera* CScene::Add_Camera(CCamera* _camera)
 		return nullptr;
 
 	return m_lCameraList.back();
+}
+
+void CScene::Remove_Camera(CCamera* _camera)
+{
+	if (_camera)
+		m_lCameraList.remove(_camera);
 }
 
 const list<CLight*>& CScene::Get_LightList()

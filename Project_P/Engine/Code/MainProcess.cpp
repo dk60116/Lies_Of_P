@@ -95,6 +95,8 @@ void CMainProcess::Update_MainApp()
         scene->Render_Game();
         graphicDev.Present();
 
+        scene->EndFrame();
+
 #ifndef _CLIENT_BUILD
         graphicDev.Set_RenderTarget(CEditor::GetInstance().Get_EditorWindow());
 

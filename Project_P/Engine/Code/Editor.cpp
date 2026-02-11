@@ -110,12 +110,10 @@ HWND CEditor::Get_EditorWindow()
 
 void CEditor::Editor_Update_Begin()
 {
-	// 1.  
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
-	// 2. Hierarchy/Inspector ڽ 
 	for (TRAVERSAL_ITER(m_mBoxList, it))
 		(*it).second->Render();
 }
@@ -126,7 +124,7 @@ void CEditor::Editor_Update_During()
 
 	if (m_bIsMovingCamera)
 	{
-		const float dt = CTime::GetInstance().Get_DeltaTime();
+		const _float dt = CTime::GetInstance().Get_DeltaTime();
 		m_fCameraMoveProgress += dt / m_fCameraMoveDuration;
 
 		if (m_fCameraMoveProgress >= 1.f)
@@ -135,7 +133,7 @@ void CEditor::Editor_Update_During()
 			m_bIsMovingCamera = false;
 		}
 
-		float t = m_fCameraMoveProgress;
+		_float t = m_fCameraMoveProgress;
 		t = t * t * (3.f - 2.f * t);
 
 		vector3 interpPos = vector3::Lerp(m_vCameraMoveStartPos, m_vCameraMoveTargetPos, t);

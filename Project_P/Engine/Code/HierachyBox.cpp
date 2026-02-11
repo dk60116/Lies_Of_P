@@ -218,17 +218,17 @@ bool CHierachyBox::IsAncestorOfSelected(CGameObject* _obj, CGameObject* selected
 	return false;
 }
 
-void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& filterLower)
+void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filterLower)
 {
 	if (!_obj)
 		return;
 
 	CEditor& editor = CEditor::GetInstance();
-	const bool filterActive = !filterLower.empty();
+	const _bool filterActive = !_filterLower.empty();
 	CGameObject* selectedObject = editor.Get_SelectedGameObject();
 
 	string name = CEngineString::WStringToString(_obj->Get_ObjectName());
-	const bool matchesFilter = ObjectMatchesFilter(_obj, filterLower);
+	const _bool matchesFilter = ObjectMatchesFilter(_obj, _filterLower);
 
 	if (filterActive && !matchesFilter)
 		return;
@@ -281,7 +281,7 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const std::string& f
 	if (hasChildren && nodeOpen)
 	{
 		for (auto* child : _obj->Get_Transform()->Get_ChldList())
-			RenderObjectHierarchy(child->Get_GameObject(), filterLower);
+			RenderObjectHierarchy(child->Get_GameObject(), _filterLower);
 
 		ImGui::TreePop();
 	}

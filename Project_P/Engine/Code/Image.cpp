@@ -87,6 +87,8 @@ void CImage::Render()
 
 void CImage::OnDestroy()
 {
+	__super::OnDestroy();
+
 	Safe_Release(m_pTexture);
 }
 

@@ -71,6 +71,9 @@ public:
 	virtual void OnApplicationQuit();
 
 public:
+	void Destroy();
+
+public:
 	template<typename T>
 	T* AddComponent();
 	template<typename T>
@@ -128,6 +131,8 @@ private:
 	class CTransform* m_pTransform;
 
 	_bool m_bIsBoneTransform;
+
+	_bool m_bKill;
 };
 
 NS_END

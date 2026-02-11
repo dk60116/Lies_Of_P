@@ -88,14 +88,23 @@ void CCanvas::Render()
 {
 	for (TRAVERSAL_ITER(m_lUIObjectList, it))
 	{
-		CSceneManager::GetInstance().Get_CrtScene()->Get_Camera()->Add_RenderTarget_UI(*it);
+		if (auto scene = CSceneManager::GetInstance().Get_CrtScene())
+		{
+			if (auto camera = scene->Get_Camera())
+				CSceneManager::GetInstance().Get_CrtScene()->Get_Camera()->Add_RenderTarget_UI(*it);
+		}
 	}
 }
 
 void CCanvas::OnDestroy()
 {
+	__super::OnDestroy();
+
 	for (TRAVERSAL_ITER(m_lUIObjectList, it))
+	{
+		(*it)->UnLinkCanvas();
 		Safe_Release(*it);
+	}
 
 	m_lUIObjectList.clear();
 }
@@ -107,6 +116,12 @@ void CCanvas::Add_UIObject(CUI* _ui)
 		m_lUIObjectList.push_back(_ui);
 		m_lUIObjectList.back()->AddRef();
 	}
+}
+
+void CCanvas::Remove_UIObject(CUI* _ui)
+{
+	if (_ui)
+		m_lUIObjectList.remove(_ui);
 }
 
 const CCanvas::RenderMode CCanvas::Get_RenderMode() const

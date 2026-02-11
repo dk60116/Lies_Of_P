@@ -15,7 +15,6 @@ CUI::CUI()
 
 CUI::~CUI()
 {
-	OnDestroy();
 }
 
 CUI* CUI::Create()
@@ -80,6 +79,9 @@ void CUI::OnDestroy()
 	Safe_Release(m_pRectMesh);
 	Safe_Release(m_pMaterial);
 	Safe_Release(m_pCanvas);
+
+	if (m_pCanvas)
+		m_pCanvas->Remove_UIObject(this);
 }
 
 void CUI::Set_Mesh(CMeshBuffer* _mesh)
@@ -126,6 +128,12 @@ void CUI::Bind_Camera(const _fmatrix _view, const _cmatrix _projection)
 const _bool CUI::Is_Canvas() const
 {
 	return m_bIsCanvas;
+}
+
+void CUI::UnLinkCanvas()
+{
+	Safe_Release(m_pCanvas);
+	m_pCanvas = nullptr;
 }
 
 CCanvas* CUI::Get_Canvas() const

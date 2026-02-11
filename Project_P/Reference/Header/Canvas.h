@@ -29,6 +29,7 @@ public:
 
 public:
     void Add_UIObject(CUI* _ui);
+    void Remove_UIObject(CUI* _ui);
     const RenderMode Get_RenderMode() const;
 
 private:

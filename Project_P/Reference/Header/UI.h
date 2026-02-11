@@ -37,6 +37,9 @@ public:
 	void SetColor(ColorValue _color);
 	void SetAlpha(const _float _value);
 
+public:
+	void UnLinkCanvas();
+
 private:
 	const _bool Is_Canvas() const;
 	void Set_Canvas(class CCanvas* _canvas);

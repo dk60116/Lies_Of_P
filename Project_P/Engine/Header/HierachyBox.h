@@ -23,9 +23,9 @@ private:
 	static CHierachyBox* Create();
 
 private:
-	void RenderObjectHierarchy(CGameObject* _obj, const std::string& filterLower);
-	bool ObjectMatchesFilter(CGameObject* _obj, const std::string& filterLower) const;
-	bool IsAncestorOfSelected(CGameObject* _obj, CGameObject* selected) const;
+	void RenderObjectHierarchy(CGameObject* _obj, const string& _filterLower);
+	bool ObjectMatchesFilter(CGameObject* _obj, const string& _filterLower) const;
+	bool IsAncestorOfSelected(CGameObject* _obj, CGameObject* _selected) const;
 
 private:
 	std::array<char, 128> m_searchBuffer{};
