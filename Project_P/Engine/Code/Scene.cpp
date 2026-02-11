@@ -27,7 +27,8 @@ namespace
 		if (CMeshRenderer* meshRenderer = selected->GetComponent<CMeshRenderer>())
 		{
 			meshBuffer = meshRenderer->Get_MeshBuffer();
-			scaleFactor = meshRenderer->GetScaleFactor();
+			if (meshBuffer)
+				scaleFactor = meshRenderer->GetScaleFactor();
 		}
 		else if ((skinnedRenderer = selected->GetComponent<CSkinnedMeshRenderer>()))
 		{

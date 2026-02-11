@@ -174,10 +174,20 @@ CMeshFilter* CMeshRenderer::Get_MeshFilter()
 
 CMeshBuffer* CMeshRenderer::Get_MeshBuffer()
 {
+	if (!m_pMeshFilter)
+		return nullptr;
+
 	return m_pMeshFilter->Get_MeshBuffer();
 }
 
 const _float CMeshRenderer::GetScaleFactor() const
 {
-	return m_pMeshFilter->Get_MeshBuffer()->Get_ScaleFactor();
+	if (!m_pMeshFilter)
+		return 1.f;
+
+	CMeshBuffer* meshBuffer = m_pMeshFilter->Get_MeshBuffer();
+	if (!meshBuffer)
+		return 1.f;
+
+	return meshBuffer->Get_ScaleFactor();
 }
