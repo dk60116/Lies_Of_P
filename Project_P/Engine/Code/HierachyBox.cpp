@@ -147,7 +147,7 @@ void CHierachyBox::Render()
 		{
 			m_lastSelectedGameObject = selectedObject;
 			m_scrollToSelected = selectedObject != nullptr;
-			m_openToSelected = false;
+			m_openToSelected = editor.Consume_OpenSelectedInHierarchyRequest();
 		}
 
 		if (ImGui::BeginChild("HierarchyScrollRegion", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar))

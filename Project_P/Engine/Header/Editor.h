@@ -45,9 +45,10 @@ public:
 	const vector3 Get_EditorCamPositon() const;
 	const quaternion Get_EditorCamQuaternion() const;
 	void Set_EditorCamTransform(class CTransform* _transform);
-	void Set_SelectedGameObject(class CGameObject* _target);
+	void Set_SelectedGameObject(class CGameObject* _target, _bool _openHierarchy = false);
 	void MoveTo_SelectedGameObject(class CGameObject* _target);
 	CGameObject* Get_SelectedGameObject() const;
+	_bool Consume_OpenSelectedInHierarchyRequest();
 
 public:
 	void OpenAsset(const fs::path& path);
@@ -97,6 +98,7 @@ private:
 	TransformControleTool m_eControleTool;
 	CGameObject* m_pSelectedGameObject;
 	CGameObject* m_pMoveTargetGameObject;
+	_bool m_bOpenSelectedInHierarchyRequested;
 	fs::path m_selectedAssetPath;
 
 private:

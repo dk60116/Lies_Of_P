@@ -14,6 +14,7 @@ CEditor::CEditor()
 	, m_eControleTool(TransformControleTool::MOVE)
 	, m_pSelectedGameObject(nullptr)
 	, m_pMoveTargetGameObject(nullptr)
+	, m_bOpenSelectedInHierarchyRequested(false)
 	, m_vCameraPos({})
 	, m_vCameraQuat({})
 	, m_bDoubleClicked(false)
@@ -287,7 +288,7 @@ void CEditor::Set_EditorCamTransform(CTransform* _transform)
 	m_vCameraQuat = _transform->Get_Quaternion();
 }
 
-void CEditor::Set_SelectedGameObject(CGameObject* _target)
+void CEditor::Set_SelectedGameObject(CGameObject* _target, _bool _openHierarchy)
 {
 	if (_target == m_pSelectedGameObject)
 		return;
@@ -295,10 +296,15 @@ void CEditor::Set_SelectedGameObject(CGameObject* _target)
 	m_pSelectedGameObject = _target;
 	m_selectedAssetPath.clear();
 
-	if (m_pSelectedGameObject)
-	{
-		m_pSelectedGameObject = _target;
-	}
+	if (_openHierarchy && m_pSelectedGameObject)
+		m_bOpenSelectedInHierarchyRequested = true;
+}
+
+_bool CEditor::Consume_OpenSelectedInHierarchyRequest()
+{
+	const _bool requested = m_bOpenSelectedInHierarchyRequested;
+	m_bOpenSelectedInHierarchyRequested = false;
+	return requested;
 }
 
 void CEditor::Set_SelectedAssetPath(const fs::path& path)

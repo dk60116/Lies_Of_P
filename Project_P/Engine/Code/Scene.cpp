@@ -1492,7 +1492,7 @@ void CScene::PickObjectInEditor_End()
 			const _uint id = Get_EditorCamera()->GetColorPickingID(mp);
 			CGameObject* pickedObj = FindGameObjectOfId(id);
 			if (id != 0 && pickedObj)
-				CEditor::GetInstance().Set_SelectedGameObject(pickedObj);
+				CEditor::GetInstance().Set_SelectedGameObject(pickedObj, true);
 		}
 	}
 }
