@@ -231,6 +231,7 @@ void CMaterial::Bind_Light(_matrix* _lights, const _uint _count)
 
 	LightCB buffer = {};
 
+	// 데이터 복사
 	const _uint maxCount = min(_count, 64u);
 	memcpy(buffer.lights, _lights, sizeof(_matrix) * maxCount);
 
@@ -322,6 +323,7 @@ void CMaterial::Bind_CustomValues()
 		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _43, _43 + sizeof(float));
 		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _44, _44 + sizeof(float));
 	}
+}
 
 CShader* CMaterial::Get_Shader() const
 {
