@@ -515,7 +515,7 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
         if (!component)
             continue;
 
-        const string componentName = CEngineString::WStringToString(component->Get_Name());
+        const string componentName = CEngineString::WStringToString(component->Get_UName());
         if (componentName.empty())
             continue;
 
