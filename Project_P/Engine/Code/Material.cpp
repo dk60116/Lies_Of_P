@@ -323,6 +323,16 @@ void CMaterial::Bind_CustomValues()
 		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _43, _43 + sizeof(float));
 		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _44, _44 + sizeof(float));
 	}
+
+	while (m_vCustomBufferByteList.size() % 16 != 0)
+		m_vCustomBufferByteList.push_back(0);
+
+	if (!m_pCustomBuffer || m_vCustomBufferByteList.empty())
+		return;
+
+	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
+	context->UpdateSubresource(m_pCustomBuffer, 0, nullptr, m_vCustomBufferByteList.data(), 0, 0);
+	context->PSSetConstantBuffers(10, 1, &m_pCustomBuffer);
 }
 
 CShader* CMaterial::Get_Shader() const
@@ -335,20 +345,6 @@ const _uint CMaterial::Get_TextureCount() const
 	return static_cast<_uint>(m_vTextureList.size());
 }
 
-	if (_index < 0 || static_cast<size_t>(_index) >= m_vTextureList.size())
-		return nullptr;
-
-	// TODO: Vector4 등도 추가 가능
-
-	// 정렬 맞추기 (16바이트 단위)
-	while (m_vCustomBufferByteList.size() % 16 != 0)
-		m_vCustomBufferByteList.push_back(0);
-
-	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
-	context->UpdateSubresource(m_pCustomBuffer, 0, nullptr, m_vCustomBufferByteList.data(), 0, 0);
-	context->PSSetConstantBuffers(10, 1, &m_pCustomBuffer);
-}
-
 const _bool CMaterial::IsUseLight() const
 {
 	return m_bUseLight;
@@ -356,6 +352,9 @@ const _bool CMaterial::IsUseLight() const
 
 CTexture* CMaterial::Get_Texture(_int _index) const
 {
+	if (_index < 0 || static_cast<size_t>(_index) >= m_vTextureList.size())
+		return nullptr;
+
 	return m_vTextureList[_index];
 }
 
