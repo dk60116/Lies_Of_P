@@ -448,6 +448,15 @@ void CMaterial::Set_Texture(CTexture* _texture, _int _index)
 		_texture->AddRef();
 }
 
+void CMaterial::Remove_Texture(_int _index)
+{
+	if (_index < 0 || static_cast<size_t>(_index) >= m_vTextureList.size())
+		return;
+
+	Safe_Release(m_vTextureList[_index]);
+	m_vTextureList.erase(m_vTextureList.begin() + _index);
+}
+
 void CMaterial::Set_BaseColor(const _float4& _color)
 {
 	m_vBaseColor = _color;

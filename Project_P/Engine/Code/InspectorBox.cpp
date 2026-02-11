@@ -21,6 +21,7 @@
 #include <iomanip>
 #include <map>
 #include <sstream>
+#include <unordered_set>
 
 static vector<string> CollectRelativeFilesByExtension(const fs::path& root, const string& extension)
 {
@@ -107,6 +108,44 @@ static void AddPathToTree(PathTreeNode& root, const string& relPath)
 }
 
 
+
+
+static vector<string> CollectTextureRelativeFiles()
+{
+    static const vector<string> extensions = { ".png", ".jpg", ".jpeg", ".bmp", ".tga", ".dds", ".tif", ".tiff", ".gif" };
+    vector<string> files;
+    unordered_set<string> unique;
+
+    for (const string& ext : extensions)
+    {
+        vector<string> extFiles = CollectRelativeFilesByExtension(fs::path(L"../Assets"), ext);
+        for (const string& file : extFiles)
+        {
+            if (unique.insert(file).second)
+                files.push_back(file);
+        }
+    }
+
+    sort(files.begin(), files.end());
+    return files;
+}
+
+static CTexture* LoadInspectorTextureResource(const string& relPath)
+{
+    if (relPath.empty())
+        return nullptr;
+
+    CResources& resources = CResources::GetInstance();
+    string normalized = relPath;
+    std::replace(normalized.begin(), normalized.end(), '\\', '/');
+    const wstring resourceName = CEngineString::StringToWString(normalized);
+
+    auto found = resources.m_mGameResourceList.find(resourceName);
+    if (found != resources.m_mGameResourceList.end())
+        return dynamic_cast<CTexture*>(found->second);
+
+    return resources.CreateGameResource<CTexture>(resourceName, CEngineString::StringToWString(relPath));
+}
 
 static string NormalizeSlashPath(const string& path)
 {
@@ -909,6 +948,11 @@ void CInspectorBox::RenderMeshRendererComponent(CMeshRenderer* _meshRenderer)
             ImGui::TextUnformatted("Shader: None");
         }
 
+        vector<string> textureFiles = CollectTextureRelativeFiles();
+
+        if (ImGui::Button("텍스쳐 추가"))
+            material->Set_Texture(nullptr, static_cast<_int>(material->Get_TextureCount()));
+
         ImGui::TextUnformatted("Textures:");
         const _uint textureCount = material->Get_TextureCount();
         if (textureCount == 0)
@@ -920,16 +964,49 @@ void CInspectorBox::RenderMeshRendererComponent(CMeshRenderer* _meshRenderer)
             for (_uint i = 0; i < textureCount; ++i)
             {
                 CTexture* texture = material->Get_Texture(static_cast<_int>(i));
-                if (texture)
-                {
-                    string textureName = CEngineString::WStringToString(texture->Get_ResourceName());
-                    ImGui::BulletText("[%u] %s", i, textureName.c_str());
-                }
+                string textureName = texture ? CEngineString::WStringToString(texture->Get_ResourceName()) : "None";
+
+                ImGui::PushID(static_cast<int>(i));
+                if (texture && texture->Get_SRV())
+                    ImGui::Image(ImTextureRef((ImTextureID)(intptr_t)texture->Get_SRV()), ImVec2(20.f, 20.f));
                 else
+                    ImGui::Dummy(ImVec2(20.f, 20.f));
+
+                ImGui::SameLine();
+                ImGui::Text("[%u]", i);
+                ImGui::SameLine();
+
+                const string comboLabel = "##TextureSlot" + to_string(i);
+                if (ImGui::BeginCombo(comboLabel.c_str(), textureName.c_str()))
                 {
-                    ImGui::BulletText("[%u] None", i);
+                    const bool noneSelected = (texture == nullptr);
+                    if (ImGui::Selectable("None", noneSelected))
+                        material->Set_Texture(nullptr, static_cast<_int>(i));
+
+                    for (const string& relPath : textureFiles)
+                    {
+                        const bool selected = (textureName == relPath);
+                        if (ImGui::Selectable(relPath.c_str(), selected))
+                        {
+                            CTexture* selectedTexture = LoadInspectorTextureResource(relPath);
+                            material->Set_Texture(selectedTexture, static_cast<_int>(i));
+                        }
+                    }
+
+                    ImGui::EndCombo();
                 }
+
+                ImGui::SameLine();
+                if (ImGui::Button("제거"))
+                {
+                    material->Remove_Texture(static_cast<_int>(i));
+                    ImGui::PopID();
+                    break;
+                }
+
+                ImGui::PopID();
             }
+
         }
     }
     else
