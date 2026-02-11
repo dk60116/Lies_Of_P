@@ -323,6 +323,9 @@ void CMaterial::Bind_CustomValues()
 		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _43, _43 + sizeof(float));
 		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _44, _44 + sizeof(float));
 	}
+	if (!m_pCustomBuffer)
+		return;
+
 CShader* CMaterial::Get_Shader() const
 {
 	return m_pShader;
