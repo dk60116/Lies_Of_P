@@ -19,6 +19,39 @@
 #include <iomanip>
 #include <sstream>
 
+static vector<string> CollectRelativeFilesByExtension(const fs::path& root, const string& extension)
+{
+    vector<string> files;
+    error_code ec;
+
+    if (!fs::exists(root, ec))
+        return files;
+
+    const string extLower = CEditor::ToLowerCopy(extension);
+
+    for (fs::recursive_directory_iterator it(root, ec), end; it != end; it.increment(ec))
+    {
+        if (ec)
+            continue;
+
+        const fs::directory_entry& entry = *it;
+        if (!entry.is_regular_file(ec))
+            continue;
+
+        string fileExt = CEditor::ToLowerCopy(entry.path().extension().string());
+        if (fileExt != extLower)
+            continue;
+
+        fs::path rel = entry.path().lexically_relative(root);
+        string relPath = rel.empty() ? entry.path().filename().string() : rel.string();
+        std::replace(relPath.begin(), relPath.end(), '\\', '/');
+        files.push_back(relPath);
+    }
+
+    sort(files.begin(), files.end());
+    return files;
+}
+
 CInspectorBox::CInspectorBox()
 	: m_fRXDrag(0.f)
     , m_fRYDrag(0.f)
@@ -570,6 +603,8 @@ void CInspectorBox::RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _m
         return;
 
     vector<pair<string, CMeshBuffer*>> meshOptions;
+    vector<string> fbxFiles = CollectRelativeFilesByExtension(fs::path(L"../Assets"), ".fbx");
+    vector<string> meshDataFiles = CollectRelativeFilesByExtension(fs::path(L"BinaryAssets"), ".meshdata");
     CResources& resources = CResources::GetInstance();
 
     for (auto& entry : resources.m_mGameResourceList)
@@ -616,6 +651,36 @@ void CInspectorBox::RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _m
 
             if (selected)
                 ImGui::SetItemDefaultFocus();
+        }
+
+        ImGui::SeparatorText("Assets .fbx");
+        if (fbxFiles.empty())
+        {
+            ImGui::Selectable("(No .fbx files)", false, ImGuiSelectableFlags_Disabled);
+        }
+        else
+        {
+            for (_uint i = 0; i < fbxFiles.size(); ++i)
+            {
+                const string itemLabel = fbxFiles[i] + "##fbx_" + to_string(i);
+                if (ImGui::Selectable(itemLabel.c_str(), false))
+                    _meshFilter->Set_MeshBuffer(nullptr);
+            }
+        }
+
+        ImGui::SeparatorText("BinaryAssets .meshdata");
+        if (meshDataFiles.empty())
+        {
+            ImGui::Selectable("(No .meshdata files)", false, ImGuiSelectableFlags_Disabled);
+        }
+        else
+        {
+            for (_uint i = 0; i < meshDataFiles.size(); ++i)
+            {
+                const string itemLabel = meshDataFiles[i] + "##meshdata_" + to_string(i);
+                if (ImGui::Selectable(itemLabel.c_str(), false))
+                    _meshFilter->Set_MeshBuffer(nullptr);
+            }
         }
 
         ImGui::EndCombo();
