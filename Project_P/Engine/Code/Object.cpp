@@ -19,13 +19,12 @@ void UObject::AddRef()
 
 _uint UObject::Release()
 {
-    _uint prevRefCount = m_iRefCount;
-    _uint refCount = --m_iRefCount;
+	_uint refCount = --m_iRefCount;
 
-    if (refCount == 0)
-        delete this;
+	if (refCount == 0)
+		delete this;
 
-    return prevRefCount;
+	return refCount;
 }
 
 const wstring& UObject::Get_UName() const
