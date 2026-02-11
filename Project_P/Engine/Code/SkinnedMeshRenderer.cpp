@@ -186,12 +186,14 @@ _bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3&
 			if (w <= 0.f || idx >= boneCount)
 				continue;
 
-			skinned += XMVector3Transform(p, skinMats[idx]) * w;
+			skinned = XMVectorAdd(skinned, XMVectorScale(XMVector3Transform(p, skinMats[idx]), w));
 			totalW += w;
 		}
 
 		if (totalW <= 0.f)
 			continue;
+
+		skinned = XMVectorScale(skinned, 1.f / totalW);
 
 		hasPoint = true;
 		minV = XMVectorMin(minV, skinned);
