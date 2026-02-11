@@ -12,6 +12,8 @@
 #include "UI.h"
 #include "Canvas.h"
 #include "Terrain.h"
+#include "Image.h"
+#include "Text.h"
 
 #include <algorithm>
 #include <iomanip>
@@ -516,6 +518,9 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
         if (!component)
             continue;
 
+        if (dynamic_cast<CTransform*>(component) || dynamic_cast<CRectTransform*>(component))
+            continue;
+
         string componentName = CEngineString::WStringToString(component->Get_UName());
         if (componentName.empty())
             continue;
@@ -664,16 +669,27 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
             _obj->AddComponent<CAnimator>();
     }
 
-    if (ImGui::MenuItem("UI"))
-    {
-        if (!_obj->GetComponent<CUI>())
-            _obj->AddComponent<CUI>();
-    }
-
     if (ImGui::MenuItem("Canvas"))
     {
         if (!_obj->GetComponent<CCanvas>())
             _obj->AddComponent<CCanvas>();
+    }
+
+    if (ImGui::BeginMenu("UI"))
+    {
+        if (ImGui::MenuItem("Image"))
+        {
+            if (!_obj->GetComponent<CImage>())
+                _obj->AddComponent<CImage>();
+        }
+
+        if (ImGui::MenuItem("Text"))
+        {
+            if (!_obj->GetComponent<CText>())
+                _obj->AddComponent<CText>();
+        }
+
+        ImGui::EndMenu();
     }
 
     if (ImGui::MenuItem("Terrain"))
@@ -682,21 +698,6 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
             _obj->AddComponent<CTerrain>();
     }
 
-    if (ImGui::MenuItem("Transform"))
-    {
-        if (!_obj->GetComponent<CTransform>())
-            _obj->AddComponent<CTransform>();
-    }
-
-    if (ImGui::MenuItem("RectTransform"))
-    {
-        if (!_obj->GetComponent<CRectTransform>())
-        {
-            CRectTransform* rectTransform = _obj->AddComponent<CRectTransform>();
-            if (rectTransform)
-                _obj->Set_Transform(rectTransform);
-        }
-    }
 
     ImGui::EndPopup();
 }
