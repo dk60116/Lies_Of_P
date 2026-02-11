@@ -62,6 +62,16 @@ struct PathTreeNode
     string fullPath;
 };
 
+struct PendingMeshSelectionRequest
+{
+    CGameObject* obj = nullptr;
+    CMeshFilter* meshFilter = nullptr;
+    string relPath;
+    _bool selectedMeshData = false;
+    _bool pending = false;
+};
+
+static PendingMeshSelectionRequest g_pendingMeshSelectionRequest;
 
 static vector<string> SplitBySlash(const string& input)
 {
@@ -290,6 +300,32 @@ static void ApplyMeshSelectionToObject(CGameObject* obj, CMeshFilter* meshFilter
     obj->CreateMeshHierachy(bundles, 0.01f);
 }
 
+static void QueueMeshSelectionRequest(CGameObject* obj, CMeshFilter* meshFilter, const string& relPath, const _bool selectedMeshData)
+{
+    if (!obj || !meshFilter)
+        return;
+
+    g_pendingMeshSelectionRequest.obj = obj;
+    g_pendingMeshSelectionRequest.meshFilter = meshFilter;
+    g_pendingMeshSelectionRequest.relPath = relPath;
+    g_pendingMeshSelectionRequest.selectedMeshData = selectedMeshData;
+    g_pendingMeshSelectionRequest.pending = true;
+}
+
+static void ProcessPendingMeshSelectionRequest()
+{
+    if (!g_pendingMeshSelectionRequest.pending)
+        return;
+
+    PendingMeshSelectionRequest req = g_pendingMeshSelectionRequest;
+    g_pendingMeshSelectionRequest = {};
+
+    if (!req.obj || !req.meshFilter)
+        return;
+
+    ApplyMeshSelectionToObject(req.obj, req.meshFilter, req.relPath, req.selectedMeshData);
+}
+
 static void RenderPathTreeRecursive(const PathTreeNode& node, const string& idPrefix, CGameObject* obj, CMeshFilter* meshFilter, const _bool selectedMeshData)
 {
     for (const auto& childPair : node.children)
@@ -301,7 +337,7 @@ static void RenderPathTreeRecursive(const PathTreeNode& node, const string& idPr
         {
             const string label = name + "##" + idPrefix + child.fullPath;
             if (ImGui::Selectable(label.c_str(), false))
-                ApplyMeshSelectionToObject(obj, meshFilter, child.fullPath, selectedMeshData);
+                QueueMeshSelectionRequest(obj, meshFilter, child.fullPath, selectedMeshData);
             continue;
         }
 
@@ -441,6 +477,7 @@ void CInspectorBox::Render()
             ShowRectTransform(selectedObj);
 
         ShowComponents(selectedObj);
+        ProcessPendingMeshSelectionRequest();
     }
     else
         ImGui::Text("No object selected.");
