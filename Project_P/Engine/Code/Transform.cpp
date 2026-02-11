@@ -181,6 +181,9 @@ void CTransform::Render_Gizmo()
 
 void CTransform::OnDestroy()
 {
+    for (TRAVERSAL_ITER(m_lChildList, it))
+        (*it)->Get_GameObject()->Destroy();
+
     Safe_Release(m_pParent);
 }
 
@@ -1010,10 +1013,4 @@ const quaternion CTransform::LookQuaternion(const vector3& _target, const _uint 
 
     quaternion finalQ;  XMStoreFloat4(reinterpret_cast<_float4*>(&finalQ), q);
     return finalQ;
-}
-
-void CTransform::RemoveChild(CTransform* _tf)
-{
-    if (_tf)
-        m_lChildList.remove(_tf);
 }

@@ -38,7 +38,7 @@ namespace Engine
 			dwRefCnt = pInstance->Release();
 
 			if (0 == dwRefCnt)
-				pInstance = NULL;
+				pInstance = nullptr;
 		}
 
 		return dwRefCnt;

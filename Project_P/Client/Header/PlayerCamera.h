@@ -43,7 +43,6 @@ private:
     _float LerpAngle(_float current, _float target, _float t);
 
 private:
-    class CPlayer* m_pPlayer;
     PlayerCameraOptions m_sOptions;
 
     _float m_fBackOffset;

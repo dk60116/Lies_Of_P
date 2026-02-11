@@ -15,6 +15,7 @@ public:
 
 public:
 	void Set_Player(CPlayer* _player);
+	void Remove_Player(CPlayer* _player);
 	CPlayer* Get_Player();
 
 	void Set_PlayerCamera(CPlayerCamera* _cam);
@@ -22,6 +23,8 @@ public:
 
 	void Set_PlayerHUD(CPlayerHUD* _hud);
 	CPlayerHUD* Get_PlayerHUD();
+
+	void Release();
 
 private:
 	wstring m_strNextScene;

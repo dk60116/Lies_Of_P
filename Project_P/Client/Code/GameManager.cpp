@@ -33,6 +33,13 @@ const wstring& CGameManager::Get_NextScene() const
 void CGameManager::Set_Player(CPlayer* _player)
 {
 	m_pPlayer = _player;
+	m_pPlayer->AddRef();
+}
+
+void CGameManager::Remove_Player(CPlayer* _player)
+{
+	Safe_Release(_player);
+	m_pPlayer = nullptr;
 }
 
 CPlayer* CGameManager::Get_Player()
@@ -58,4 +65,9 @@ void CGameManager::Set_PlayerHUD(CPlayerHUD* _hud)
 CPlayerHUD* CGameManager::Get_PlayerHUD()
 {
 	return m_pPlayerHUD;
+}
+
+void CGameManager::Release()
+{
+	Safe_Release(m_pPlayer);
 }

@@ -64,8 +64,7 @@ namespace
 }
 
 CPlayerCamera::CPlayerCamera()
-    : m_pPlayer(nullptr)
-    , m_sOptions({})
+    : m_sOptions({})
     , m_fBackOffset(6.f)
     , m_fZoomSensor(0.f)
     , m_bMouseLocked(true)
@@ -112,7 +111,6 @@ HRESULT CPlayerCamera::Initialize()
 void CPlayerCamera::Awake()
 {
     CGameManager::GetInstance().Set_PlayerCamera(this);
-    m_pPlayer = CGameManager::GetInstance().Get_Player();
 }
 
 void CPlayerCamera::Start()
@@ -201,11 +199,11 @@ _float CPlayerCamera::LerpAngle(_float current, _float target, _float t)
 
 void CPlayerCamera::LateUpdate()
 {
-    if (!m_pPlayer) 
+    if (!CGameManager::GetInstance().Get_Player())
         return;
 
     CTransform* tf = Get_Transform();
-    CTransform* playerTf = m_pPlayer->Get_Transform();
+    CTransform* playerTf = CGameManager::GetInstance().Get_Player()->Get_Transform();
 
     const vector3 playerPos = playerTf->Get_Position();
     const vector3 pivot = playerPos + vector3::up() * m_sOptions.lookHeightOffset;

@@ -145,9 +145,6 @@ public:
 	const vector3 LookRotation(const vector3& _target, const _uint _lockRotationFilter = 0x000);
 	const quaternion LookQuaternion(const vector3& _target, const _uint _lockRotationFilter = 0x000);
 
-public:
-	void RemoveChild(CTransform* _tf);
-
 private:
 	void Bind_Matrix();
 	void Bind_Direction();

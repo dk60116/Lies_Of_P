@@ -164,6 +164,7 @@ void CPlayer::Update()
 
 void CPlayer::OnDestroy()
 {
+	CGameManager::GetInstance().Remove_Player(this);
 }
 
 CPlayerController* CPlayer::Get_Controller()
