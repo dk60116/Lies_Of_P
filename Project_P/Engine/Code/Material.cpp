@@ -430,6 +430,36 @@ const _float4x4& CMaterial::Get_MatrixValue(const wstring& _key)
 	return {};
 }
 
+const unordered_map<wstring, _float>& CMaterial::Get_FloatValues() const
+{
+	return m_mFloatValues;
+}
+
+const unordered_map<wstring, _int>& CMaterial::Get_IntValues() const
+{
+	return m_mIntValues;
+}
+
+const unordered_map<wstring, _float2>& CMaterial::Get_Vector2Values() const
+{
+	return m_mVector2Values;
+}
+
+const unordered_map<wstring, _float3>& CMaterial::Get_Vector3Values() const
+{
+	return m_mVector3Values;
+}
+
+const unordered_map<wstring, _float4>& CMaterial::Get_Vector4Values() const
+{
+	return m_mVector4Values;
+}
+
+const unordered_map<wstring, _float4x4>& CMaterial::Get_MatrixValues() const
+{
+	return m_mMatrixValues;
+}
+
 void CMaterial::Set_Texture(CTexture* _texture, _int _index)
 {
 	if (_index < 0)

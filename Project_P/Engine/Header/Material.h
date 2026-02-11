@@ -55,6 +55,12 @@ public:
 	const _float3& Get_Vector3Value(const wstring& _key);
 	const _float4& Get_Vector4Value(const wstring& _key);
 	const _float4x4& Get_MatrixValue(const wstring& _key);
+	const unordered_map<wstring, _float>& Get_FloatValues() const;
+	const unordered_map<wstring, _int>& Get_IntValues() const;
+	const unordered_map<wstring, _float2>& Get_Vector2Values() const;
+	const unordered_map<wstring, _float3>& Get_Vector3Values() const;
+	const unordered_map<wstring, _float4>& Get_Vector4Values() const;
+	const unordered_map<wstring, _float4x4>& Get_MatrixValues() const;
 
 	void Set_Shader(CShader* _shader);
 	void Set_Texture(CTexture* _texture, _int _index = 0);
