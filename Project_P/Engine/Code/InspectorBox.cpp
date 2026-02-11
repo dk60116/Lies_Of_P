@@ -184,9 +184,9 @@ static _bool RemoveFirstMeshRendererComponent(CGameObject* obj)
     {
         if (CMeshRenderer* meshRenderer = dynamic_cast<CMeshRenderer*>(*it))
         {
+            components.erase(it);
             meshRenderer->OnDestroy();
             Safe_Release(meshRenderer);
-            components.erase(it);
             return true;
         }
     }
@@ -205,9 +205,9 @@ static _bool RemoveSpecificMeshFilterComponent(CGameObject* obj, CMeshFilter* me
     {
         if ((*it) == meshFilter)
         {
+            components.erase(it);
             meshFilter->OnDestroy();
             Safe_Release(meshFilter);
-            components.erase(it);
             return true;
         }
     }
