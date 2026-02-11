@@ -2,7 +2,6 @@
 #include "Scene.h"
 #include "EditorCamera.h"
 #include <unordered_map>
-#include <limits>
 
 namespace
 {
@@ -62,60 +61,11 @@ namespace
 		};
 
 		_vector worldCorners[8] = {};
-		if (skinnedRenderer && skinnedRenderer->Get_BoneCount() > 0)
+		for (_uint i = 0; i < 8; ++i)
 		{
-			_vector minPoint = XMVectorSet((std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)(), 0.f);
-			_vector maxPoint = XMVectorSet(-(std::numeric_limits<float>::max)(), -(std::numeric_limits<float>::max)(), -(std::numeric_limits<float>::max)(), 0.f);
-
-			const _uint boneCount = skinnedRenderer->Get_BoneCount();
-			_bool hasSkinnedPoint = false;
-			for (_uint i = 0; i < 8; ++i)
-			{
-				_vector localCorner = center + XMVectorMultiply(offsets[i], extents);
-				for (_uint boneIdx = 0; boneIdx < boneCount; ++boneIdx)
-				{
-					CTransform* boneTf = skinnedRenderer->Get_BoneTransform(boneIdx);
-					if (!boneTf)
-						continue;
-
-					_matrix invBindPose = XMLoadFloat4x4(&skinnedRenderer->Get_BoneOffsetMatrix(boneIdx));
-					_matrix boneWorld = boneTf->Get_WorldMatrix();
-					_vector skinnedCorner = XMVector3Transform(localCorner, invBindPose * boneWorld);
-					hasSkinnedPoint = true;
-					minPoint = XMVectorMin(minPoint, skinnedCorner);
-					maxPoint = XMVectorMax(maxPoint, skinnedCorner);
-				}
-			}
-
-			if (!hasSkinnedPoint)
-			{
-				for (_uint i = 0; i < 8; ++i)
-				{
-					_vector localCorner = center + XMVectorMultiply(offsets[i], extents);
-					_vector scaledCorner = XMVectorScale(localCorner, scaleFactor);
-					worldCorners[i] = XMVector3Transform(scaledCorner, objectWorld);
-				}
-			}
-			else
-			{
-				worldCorners[0] = XMVectorSet(XMVectorGetX(minPoint), XMVectorGetY(minPoint), XMVectorGetZ(minPoint), 1.f);
-			worldCorners[1] = XMVectorSet(XMVectorGetX(maxPoint), XMVectorGetY(minPoint), XMVectorGetZ(minPoint), 1.f);
-			worldCorners[2] = XMVectorSet(XMVectorGetX(maxPoint), XMVectorGetY(maxPoint), XMVectorGetZ(minPoint), 1.f);
-			worldCorners[3] = XMVectorSet(XMVectorGetX(minPoint), XMVectorGetY(maxPoint), XMVectorGetZ(minPoint), 1.f);
-			worldCorners[4] = XMVectorSet(XMVectorGetX(minPoint), XMVectorGetY(minPoint), XMVectorGetZ(maxPoint), 1.f);
-			worldCorners[5] = XMVectorSet(XMVectorGetX(maxPoint), XMVectorGetY(minPoint), XMVectorGetZ(maxPoint), 1.f);
-			worldCorners[6] = XMVectorSet(XMVectorGetX(maxPoint), XMVectorGetY(maxPoint), XMVectorGetZ(maxPoint), 1.f);
-				worldCorners[7] = XMVectorSet(XMVectorGetX(minPoint), XMVectorGetY(maxPoint), XMVectorGetZ(maxPoint), 1.f);
-			}
-		}
-		else
-		{
-			for (_uint i = 0; i < 8; ++i)
-			{
-				_vector localCorner = center + XMVectorMultiply(offsets[i], extents);
-				_vector scaledCorner = XMVectorScale(localCorner, scaleFactor);
-				worldCorners[i] = XMVector3Transform(scaledCorner, objectWorld);
-			}
+			_vector localCorner = center + XMVectorMultiply(offsets[i], extents);
+			_vector scaledCorner = XMVectorScale(localCorner, scaleFactor);
+			worldCorners[i] = XMVector3Transform(scaledCorner, objectWorld);
 		}
 
 		constexpr _uint edges[12][2] =
