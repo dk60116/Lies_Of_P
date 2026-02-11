@@ -147,7 +147,9 @@ static CTexture* LoadInspectorTextureResource(const string& relPath)
     CResources& resources = CResources::GetInstance();
     string normalized = relPath;
     std::replace(normalized.begin(), normalized.end(), '\\', '/');
-    const wstring resourceName = CEngineString::StringToWString(normalized);
+    const string fileName = fs::path(normalized).filename().string();
+    const size_t pathHash = std::hash<string>{}(normalized);
+    const wstring resourceName = CEngineString::StringToWString("InspectorTexture/" + fileName + "_" + to_string(pathHash));
 
     auto found = resources.m_mGameResourceList.find(resourceName);
     if (found != resources.m_mGameResourceList.end())

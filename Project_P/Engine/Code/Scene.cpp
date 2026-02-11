@@ -8,6 +8,15 @@
 #include "Animator.h"
 #include "AnimationClip.h"
 #include "AnimatorController.h"
+#include "Camera.h"
+#include "Light.h"
+#include "MeshRenderer.h"
+#include "SkinnedMeshRenderer.h"
+#include "UI.h"
+#include "Canvas.h"
+#include "Terrain.h"
+#include "Image.h"
+#include "Text.h"
 #include <unordered_map>
 
 namespace
@@ -797,6 +806,25 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		return path;
 	};
 
+	auto getComponentPersistName = [](CComponent* component) -> wstring
+	{
+		if (!component)
+			return L"";
+
+		if (dynamic_cast<CCamera*>(component)) return L"Camera";
+		if (dynamic_cast<CLight*>(component)) return L"Light";
+		if (dynamic_cast<CMeshFilter*>(component)) return L"Mesh Filter";
+		if (dynamic_cast<CMeshRenderer*>(component)) return L"Mesh Renderer";
+		if (dynamic_cast<CSkinnedMeshRenderer*>(component)) return L"Skinned Mesh Renderer";
+		if (dynamic_cast<CAnimator*>(component)) return L"Animator";
+		if (dynamic_cast<CCanvas*>(component)) return L"Canvas";
+		if (dynamic_cast<CImage*>(component)) return L"Image";
+		if (dynamic_cast<CText*>(component)) return L"Text";
+		if (dynamic_cast<CTerrain*>(component)) return L"Terrain";
+		if (dynamic_cast<CUI*>(component)) return L"UI";
+		return component->Get_UName();
+	};
+
 	_uint i = 0;
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
@@ -840,7 +868,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			if (dynamic_cast<CTransform*>(component) || dynamic_cast<CRectTransform*>(component))
 				continue;
 
-			info.componentNames.push_back(component->Get_UName());
+			{ const wstring compName = getComponentPersistName(component); if (!compName.empty()) info.componentNames.push_back(compName); }
 		}
 
 		if (i > 0 && !(*it)->m_bIsBoneTransform)
@@ -854,6 +882,54 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 
 void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 {
+	auto hasComponentByName = [](CGameObject* obj, const wstring& componentName) -> _bool
+	{
+		if (!obj)
+			return false;
+
+		for (CComponent* component : obj->Get_ComponentList())
+		{
+			if (!component)
+				continue;
+
+			wstring name = component->Get_UName();
+			if (name == componentName)
+				return true;
+
+			if (componentName == L"Mesh Filter" && dynamic_cast<CMeshFilter*>(component)) return true;
+			if (componentName == L"Mesh Renderer" && dynamic_cast<CMeshRenderer*>(component)) return true;
+			if (componentName == L"Skinned Mesh Renderer" && dynamic_cast<CSkinnedMeshRenderer*>(component)) return true;
+			if (componentName == L"Animator" && dynamic_cast<CAnimator*>(component)) return true;
+			if (componentName == L"Camera" && dynamic_cast<CCamera*>(component)) return true;
+			if (componentName == L"Light" && dynamic_cast<CLight*>(component)) return true;
+			if (componentName == L"Canvas" && dynamic_cast<CCanvas*>(component)) return true;
+			if (componentName == L"Image" && dynamic_cast<CImage*>(component)) return true;
+			if (componentName == L"Text" && dynamic_cast<CText*>(component)) return true;
+			if (componentName == L"Terrain" && dynamic_cast<CTerrain*>(component)) return true;
+			if (componentName == L"UI" && dynamic_cast<CUI*>(component)) return true;
+		}
+
+		return false;
+	};
+
+	auto ensureComponentByName = [&](CGameObject* obj, const wstring& componentName)
+	{
+		if (!obj || componentName.empty() || hasComponentByName(obj, componentName))
+			return;
+
+		if (componentName == L"Mesh Filter") obj->AddComponent<CMeshFilter>();
+		else if (componentName == L"Mesh Renderer") obj->AddComponent<CMeshRenderer>();
+		else if (componentName == L"Skinned Mesh Renderer") obj->AddComponent<CSkinnedMeshRenderer>();
+		else if (componentName == L"Animator") obj->AddComponent<CAnimator>();
+		else if (componentName == L"Camera") obj->AddComponent<CCamera>();
+		else if (componentName == L"Light") obj->AddComponent<CLight>();
+		else if (componentName == L"Canvas") obj->AddComponent<CCanvas>();
+		else if (componentName == L"Image") obj->AddComponent<CImage>();
+		else if (componentName == L"Text") obj->AddComponent<CText>();
+		else if (componentName == L"Terrain") obj->AddComponent<CTerrain>();
+		else if (componentName == L"UI") obj->AddComponent<CUI>();
+	};
+
 	unordered_map<wstring, size_t> infoIndexByGuid;
 	unordered_map<wstring, size_t> infoIndexByPath;
 	infoIndexByGuid.reserve(_infoList.size());
@@ -922,6 +998,13 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		tf->Set_LocalPosition(info.localPos);
 	};
 
+	auto applyComponents = [&](CGameObject* obj, const SCENETRANSFORMINFO& info)
+	{
+		for (const wstring& componentName : info.componentNames)
+			ensureComponentByName(obj, componentName);
+	};
+
+
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
 		CGameObject* obj = *it;
@@ -934,6 +1017,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		{
 			const auto& info = _infoList[guidIter->second];
 			applyInfo(obj, info);
+			applyComponents(obj, info);
 			usedInfo[guidIter->second] = true;
 			continue;
 		}
@@ -946,6 +1030,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			if (!info.objGuid.empty())
 				obj->m_strGuid = info.objGuid;
 			applyInfo(obj, info);
+			applyComponents(obj, info);
 			usedInfo[pathIter->second] = true;
 			continue;
 		}
@@ -971,6 +1056,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				if (!info.objGuid.empty())
 					obj->m_strGuid = info.objGuid;
 				applyInfo(obj, info);
+				applyComponents(obj, info);
 			}
 		}
 	}
@@ -1054,6 +1140,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				newObj->m_strGuid = info.objGuid;
 
 			applyInfo(newObj, info);
+			applyComponents(newObj, info);
 			usedInfo[i] = true;
 			createdAny = true;
 		}
@@ -1547,6 +1634,9 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 		addResourceWithName(sceneName, resource);
 	};
 
+	_bool hasMeshRendererObject = false;
+	_bool hasSkinnedRendererObject = false;
+
 	for (CGameObject* obj : m_lObjectList)
 	{
 		if (!obj)
@@ -1559,6 +1649,11 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 
 			if (CMeshFilter* meshFilter = dynamic_cast<CMeshFilter*>(component))
 				addResource(meshFilter->Get_MeshBuffer());
+
+			if (dynamic_cast<CMeshRenderer*>(component))
+				hasMeshRendererObject = true;
+			if (dynamic_cast<CSkinnedMeshRenderer*>(component))
+				hasSkinnedRendererObject = true;
 
 			if (CRenderer* renderer = dynamic_cast<CRenderer*>(component))
 			{
@@ -1577,6 +1672,17 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 				for (auto& [clipName, clip] : animator->Get_AnimationClipList())
 					addResourceWithName(clipName, clip);
 			}
+		}
+	}
+
+	if (hasMeshRendererObject || hasSkinnedRendererObject)
+	{
+		for (const auto& [name, entry] : previousEntries)
+		{
+			if (hasMeshRendererObject && CEngineString::Contains(entry.format, L"[Mesh]"))
+				addEntry(name, entry.path, entry.format);
+			if (hasSkinnedRendererObject && CEngineString::Contains(entry.format, L"[Skinned Mesh]"))
+				addEntry(name, entry.path, entry.format);
 		}
 	}
 
