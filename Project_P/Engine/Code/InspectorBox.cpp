@@ -110,24 +110,33 @@ static void AddPathToTree(PathTreeNode& root, const string& relPath)
 
 
 
-static vector<string> CollectTextureRelativeFiles()
-{
-    static const vector<string> extensions = { ".png", ".jpg", ".jpeg", ".bmp", ".tga", ".dds", ".tif", ".tiff", ".gif" };
-    vector<string> files;
-    unordered_set<string> unique;
+static vector<string> g_cachedTextureFiles;
+static _bool g_cachedTextureFilesInitialized = false;
 
-    for (const string& ext : extensions)
+static const vector<string>& GetTextureRelativeFiles(const _bool forceRefresh = false)
+{
+    if (!g_cachedTextureFilesInitialized || forceRefresh)
     {
-        vector<string> extFiles = CollectRelativeFilesByExtension(fs::path(L"../Assets"), ext);
-        for (const string& file : extFiles)
+        static const vector<string> extensions = { ".png", ".jpg", ".jpeg", ".bmp", ".tga", ".dds", ".tif", ".tiff", ".gif" };
+        vector<string> files;
+        unordered_set<string> unique;
+
+        for (const string& ext : extensions)
         {
-            if (unique.insert(file).second)
-                files.push_back(file);
+            vector<string> extFiles = CollectRelativeFilesByExtension(fs::path(L"../Assets"), ext);
+            for (const string& file : extFiles)
+            {
+                if (unique.insert(file).second)
+                    files.push_back(file);
+            }
         }
+
+        sort(files.begin(), files.end());
+        g_cachedTextureFiles = move(files);
+        g_cachedTextureFilesInitialized = true;
     }
 
-    sort(files.begin(), files.end());
-    return files;
+    return g_cachedTextureFiles;
 }
 
 static CTexture* LoadInspectorTextureResource(const string& relPath)
@@ -272,7 +281,10 @@ static void RenderTexturePickerWindow()
         return;
     }
 
-    vector<string> textureFiles = CollectTextureRelativeFiles();
+    if (ImGui::Button("Refresh List"))
+        GetTextureRelativeFiles(true);
+
+    const vector<string>& textureFiles = GetTextureRelativeFiles();
     vector<string> folders = CollectTextureFolders(textureFiles);
 
     if (g_texturePickerState.selectedFolder.empty())
@@ -327,33 +339,55 @@ static void RenderTexturePickerWindow()
 
     if (ImGui::BeginTable("##TextureGrid", columns))
     {
-        for (const string& relPath : filteredFiles)
+        const _int rowCount = static_cast<_int>((filteredFiles.size() + columns - 1) / columns);
+        ImGuiListClipper clipper;
+        clipper.Begin(rowCount);
+
+        while (clipper.Step())
         {
-            ImGui::TableNextColumn();
-            ImGui::PushID(relPath.c_str());
-
-            CTexture* texture = LoadInspectorTextureResource(relPath);
-            _bool selected = false;
-            if (texture && texture->Get_SRV())
-                selected = ImGui::ImageButton("##TexThumb", ImTextureRef((ImTextureID)(intptr_t)texture->Get_SRV()), ImVec2(thumbnailSize, thumbnailSize));
-            else
-                selected = ImGui::Button("Select", ImVec2(thumbnailSize, thumbnailSize));
-
-            if (selected)
+            for (_int row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row)
             {
-                g_texturePickerState.material->Set_Texture(texture, g_texturePickerState.slotIndex);
-                g_texturePickerState.open = false;
-                ImGui::PopID();
-                break;
+                ImGui::TableNextRow();
+
+                for (_int col = 0; col < columns; ++col)
+                {
+                    const _int index = row * columns + col;
+                    ImGui::TableSetColumnIndex(col);
+
+                    if (index >= static_cast<_int>(filteredFiles.size()))
+                        continue;
+
+                    const string& relPath = filteredFiles[index];
+                    ImGui::PushID(relPath.c_str());
+
+                    CTexture* texture = LoadInspectorTextureResource(relPath);
+                    _bool selected = false;
+                    if (texture && texture->Get_SRV())
+                        selected = ImGui::ImageButton("##TexThumb", ImTextureRef((ImTextureID)(intptr_t)texture->Get_SRV()), ImVec2(thumbnailSize, thumbnailSize));
+                    else
+                        selected = ImGui::Button("Select", ImVec2(thumbnailSize, thumbnailSize));
+
+                    if (selected)
+                    {
+                        g_texturePickerState.material->Set_Texture(texture, g_texturePickerState.slotIndex);
+                        g_texturePickerState.open = false;
+                        ImGui::PopID();
+                        clipper.End();
+                        ImGui::EndTable();
+                        ImGui::EndChild();
+                        ImGui::End();
+                        return;
+                    }
+
+                    const string fileName = fs::path(relPath).filename().string();
+                    const string shortName = BuildShortLabel(fileName, 12);
+                    ImGui::TextUnformatted(shortName.c_str());
+                    if (ImGui::IsItemHovered())
+                        ImGui::SetTooltip("%s", fileName.c_str());
+
+                    ImGui::PopID();
+                }
             }
-
-            const string fileName = fs::path(relPath).filename().string();
-            const string shortName = BuildShortLabel(fileName, 12);
-            ImGui::TextUnformatted(shortName.c_str());
-            if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("%s", fileName.c_str());
-
-            ImGui::PopID();
         }
 
         ImGui::EndTable();
@@ -1202,6 +1236,10 @@ void CInspectorBox::RenderMeshRendererComponent(CMeshRenderer* _meshRenderer)
                 ImGui::Text("[%u] %s", i, shortSlotName.c_str());
                 if (ImGui::IsItemHovered())
                     ImGui::SetTooltip("%s", textureName.c_str());
+
+                ImGui::SameLine();
+                if (ImGui::Button("Empty"))
+                    material->Set_Texture(nullptr, static_cast<_int>(i));
 
                 ImGui::SameLine();
                 if (ImGui::Button("Remove"))
