@@ -396,6 +396,14 @@ void CScene::Start()
 
 void CScene::Update_Editor()
 {
+	if (CInput::GetInstance().GetKeyDown_Editor(KEY_DELETE))
+	{
+		if (auto deleteObj = CEditor::GetInstance().Get_SelectedGameObject())
+			deleteObj->Destroy();
+
+		CEditor::GetInstance().Set_SelectedGameObject(nullptr);
+	}
+
 	PickObjectInEditor_End();
 	PickObjectInEditor_Start();
 
@@ -673,6 +681,23 @@ void CScene::Render_Game()
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->OnPostRender();
+}
+
+void CScene::Frame_End()
+{
+	vector<CGameObject*> deleteList = {};
+
+	for (TRAVERSAL_ITER(m_lObjectList, it))
+	{
+		if ((*it)->m_bKill)
+		{
+			Safe_Release((*it));
+			deleteList.push_back(*it);
+		}
+	}
+
+	for (TRAVERSAL_ITER(deleteList, it))
+		m_lObjectList.remove((*it));
 }
 
 void CScene::SceneRelease()
@@ -1317,6 +1342,17 @@ CCamera* CScene::Add_Camera(CCamera* _camera)
 	return m_lCameraList.back();
 }
 
+void CScene::Remove_Camera(CCamera* _camera)
+{
+	if (!_camera)
+		return;
+
+	auto it = find(m_lCameraList.begin(), m_lCameraList.end(), _camera);
+
+	if (it != m_lCameraList.end())
+		m_lCameraList.erase(it);
+}
+
 const list<CLight*>& CScene::Get_LightList()
 {
 	return m_lLightList;
@@ -1330,6 +1366,16 @@ CLight* CScene::Add_Light(CLight* _light)
 	m_lLightList.push_back(_light);
 
 	return m_lLightList.back();
+}
+
+void CScene::RemoveLight(CLight* _light)
+{
+	if (!_light)
+		return;
+
+	auto it = find(m_lLightList.begin(), m_lLightList.end(), _light);
+	if (it != m_lLightList.end())
+		m_lLightList.erase(it);
 }
 
 vector<_matrix>& CScene::Get_LightData()

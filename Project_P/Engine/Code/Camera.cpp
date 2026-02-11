@@ -14,8 +14,8 @@ CCamera::CCamera()
 	, m_fFar(600.f)
 	, m_fFieldOfView(60.f)
 	, m_fSize(5.f)
-	, m_vMeshList({})
-	, m_vUIList({})
+	, m_lMeshList({})
+	, m_lUIList({})
 	, m_mRTDebugDisplays({})
 	, m_pRectBuffer(nullptr)
 	, m_mRectMats({})
@@ -226,7 +226,7 @@ void CCamera::Render()
 
 void CCamera::OnPostRender()
 {
-	m_vMeshList.clear();
+	m_lMeshList.clear();
 }
 
 void CCamera::OnDestroy()
@@ -246,6 +246,9 @@ void CCamera::OnDestroy()
 
 	Safe_Release(m_pPickStaging);
 	Safe_Release(m_pMainLight);
+
+	if (auto scene = CSceneManager::GetInstance().Get_CrtScene())
+	 scene->Remove_Camera(this);
 }
 
 _matrix CCamera::Get_ViewMatrix() const
@@ -292,12 +295,12 @@ void CCamera::Set_BackgroundColor(const ColorValue& _color)
 
 void CCamera::Add_RenderTarget_Mesh(CRenderer* _mesh)
 {
-	m_vMeshList.push_back(_mesh);
+	m_lMeshList.push_back(_mesh);
 }
 
 void CCamera::Add_RenderTarget_UI(CUI* _ui)
 {
-	m_vUIList.push_back(_ui);
+	m_lUIList.push_back(_ui);
 }
 
 void CCamera::Bind_ViewMatrix()
@@ -349,7 +352,7 @@ void CCamera::Bind_ProjectionMatrix()
 
 void CCamera::RenderMesh()
 {
-	for (TRAVERSAL_ITER(m_vMeshList, it))
+	for (TRAVERSAL_ITER(m_lMeshList, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->Render_WithCamera(this);
@@ -377,10 +380,10 @@ void CCamera::RenderUI()
 		0.f, 1.f
 	);
 
-	if (m_vUIList.size() <= 0)
+	if (m_lUIList.size() <= 0)
 		return;
 
-	for (TRAVERSAL_ITER(m_vUIList, it))
+	for (TRAVERSAL_ITER(m_lUIList, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 		{
@@ -398,7 +401,7 @@ void CCamera::RenderUI()
 		}
 	}
 
-	m_vUIList.clear();
+	m_lUIList.clear();
 }
 
 void CCamera::RenderDisplay()
@@ -952,7 +955,7 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	const _float bf[4] = { 0,0,0,0 };
 	ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF);
 
-	auto& shadowList = m_vMeshList;
+	auto& shadowList = m_lMeshList;
 
 	CMaterial* shadowDepthMat = Find_RectMaterial(CRenderTarget::RTType::ShadowDepth);
 

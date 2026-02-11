@@ -107,8 +107,8 @@ protected:
 	_float m_fFieldOfView;
 	_float m_fSize;
 
-	vector<CRenderer*> m_vMeshList;
-	vector<CUI*> m_vUIList;
+	list<CRenderer*> m_lMeshList;
+	list<CUI*> m_lUIList;
 
 private:
 	static const ColorValue s_vDefaultCameraColor;

@@ -234,8 +234,6 @@ void CRectTransform::SetParent(CTransform* _parent)
     if (canvas)
     {
         m_pUI->Set_Canvas(canvas);
-        canvas->Add_UIObject(m_pUI);
-
         Safe_Release(m_pParentRect);
 
         if (m_pParent)

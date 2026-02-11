@@ -33,6 +33,7 @@ CGameObject::CGameObject(const wstring _name, ID3D11Device* _pDevice, ID3D11Devi
 	, m_pDevice(_pDevice)
 	, m_pContext(_pContext)
 	, m_bIsBoneTransform(false)
+	, m_bKill(false)
 {
 	m_strName = L"Game Object";
 	m_pDevice->AddRef();
@@ -300,6 +301,11 @@ void CGameObject::OnApplicationQuit()
 		if ((*it)->Get_Enable())
 			(*it)->OnApplicationQuit();
 	}
+}
+
+void CGameObject::Destroy()
+{
+	m_bKill = true;
 }
 
 const _bool CGameObject::IsActive() const

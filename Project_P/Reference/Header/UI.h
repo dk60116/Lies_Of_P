@@ -16,6 +16,7 @@ protected:
 
 public:
 	HRESULT Initialize() override;
+	void Update() override;
 	void OnDestroy();
 
 private:
@@ -36,6 +37,9 @@ public:
 	CCanvas* Get_Canvas() const;
 	void SetColor(ColorValue _color);
 	void SetAlpha(const _float _value);
+
+public:
+	void UnlinkCanvas();
 
 private:
 	const _bool Is_Canvas() const;

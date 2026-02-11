@@ -59,6 +59,8 @@ void CLight::Render()
 
 void CLight::OnDestroy()
 {
+	if (auto scene = CSceneManager::GetInstance().Get_CrtScene())
+		scene->RemoveLight(this);
 }
 
 const CLight::Type CLight::Get_Type() const

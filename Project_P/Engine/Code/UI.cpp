@@ -15,7 +15,6 @@ CUI::CUI()
 
 CUI::~CUI()
 {
-	OnDestroy();
 }
 
 CUI* CUI::Create()
@@ -69,6 +68,12 @@ HRESULT CUI::Initialize()
 		Set_Material(CResources::GetInstance().CloneOnGame<CMaterial>(L"DefaultUIMaterial (Material)"));
 
 	return S_OK;
+}
+
+void CUI::Update()
+{
+	if (m_pCanvas)
+		m_pCanvas->Add_UIObject(this);
 }
 
 void CUI::OnDestroy()
@@ -131,6 +136,12 @@ const _bool CUI::Is_Canvas() const
 CCanvas* CUI::Get_Canvas() const
 {
 	return m_pCanvas;
+}
+
+void CUI::UnlinkCanvas()
+{
+	Safe_Release(m_pCanvas);
+	m_pCanvas = nullptr;
 }
 
 void CUI::Set_Canvas(CCanvas* _canvas)

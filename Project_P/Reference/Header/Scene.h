@@ -58,6 +58,7 @@ public:
     virtual void LateUpdate();
     virtual void Render_Editor();
     virtual void Render_Game();
+    virtual void Frame_End();
     virtual void SceneRelease();
 
 protected:
@@ -100,9 +101,11 @@ public:
     CCamera* Get_EditorCamera() const;
     const list <CCamera*>& Get_CameraList();
     CCamera* Add_Camera(CCamera* _camera);
+    void Remove_Camera(CCamera* _camera);
 
     const list<class CLight*>& Get_LightList();
     CLight* Add_Light(CLight* _light);
+    void RemoveLight(CLight* _light);
 
     vector<_matrix>& Get_LightData();
 

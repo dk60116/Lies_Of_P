@@ -181,7 +181,10 @@ void CTransform::Render_Gizmo()
 
 void CTransform::OnDestroy()
 {
-    Safe_Release(m_pParent);
+    if (m_pParent)
+        m_pParent->m_lChildList.remove(this);
+    
+    //Safe_Release(m_pParent);
 }
 
 CTransform* CTransform::Get_Parent() const

@@ -105,6 +105,8 @@ void CMainProcess::Update_MainApp()
 
         graphicDev.Present();
 #endif
+
+        scene->Frame_End();
     }
 
     if (CSceneManager::GetInstance().Is_Loading() && !CSceneLoader::GetInstance().Is_Loading())
