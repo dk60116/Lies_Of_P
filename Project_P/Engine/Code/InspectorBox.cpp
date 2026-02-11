@@ -897,10 +897,46 @@ void CInspectorBox::RenderMeshRendererComponent(CMeshRenderer* _meshRenderer)
     {
         string materialName = CEngineString::WStringToString(material->Get_ResourceName());
         ImGui::Text("Material: %s", materialName.c_str());
+
+        CShader* shader = material->Get_Shader();
+        if (shader)
+        {
+            string shaderName = CEngineString::WStringToString(shader->Get_ResourceName());
+            ImGui::Text("Shader: %s", shaderName.c_str());
+        }
+        else
+        {
+            ImGui::TextUnformatted("Shader: None");
+        }
+
+        ImGui::TextUnformatted("Textures:");
+        const _uint textureCount = material->Get_TextureCount();
+        if (textureCount == 0)
+        {
+            ImGui::BulletText("None");
+        }
+        else
+        {
+            for (_uint i = 0; i < textureCount; ++i)
+            {
+                CTexture* texture = material->Get_Texture(static_cast<_int>(i));
+                if (texture)
+                {
+                    string textureName = CEngineString::WStringToString(texture->Get_ResourceName());
+                    ImGui::BulletText("[%u] %s", i, textureName.c_str());
+                }
+                else
+                {
+                    ImGui::BulletText("[%u] None", i);
+                }
+            }
+        }
     }
     else
     {
         ImGui::TextUnformatted("Material: None");
+        ImGui::TextUnformatted("Shader: None");
+        ImGui::TextUnformatted("Textures: None");
     }
 
     CMeshFilter* meshFilter = _meshRenderer->Get_MeshFilter();

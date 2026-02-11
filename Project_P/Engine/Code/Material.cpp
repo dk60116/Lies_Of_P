@@ -231,7 +231,7 @@ void CMaterial::Bind_Light(_matrix* _lights, const _uint _count)
 
 	LightCB buffer = {};
 
-	// µ¥ÀÌÅÍ º¹»ç
+	// ë°ì´í„° ë³µì‚¬
 	const _uint maxCount = min(_count, 64u);
 	memcpy(buffer.lights, _lights, sizeof(_matrix) * maxCount);
 
@@ -243,7 +243,7 @@ void CMaterial::Bind_CustomValues()
 {
 	m_vCustomBufferByteList.clear();
 
-	// ¼ø¼­ Áß¿ä: HLSL°ú ÀÏÄ¡ÇØ¾ß ÇÔ
+	// ìˆœì„œ ì¤‘ìš”: HLSLê³¼ ì¼ì¹˜í•´ì•¼ í•¨
 	for (const auto& [key, value] : m_mFloatValues)
 	{
 		const BYTE* p = reinterpret_cast<const BYTE*>(&value);
@@ -323,9 +323,22 @@ void CMaterial::Bind_CustomValues()
 		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _43, _43 + sizeof(float));
 		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _44, _44 + sizeof(float));
 	}
-	// TODO: Vector4 µîµµ Ãß°¡ °¡´É
+CShader* CMaterial::Get_Shader() const
+{
+	return m_pShader;
+}
 
-	// Á¤·Ä ¸ÂÃß±â (16¹ÙÀÌÆ® ´ÜÀ§)
+const _uint CMaterial::Get_TextureCount() const
+{
+	return static_cast<_uint>(m_vTextureList.size());
+}
+
+	if (_index < 0 || static_cast<size_t>(_index) >= m_vTextureList.size())
+		return nullptr;
+
+	// TODO: Vector4 ë“±ë„ ì¶”ê°€ ê°€ëŠ¥
+
+	// ì •ë ¬ ë§ì¶”ê¸° (16ë°”ì´íŠ¸ ë‹¨ìœ„)
 	while (m_vCustomBufferByteList.size() % 16 != 0)
 		m_vCustomBufferByteList.push_back(0);
 

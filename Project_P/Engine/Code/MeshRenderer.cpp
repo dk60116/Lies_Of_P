@@ -39,6 +39,9 @@ HRESULT CMeshRenderer::Initialize()
 			m_pMeshFilter->AddRef();
 	}
 
+	if (!Get_Material())
+		Set_Material(CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferLit (Material)"));
+
 	return S_OK;
 }
 

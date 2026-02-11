@@ -44,6 +44,8 @@ public:
 
 public:
 	const _bool IsUseLight() const;
+	class CShader* Get_Shader() const;
+	const _uint Get_TextureCount() const;
 	class CTexture* Get_Texture(_int _index) const;
 
 public:
