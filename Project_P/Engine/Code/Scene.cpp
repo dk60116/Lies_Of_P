@@ -874,7 +874,34 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		if (CMeshFilter* meshFilter = (*it)->GetComponent<CMeshFilter>())
 		{
 			if (CMeshBuffer* meshBuffer = meshFilter->Get_MeshBuffer())
-				info.meshBufferName = meshBuffer->Get_ResourceName();
+			{
+				wstring meshResourceName = meshBuffer->Get_ResourceName();
+				wstring meshBundleName = L"";
+
+				auto findBundleName = [&](const auto& bundleMap)
+				{
+					for (const auto& bundlePair : bundleMap)
+					{
+						for (const MeshBundle& bundle : bundlePair.second)
+						{
+							if (bundle.meshBuffer == meshBuffer)
+							{
+								meshBundleName = bundlePair.first;
+								return;
+							}
+						}
+					}
+				};
+
+				findBundleName(m_mMeshBundleList);
+				if (meshBundleName.empty())
+					findBundleName(m_mTempMeshBundleList);
+
+				if (!meshBundleName.empty())
+					info.meshBufferName = meshBundleName + L"::" + meshResourceName;
+				else
+					info.meshBufferName = meshResourceName;
+			}
 		}
 
 		if (CRenderer* renderer = (*it)->GetComponent<CRenderer>())
@@ -1019,9 +1046,117 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		{
 			if (CMeshFilter* meshFilter = obj->GetComponent<CMeshFilter>())
 			{
-				CMeshBuffer* meshBuffer = CResources::GetInstance().LoadOnScene<CMeshBuffer>(info.meshBufferName);
+				auto findMeshInBundles = [&](const wstring& bundleName, const wstring& meshName) -> CMeshBuffer*
+				{
+					auto findMeshInStaticBundleList = [&](const auto& bundleList) -> CMeshBuffer*
+					{
+						for (const MeshBundle& bundle : bundleList)
+						{
+							CMeshBuffer* bundleMesh = bundle.meshBuffer;
+							if (!bundleMesh)
+								continue;
+
+							if (meshName.empty() || bundleMesh->Get_ResourceName() == meshName)
+								return bundleMesh;
+						}
+
+						return nullptr;
+					};
+
+					auto findMeshInSkinnedBundleList = [&](const auto& bundleList) -> CMeshBuffer*
+					{
+						for (const SkinnedMeshBundle& bundle : bundleList)
+						{
+							CMeshBuffer* bundleMesh = bundle.meshBuffer;
+							if (!bundleMesh)
+								continue;
+
+							if (meshName.empty() || bundleMesh->Get_ResourceName() == meshName)
+								return bundleMesh;
+						}
+
+						return nullptr;
+					};
+
+					if (!bundleName.empty())
+					{
+						auto staticBundleIter = m_mMeshBundleList.find(bundleName);
+						if (staticBundleIter != m_mMeshBundleList.end())
+							if (CMeshBuffer* found = findMeshInStaticBundleList(staticBundleIter->second))
+								return found;
+
+						auto staticTempBundleIter = m_mTempMeshBundleList.find(bundleName);
+						if (staticTempBundleIter != m_mTempMeshBundleList.end())
+							if (CMeshBuffer* found = findMeshInStaticBundleList(staticTempBundleIter->second))
+								return found;
+
+						auto skinnedBundleIter = m_mSkinnedBundleList.find(bundleName);
+						if (skinnedBundleIter != m_mSkinnedBundleList.end())
+							if (CMeshBuffer* found = findMeshInSkinnedBundleList(skinnedBundleIter->second))
+								return found;
+
+						auto skinnedTempBundleIter = m_mTempSkinnedBundleList.find(bundleName);
+						if (skinnedTempBundleIter != m_mTempSkinnedBundleList.end())
+							if (CMeshBuffer* found = findMeshInSkinnedBundleList(skinnedTempBundleIter->second))
+								return found;
+					}
+					else
+					{
+						auto findByMeshNameInMap = [&](const auto& bundleMap) -> CMeshBuffer*
+						{
+							for (const auto& bundlePair : bundleMap)
+							{
+								if (CMeshBuffer* found = findMeshInStaticBundleList(bundlePair.second))
+									return found;
+							}
+
+							return nullptr;
+						};
+
+						auto findByMeshNameInSkinnedMap = [&](const auto& bundleMap) -> CMeshBuffer*
+						{
+							for (const auto& bundlePair : bundleMap)
+							{
+								if (CMeshBuffer* found = findMeshInSkinnedBundleList(bundlePair.second))
+									return found;
+							}
+
+							return nullptr;
+						};
+
+						if (CMeshBuffer* found = findByMeshNameInMap(m_mMeshBundleList))
+							return found;
+						if (CMeshBuffer* found = findByMeshNameInMap(m_mTempMeshBundleList))
+							return found;
+						if (CMeshBuffer* found = findByMeshNameInSkinnedMap(m_mSkinnedBundleList))
+							return found;
+						if (CMeshBuffer* found = findByMeshNameInSkinnedMap(m_mTempSkinnedBundleList))
+							return found;
+					}
+
+					return nullptr;
+				};
+
+				wstring meshToken = info.meshBufferName;
+				wstring bundleName = L"";
+				wstring meshName = meshToken;
+
+				size_t separatorPos = meshToken.find(L"::");
+				if (separatorPos != wstring::npos)
+				{
+					bundleName = meshToken.substr(0, separatorPos);
+					meshName = meshToken.substr(separatorPos + 2);
+				}
+
+				CMeshBuffer* meshBuffer = CResources::GetInstance().LoadOnScene<CMeshBuffer>(meshToken);
 				if (!meshBuffer)
-					meshBuffer = CResources::GetInstance().LoadOnGame<CMeshBuffer>(info.meshBufferName);
+					meshBuffer = CResources::GetInstance().LoadOnGame<CMeshBuffer>(meshToken);
+				if (!meshBuffer)
+					meshBuffer = CResources::GetInstance().LoadOnScene<CMeshBuffer>(meshName);
+				if (!meshBuffer)
+					meshBuffer = CResources::GetInstance().LoadOnGame<CMeshBuffer>(meshName);
+				if (!meshBuffer)
+					meshBuffer = findMeshInBundles(bundleName, meshName);
 				if (meshBuffer)
 					meshFilter->Set_MeshBuffer(meshBuffer);
 			}
