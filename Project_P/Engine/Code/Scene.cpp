@@ -871,6 +871,18 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			{ const wstring compName = getComponentPersistName(component); if (!compName.empty()) info.componentNames.push_back(compName); }
 		}
 
+		if (CMeshFilter* meshFilter = (*it)->GetComponent<CMeshFilter>())
+		{
+			if (CMeshBuffer* meshBuffer = meshFilter->Get_MeshBuffer())
+				info.meshBufferName = meshBuffer->Get_ResourceName();
+		}
+
+		if (CRenderer* renderer = (*it)->GetComponent<CRenderer>())
+		{
+			if (CMaterial* material = renderer->Get_Material())
+				info.materialName = material->Get_ResourceName();
+		}
+
 		if (i > 0 && !(*it)->m_bIsBoneTransform)
 			result.push_back(info);
 
@@ -1002,6 +1014,38 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 	{
 		for (const wstring& componentName : info.componentNames)
 			ensureComponentByName(obj, componentName);
+
+		if (!info.meshBufferName.empty())
+		{
+			if (CMeshFilter* meshFilter = obj->GetComponent<CMeshFilter>())
+			{
+				CMeshBuffer* meshBuffer = CResources::GetInstance().LoadOnScene<CMeshBuffer>(info.meshBufferName);
+				if (!meshBuffer)
+					meshBuffer = CResources::GetInstance().LoadOnGame<CMeshBuffer>(info.meshBufferName);
+				if (meshBuffer)
+					meshFilter->Set_MeshBuffer(meshBuffer);
+			}
+		}
+
+		if (!info.materialName.empty())
+		{
+			if (CRenderer* renderer = dynamic_cast<CRenderer*>(obj->GetComponent<CMeshRenderer>()))
+			{
+				CMaterial* material = CResources::GetInstance().LoadOnScene<CMaterial>(info.materialName);
+				if (!material)
+					material = CResources::GetInstance().LoadOnGame<CMaterial>(info.materialName);
+				if (material)
+					renderer->Set_Material(material);
+			}
+			else if (CRenderer* skinnedRenderer = dynamic_cast<CRenderer*>(obj->GetComponent<CSkinnedMeshRenderer>()))
+			{
+				CMaterial* material = CResources::GetInstance().LoadOnScene<CMaterial>(info.materialName);
+				if (!material)
+					material = CResources::GetInstance().LoadOnGame<CMaterial>(info.materialName);
+				if (material)
+					skinnedRenderer->Set_Material(material);
+			}
+		}
 	};
 
 

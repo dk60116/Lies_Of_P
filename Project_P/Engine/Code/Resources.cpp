@@ -656,7 +656,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 4;
+	const _uint version = 5;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -706,6 +706,16 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 			if (componentNameSize > 0)
 				out.write(reinterpret_cast<const char*>(componentName.data()), sizeof(wchar_t) * componentNameSize);
 		}
+
+		_uint meshBufferNameSize = static_cast<_uint>(info.meshBufferName.size());
+		out.write(reinterpret_cast<const char*>(&meshBufferNameSize), sizeof(_uint));
+		if (meshBufferNameSize > 0)
+			out.write(reinterpret_cast<const char*>(info.meshBufferName.data()), sizeof(wchar_t) * meshBufferNameSize);
+
+		_uint materialNameSize = static_cast<_uint>(info.materialName.size());
+		out.write(reinterpret_cast<const char*>(&materialNameSize), sizeof(_uint));
+		if (materialNameSize > 0)
+			out.write(reinterpret_cast<const char*>(info.materialName.data()), sizeof(wchar_t) * materialNameSize);
 	}
 
 	out.close();
@@ -822,6 +832,27 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 				}
 				else
 					info.componentNames.push_back(L"");
+			}
+		}
+
+		if (version >= 5)
+		{
+			_uint meshBufferNameSize = 0;
+			in.read(reinterpret_cast<char*>(&meshBufferNameSize), sizeof(_uint));
+			if (meshBufferNameSize > 0)
+			{
+				wstring meshBufferName(meshBufferNameSize, L'\0');
+				in.read(reinterpret_cast<char*>(&meshBufferName[0]), sizeof(wchar_t) * meshBufferNameSize);
+				info.meshBufferName = move(meshBufferName);
+			}
+
+			_uint materialNameSize = 0;
+			in.read(reinterpret_cast<char*>(&materialNameSize), sizeof(_uint));
+			if (materialNameSize > 0)
+			{
+				wstring materialName(materialNameSize, L'\0');
+				in.read(reinterpret_cast<char*>(&materialName[0]), sizeof(wchar_t) * materialNameSize);
+				info.materialName = move(materialName);
 			}
 		}
 

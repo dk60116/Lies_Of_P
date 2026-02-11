@@ -33,6 +33,8 @@ public:
         _bool isRect = false;
         SCENERECTINFO rectInfo = {};
         vector<wstring> componentNames = {};
+        wstring meshBufferName = L"";
+        wstring materialName = L"";
     }SCENETRANSFORMINFO;
 
 public:
