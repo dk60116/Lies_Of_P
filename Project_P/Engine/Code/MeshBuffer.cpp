@@ -430,6 +430,8 @@ CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateCube()
     desc.vertexSize = sizeof(VertexTexNormalTangentBuffer);
     desc.vertextCount = _countof(cubeVertices);
     desc.indexCount = _countof(cubeIndices);
+    desc.boundingBox.Center = _float3(0.f, 0.f, 0.f);
+    desc.boundingBox.Extents = _float3(length, length, length);
 
     info.buffer.assign(reinterpret_cast<uint8_t*>(cubeVertices), reinterpret_cast<uint8_t*>(cubeVertices) + sizeof(cubeVertices));
     info.indices.assign(begin(cubeIndices), end(cubeIndices));
