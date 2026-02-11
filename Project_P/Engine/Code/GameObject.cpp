@@ -370,12 +370,15 @@ vector<CMeshRenderer*> CGameObject::CreateMeshHierachy(vector<MeshBundle> _meshI
 	vector<CMeshRenderer*> renderers;
 	renderers.reserve(_meshInfos.size());
 
+	_uint childIndex = 0;
+
 	for (const auto& mb : _meshInfos)
 	{
 		if (!mb.meshBuffer)
 			continue;
 
-		CGameObject* child = m_pScene->Add_GameObject(mb.meshBuffer->Get_ResourceName());
+		wstring childName = mb.meshBuffer->Get_ResourceName() + L"_" + to_wstring(childIndex++);
+		CGameObject* child = m_pScene->Add_GameObject(childName);
 		if (!child || !child->Get_Transform())
 			continue;
 
