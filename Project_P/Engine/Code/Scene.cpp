@@ -1103,8 +1103,12 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			if (info.objPath.empty())
 				continue;
 
-			if (findObjectByPath(info.objPath))
+			if (CGameObject* existingObj = findObjectByPath(info.objPath))
 			{
+				if (!info.objGuid.empty())
+					existingObj->m_strGuid = info.objGuid;
+				applyInfo(existingObj, info);
+				applyComponents(existingObj, info);
 				usedInfo[i] = true;
 				continue;
 			}
