@@ -240,6 +240,18 @@ static void RenderFolderTreeRecursive(const PathTreeNode& node, const string& cu
     }
 }
 
+
+static string BuildShortLabel(const string& input, const size_t maxLen)
+{
+    if (input.size() <= maxLen)
+        return input;
+
+    if (maxLen <= 3)
+        return input.substr(0, maxLen);
+
+    return input.substr(0, maxLen - 3) + "...";
+}
+
 static void RenderTexturePickerWindow()
 {
     if (!g_texturePickerState.open)
@@ -291,8 +303,8 @@ static void RenderTexturePickerWindow()
     const float cellWidth = 120.f;
     const float panelWidth = ImGui::GetContentRegionAvail().x;
     const _int columns = std::max(1, static_cast<_int>(panelWidth / cellWidth));
-    _int columnIndex = 0;
 
+    vector<string> filteredFiles;
     for (const string& relPath : textureFiles)
     {
         string normalizedPath = relPath;
@@ -310,33 +322,41 @@ static void RenderTexturePickerWindow()
         if (!searchFilter.empty() && lowerPath.find(searchFilter) == string::npos)
             continue;
 
-        ImGui::PushID(relPath.c_str());
-        CTexture* texture = LoadInspectorTextureResource(relPath);
+        filteredFiles.push_back(relPath);
+    }
 
-        _bool selected = false;
-        if (texture && texture->Get_SRV())
-            selected = ImGui::ImageButton("##TexThumb", ImTextureRef((ImTextureID)(intptr_t)texture->Get_SRV()), ImVec2(thumbnailSize, thumbnailSize));
-        else
-            selected = ImGui::Button("Select", ImVec2(thumbnailSize, thumbnailSize));
-
-        if (selected)
+    if (ImGui::BeginTable("##TextureGrid", columns))
+    {
+        for (const string& relPath : filteredFiles)
         {
-            g_texturePickerState.material->Set_Texture(texture, g_texturePickerState.slotIndex);
-            g_texturePickerState.open = false;
+            ImGui::TableNextColumn();
+            ImGui::PushID(relPath.c_str());
+
+            CTexture* texture = LoadInspectorTextureResource(relPath);
+            _bool selected = false;
+            if (texture && texture->Get_SRV())
+                selected = ImGui::ImageButton("##TexThumb", ImTextureRef((ImTextureID)(intptr_t)texture->Get_SRV()), ImVec2(thumbnailSize, thumbnailSize));
+            else
+                selected = ImGui::Button("Select", ImVec2(thumbnailSize, thumbnailSize));
+
+            if (selected)
+            {
+                g_texturePickerState.material->Set_Texture(texture, g_texturePickerState.slotIndex);
+                g_texturePickerState.open = false;
+                ImGui::PopID();
+                break;
+            }
+
+            const string fileName = fs::path(relPath).filename().string();
+            const string shortName = BuildShortLabel(fileName, 12);
+            ImGui::TextUnformatted(shortName.c_str());
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("%s", fileName.c_str());
+
             ImGui::PopID();
-            break;
         }
 
-        string fileName = fs::path(relPath).filename().string();
-        if (fileName.size() > 18)
-            fileName = fileName.substr(0, 15) + "...";
-        ImGui::TextWrapped("%s", fileName.c_str());
-
-        ++columnIndex;
-        if (columnIndex % columns != 0)
-            ImGui::SameLine();
-
-        ImGui::PopID();
+        ImGui::EndTable();
     }
 
     ImGui::EndChild();
@@ -1175,7 +1195,10 @@ void CInspectorBox::RenderMeshRendererComponent(CMeshRenderer* _meshRenderer)
                     OpenTexturePicker(material, static_cast<_int>(i));
 
                 ImGui::SameLine();
-                ImGui::Text("[%u] %s", i, textureName.c_str());
+                const string shortSlotName = BuildShortLabel(textureName, 18);
+                ImGui::Text("[%u] %s", i, shortSlotName.c_str());
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("%s", textureName.c_str());
 
                 ImGui::SameLine();
                 if (ImGui::Button("Remove"))

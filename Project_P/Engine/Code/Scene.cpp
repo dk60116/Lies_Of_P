@@ -409,7 +409,7 @@ void CScene::Update_Editor()
 
 	CPhysics::RAYCASTHIT firstHit = {};
 
-	if (CInput::GetInstance().GetMouseButtonDown_Editor(0))
+	if (!ImGui::GetIO().WantCaptureMouse && CInput::GetInstance().GetMouseButtonDown_Editor(0))
 	{
 		const vector2Int point = CInput::GetInstance().GetMousePos_Editor();
 		CPhysics::Ray ray = m_pEditorCamera->ScreenPointToRay_Editor(point);
@@ -1473,12 +1473,18 @@ HRESULT CScene::PreLoadResources()
 
 void CScene::PickObjectInEditor_Start()
 {
+	if (ImGui::GetIO().WantCaptureMouse)
+		return;
+
 	if (CInput::GetInstance().GetMouseButtonDown_Editor(0))
 		m_vTempPickMousePos = CInput::GetInstance().GetMousePos_Editor();
 }
 
 void CScene::PickObjectInEditor_End()
 {
+	if (ImGui::GetIO().WantCaptureMouse)
+		return;
+
 	if (CInput::GetInstance().GetMouseButtonUp_Editor(0))
 	{
 		const vector2Int mp = CInput::GetInstance().GetMousePos_Editor();
