@@ -112,6 +112,7 @@ public:
     class CCanvas* Get_Canvas(const _int _index) const;
     const list <CCanvas*>& Get_CanvasList();
     CCanvas* Add_Canvas(CCanvas* _canvas);
+    void Remove_Canvas(CCanvas* _canvas);
 
     HRESULT SaveScene(const wstring& _filePath);
     const _uint Get_UniqueObjectCount() const;

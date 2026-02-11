@@ -119,6 +119,8 @@ void CText::RenderText()
 
 void CText::OnDestroy()
 {
+    __super::OnDestroy();
+
     Safe_Release(m_pFont);
 }
 

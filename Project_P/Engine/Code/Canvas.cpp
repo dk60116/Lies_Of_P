@@ -103,6 +103,9 @@ void CCanvas::OnDestroy()
 	__super::OnDestroy();
 
 	m_lUIObjectList.clear();
+
+	if (auto scene = CSceneManager::GetInstance().Get_CrtScene())
+		scene->Remove_Canvas(this);
 }
 
 void CCanvas::Add_UIObject(CUI* _ui)

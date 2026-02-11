@@ -1417,6 +1417,14 @@ CCanvas* CScene::Add_Canvas(CCanvas* _canvas)
 	return m_lCanvasList.back();
 }
 
+void CScene::Remove_Canvas(CCanvas* _canvas)
+{
+	if (!_canvas)
+		return;
+
+	m_lCanvasList.remove(_canvas);
+}
+
 HRESULT CScene::SaveScene(const wstring& _filePath)
 {
 	return S_OK;
