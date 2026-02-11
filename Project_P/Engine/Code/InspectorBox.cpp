@@ -1,6 +1,17 @@
 #include "epch.h"
 #include "InspectorBox.h"
 #include "Resources.h"
+#include "Transform.h"
+#include "RectTransform.h"
+#include "Camera.h"
+#include "Light.h"
+#include "MeshRenderer.h"
+#include "MeshFilter.h"
+#include "SkinnedMeshRenderer.h"
+#include "Animator.h"
+#include "UI.h"
+#include "Canvas.h"
+#include "Terrain.h"
 
 #include <iomanip>
 #include <sstream>
@@ -114,6 +125,8 @@ void CInspectorBox::Render()
             ShowTransform(selectedObj);
         else
             ShowRectTransform(selectedObj);
+
+        ShowComponents(selectedObj);
     }
     else
         ImGui::Text("No object selected.");
@@ -485,6 +498,117 @@ void CInspectorBox::ShowRectTransform(CGameObject* _obj)
         prevY = 0.f;
         prevZ = 0.f;
     }
+}
+
+
+void CInspectorBox::ShowComponents(CGameObject* _obj)
+{
+    if (!_obj)
+        return;
+
+    ImGui::Separator();
+    ImGui::Text("Components");
+
+    list<CComponent*>& components = _obj->Get_ComponentList();
+    for (CComponent* component : components)
+    {
+        if (!component)
+            continue;
+
+        const string componentName = CEngineString::WStringToString(component->Get_Name());
+        if (componentName.empty())
+            continue;
+
+        ImGui::BulletText("%s", componentName.c_str());
+    }
+
+    ShowAddComponentMenu(_obj);
+}
+
+void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
+{
+    if (!_obj)
+        return;
+
+    if (!ImGui::Button("Add Component"))
+        return;
+
+    ImGui::OpenPopup("AddComponentPopup");
+
+    if (!ImGui::BeginPopup("AddComponentPopup"))
+        return;
+
+    if (ImGui::MenuItem("Camera"))
+    {
+        if (!_obj->GetComponent<CCamera>())
+            _obj->AddComponent<CCamera>();
+    }
+
+    if (ImGui::MenuItem("Light"))
+    {
+        if (!_obj->GetComponent<CLight>())
+            _obj->AddComponent<CLight>();
+    }
+
+    if (ImGui::MenuItem("MeshRenderer"))
+    {
+        if (!_obj->GetComponent<CMeshRenderer>())
+            _obj->AddComponent<CMeshRenderer>();
+    }
+
+    if (ImGui::MenuItem("MeshFilter"))
+    {
+        if (!_obj->GetComponent<CMeshFilter>())
+            _obj->AddComponent<CMeshFilter>();
+    }
+
+    if (ImGui::MenuItem("SkinnedMeshRenderer"))
+    {
+        if (!_obj->GetComponent<CSkinnedMeshRenderer>())
+            _obj->AddComponent<CSkinnedMeshRenderer>();
+    }
+
+    if (ImGui::MenuItem("Animator"))
+    {
+        if (!_obj->GetComponent<CAnimator>())
+            _obj->AddComponent<CAnimator>();
+    }
+
+    if (ImGui::MenuItem("UI"))
+    {
+        if (!_obj->GetComponent<CUI>())
+            _obj->AddComponent<CUI>();
+    }
+
+    if (ImGui::MenuItem("Canvas"))
+    {
+        if (!_obj->GetComponent<CCanvas>())
+            _obj->AddComponent<CCanvas>();
+    }
+
+    if (ImGui::MenuItem("Terrain"))
+    {
+        if (!_obj->GetComponent<CTerrain>())
+            _obj->AddComponent<CTerrain>();
+    }
+
+    if (ImGui::MenuItem("Transform"))
+    {
+        if (!_obj->GetComponent<CTransform>())
+            _obj->AddComponent<CTransform>();
+    }
+
+    if (ImGui::MenuItem("RectTransform"))
+    {
+        if (!_obj->GetComponent<CRectTransform>())
+        {
+            CRectTransform* rectTransform = _obj->AddComponent<CRectTransform>();
+            if (rectTransform)
+                _obj->Set_Transform(rectTransform);
+        }
+    }
+
+    ImGui::EndPopup();
 }
 
 static _bool IsPreviewImageExtension(const fs::path& path)

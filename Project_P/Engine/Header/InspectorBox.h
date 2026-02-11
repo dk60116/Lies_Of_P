@@ -25,6 +25,8 @@ public:
 private:
 	void ShowTransform(CGameObject* _obj);
 	void ShowRectTransform(CGameObject* _obj);
+	void ShowComponents(CGameObject* _obj);
+	void ShowAddComponentMenu(CGameObject* _obj);
 	void RenderSelectedAssetInfo(const fs::path& path);
 	void RenderSelectedAssetPreview(const fs::path& path);
 	_float m_fRXDrag, m_fRYDrag, m_fRZDrag;
