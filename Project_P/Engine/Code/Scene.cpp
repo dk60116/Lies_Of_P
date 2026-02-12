@@ -1221,22 +1221,23 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 
 		if (!info.materialName.empty())
 		{
-			auto applyMaterialData = [&](CMaterial* material)
+			auto resolveMaterial = [&]() -> CMaterial*
 			{
-				if (!material)
-					return;
-
-				for (_int index = static_cast<_int>(material->Get_TextureCount()) - 1; index >= 0; --index)
-					material->Remove_Texture(index);
-
-				for (const auto& textureInfo : info.materialTextures)
+				CMaterial* source = CResources::GetInstance().LoadOnScene<CMaterial>(info.materialName);
+				if (source)
+					if (CMaterial* clone = CResources::GetInstance().CloneOnScene<CMaterial>(info.materialName))
+						return clone;
+				source = CResources::GetInstance().LoadOnGame<CMaterial>(info.materialName);
+				if (source)
+					if (CMaterial* clone = CResources::GetInstance().CloneOnGame<CMaterial>(info.materialName))
+						return clone;
+				if (CMaterial* fallbackClone = CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferLit (Material)"))
 				{
-					CTexture* texture = nullptr;
-					if (!textureInfo.name.empty())
-					{
-						texture = CResources::GetInstance().LoadOnScene<CTexture>(textureInfo.name);
-						if (!texture)
-							texture = CResources::GetInstance().LoadOnGame<CTexture>(textureInfo.name);
+					if (!info.materialName.empty())
+						fallbackClone->Set_ResourceName(info.materialName);
+					return fallbackClone;
+				}
+				return nullptr;
 					}
 
 					if (!texture && !textureInfo.path.empty())
@@ -1271,8 +1272,8 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 
 			if (CRenderer* renderer = dynamic_cast<CRenderer*>(obj->GetComponent<CMeshRenderer>()))
 			{
-				CMaterial* material = CResources::GetInstance().LoadOnScene<CMaterial>(info.materialName);
-				if (!material)
+				CMaterial* material = resolveMaterial();
+				CMaterial* material = resolveMaterial();
 					material = CResources::GetInstance().LoadOnGame<CMaterial>(info.materialName);
 				if (material)
 				{
