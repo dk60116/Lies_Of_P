@@ -910,9 +910,9 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			}
 		}
 
-		if (CRenderer* renderer = (*it)->GetComponent<CRenderer>())
+		if (CMeshRenderer* meshRenderer = (*it)->GetComponent<CMeshRenderer>())
 		{
-			if (CMaterial* material = renderer->Get_Material())
+			if (CMaterial* material = meshRenderer->Get_Material())
 			{
 				info.materialName = material->Get_ResourceName();
 
@@ -1251,8 +1251,12 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 
 				CResources& resources = CResources::GetInstance();
 
-				for (const auto& textureInfo : info.materialTextures)
+				while (material->Get_TextureCount() > 0)
+					material->Remove_Texture(static_cast<_int>(material->Get_TextureCount() - 1));
+
+				for (_uint textureIndex = 0; textureIndex < info.materialTextures.size(); ++textureIndex)
 				{
+					const auto& textureInfo = info.materialTextures[textureIndex];
 					CTexture* texture = nullptr;
 
 					if (!textureInfo.name.empty())
@@ -1275,7 +1279,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 						texture = resources.CreateSceneResource<CTexture>(textureName, path);
 					}
 
-					material->Set_Texture(texture, static_cast<_int>(material->Get_TextureCount()));
+					material->Set_Texture(texture, static_cast<_int>(textureIndex));
 				}
 
 				for (const auto& [key, value] : info.materialFloatValues)
