@@ -849,13 +849,16 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		if (dynamic_cast<CText*>(component)) return L"Text";
 		if (dynamic_cast<CTerrain*>(component)) return L"Terrain";
 		if (dynamic_cast<CUI*>(component)) return L"UI";
-		return component->Get_UName();
+		return L"";
 	};
 
 	_uint i = 0;
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
+		if (CEngineString::Contains((*it)->Get_ObjectName(), L"(Clone)"))
+			continue;
+
 		SCENETRANSFORMINFO info = {};
 
 		CTransform* tf = (*it)->Get_Transform();
@@ -2044,6 +2047,9 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 	for (CGameObject* obj : m_lObjectList)
 	{
 		if (!obj)
+			continue;
+
+		if (CEngineString::Contains(obj->Get_ObjectName(), L"(Clone)"))
 			continue;
 
 		for (CComponent* component : obj->Get_ComponentList())
