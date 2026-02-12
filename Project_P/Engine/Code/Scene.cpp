@@ -783,7 +783,8 @@ void CScene::EndFrame()
 
 		if (obj && obj->m_bKill)
 		{
-			(*it)->Get_Transform()->Get_Parent()->RemoveChild((*it)->Get_Transform());
+			if (auto* parent = (*it)->Get_Transform()->Get_Parent())
+				parent->RemoveChild((*it)->Get_Transform());
 			Safe_Release(obj);
 			it = m_lObjectList.erase(it); 
 		}
