@@ -1222,28 +1222,25 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 
 		if (!info.materialName.empty())
 		{
-				auto resolveMaterial = [&]() -> CMaterial*
+			auto resolveMaterial = [&]() -> CMaterial*
+			{
+				if (CResources::GetInstance().LoadOnScene<CMaterial>(info.materialName))
 				{
-					CMaterial* source = CResources::GetInstance().LoadOnScene<CMaterial>(info.materialName);
-					if (source)
-					{
-						if (CMaterial* clone = CResources::GetInstance().CloneOnScene<CMaterial>(info.materialName))
-							return clone;
-					}
-					source = CResources::GetInstance().LoadOnGame<CMaterial>(info.materialName);
-					if (source)
-					{
-						if (CMaterial* clone = CResources::GetInstance().CloneOnGame<CMaterial>(info.materialName))
-							return clone;
-					}
-					if (CMaterial* fallbackClone = CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferLit (Material)"))
-					{
-						if (!info.materialName.empty())
-							fallbackClone->Set_ResourceName(info.materialName);
-						return fallbackClone;
-					}
-					return nullptr;
-				};
+					if (CMaterial* clone = CResources::GetInstance().CloneOnScene<CMaterial>(info.materialName))
+						return clone;
+				}
+				if (CResources::GetInstance().LoadOnGame<CMaterial>(info.materialName))
+				{
+					if (CMaterial* clone = CResources::GetInstance().CloneOnGame<CMaterial>(info.materialName))
+						return clone;
+				}
+				if (CMaterial* fallbackClone = CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferLit (Material)"))
+				{
+					fallbackClone->Set_ResourceName(info.materialName);
+					return fallbackClone;
+				}
+				return nullptr;
+			};
 
 					if (!texture && !textureInfo.path.empty())
 					{
@@ -1277,10 +1274,8 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 
 			if (CRenderer* renderer = dynamic_cast<CRenderer*>(obj->GetComponent<CMeshRenderer>()))
 			{
-				CMaterial* material = resolveMaterial();
-				CMaterial* material = resolveMaterial();
-					material = CResources::GetInstance().LoadOnGame<CMaterial>(info.materialName);
-				if (material)
+				if (CMaterial* material = resolveMaterial())
+				if (CMaterial* material = resolveMaterial())
 				{
 					renderer->Set_Material(material);
 					applyMaterialData(material);
