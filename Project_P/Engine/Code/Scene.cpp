@@ -1222,19 +1222,21 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 
 		if (!info.materialName.empty())
 		{
-			auto resolveMaterial = [&]() -> CMaterial*
+			auto resolveMaterial = [&info]() -> CMaterial*
 			{
-				if (CResources::GetInstance().LoadOnScene<CMaterial>(info.materialName))
+				CResources& resources = CResources::GetInstance();
+
+				if (resources.LoadOnScene<CMaterial>(info.materialName))
 				{
-					if (CMaterial* clone = CResources::GetInstance().CloneOnScene<CMaterial>(info.materialName))
+					if (CMaterial* clone = resources.CloneOnScene<CMaterial>(info.materialName))
 						return clone;
 				}
-				if (CResources::GetInstance().LoadOnGame<CMaterial>(info.materialName))
+				if (resources.LoadOnGame<CMaterial>(info.materialName))
 				{
-					if (CMaterial* clone = CResources::GetInstance().CloneOnGame<CMaterial>(info.materialName))
+					if (CMaterial* clone = resources.CloneOnGame<CMaterial>(info.materialName))
 						return clone;
 				}
-				if (CMaterial* fallbackClone = CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferLit (Material)"))
+				if (CMaterial* fallbackClone = resources.CloneOnGame<CMaterial>(L"G_BufferLit (Material)"))
 				{
 					fallbackClone->Set_ResourceName(info.materialName);
 					return fallbackClone;
@@ -1242,17 +1244,19 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				return nullptr;
 			};
 
-					if (!texture && !textureInfo.path.empty())
+			auto applyMaterialData = [&info](CMaterial* material)
+				CResources& resources = CResources::GetInstance();
+
 					{
-						wstring path = textureInfo.path;
-						if (path.find(L"../Assets/") == 0)
+						texture = resources.LoadOnScene<CTexture>(textureInfo.name);
+							texture = resources.LoadOnGame<CTexture>(textureInfo.name);
 							path = path.substr(10);
 
 						wstring textureName = textureInfo.name;
 						if (textureName.empty())
 							textureName = std::filesystem::path(path).stem().wstring() + L" (Texture)";
 
-						texture = CResources::GetInstance().CreateSceneResource<CTexture>(textureName, path);
+						texture = resources.CreateSceneResource<CTexture>(textureName, path);
 					}
 
 					material->Set_Texture(texture, static_cast<_int>(material->Get_TextureCount()));
