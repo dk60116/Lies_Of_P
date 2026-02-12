@@ -23,6 +23,12 @@ public:
 
     typedef struct ObjectsTransformInfo
     {
+        typedef struct MaterialTextureInfo
+        {
+            wstring name = L"";
+            wstring path = L"";
+        }MATERIALTEXTUREINFO;
+
         _uint objID = 0;
         wstring objGuid = L"";
         wstring objName = L"";
@@ -32,6 +38,16 @@ public:
         _float3 localScale = {};
         _bool isRect = false;
         SCENERECTINFO rectInfo = {};
+        vector<wstring> componentNames = {};
+        wstring meshBufferName = L"";
+        wstring materialName = L"";
+        vector<MATERIALTEXTUREINFO> materialTextures = {};
+        vector<pair<wstring, _float>> materialFloatValues = {};
+        vector<pair<wstring, _int>> materialIntValues = {};
+        vector<pair<wstring, _float2>> materialVector2Values = {};
+        vector<pair<wstring, _float3>> materialVector3Values = {};
+        vector<pair<wstring, _float4>> materialVector4Values = {};
+        vector<pair<wstring, _float4x4>> materialMatrixValues = {};
     }SCENETRANSFORMINFO;
 
 public:

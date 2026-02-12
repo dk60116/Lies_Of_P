@@ -1,3 +1,6 @@
-Scene name : Main Scene
-Main_BG : MainMenu/Main_Backgrouond.png : [Texture]
-Main_Logo : MainMenu/Zelda_Logo.png : [Texture]
+SceneName : Main Scene
+Building_0_Stage01_Building_00_Auto_1770860081845 : Map/Map01/Building_0/Stage01_Building_00.fbx : [Mesh]
+../Assets/Map/Map01/Building_0\Stage01_Building_00_TD_0.png : Map/Map01/Building_0/Stage01_Building_00_TD_0.png : [Texture] [Editor]
+../Assets/Map/Map01/Building_0\Stage01_Building_00_TD_1.png : Map/Map01/Building_0/Stage01_Building_00_TD_1.png : [Texture] [Editor]
+../Assets/Map/Map01/Building_0\Stage01_Building_00_TD_2.png : Map/Map01/Building_0/Stage01_Building_00_TD_2.png : [Texture] [Editor]
+../Assets/Map/Map01/Building_0\Stage01_Building_00_TD_3.png : Map/Map01/Building_0/Stage01_Building_00_TD_3.png : [Texture] [Editor]
