@@ -853,8 +853,6 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		return L"";
 	};
 
-	_uint i = 0;
-
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
 		if (CEngineString::Contains((*it)->Get_ObjectName(), L"(Clone)"))
@@ -980,10 +978,8 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			}
 		}
 
-		if (i > 0 && !(*it)->m_bIsBoneTransform)
+		if (!(*it)->m_bIsBoneTransform)
 			result.push_back(info);
-
-		++i;
 	}
 
 	return result;
