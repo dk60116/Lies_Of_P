@@ -1933,7 +1933,6 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 	string sceneNameLine = "SceneName : " + CEngineString::WStringToString(m_strSceneName);
 	vector<string> preservedManualLines;
 	unordered_map<wstring, SceneResourceEntry> previousEntries;
-	unordered_map<wstring, SceneResourceEntry> previousEditorEntries;
 	unordered_set<wstring> previousNonEditorClipPaths;
 	{
 		ifstream prev(_filePath);
@@ -1972,9 +1971,7 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 			e.format = CEngineString::StringToWString(split[2]);
 			previousEntries[e.name] = e;
 
-			if (isEditorFormat(e.format))
-				previousEditorEntries[e.name] = e;
-			else
+			if (!isEditorFormat(e.format))
 			{
 				if (CEngineString::Contains(e.format, L"[Animation Clip]") && !e.path.empty())
 					previousNonEditorClipPaths.insert(e.path);
@@ -2078,9 +2075,6 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 		addResourceWithName(sceneName, resource);
 	};
 
-	_bool hasMeshRendererObject = false;
-	_bool hasSkinnedRendererObject = false;
-
 	for (CGameObject* obj : m_lObjectList)
 	{
 		if (!obj)
@@ -2100,11 +2094,6 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 			if (CMeshFilter* meshFilter = dynamic_cast<CMeshFilter*>(component))
 				addResource(meshFilter->Get_MeshBuffer());
 
-			if (dynamic_cast<CMeshRenderer*>(component))
-				hasMeshRendererObject = true;
-			if (dynamic_cast<CSkinnedMeshRenderer*>(component))
-				hasSkinnedRendererObject = true;
-
 			if (CRenderer* renderer = dynamic_cast<CRenderer*>(component))
 			{
 				CMaterial* material = renderer->Get_Material();
@@ -2122,17 +2111,6 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 				for (auto& [clipName, clip] : animator->Get_AnimationClipList())
 					addResourceWithName(clipName, clip);
 			}
-		}
-	}
-
-	if (hasMeshRendererObject || hasSkinnedRendererObject)
-	{
-		for (const auto& [name, entry] : previousEditorEntries)
-		{
-			if (hasMeshRendererObject && CEngineString::Contains(entry.format, L"[Mesh]"))
-				addEntry(name, entry.path, entry.format);
-			if (hasSkinnedRendererObject && CEngineString::Contains(entry.format, L"[Skinned Mesh]"))
-				addEntry(name, entry.path, entry.format);
 		}
 	}
 
