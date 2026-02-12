@@ -19,6 +19,7 @@
 #include "Text.h"
 #include <filesystem>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace
 {
@@ -1893,6 +1894,7 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 	vector<string> preservedManualLines;
 	unordered_map<wstring, SceneResourceEntry> previousEntries;
 	unordered_map<wstring, SceneResourceEntry> previousEditorEntries;
+	unordered_set<wstring> previousNonEditorClipPaths;
 	{
 		ifstream prev(_filePath);
 		string line;
@@ -1933,7 +1935,11 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 			if (isEditorFormat(e.format))
 				previousEditorEntries[e.name] = e;
 			else
+			{
+				if (CEngineString::Contains(e.format, L"[Animation Clip]") && !e.path.empty())
+					previousNonEditorClipPaths.insert(e.path);
 				preservedManualLines.push_back(line);
+			}
 		}
 	}
 
@@ -2012,6 +2018,10 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 			format = L"[Animation Clip]";
 			if (clip->IsLoop())
 				format += L" [Loop]";
+
+			wstring normalizedPath = normalizePath(resource->Get_FilePath());
+			if (!normalizedPath.empty() && previousNonEditorClipPaths.find(normalizedPath) != previousNonEditorClipPaths.end())
+				return;
 		}
 		else if (dynamic_cast<CAnimatorController*>(resource))
 			format = L"[Animator Controller]";
