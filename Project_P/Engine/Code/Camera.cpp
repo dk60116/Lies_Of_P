@@ -84,7 +84,7 @@ HRESULT CCamera::Initialize()
 	CMaterial* specularMat = Add_RectMaterial(CRenderTarget::RTType::Specular, L"DeferredSpecular (Material)");
 	CMaterial* shadowMaskMat = Add_RectMaterial(CRenderTarget::RTType::ShadowMask, L"ShadowMask (Material)");
 
-	// µΩ∫«√∑π¿Ã µÓ∑œ
+	// ÎîîÏä§ÌîåÎ†àÏù¥ Îì±Î°ù
 	auto pushDisplay = [&](CRenderTarget::RTType type, CMaterial* mat)
 		{
 			RTDebugDisplay desc = {};
@@ -106,7 +106,7 @@ HRESULT CCamera::Initialize()
 	pushDisplay(CRenderTarget::RTType::Specular, presentMat);
 	pushDisplay(CRenderTarget::RTType::ShadowMask, shadowMaskPresentMat);
 
-	// Debug pipeline states ª˝º∫
+	// Debug pipeline states ÏÉùÏÑ±
 	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 
 	if (!device)
@@ -752,9 +752,7 @@ void CCamera::RenderLightingPass_ToDiffuse(const D3D11_VIEWPORT* vp)
 	shadingMat->Bind_Camera(camPos, v, p, 0);
 
 	vector<_matrix>& lights = CSceneManager::GetInstance().Get_CrtScene()->Get_LightData();
-
-	if (!lights.empty())
-		shadingMat->Bind_Light(lights.data(), (_uint)lights.size());
+	shadingMat->Bind_Light(lights.empty() ? nullptr : lights.data(), (_uint)lights.size());
 
 	ID3D11ShaderResourceView* srvs[4] = { srvAlbedo, srvNormal, srvDepth, srvMaterial };
 	ctx->PSSetShaderResources(0, 4, srvs);
@@ -870,9 +868,7 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 	specularMat->Bind_Camera(camPos, v, p, 0);
 
 	vector<_matrix>& lights = CSceneManager::GetInstance().Get_CrtScene()->Get_LightData();
-
-	if (!lights.empty())
-		specularMat->Bind_Light(lights.data(), (_uint)lights.size());
+	specularMat->Bind_Light(lights.empty() ? nullptr : lights.data(), (_uint)lights.size());
 
 	ID3D11ShaderResourceView* srvs[4] = { srvAlbedo, srvNormal, srvDepth, srvMaterial };
 	ctx->PSSetShaderResources(0, 4, srvs);
@@ -1231,7 +1227,7 @@ const _int CCamera::GetColorPickingID(const vector2Int& _mouseVPPos)
 	ID3D11Texture2D* srcTex = rtm.GetTexture(CRenderTarget::RTType::Object, m_bIsEditor);
 	if (!srcTex) return 0;
 
-	// 1x1 øµø™∏∏ ∫πªÁ
+	// 1x1 ÏòÅÏó≠Îßå Î≥µÏÇ¨
 	D3D11_BOX box;
 	box.left = _mouseVPPos.x;
 	box.right = _mouseVPPos.x + 1;

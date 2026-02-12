@@ -518,12 +518,25 @@ void CScene::Render_Editor()
 		return;
 
 	m_vLightData.clear();
+	const _uint maxLightCount = 64u;
+	vector<_float4x4> lightInfos = {};
+	lightInfos.reserve(min<_uint>(static_cast<_uint>(m_lLightList.size()), maxLightCount));
+
 	for (TRAVERSAL_ITER(m_lLightList, it))
 	{
 		if (!(*it))
 			continue;
-		_float4x4 lightInfo = (*it)->To_LightInfo();
-		lightInfo._44 = (_float)m_lLightList.size();
+
+		if (lightInfos.size() >= maxLightCount)
+			break;
+
+		lightInfos.push_back((*it)->To_LightInfo());
+	}
+
+	const _float lightCount = static_cast<_float>(lightInfos.size());
+	for (auto& lightInfo : lightInfos)
+	{
+		lightInfo._44 = lightCount;
 		m_vLightData.push_back(XMLoadFloat4x4(&lightInfo));
 	}
 
@@ -603,13 +616,25 @@ void CScene::Render_Editor()
 void CScene::Render_Game()
 {
 	m_vLightData.clear();
+	const _uint maxLightCount = 64u;
+	vector<_float4x4> lightInfos = {};
+	lightInfos.reserve(min<_uint>(static_cast<_uint>(m_lLightList.size()), maxLightCount));
 
 	for (TRAVERSAL_ITER(m_lLightList, it))
 	{
 		if (!(*it))
 			continue;
-		_float4x4 lightInfo = (*it)->To_LightInfo();
-		lightInfo._44 = (_float)m_lLightList.size();
+
+		if (lightInfos.size() >= maxLightCount)
+			break;
+
+		lightInfos.push_back((*it)->To_LightInfo());
+	}
+
+	const _float lightCount = static_cast<_float>(lightInfos.size());
+	for (auto& lightInfo : lightInfos)
+	{
+		lightInfo._44 = lightCount;
 		m_vLightData.push_back(XMLoadFloat4x4(&lightInfo));
 	}
 

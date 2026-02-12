@@ -96,7 +96,8 @@ const _float4x4 CLight::To_LightInfo()
 	_float4x4 result = {};
 
 	const vector3 pos = Get_Transform()->Get_Position();
-	const vector3 dir = Get_Transform()->Get_Directions().forward;
+	vector3 dir = Get_Transform()->Get_Directions().forward;
+	dir = dir.normalized();
 	const vector3 color = m_vDiffuseColor.f3Color();
 
 	result._11 = pos.x;

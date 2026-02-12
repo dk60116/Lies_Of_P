@@ -226,16 +226,15 @@ void CMaterial::Bind_Camera(const _float3 _camPos, const _fmatrix _view, const _
 
 void CMaterial::Bind_Light(_matrix* _lights, const _uint _count)
 {
-	if (!_lights || !m_bUseLight || !m_pLightBuffer)
+	if (!m_bUseLight || !m_pLightBuffer)
 		return;
 
 	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
 
 	LightCB buffer = {};
-
-	// 데이터 복사
 	const _uint maxCount = min(_count, 64u);
-	memcpy(buffer.lights, _lights, sizeof(_matrix) * maxCount);
+	if (_lights && maxCount > 0)
+		memcpy(buffer.lights, _lights, sizeof(_matrix) * maxCount);
 
 	context->UpdateSubresource(m_pLightBuffer, 0, nullptr, &buffer, 0, 0);
 	context->PSSetConstantBuffers(4, 1, &m_pLightBuffer);
