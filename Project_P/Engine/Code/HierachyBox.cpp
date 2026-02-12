@@ -76,6 +76,22 @@ namespace
 
 		return value.substr(start, end - start + 1);
 	}
+
+	bool IsAncestorTransform(CTransform* ancestor, CTransform* target)
+	{
+		if (!ancestor || !target)
+			return false;
+
+		CTransform* current = target->Get_Parent();
+		while (current)
+		{
+			if (current == ancestor)
+				return true;
+			current = current->Get_Parent();
+		}
+
+		return false;
+	}
 }
 
 CHierachyBox::CHierachyBox()
@@ -253,6 +269,33 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filte
 
 	if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
 		editor.Set_SelectedGameObject(_obj);
+
+	if (ImGui::BeginDragDropSource())
+	{
+		CGameObject* dragObject = _obj;
+		ImGui::SetDragDropPayload("HierarchyGameObject", &dragObject, sizeof(CGameObject*));
+		ImGui::TextUnformatted(name.c_str());
+		ImGui::EndDragDropSource();
+	}
+
+	if (ImGui::BeginDragDropTarget())
+	{
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HierarchyGameObject"))
+		{
+			if (payload->DataSize == sizeof(CGameObject*))
+			{
+				CGameObject* droppedObject = *reinterpret_cast<CGameObject* const*>(payload->Data);
+				if (droppedObject && droppedObject != _obj)
+				{
+					CTransform* droppedTransform = droppedObject->Get_Transform();
+					CTransform* targetTransform = _obj->Get_Transform();
+					if (droppedTransform && targetTransform && !IsAncestorTransform(droppedTransform, targetTransform))
+						droppedTransform->SetParent(targetTransform);
+				}
+			}
+		}
+		ImGui::EndDragDropTarget();
+	}
 
 	if (ImGui::BeginPopupContextItem(("HierarchyItemContext##" + to_string(reinterpret_cast<size_t>(_obj))).c_str()))
 	{
