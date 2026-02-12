@@ -1858,24 +1858,57 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 		wstring format;
 	};
 
+	constexpr const char* editorTag = "[Editor]";
+	auto isEditorFormat = [&](const wstring& format)
+	{
+		return CEngineString::Contains(format, CEngineString::StringToWString(editorTag));
+	};
+
+	string sceneNameLine = "SceneName : " + CEngineString::WStringToString(m_strSceneName);
+	vector<string> preservedManualLines;
 	unordered_map<wstring, SceneResourceEntry> previousEntries;
+	unordered_map<wstring, SceneResourceEntry> previousEditorEntries;
 	{
 		ifstream prev(_filePath);
 		string line;
 		while (getline(prev, line))
 		{
 			if (line.empty() || CEngineString::Contains(line, "//") || !CEngineString::Contains(line, " : "))
+			{
+				preservedManualLines.push_back(line);
 				continue;
+			}
 
 			auto split = CEngineString::Split(line, " : ");
-			if (split.size() < 3)
+			if (split.size() < 2)
+			{
+				preservedManualLines.push_back(line);
 				continue;
+			}
+
+			const string key = split[0];
+			if (key == "SceneName" || key == "Scene name")
+			{
+				sceneNameLine = line;
+				continue;
+			}
+
+			if (split.size() < 3)
+			{
+				preservedManualLines.push_back(line);
+				continue;
+			}
 
 			SceneResourceEntry e = {};
 			e.name = CEngineString::StringToWString(split[0]);
 			e.path = normalizePath(CEngineString::StringToWString(split[1]));
 			e.format = CEngineString::StringToWString(split[2]);
 			previousEntries[e.name] = e;
+
+			if (isEditorFormat(e.format))
+				previousEditorEntries[e.name] = e;
+			else
+				preservedManualLines.push_back(line);
 		}
 	}
 
@@ -1930,6 +1963,9 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 
 		if (entry.path.empty() || entry.format.empty())
 			return;
+
+		if (!isEditorFormat(entry.format))
+			entry.format += L" [Editor]";
 
 		entries[name] = entry;
 	};
@@ -2010,7 +2046,7 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 
 	if (hasMeshRendererObject || hasSkinnedRendererObject)
 	{
-		for (const auto& [name, entry] : previousEntries)
+		for (const auto& [name, entry] : previousEditorEntries)
 		{
 			if (hasMeshRendererObject && CEngineString::Contains(entry.format, L"[Mesh]"))
 				addEntry(name, entry.path, entry.format);
@@ -2036,7 +2072,9 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 		return E_FAIL;
 	}
 
-	out << "SceneName : " << CEngineString::WStringToString(m_strSceneName) << "\n";
+	out << sceneNameLine << "\n";
+	for (const auto& preservedLine : preservedManualLines)
+		out << preservedLine << "\n";
 	for (const auto& entry : sortedEntries)
 	{
 		out
