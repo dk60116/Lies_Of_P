@@ -268,7 +268,9 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 	_matrix matView = _cam->Get_ViewMatrix();
 	_matrix matProj = _cam->Get_ProjectionMatrix();
 
-	const _uint boneCount = min<_uint>(static_cast<_uint>(m_vBones.size()), MAX_BONE);
+	const _uint meshBoneCount = m_pMeshBuffer ? m_pMeshBuffer->Get_BoneCount() : 0;
+	const _uint offsetBoneCount = static_cast<_uint>(m_pMeshBuffer ? m_pMeshBuffer->m_vBoneOffsetMatrices.size() : 0);
+	const _uint boneCount = min<_uint>(min<_uint>(static_cast<_uint>(m_vBones.size()), meshBoneCount), min<_uint>(offsetBoneCount, MAX_BONE));
 
 	_matrix boneMatrices[MAX_BONE];
 	for (_int i = 0; i < MAX_BONE; ++i)
@@ -365,7 +367,9 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 	_matrix matView = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.view));
 	_matrix matProj = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.proj));
 
-	const _uint boneCount = min<_uint>(static_cast<_uint>(m_vBones.size()), MAX_BONE);
+	const _uint meshBoneCount = m_pMeshBuffer->Get_BoneCount();
+	const _uint offsetBoneCount = static_cast<_uint>(m_pMeshBuffer->m_vBoneOffsetMatrices.size());
+	const _uint boneCount = min<_uint>(min<_uint>(static_cast<_uint>(m_vBones.size()), meshBoneCount), min<_uint>(offsetBoneCount, MAX_BONE));
 
 	_matrix boneMatrices[MAX_BONE];
 	for (int i = 0; i < MAX_BONE; ++i)
