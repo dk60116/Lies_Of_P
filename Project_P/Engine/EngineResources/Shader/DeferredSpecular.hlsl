@@ -33,7 +33,7 @@ Texture2D gAlbedo : register(t0);
 Texture2D gNormal : register(t1);
 Texture2D<float> gDepth : register(t2);
 Texture2D gMaterial : register(t3);
-SamplerState gSampler : register(s0); // <- s4 ¾²Áö ¸»°í s0 ±ÇÀå
+SamplerState gSampler : register(s0); // <- s4 Â¾Â²ÃÃ¶ Â¸Â»Â°Ã­ s0 Â±Ã‡Ã€Ã¥
 
 struct VSIn
 {
@@ -130,7 +130,7 @@ float4 PSMain(VSOut i) : SV_Target
 
     float3 specSum = 0;
 
-    int lightCount = (int) gLight[0][3][3];
+    int lightCount = clamp((int) gLight[0][3][3], 0, MAX_LIGHTS);
 
     [loop]
     for (int li = 0; li < lightCount; ++li)

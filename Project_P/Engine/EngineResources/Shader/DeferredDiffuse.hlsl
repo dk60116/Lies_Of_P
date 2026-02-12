@@ -1,6 +1,6 @@
 // DeferredLighting_DiffuseOnly.hlsl
 
-// ¶óÀÌÆ® Á¤ÀÇ
+// ë¼ì´íŠ¸ ì •ì˜
 #define PI 3.141592
 
 #define MAX_LIGHTS 64
@@ -89,9 +89,9 @@ float3 ReconstructWorldPos(float2 uv, float depth01)
 float RemapMetallicArt(float m)
 {
     m = saturate(m * METALLIC_BOOST);
-    // gamma·Î 0/1ÂÊÀ¸·Î ¸ô±â
+    // gammaë¡œ 0/1ìª½ìœ¼ë¡œ ëª°ê¸°
     m = pow(m, METALLIC_GAMMA);
-    // ±Ø´Ü °­È­(¼±ÅÃ): Áß°£°ªÀ» ´õ ºü¸£°Ô ¹Ğ¾îÁÜ
+    // ê·¹ë‹¨ ê°•í™”(ì„ íƒ): ì¤‘ê°„ê°’ì„ ë” ë¹ ë¥´ê²Œ ë°€ì–´ì¤Œ
     m = smoothstep(0.05f, 0.95f, m);
     return m;
 }
@@ -106,7 +106,7 @@ float DistributionGGX(float NdotH, float roughness)
 
 float GeometrySchlickGGX(float NdotX, float roughness)
 {
-    // UE4 ½ºÅ¸ÀÏ k
+    // UE4 ìŠ¤íƒ€ì¼ k
     float r = roughness + 1.0f;
     float k = (r * r) / 8.0f;
     return NdotX / max(NdotX * (1.0f - k) + k, 1e-6f);
@@ -158,7 +158,7 @@ float4 PSMain(VSOut i) : SV_Target
 
     float3 Lo = 0;
 
-    int lightCount = (int) gLight[0][3][3];
+    int lightCount = clamp((int) gLight[0][3][3], 0, MAX_LIGHTS);
     
     int dirLightCount = 0;
 
@@ -229,7 +229,7 @@ float4 PSMain(VSOut i) : SV_Target
 
         float3 spec = (D * G * F) / max(4.0f * NdotV * NdotL, 1e-6f);
 
-        // Diffuse: metallicÀÏ¼ö·Ï ÁÙ¾îµê + ¿¡³ÊÁö º¸Á¸(F) ¹İ¿µ
+        // Diffuse: metallicì¼ìˆ˜ë¡ ì¤„ì–´ë“¦ + ì—ë„ˆì§€ ë³´ì¡´(F) ë°˜ì˜
         float3 kS = F;
         float3 kD = (1.0f - kS) * (1.0f - metallic * PI);
 
