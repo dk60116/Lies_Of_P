@@ -811,6 +811,23 @@ const wstring& CScene::Get_SceneName() const
 vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 {
 	vector<SCENETRANSFORMINFO> result = {};
+	unordered_map<const CMeshBuffer*, wstring> sharedMeshResourceNames;
+	unordered_map<const CMaterial*, wstring> sharedMaterialResourceNames;
+	unordered_map<const CTexture*, wstring> sharedTextureResourceNames;
+
+	auto resolveSharedResourceName = [](auto* resource, const wstring& fallbackName, auto& sharedNameMap) -> wstring
+	{
+		if (!resource)
+			return fallbackName;
+
+		auto found = sharedNameMap.find(resource);
+		if (found != sharedNameMap.end())
+			return found->second;
+
+		const wstring resolvedName = fallbackName.empty() ? resource->Get_ResourceName() : fallbackName;
+		sharedNameMap.emplace(resource, resolvedName);
+		return resolvedName;
+	};
 
 	auto buildPath = [](CGameObject* obj)
 	{
@@ -937,11 +954,11 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 					findBundleName(m_mTempMeshBundleList);
 
 				if (!meshBundleName.empty() && meshBundleIndex >= 0)
-					info.meshBufferName = meshBundleName + L"::#" + to_wstring(meshBundleIndex);
+					meshResourceName = meshBundleName + L"::#" + to_wstring(meshBundleIndex);
 				else if (!meshBundleName.empty())
-					info.meshBufferName = meshBundleName + L"::" + meshResourceName;
-				else
-					info.meshBufferName = meshResourceName;
+					meshResourceName = meshBundleName + L"::" + meshResourceName;
+
+				info.meshBufferName = resolveSharedResourceName(meshBuffer, meshResourceName, sharedMeshResourceNames);
 			}
 		}
 
@@ -949,7 +966,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		{
 			if (CMaterial* material = meshRenderer->Get_Material())
 			{
-				info.materialName = material->Get_ResourceName();
+				info.materialName = resolveSharedResourceName(material, material->Get_ResourceName(), sharedMaterialResourceNames);
 
 				const _uint textureCount = material->Get_TextureCount();
 				info.materialTextures.reserve(textureCount);
@@ -958,7 +975,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 					CScene::SCENETRANSFORMINFO::MATERIALTEXTUREINFO textureInfo = {};
 					if (CTexture* texture = material->Get_Texture(static_cast<_int>(textureIndex)))
 					{
-						textureInfo.name = texture->Get_ResourceName();
+						textureInfo.name = resolveSharedResourceName(texture, texture->Get_ResourceName(), sharedTextureResourceNames);
 						textureInfo.path = texture->Get_FilePath();
 					}
 					info.materialTextures.push_back(move(textureInfo));
