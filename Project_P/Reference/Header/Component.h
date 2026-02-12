@@ -7,6 +7,7 @@ NS_BEGIN(Engine)
 class ENGINE_DLL CComponent abstract : public UObject
 {
 	friend class CGameObject;
+	friend class CScene;
 
 protected:
 	CComponent();
@@ -74,6 +75,7 @@ public:
 	class CTransform* Get_Transform();
 
 	const _int GetSortIndex() const;
+	const _bool Is_SaveTarget() const;
 
 private:
 	void Set_Object(class CGameObject* _gameObject);
@@ -84,6 +86,7 @@ protected:
 
 protected:
 	_bool m_bEnable;
+	_bool m_bSaveTarget;
 	class CGameObject* m_pGameObject;
 
 protected:

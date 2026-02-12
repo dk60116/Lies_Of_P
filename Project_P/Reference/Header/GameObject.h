@@ -111,6 +111,7 @@ public:
 	static vector<T*> FindObjectsOfType();
 
 	const _bool IsRecursiveActive();
+	const _bool Is_SaveTarget() const;
 
 private:
 	void Set_RecursiveActive(const _bool _active);
@@ -131,6 +132,7 @@ private:
 	class CTransform* m_pTransform;
 
 	_bool m_bIsBoneTransform;
+	_bool m_bSaveTarget;
 
 	_bool m_bKill;
 };
@@ -152,6 +154,9 @@ inline T* CGameObject::AddComponent()
 	}
 
 	baseComponent->Set_Object(this);
+	baseComponent->m_bSaveTarget = m_bSaveTarget;
+	if (m_pScene && !m_pScene->Is_SaveRegistrationEnabled())
+		baseComponent->m_bSaveTarget = false;
 	newComponent->AddRef();
 	m_lComponentList.push_back(newComponent);
 
