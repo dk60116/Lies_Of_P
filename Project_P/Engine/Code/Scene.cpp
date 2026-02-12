@@ -1222,24 +1222,28 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 
 		if (!info.materialName.empty())
 		{
-			auto resolveMaterial = [&]() -> CMaterial*
-			{
-				CMaterial* source = CResources::GetInstance().LoadOnScene<CMaterial>(info.materialName);
-				if (source)
-					if (CMaterial* clone = CResources::GetInstance().CloneOnScene<CMaterial>(info.materialName))
-						return clone;
-				source = CResources::GetInstance().LoadOnGame<CMaterial>(info.materialName);
-				if (source)
-					if (CMaterial* clone = CResources::GetInstance().CloneOnGame<CMaterial>(info.materialName))
-						return clone;
-				if (CMaterial* fallbackClone = CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferLit (Material)"))
+				auto resolveMaterial = [&]() -> CMaterial*
 				{
-					if (!info.materialName.empty())
-						fallbackClone->Set_ResourceName(info.materialName);
-					return fallbackClone;
-				}
-				return nullptr;
+					CMaterial* source = CResources::GetInstance().LoadOnScene<CMaterial>(info.materialName);
+					if (source)
+					{
+						if (CMaterial* clone = CResources::GetInstance().CloneOnScene<CMaterial>(info.materialName))
+							return clone;
 					}
+					source = CResources::GetInstance().LoadOnGame<CMaterial>(info.materialName);
+					if (source)
+					{
+						if (CMaterial* clone = CResources::GetInstance().CloneOnGame<CMaterial>(info.materialName))
+							return clone;
+					}
+					if (CMaterial* fallbackClone = CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferLit (Material)"))
+					{
+						if (!info.materialName.empty())
+							fallbackClone->Set_ResourceName(info.materialName);
+						return fallbackClone;
+					}
+					return nullptr;
+				};
 
 					if (!texture && !textureInfo.path.empty())
 					{
