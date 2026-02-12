@@ -1259,16 +1259,33 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			auto resolveMaterial = [&info]() -> CMaterial*
 			{
 				CResources& resources = CResources::GetInstance();
+				const _bool isGBufferLit =
+					info.materialName == L"G_BufferLit (Material)" ||
+					info.materialName == L"G_Buffer_Lit (Material)";
 
-				if (resources.LoadOnScene<CMaterial>(info.materialName))
+				if (isGBufferLit)
 				{
-					if (CMaterial* clone = resources.CloneOnScene<CMaterial>(info.materialName))
-						return clone;
+					if (resources.LoadOnGame<CMaterial>(L"G_BufferLit (Material)"))
+					{
+						if (CMaterial* clone = resources.CloneOnGame<CMaterial>(L"G_BufferLit (Material)"))
+						{
+							clone->Set_ResourceName(info.materialName);
+							return clone;
+						}
+					}
 				}
-				if (resources.LoadOnGame<CMaterial>(info.materialName))
+				else
 				{
-					if (CMaterial* clone = resources.CloneOnGame<CMaterial>(info.materialName))
-						return clone;
+					if (resources.LoadOnScene<CMaterial>(info.materialName))
+					{
+						if (CMaterial* clone = resources.CloneOnScene<CMaterial>(info.materialName))
+							return clone;
+					}
+					if (resources.LoadOnGame<CMaterial>(info.materialName))
+					{
+						if (CMaterial* clone = resources.CloneOnGame<CMaterial>(info.materialName))
+							return clone;
+					}
 				}
 				if (CMaterial* fallbackClone = resources.CloneOnGame<CMaterial>(L"G_BufferLit (Material)"))
 				{
@@ -1351,10 +1368,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				CMaterial* targetMaterial = skinnedRenderer->Get_Material();
 				if (!info.materialName.empty())
 				{
-					CMaterial* material = CResources::GetInstance().LoadOnScene<CMaterial>(info.materialName);
-					if (!material)
-						material = CResources::GetInstance().LoadOnGame<CMaterial>(info.materialName);
-					if (material)
+					if (CMaterial* material = resolveMaterial())
 					{
 						skinnedRenderer->Set_Material(material);
 						targetMaterial = material;
