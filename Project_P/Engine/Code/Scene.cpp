@@ -17,6 +17,7 @@
 #include "Terrain.h"
 #include "Image.h"
 #include "Text.h"
+#include <filesystem>
 #include <unordered_map>
 
 namespace
@@ -1248,7 +1249,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 
 						wstring textureName = textureInfo.name;
 						if (textureName.empty())
-							textureName = fs::path(path).stem().wstring() + L" (Texture)";
+							textureName = std::filesystem::path(path).stem().wstring() + L" (Texture)";
 
 						texture = CResources::GetInstance().CreateSceneResource<CTexture>(textureName, path);
 					}
