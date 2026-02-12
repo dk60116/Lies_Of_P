@@ -912,7 +912,35 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		if (CRenderer* renderer = (*it)->GetComponent<CRenderer>())
 		{
 			if (CMaterial* material = renderer->Get_Material())
+			{
 				info.materialName = material->Get_ResourceName();
+
+				const _uint textureCount = material->Get_TextureCount();
+				info.materialTextures.reserve(textureCount);
+				for (_uint textureIndex = 0; textureIndex < textureCount; ++textureIndex)
+				{
+					CScene::SCENETRANSFORMINFO::MATERIALTEXTUREINFO textureInfo = {};
+					if (CTexture* texture = material->Get_Texture(static_cast<_int>(textureIndex)))
+					{
+						textureInfo.name = texture->Get_ResourceName();
+						textureInfo.path = texture->Get_FilePath();
+					}
+					info.materialTextures.push_back(move(textureInfo));
+				}
+
+				for (const auto& [key, value] : material->Get_FloatValues())
+					info.materialFloatValues.push_back({ key, value });
+				for (const auto& [key, value] : material->Get_IntValues())
+					info.materialIntValues.push_back({ key, value });
+				for (const auto& [key, value] : material->Get_Vector2Values())
+					info.materialVector2Values.push_back({ key, value });
+				for (const auto& [key, value] : material->Get_Vector3Values())
+					info.materialVector3Values.push_back({ key, value });
+				for (const auto& [key, value] : material->Get_Vector4Values())
+					info.materialVector4Values.push_back({ key, value });
+				for (const auto& [key, value] : material->Get_MatrixValues())
+					info.materialMatrixValues.push_back({ key, value });
+			}
 		}
 
 		if (i > 0 && !(*it)->m_bIsBoneTransform)
@@ -1193,13 +1221,64 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 
 		if (!info.materialName.empty())
 		{
+			auto applyMaterialData = [&](CMaterial* material)
+			{
+				if (!material)
+					return;
+
+				for (_int index = static_cast<_int>(material->Get_TextureCount()) - 1; index >= 0; --index)
+					material->Remove_Texture(index);
+
+				for (const auto& textureInfo : info.materialTextures)
+				{
+					CTexture* texture = nullptr;
+					if (!textureInfo.name.empty())
+					{
+						texture = CResources::GetInstance().LoadOnScene<CTexture>(textureInfo.name);
+						if (!texture)
+							texture = CResources::GetInstance().LoadOnGame<CTexture>(textureInfo.name);
+					}
+
+					if (!texture && !textureInfo.path.empty())
+					{
+						wstring path = textureInfo.path;
+						if (path.find(L"../Assets/") == 0)
+							path = path.substr(10);
+
+						wstring textureName = textureInfo.name;
+						if (textureName.empty())
+							textureName = fs::path(path).stem().wstring() + L" (Texture)";
+
+						texture = CResources::GetInstance().CreateSceneResource<CTexture>(textureName, path);
+					}
+
+					material->Set_Texture(texture, static_cast<_int>(material->Get_TextureCount()));
+				}
+
+				for (const auto& [key, value] : info.materialFloatValues)
+					material->Set_FloatValue(key, value);
+				for (const auto& [key, value] : info.materialIntValues)
+					material->Set_IntValue(key, value);
+				for (const auto& [key, value] : info.materialVector2Values)
+					material->Set_Vector2Value(key, value);
+				for (const auto& [key, value] : info.materialVector3Values)
+					material->Set_Vector3Value(key, value);
+				for (const auto& [key, value] : info.materialVector4Values)
+					material->Set_Vector4Value(key, value);
+				for (const auto& [key, value] : info.materialMatrixValues)
+					material->Set_MatrixValue(key, value);
+			};
+
 			if (CRenderer* renderer = dynamic_cast<CRenderer*>(obj->GetComponent<CMeshRenderer>()))
 			{
 				CMaterial* material = CResources::GetInstance().LoadOnScene<CMaterial>(info.materialName);
 				if (!material)
 					material = CResources::GetInstance().LoadOnGame<CMaterial>(info.materialName);
 				if (material)
+				{
 					renderer->Set_Material(material);
+					applyMaterialData(material);
+				}
 			}
 			else if (CRenderer* skinnedRenderer = dynamic_cast<CRenderer*>(obj->GetComponent<CSkinnedMeshRenderer>()))
 			{
@@ -1207,7 +1286,10 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				if (!material)
 					material = CResources::GetInstance().LoadOnGame<CMaterial>(info.materialName);
 				if (material)
+				{
 					skinnedRenderer->Set_Material(material);
+					applyMaterialData(material);
+				}
 			}
 		}
 	};

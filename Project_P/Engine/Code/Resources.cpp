@@ -656,7 +656,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 5;
+	const _uint version = 6;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -716,6 +716,42 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 		out.write(reinterpret_cast<const char*>(&materialNameSize), sizeof(_uint));
 		if (materialNameSize > 0)
 			out.write(reinterpret_cast<const char*>(info.materialName.data()), sizeof(wchar_t) * materialNameSize);
+
+		_uint materialTextureCount = static_cast<_uint>(info.materialTextures.size());
+		out.write(reinterpret_cast<const char*>(&materialTextureCount), sizeof(_uint));
+		for (const auto& textureInfo : info.materialTextures)
+		{
+			_uint textureNameSize = static_cast<_uint>(textureInfo.name.size());
+			out.write(reinterpret_cast<const char*>(&textureNameSize), sizeof(_uint));
+			if (textureNameSize > 0)
+				out.write(reinterpret_cast<const char*>(textureInfo.name.data()), sizeof(wchar_t) * textureNameSize);
+
+			_uint texturePathSize = static_cast<_uint>(textureInfo.path.size());
+			out.write(reinterpret_cast<const char*>(&texturePathSize), sizeof(_uint));
+			if (texturePathSize > 0)
+				out.write(reinterpret_cast<const char*>(textureInfo.path.data()), sizeof(wchar_t) * texturePathSize);
+		}
+
+		auto writeMaterialValueList = [&](const auto& valueList)
+		{
+			_uint valueCount = static_cast<_uint>(valueList.size());
+			out.write(reinterpret_cast<const char*>(&valueCount), sizeof(_uint));
+			for (const auto& [key, value] : valueList)
+			{
+				_uint keySize = static_cast<_uint>(key.size());
+				out.write(reinterpret_cast<const char*>(&keySize), sizeof(_uint));
+				if (keySize > 0)
+					out.write(reinterpret_cast<const char*>(key.data()), sizeof(wchar_t) * keySize);
+				out.write(reinterpret_cast<const char*>(&value), sizeof(value));
+			}
+		};
+
+		writeMaterialValueList(info.materialFloatValues);
+		writeMaterialValueList(info.materialIntValues);
+		writeMaterialValueList(info.materialVector2Values);
+		writeMaterialValueList(info.materialVector3Values);
+		writeMaterialValueList(info.materialVector4Values);
+		writeMaterialValueList(info.materialMatrixValues);
 	}
 
 	out.close();
@@ -854,6 +890,66 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 				in.read(reinterpret_cast<char*>(&materialName[0]), sizeof(wchar_t) * materialNameSize);
 				info.materialName = move(materialName);
 			}
+		}
+
+		if (version >= 6)
+		{
+			_uint materialTextureCount = 0;
+			in.read(reinterpret_cast<char*>(&materialTextureCount), sizeof(_uint));
+			info.materialTextures.reserve(materialTextureCount);
+			for (_uint textureIndex = 0; textureIndex < materialTextureCount; ++textureIndex)
+			{
+				CScene::ObjectsTransformInfo::MATERIALTEXTUREINFO textureInfo = {};
+
+				_uint textureNameSize = 0;
+				in.read(reinterpret_cast<char*>(&textureNameSize), sizeof(_uint));
+				if (textureNameSize > 0)
+				{
+					wstring textureName(textureNameSize, L'\0');
+					in.read(reinterpret_cast<char*>(&textureName[0]), sizeof(wchar_t) * textureNameSize);
+					textureInfo.name = move(textureName);
+				}
+
+				_uint texturePathSize = 0;
+				in.read(reinterpret_cast<char*>(&texturePathSize), sizeof(_uint));
+				if (texturePathSize > 0)
+				{
+					wstring texturePath(texturePathSize, L'\0');
+					in.read(reinterpret_cast<char*>(&texturePath[0]), sizeof(wchar_t) * texturePathSize);
+					textureInfo.path = move(texturePath);
+				}
+
+				info.materialTextures.push_back(move(textureInfo));
+			}
+
+			auto readMaterialValueList = [&](auto& valueList)
+			{
+				_uint valueCount = 0;
+				in.read(reinterpret_cast<char*>(&valueCount), sizeof(_uint));
+				valueList.reserve(valueCount);
+				for (_uint valueIndex = 0; valueIndex < valueCount; ++valueIndex)
+				{
+					_uint keySize = 0;
+					in.read(reinterpret_cast<char*>(&keySize), sizeof(_uint));
+					wstring key = L"";
+					if (keySize > 0)
+					{
+						key.resize(keySize);
+						in.read(reinterpret_cast<char*>(&key[0]), sizeof(wchar_t) * keySize);
+					}
+
+					typename decay_t<decltype(valueList)>::value_type::second_type value = {};
+					in.read(reinterpret_cast<char*>(&value), sizeof(value));
+					valueList.push_back({ move(key), value });
+				}
+			};
+
+			readMaterialValueList(info.materialFloatValues);
+			readMaterialValueList(info.materialIntValues);
+			readMaterialValueList(info.materialVector2Values);
+			readMaterialValueList(info.materialVector3Values);
+			readMaterialValueList(info.materialVector4Values);
+			readMaterialValueList(info.materialMatrixValues);
 		}
 
 		resultInfo.push_back(info);
