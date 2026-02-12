@@ -1245,11 +1245,27 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			};
 
 			auto applyMaterialData = [&info](CMaterial* material)
+			{
+				if (!material)
+					return;
+
 				CResources& resources = CResources::GetInstance();
 
+				for (const auto& textureInfo : info.materialTextures)
+				{
+					CTexture* texture = nullptr;
+
+					if (!textureInfo.name.empty())
 					{
 						texture = resources.LoadOnScene<CTexture>(textureInfo.name);
+						if (!texture)
 							texture = resources.LoadOnGame<CTexture>(textureInfo.name);
+					}
+
+					if (!texture && !textureInfo.path.empty())
+					{
+						wstring path = textureInfo.path;
+						if (path.rfind(L"../Assets/", 0) == 0)
 							path = path.substr(10);
 
 						wstring textureName = textureInfo.name;
@@ -1278,7 +1294,6 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 
 			if (CRenderer* renderer = dynamic_cast<CRenderer*>(obj->GetComponent<CMeshRenderer>()))
 			{
-				if (CMaterial* material = resolveMaterial())
 				if (CMaterial* material = resolveMaterial())
 				{
 					renderer->Set_Material(material);
