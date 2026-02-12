@@ -6,6 +6,7 @@ NS_BEGIN(Engine)
 
 class ENGINE_DLL CTransform : public CComponent
 {
+	friend class CScene;
 	friend class CGameObject;
 
 public:
@@ -144,6 +145,9 @@ public:
 	void LookAt(const vector3& _target, const _uint _lockRotationFilter = 0x000);
 	const vector3 LookRotation(const vector3& _target, const _uint _lockRotationFilter = 0x000);
 	const quaternion LookQuaternion(const vector3& _target, const _uint _lockRotationFilter = 0x000);
+
+protected:
+	void RemoveChild(CTransform* _child);
 
 private:
 	void Bind_Matrix();

@@ -224,6 +224,7 @@ bool CHierachyBox::IsAncestorOfSelected(CGameObject* _obj, CGameObject* selected
 		return false;
 
 	CTransform* parent = selected->Get_Transform()->Get_Parent();
+
 	while (parent)
 	{
 		if (parent->Get_GameObject() == _obj)

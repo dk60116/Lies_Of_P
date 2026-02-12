@@ -1014,3 +1014,9 @@ const quaternion CTransform::LookQuaternion(const vector3& _target, const _uint 
     quaternion finalQ;  XMStoreFloat4(reinterpret_cast<_float4*>(&finalQ), q);
     return finalQ;
 }
+
+void CTransform::RemoveChild(CTransform* _child)
+{
+    if (_child)
+        m_lChildList.remove(_child);
+}
