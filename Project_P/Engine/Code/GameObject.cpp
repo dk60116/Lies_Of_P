@@ -33,6 +33,7 @@ CGameObject::CGameObject(const wstring _name, ID3D11Device* _pDevice, ID3D11Devi
 	, m_pDevice(_pDevice)
 	, m_pContext(_pContext)
 	, m_bIsBoneTransform(false)
+	, m_bSaveTarget(true)
 	, m_bKill(false)
 {
 	m_strName = L"Game Object";
@@ -53,6 +54,7 @@ CGameObject::CGameObject(const CGameObject& _rhs)
 	, m_pDevice(_rhs.m_pDevice)
 	, m_pContext(_rhs.m_pContext)
 	, m_bIsBoneTransform(_rhs.m_bIsBoneTransform)
+	, m_bSaveTarget(_rhs.m_bSaveTarget)
 {
 	m_iUniqueID = CSceneManager::GetInstance().Get_CrtScene()->Get_UniqueObjectCount();
 }
@@ -569,6 +571,11 @@ CGameObject* CGameObject::Instantiate(const CGameObject* _rhs)
 const _bool CGameObject::IsRecursiveActive()
 {
 	return m_bRecursiveActive;
+}
+
+const _bool CGameObject::Is_SaveTarget() const
+{
+	return m_bSaveTarget;
 }
 
 void CGameObject::Set_RecursiveActive(const _bool _active)

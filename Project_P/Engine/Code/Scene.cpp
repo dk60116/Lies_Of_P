@@ -195,6 +195,7 @@ CScene::CScene()
 	, m_pNoneBlendingState(nullptr)
 	, m_fPssedTime(0.f)
 	, m_vTempPickMousePos({-1, -1})
+	, m_bSaveRegistrationEnabled(true)
 {
 	m_strName = L"Scene";
 
@@ -859,6 +860,9 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		if (CEngineString::Contains((*it)->Get_ObjectName(), L"(Clone)"))
 			continue;
 
+		if (!(*it)->Is_SaveTarget())
+			continue;
+
 		SCENETRANSFORMINFO info = {};
 
 		CTransform* tf = (*it)->Get_Transform();
@@ -893,6 +897,9 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		for (CComponent* component : (*it)->Get_ComponentList())
 		{
 			if (!component)
+				continue;
+
+			if (!component->Is_SaveTarget())
 				continue;
 
 			if (dynamic_cast<CTransform*>(component) || dynamic_cast<CRectTransform*>(component))
@@ -1690,6 +1697,7 @@ CGameObject* CScene::Add_GameObject(wstring _name)
 	m_lObjectList.push_back(newObj);
 
 	newObj->Set_ObjectName(_name);
+	newObj->m_bSaveTarget = m_bSaveRegistrationEnabled;
 
 	if (FAILED(m_lObjectList.back()->Initialize()))
 	{
@@ -2049,6 +2057,9 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 		if (!obj)
 			continue;
 
+		if (!obj->Is_SaveTarget())
+			continue;
+
 		if (CEngineString::Contains(obj->Get_ObjectName(), L"(Clone)"))
 			continue;
 
@@ -2135,6 +2146,16 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 const _uint CScene::Get_UniqueObjectCount() const
 {
 	return m_iUniqueObjectCount;
+}
+
+const _bool CScene::Is_SaveRegistrationEnabled() const
+{
+	return m_bSaveRegistrationEnabled;
+}
+
+void CScene::Set_SaveRegistrationEnabled(const _bool _enabled)
+{
+	m_bSaveRegistrationEnabled = _enabled;
 }
 
 CGameObject* CScene::FindGameObjectOfId(const _uint id)

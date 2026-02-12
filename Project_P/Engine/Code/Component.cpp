@@ -5,6 +5,7 @@ CComponent::CComponent()
 	: m_pDevice(nullptr)
 	, m_pContext(nullptr)
 	, m_bEnable(true)
+	, m_bSaveTarget(true)
 	, m_pGameObject(nullptr)
 	, m_iSortIndex(0)
 {
@@ -166,5 +167,10 @@ CTransform* CComponent::Get_Transform()
 const _int CComponent::GetSortIndex() const
 {
 	return m_iSortIndex;
+}
+
+const _bool CComponent::Is_SaveTarget() const
+{
+	return m_bSaveTarget;
 }
 

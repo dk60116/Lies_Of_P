@@ -133,6 +133,7 @@ void CSceneManager::LoadComplete()
 
 	if (m_pCrtScene)
 	{
+		m_pCrtScene->Set_SaveRegistrationEnabled(false);
 		m_pCrtScene->Initialize();
 		m_bLoading = false;
 	}
@@ -142,6 +143,7 @@ void CSceneManager::LoadComplete()
 
 	m_pCrtScene->Bind_ObjectsTransform(sceneTransformInfo);
 	m_pCrtScene->Awake();
+	m_pCrtScene->Set_SaveRegistrationEnabled(true);
 }
 
 CCamera* CSceneManager::Get_EditorCamera()

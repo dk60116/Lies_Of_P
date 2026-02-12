@@ -130,6 +130,8 @@ public:
 
     HRESULT SaveScene(const wstring& _filePath);
     const _uint Get_UniqueObjectCount() const;
+	const _bool Is_SaveRegistrationEnabled() const;
+	void Set_SaveRegistrationEnabled(const _bool _enabled);
 
     CGameObject* FindGameObjectOfId(const _uint id);
 
@@ -179,6 +181,7 @@ protected:
     _float m_fPssedTime;
 
     vector2Int m_vTempPickMousePos;
+    _bool m_bSaveRegistrationEnabled;
 };
 
 NS_END
