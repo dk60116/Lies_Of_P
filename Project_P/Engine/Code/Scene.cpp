@@ -877,16 +877,19 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			{
 				wstring meshResourceName = meshBuffer->Get_ResourceName();
 				wstring meshBundleName = L"";
+				_int meshBundleIndex = -1;
 
 				auto findBundleName = [&](const auto& bundleMap)
 				{
 					for (const auto& bundlePair : bundleMap)
 					{
-						for (const MeshBundle& bundle : bundlePair.second)
+						for (_uint bundleIndex = 0; bundleIndex < bundlePair.second.size(); ++bundleIndex)
 						{
+							const MeshBundle& bundle = bundlePair.second[bundleIndex];
 							if (bundle.meshBuffer == meshBuffer)
 							{
 								meshBundleName = bundlePair.first;
+								meshBundleIndex = static_cast<_int>(bundleIndex);
 								return;
 							}
 						}
@@ -897,7 +900,9 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 				if (meshBundleName.empty())
 					findBundleName(m_mTempMeshBundleList);
 
-				if (!meshBundleName.empty())
+				if (!meshBundleName.empty() && meshBundleIndex >= 0)
+					info.meshBufferName = meshBundleName + L"::#" + to_wstring(meshBundleIndex);
+				else if (!meshBundleName.empty())
 					info.meshBufferName = meshBundleName + L"::" + meshResourceName;
 				else
 					info.meshBufferName = meshResourceName;
@@ -1046,10 +1051,17 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		{
 			if (CMeshFilter* meshFilter = obj->GetComponent<CMeshFilter>())
 			{
-				auto findMeshInBundles = [&](const wstring& bundleName, const wstring& meshName) -> CMeshBuffer*
+				auto findMeshInBundles = [&](const wstring& bundleName, const wstring& meshName, _int meshIndex) -> CMeshBuffer*
 				{
 					auto findMeshInStaticBundleList = [&](const auto& bundleList) -> CMeshBuffer*
 					{
+						if (meshIndex >= 0)
+						{
+							if (meshIndex < static_cast<_int>(bundleList.size()))
+								return bundleList[meshIndex].meshBuffer;
+							return nullptr;
+						}
+
 						for (const MeshBundle& bundle : bundleList)
 						{
 							CMeshBuffer* bundleMesh = bundle.meshBuffer;
@@ -1065,6 +1077,13 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 
 					auto findMeshInSkinnedBundleList = [&](const auto& bundleList) -> CMeshBuffer*
 					{
+						if (meshIndex >= 0)
+						{
+							if (meshIndex < static_cast<_int>(bundleList.size()))
+								return bundleList[meshIndex].meshBuffer;
+							return nullptr;
+						}
+
 						for (const SkinnedMeshBundle& bundle : bundleList)
 						{
 							CMeshBuffer* bundleMesh = bundle.meshBuffer;
@@ -1100,7 +1119,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 							if (CMeshBuffer* found = findMeshInSkinnedBundleList(skinnedTempBundleIter->second))
 								return found;
 					}
-					else
+					else if (meshIndex < 0)
 					{
 						auto findByMeshNameInMap = [&](const auto& bundleMap) -> CMeshBuffer*
 						{
@@ -1140,23 +1159,33 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				wstring meshToken = info.meshBufferName;
 				wstring bundleName = L"";
 				wstring meshName = meshToken;
+				_int meshIndex = -1;
 
 				size_t separatorPos = meshToken.find(L"::");
 				if (separatorPos != wstring::npos)
 				{
 					bundleName = meshToken.substr(0, separatorPos);
 					meshName = meshToken.substr(separatorPos + 2);
+					if (!meshName.empty() && meshName[0] == L'#')
+					{
+						meshIndex = static_cast<_int>(wcstol(meshName.substr(1).c_str(), nullptr, 10));
+						meshName = L"";
+					}
 				}
 
-				CMeshBuffer* meshBuffer = CResources::GetInstance().LoadOnScene<CMeshBuffer>(meshToken);
+				CMeshBuffer* meshBuffer = nullptr;
+				if (meshIndex < 0)
+				{
+					meshBuffer = CResources::GetInstance().LoadOnScene<CMeshBuffer>(meshToken);
+					if (!meshBuffer)
+						meshBuffer = CResources::GetInstance().LoadOnGame<CMeshBuffer>(meshToken);
+					if (!meshBuffer)
+						meshBuffer = CResources::GetInstance().LoadOnScene<CMeshBuffer>(meshName);
+					if (!meshBuffer)
+						meshBuffer = CResources::GetInstance().LoadOnGame<CMeshBuffer>(meshName);
+				}
 				if (!meshBuffer)
-					meshBuffer = CResources::GetInstance().LoadOnGame<CMeshBuffer>(meshToken);
-				if (!meshBuffer)
-					meshBuffer = CResources::GetInstance().LoadOnScene<CMeshBuffer>(meshName);
-				if (!meshBuffer)
-					meshBuffer = CResources::GetInstance().LoadOnGame<CMeshBuffer>(meshName);
-				if (!meshBuffer)
-					meshBuffer = findMeshInBundles(bundleName, meshName);
+					meshBuffer = findMeshInBundles(bundleName, meshName, meshIndex);
 				if (meshBuffer)
 					meshFilter->Set_MeshBuffer(meshBuffer);
 			}
