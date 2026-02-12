@@ -136,12 +136,14 @@ void CSceneManager::LoadComplete()
 		m_pCrtScene->Set_SaveRegistrationEnabled(false);
 		m_pCrtScene->Initialize();
 		m_bLoading = false;
+		m_pCrtScene->Set_SaveRegistrationEnabled(true);
 	}
 
 	wstring file = m_pCrtScene->Get_SceneName() + L".scenedata";
 	auto sceneTransformInfo = CResources::GetInstance().ReadSceneObjectTransformInfos(file);
 
 	m_pCrtScene->Bind_ObjectsTransform(sceneTransformInfo);
+	m_pCrtScene->Set_SaveRegistrationEnabled(false);
 	m_pCrtScene->Awake();
 	m_pCrtScene->Set_SaveRegistrationEnabled(true);
 }
