@@ -13,7 +13,7 @@ CMaterial::CMaterial()
 	, m_bUseLight(false)
 	, m_bUseNormalMap(false)
 	, m_bUseORMMap(false)
-	, m_vBaseColor(ColorValue::white().f4Color())
+	, m_vBaseColor(_other.m_vBaseColor)
 	, m_vTextureList({})
 	, m_mIntValues({})
 	, m_mFloatValues({})
@@ -37,7 +37,7 @@ CMaterial::CMaterial(const CMaterial& _other)
 	, m_bUseNormalMap(_other.m_bUseNormalMap)
 	, m_bUseORMMap(_other.m_bUseORMMap)
 	, m_vTextureList({})
-	, m_vBaseColor(ColorValue::white().f4Color())
+	, m_vBaseColor(_other.m_vBaseColor)
 	, m_mFloatValues(_other.m_mFloatValues)
 	, m_mIntValues(_other.m_mIntValues)
 	, m_mVector2Values(_other.m_mVector2Values)
@@ -46,6 +46,8 @@ CMaterial::CMaterial(const CMaterial& _other)
 	, m_mMatrixValues(_other.m_mMatrixValues)
 {
 	m_strName = L"Material (Clone)";
+	m_strResourceName = _other.m_strResourceName;
+	m_strFilePath = _other.m_strFilePath;
 
 	if (m_pShader)
 		m_pShader->AddRef();
