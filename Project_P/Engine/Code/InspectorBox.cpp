@@ -158,6 +158,25 @@ static CTexture* LoadInspectorTextureResource(const string& relPath)
     return resources.CreateGameResource<CTexture>(resourceName, CEngineString::StringToWString(relPath));
 }
 
+static CTexture* FindInspectorTextureResource(const string& relPath)
+{
+    if (relPath.empty())
+        return nullptr;
+
+    CResources& resources = CResources::GetInstance();
+    string normalized = relPath;
+    std::replace(normalized.begin(), normalized.end(), '\\', '/');
+    const string fileName = fs::path(normalized).filename().string();
+    const size_t pathHash = std::hash<string>{}(normalized);
+    const wstring resourceName = CEngineString::StringToWString("InspectorTexture/" + fileName + "_" + to_string(pathHash));
+
+    auto found = resources.m_mGameResourceList.find(resourceName);
+    if (found == resources.m_mGameResourceList.end())
+        return nullptr;
+
+    return dynamic_cast<CTexture*>(found->second);
+}
+
 struct TexturePickerState
 {
     _bool open = false;
@@ -362,7 +381,7 @@ static void RenderTexturePickerWindow()
                     const string& relPath = filteredFiles[index];
                     ImGui::PushID(relPath.c_str());
 
-                    CTexture* texture = LoadInspectorTextureResource(relPath);
+                    CTexture* texture = FindInspectorTextureResource(relPath);
                     _bool selected = false;
                     if (texture && texture->Get_SRV())
                         selected = ImGui::ImageButton("##TexThumb", ImTextureRef((ImTextureID)(intptr_t)texture->Get_SRV()), ImVec2(thumbnailSize, thumbnailSize));
@@ -371,6 +390,8 @@ static void RenderTexturePickerWindow()
 
                     if (selected)
                     {
+                        if (!texture)
+                            texture = LoadInspectorTextureResource(relPath);
                         g_texturePickerState.material->Set_Texture(texture, g_texturePickerState.slotIndex);
                         g_texturePickerState.open = false;
                         ImGui::PopID();
