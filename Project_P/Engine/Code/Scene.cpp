@@ -1346,7 +1346,8 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 								path = path.substr(10);
 
 							const wstring textureName = makeTextureResourceNameFromPath(path);
-							texture = resources.LoadOnScene<CTexture>(textureName);
+							if (CScene* crtScene = CSceneManager::GetInstance().Get_CrtScene())
+								texture = dynamic_cast<CTexture*>(crtScene->Find_Resource(textureName));
 							if (!texture)
 								texture = resources.CreateSceneResource<CTexture>(textureName, path);
 						}
