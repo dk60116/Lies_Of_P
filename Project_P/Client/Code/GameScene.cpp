@@ -31,6 +31,7 @@ HRESULT CGameScene::Initialize()
 	CGameObject* lightObject = Add_GameObject(L"Directional Light");
 	m_pDirLight = lightObject->AddComponent<CLight>();
 	m_pDirLight->Set_Intensity(0.5f);
+	m_pDirLight->Get_Transform()->Set_EulerAngles(36.f, 8.f, -150.f);
 	m_pDirLight->Set_Color(ColorValue(170, 230, 160));
 
 	m_pDirLight->Get_Transform()->Set_EulerAngles(40.f, -180.f, 0.f);
@@ -41,9 +42,6 @@ HRESULT CGameScene::Initialize()
 
 	CGameObject* hudObject = Add_GameObject(L"Player HUD");
 	m_pHUD = hudObject->AddComponent<CPlayerHUD>();
-
-	CGameObject* bb = Add_GameObject(L"BB");
-	bb->CreateMeshHierachy(CResources::GetInstance().LoadMeshBuffersOnScene(L"Stage01_Building_06 (MeshBuffer)"), 0.01f);
 
 	CGameObject* playerObj = Add_GameObject(L"Player");
 	m_pPlayer = playerObj->AddComponent<CPlayer>();
