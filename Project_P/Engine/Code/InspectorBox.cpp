@@ -382,6 +382,8 @@ static void RenderTexturePickerWindow()
                     ImGui::PushID(relPath.c_str());
 
                     CTexture* texture = FindInspectorTextureResource(relPath);
+                    if (!texture)
+                        texture = LoadInspectorTextureResource(relPath);
                     _bool selected = false;
                     if (texture && texture->Get_SRV())
                         selected = ImGui::ImageButton("##TexThumb", ImTextureRef((ImTextureID)(intptr_t)texture->Get_SRV()), ImVec2(thumbnailSize, thumbnailSize));
@@ -390,8 +392,6 @@ static void RenderTexturePickerWindow()
 
                     if (selected)
                     {
-                        if (!texture)
-                            texture = LoadInspectorTextureResource(relPath);
                         g_texturePickerState.material->Set_Texture(texture, g_texturePickerState.slotIndex);
                         g_texturePickerState.open = false;
                         ImGui::PopID();
