@@ -1314,42 +1314,42 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				return nullptr;
 			};
 
-			auto applyMaterialData = [&info](CMaterial* material)
-			{
-				if (!material)
-					return;
-
-				CResources& resources = CResources::GetInstance();
-
-				if (!info.materialTextures.empty())
+				auto applyMaterialData = [&info](CMaterial* material)
 				{
-					while (material->Get_TextureCount() > 0)
-						material->Remove_Texture(static_cast<_int>(material->Get_TextureCount() - 1));
+					if (!material)
+						return;
 
-					for (_uint textureIndex = 0; textureIndex < info.materialTextures.size(); ++textureIndex)
+					CResources& resources = CResources::GetInstance();
+					auto makeTextureResourceNameFromPath = [](const wstring& path)
 					{
-					const auto& textureInfo = info.materialTextures[textureIndex];
-					CTexture* texture = nullptr;
+						std::string normalized = CEngineString::WStringToString(path);
+						std::replace(normalized.begin(), normalized.end(), '\\', '/');
+						const std::string fileName = std::filesystem::path(normalized).filename().string();
+						const size_t pathHash = std::hash<std::string>{}(normalized);
+						return CEngineString::StringToWString("SceneTexture/" + fileName + "_" + std::to_string(pathHash));
+					};
 
-					if (!textureInfo.name.empty())
+					if (!info.materialTextures.empty())
 					{
-						texture = resources.LoadOnScene<CTexture>(textureInfo.name);
-						if (!texture)
-							texture = resources.LoadOnGame<CTexture>(textureInfo.name);
-					}
+						while (material->Get_TextureCount() > 0)
+							material->Remove_Texture(static_cast<_int>(material->Get_TextureCount() - 1));
 
-					if (!texture && !textureInfo.path.empty())
-					{
-						wstring path = textureInfo.path;
-						if (path.rfind(L"../Assets/", 0) == 0)
-							path = path.substr(10);
+						for (_uint textureIndex = 0; textureIndex < info.materialTextures.size(); ++textureIndex)
+						{
+						const auto& textureInfo = info.materialTextures[textureIndex];
+						CTexture* texture = nullptr;
 
-						wstring textureName = textureInfo.name;
-						if (textureName.empty())
-							textureName = std::filesystem::path(path).stem().wstring() + L" (Texture)";
+						if (!textureInfo.path.empty())
+						{
+							wstring path = textureInfo.path;
+							if (path.rfind(L"../Assets/", 0) == 0)
+								path = path.substr(10);
 
-						texture = resources.CreateSceneResource<CTexture>(textureName, path);
-					}
+							const wstring textureName = makeTextureResourceNameFromPath(path);
+							texture = resources.LoadOnScene<CTexture>(textureName);
+							if (!texture)
+								texture = resources.CreateSceneResource<CTexture>(textureName, path);
+						}
 
 						material->Set_Texture(texture, static_cast<_int>(textureIndex));
 					}
