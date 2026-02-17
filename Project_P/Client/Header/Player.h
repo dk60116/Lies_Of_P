@@ -66,6 +66,8 @@ private:
 
 	vector<CSkinnedMeshRenderer*> m_vBodySuits, m_vFaces, m_vHairs;
 
+	CTransform* m_pWeaponHolder;
+
 public:
 	const _uint GetLightAttackComboCount() const;
 	void SetLightAttakComboCount(const _uint _count);

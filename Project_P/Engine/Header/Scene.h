@@ -55,7 +55,7 @@ public:
     {
         wstring skyBox = L"DefaultSky (SkyBox)";
         _float ambient = 0.2f;
-        _float directionalLightShadowDist = 100.f;
+        _float directionalLightShadowDist = 200.f;
         _float shadowBias = 0.f;
     };
 

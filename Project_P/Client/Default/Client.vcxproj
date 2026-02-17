@@ -171,7 +171,7 @@
     <ClInclude Include="..\Header\SceneMap.h" />
     <ClInclude Include="..\Header\Weapon.h" />
     <ClInclude Include="..\Header\Wolf.h" />
-    <ClInclude Include="..\Header\WoodenSword.h" />
+    <ClInclude Include="..\Header\Eve_Sword.h" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="cpch.h" />
     <ClInclude Include="Resource.h" />
@@ -207,7 +207,7 @@
     <ClCompile Include="..\Code\SceneMap.cpp" />
     <ClCompile Include="..\Code\Weapon.cpp" />
     <ClCompile Include="..\Code\Wolf.cpp" />
-    <ClCompile Include="..\Code\WoodenSword.cpp" />
+    <ClCompile Include="..\Code\Eve_Sword.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="cpch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

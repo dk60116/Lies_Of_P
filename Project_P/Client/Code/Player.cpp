@@ -1,6 +1,7 @@
 #include "cpch.h"
 #include "Player.h"
 #include "PlayerController.h"
+#include "Eve_Sword.h"
 
 CPlayer::CPlayer()
 	: m_pController(nullptr)
@@ -14,6 +15,7 @@ CPlayer::CPlayer()
 	, m_vFaces({})
 	, m_vHairs({})
 	, m_iLightAttackComboCount(0)
+	, m_pWeaponHolder(nullptr)
 {
 	m_strName = L"Player";
 }
@@ -121,6 +123,16 @@ HRESULT CPlayer::Initialize()
 	m_pAnimator->SetApplyRootmotion(true, Get_Transform());
 
 	CGameManager::GetInstance().Set_Player(this);
+
+	m_pWeaponHolder = Get_Transform()->Find_ChildRecursive(L"SC_WeaponConstraint");
+
+	CGameObject* m_pWeaponObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Eve_Sword");
+	m_pEquipWeapon = m_pWeaponObj->AddComponent<CEve_Sword>();
+
+	m_pWeaponObj->Get_Transform()->SetParent(m_pWeaponHolder);
+	m_pWeaponObj->Get_Transform()->Set_LocalPosition(vector3::zero());
+	m_pWeaponObj->Get_Transform()->Set_LocalEulerAngles(vector3::back() * 90.f);
+	m_pWeaponObj->Get_Transform()->Set_LocalScale(0.5f);
 
 	return S_OK;
 }

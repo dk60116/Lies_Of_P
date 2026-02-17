@@ -27,26 +27,6 @@ bool isInputDir=false
 bool isJump=false
 trigger jump
 
-[state Jump_End]
-blendTree=2d
-paramX=isBattle
-paramY=speed
-child=Eve_Jump_End,0.000000,0.000000
-child=Eve_JumpForward_End,0.000000,1.000000
-child=Eve_Battle_Jump_End,1.000000,0.000000
-child=Eve_Battle_JumpForward_End,1.000000,1.000000
-speedMul=1.000000
-pos=246,-597
-
-[state Idle]
-blendTree=direct
-param=isBattle
-directBlend=0.300000
-child=Eve_Idle,0.000000
-child=Eve_BattleIdle,1.000000
-speedMul=1.000000
-pos=121,258
-
 [state Attack_Light_04]
 motion=Eve_Attack_Light_04
 speedMul=1.000000
@@ -63,16 +43,30 @@ child=Eve_BattleSprint_Start,1.000000,2.000000
 speedMul=1.000000
 pos=578,145
 
-[state Run_Forward]
+[state Jump_End]
 blendTree=2d
 paramX=isBattle
 paramY=speed
-child=Eve_Run_Forward_During,0.000000,1.000000
-child=Eve_BattleRun_During,1.000000,1.000000
-child=Eve_SprintForward_During,0.000000,2.000000
-child=Eve_BattleSprintForward_During,1.000000,2.000000
+child=Eve_Jump_End,0.000000,0.000000
+child=Eve_JumpForward_End,0.000000,1.000000
+child=Eve_Battle_Jump_End,1.000000,0.000000
+child=Eve_Battle_JumpForward_End,1.000000,1.000000
 speedMul=1.000000
-pos=662,414
+pos=246,-597
+
+[state Idle]
+blendTree=direct
+param=isBattle
+directBlend=0.500000
+child=Eve_Idle,0.000000
+child=Eve_BattleIdle,1.000000
+speedMul=1.000000
+pos=121,258
+
+[state Attack_Light_01]
+motion=Eve_Attack_Light_01
+speedMul=1.000000
+pos=-357,160
 
 [state Run_End]
 blendTree=2d
@@ -83,10 +77,16 @@ child=Eve_BattleRun_End,1.000000,1.000000
 speedMul=1.000000
 pos=407,373
 
-[state Attack_Light_01]
-motion=Eve_Attack_Light_01
+[state Run_Forward]
+blendTree=2d
+paramX=isBattle
+paramY=speed
+child=Eve_Run_Forward_During,0.000000,1.000000
+child=Eve_BattleRun_During,1.000000,1.000000
+child=Eve_SprintForward_During,0.000000,2.000000
+child=Eve_BattleSprintForward_During,1.000000,2.000000
 speedMul=1.000000
-pos=-357,160
+pos=662,414
 
 [state Run_TurnL]
 blendTree=2d
@@ -99,14 +99,6 @@ child=Eve_BattleSprintTurn_L,1.000000,2.000000
 speedMul=1.000000
 pos=305,-292
 
-[state SprintEnd]
-blendTree=direct
-param=isBattle
-child=Eve_Sprint_End,0.000000
-child=Eve_BattleSprint_End,1.000000
-speedMul=1.000000
-pos=870,359
-
 [state Run_TurnR]
 blendTree=2d
 paramX=isBattle
@@ -118,6 +110,14 @@ child=Eve_BattleSprintTurn_R,1.000000,2.000000
 speedMul=1.000000
 pos=655,-169
 
+[state SprintEnd]
+blendTree=direct
+param=isBattle
+child=Eve_Sprint_End,0.000000
+child=Eve_BattleSprint_End,1.000000
+speedMul=1.000000
+pos=870,359
+
 [state Attack_Light_02]
 motion=Eve_Attack_Light_02
 speedMul=1.000000
@@ -128,6 +128,11 @@ motion=Eve_Attack_Light_03
 speedMul=1.000000
 pos=-411,492
 
+[state Guard_Start]
+motion=Eve_Guard_Start
+speedMul=1.000000
+pos=-102,-180
+
 [state SprintToRun]
 blendTree=direct
 param=isBattle
@@ -135,11 +140,6 @@ child=Eve_SprintToRun,0.000000
 child=Eve_BattleSprintToRun,1.000000
 speedMul=1.000000
 pos=873,494
-
-[state Guard_Start]
-motion=Eve_Guard_Start
-speedMul=1.000000
-pos=-102,-180
 
 [state Guard_Idle]
 motion=Eve_Guard_Idle
@@ -271,7 +271,7 @@ transitionDuration=0.150000
 transitionOffset=0.000000
 
 [transition Run_End->Idle]
-blend=0.150000
+blend=0.300000
 exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000

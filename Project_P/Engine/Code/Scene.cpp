@@ -428,31 +428,6 @@ void CScene::Update_Editor()
 
 	CPhysics::RAYCASTHIT firstHit = {};
 
-	if (!ImGui::GetIO().WantCaptureMouse && CInput::GetInstance().GetMouseButtonDown_Editor(0))
-	{
-		const vector2Int point = CInput::GetInstance().GetMousePos_Editor();
-		CPhysics::Ray ray = m_pEditorCamera->ScreenPointToRay_Editor(point);
-
-		auto hits = CPhysics::GetInstance().Raycast(ray);
-
-		if (hits.size() <= 0)
-			return;
-
-		firstHit = hits[0];
-
-		//CEditor::GetInstance().Set_SelectedGameObject(firstHit.object);
-
-		if (CInput::GetInstance().GetKey_Editor(CONTROL))
-		{
-			CDebug::LogError("Ray Origin & Dir");
-			CDebug::LogError(ray.origin);
-			CDebug::LogError(ray.dir);
-			CDebug::LogError("HitPos");
-			CDebug::LogError(firstHit.hitPos);
-			CDebug::LogError(firstHit.object->Get_ObjectName());
-		}
-	}
-
 	if (CInput::GetInstance().GetKey_Editor(CONTROL))
 	{
 		if (CInput::GetInstance().GetKeyDown_Editor(S))

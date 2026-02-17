@@ -385,10 +385,12 @@ vector<CMeshRenderer*> CGameObject::CreateMeshHierachy(vector<MeshBundle> _meshI
 			continue;
 
 		child->Get_Transform()->SetParent(parentTransform);
-
+		child->Get_Transform()->Set_LocalPosition(vector3::zero());
+		child->Get_Transform()->Set_LocalEulerAngles(vector3::zero());
 		child->Get_Transform()->Set_LocalScale(_scaleFactor);
 
 		CMeshRenderer* ren = child->AddComponent<CMeshRenderer>();
+
 		if (!ren || !ren->Get_MeshFilter())
 			continue;
 

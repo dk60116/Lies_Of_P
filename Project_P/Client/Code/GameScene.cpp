@@ -34,7 +34,7 @@ HRESULT CGameScene::Initialize()
 	m_pDirLight->Get_Transform()->Set_EulerAngles(36.f, 8.f, -150.f);
 	m_pDirLight->Set_Color(ColorValue(170, 230, 160));
 
-	m_pDirLight->Get_Transform()->Set_EulerAngles(40.f, -180.f, 0.f);
+	m_pDirLight->Get_Transform()->Set_EulerAngles(45.f, 160.f, 0.f);
 
 	CGameObject* lightObject2 = Add_GameObject(L"Point Light");
 	CLight* pointLight = lightObject2->AddComponent<CLight>();

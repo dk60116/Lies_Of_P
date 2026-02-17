@@ -81,7 +81,7 @@
     <ClInclude Include="..\Header\Weapon.h">
       <Filter>Scripts\Object\Weapons</Filter>
     </ClInclude>
-    <ClInclude Include="..\Header\WoodenSword.h">
+    <ClInclude Include="..\Header\Eve_Sword.h">
       <Filter>Scripts\Object\Weapons\Swords</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\Monster.h">
@@ -179,7 +179,7 @@
     <ClCompile Include="..\Code\Weapon.cpp">
       <Filter>Scripts\Object\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="..\Code\WoodenSword.cpp">
+    <ClCompile Include="..\Code\Eve_Sword.cpp">
       <Filter>Scripts\Object\Weapons\Swords</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\Monster.cpp">

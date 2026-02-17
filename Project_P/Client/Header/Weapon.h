@@ -5,7 +5,7 @@
 class CWeapon abstract : public CComponent
 {
 public:
-	enum class WeaponType { Swords, Bow, Bomb };
+	enum class WeaponType { Swords };
 
 protected:
 	CWeapon();
@@ -13,9 +13,11 @@ protected:
 
 public:
 	HRESULT Initialize() override;
+	void OnDestroy() override;
 
-private:
-	CMeshRenderer* m_pRenderer;
+protected:
+	wstring m_strWeaponName;
+	vector<CSkinnedMeshRenderer*> m_vRenderers;
 	CTransform* m_pTargetHand;
 };
 
