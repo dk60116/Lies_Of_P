@@ -48,3 +48,17 @@ x86/
 *.bak
 *.old
 *.orig
+
+.cache/
+.clangd/
+.fleet/
+.idea/
+.vscode
+.DS_Store
+/profile_chart_*.html
+/stats*.html
+/snapshot.bin
+/*.jor
+/detlog.txt
+/Assets/Shaders/VK/*.spv
+/Assets/Shaders/MTL/*.metallib
