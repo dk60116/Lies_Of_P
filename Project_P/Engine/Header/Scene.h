@@ -36,6 +36,7 @@ public:
         _float3 localPos = {};
         _float4 localQuaternion = {};
         _float3 localScale = {};
+        _bool isActive = true;
         _bool isRect = false;
         SCENERECTINFO rectInfo = {};
         vector<wstring> componentNames = {};

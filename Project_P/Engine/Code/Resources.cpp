@@ -656,7 +656,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 6;
+	const _uint version = 7;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -686,6 +686,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 		out.write(reinterpret_cast<const char*>(&info.localPos), sizeof(_float3));
 		out.write(reinterpret_cast<const char*>(&info.localQuaternion), sizeof(_float4));
 		out.write(reinterpret_cast<const char*>(&info.localScale), sizeof(_float3));
+		out.write(reinterpret_cast<const char*>(&info.isActive), sizeof(_bool));
 
 		out.write(reinterpret_cast<const char*>(&info.isRect), sizeof(_bool));
 		if (info.isRect)
@@ -838,6 +839,10 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 		in.read(reinterpret_cast<char*>(&info.localPos), sizeof(_float3));
 		in.read(reinterpret_cast<char*>(&info.localQuaternion), sizeof(_float4));
 		in.read(reinterpret_cast<char*>(&info.localScale), sizeof(_float3));
+
+		info.isActive = true;
+		if (version >= 7)
+			in.read(reinterpret_cast<char*>(&info.isActive), sizeof(_bool));
 
 		_bool isRect = false;
 		in.read(reinterpret_cast<char*>(&info.isRect), sizeof(_bool));

@@ -870,6 +870,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		const quaternion quat = tf->Get_LocalQuaternion();
 		info.localQuaternion = quat;
 		info.localScale = tf->Get_LocalScale();
+		info.isActive = (*it)->IsActive_Origin();
 
 		CRectTransform* rect = (*it)->GetComponent<CRectTransform>();
 
@@ -1076,6 +1077,8 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 	auto applyInfo = [](CGameObject* obj, const SCENETRANSFORMINFO& info)
 	{
 		CTransform* tf = obj->Get_Transform();
+
+		obj->SetActive(info.isActive);
 
 		if (!info.isRect)
 			tf->Set_LocalScale(info.localScale);
