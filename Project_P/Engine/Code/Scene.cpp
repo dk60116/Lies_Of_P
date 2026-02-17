@@ -740,6 +740,7 @@ void CScene::SceneRelease()
 		Safe_Release(*it);
 
 	m_lObjectList.clear();
+	m_mObjectOfId.clear();
 	m_mResourceList.clear();
 	m_mMeshBundleList.clear();
 	m_mSkinnedBundleList.clear();
@@ -758,6 +759,7 @@ void CScene::EndFrame()
 
 		if (obj && obj->m_bKill)
 		{
+			m_mObjectOfId.erase(obj->m_iUniqueID);
 			if (auto* parent = (*it)->Get_Transform()->Get_Parent())
 				parent->RemoveChild((*it)->Get_Transform());
 			Safe_Release(obj);
