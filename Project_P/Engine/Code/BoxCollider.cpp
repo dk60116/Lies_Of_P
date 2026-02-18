@@ -52,6 +52,12 @@ const vector3& CBoxCollider::GetSize() const
     return m_vSize;
 }
 
+void CBoxCollider::SetSize(const vector3& size)
+{
+    m_vSize = size;
+    m_bShapeDirty = true;
+}
+
 void CBoxCollider::OnDestroy()
 {
     __super::OnDestroy();

@@ -51,3 +51,15 @@ const vector3& CCollider::GetCenter() const
 {
 	return m_vCenter;
 }
+
+void CCollider::SetTrigger(const _bool isTrigger)
+{
+	m_bIsTrigger = isTrigger;
+	m_bShapeDirty = true;
+}
+
+void CCollider::SetCenter(const vector3& center)
+{
+	m_vCenter = center;
+	m_bShapeDirty = true;
+}

@@ -1197,6 +1197,23 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
 
             if (CMeshFilter* meshFilter = dynamic_cast<CMeshFilter*>(component))
                 RenderMeshFilterComponent(_obj, meshFilter);
+
+            if (CBoxCollider* boxCollider = dynamic_cast<CBoxCollider*>(component))
+            {
+                _bool isTrigger = boxCollider->IsTrigger();
+                if (ImGui::Checkbox("Is Trigger", &isTrigger))
+                    boxCollider->SetTrigger(isTrigger);
+
+                vector3 center = boxCollider->GetCenter();
+                _float centerValues[3] = { center.x, center.y, center.z };
+                if (ImGui::InputFloat3("Center", centerValues))
+                    boxCollider->SetCenter(vector3(centerValues[0], centerValues[1], centerValues[2]));
+
+                vector3 size = boxCollider->GetSize();
+                _float sizeValues[3] = { size.x, size.y, size.z };
+                if (ImGui::InputFloat3("Size", sizeValues))
+                    boxCollider->SetSize(vector3(sizeValues[0], sizeValues[1], sizeValues[2]));
+            }
         }
     }
 

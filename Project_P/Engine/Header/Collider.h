@@ -25,6 +25,8 @@ public:
 
     const _bool IsTrigger() const;
     const vector3& GetCenter() const;
+    void SetTrigger(const _bool isTrigger);
+    void SetCenter(const vector3& center);
 
 protected:
     virtual void BuildShapeIfNeeded() PURE;
@@ -40,4 +42,3 @@ protected:
 };
 
 NS_END
-

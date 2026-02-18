@@ -20,6 +20,7 @@ public:
 	void Render_Editor() override;
 
 	const vector3& GetSize() const;
+	void SetSize(const vector3& size);
 
 	void OnDestroy() override;
 
