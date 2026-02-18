@@ -163,6 +163,8 @@ call copy.bat</Command>
     <ClInclude Include="..\Header\Animator.h" />
     <ClInclude Include="..\Header\AnimatorControllerEditorBox.h" />
     <ClInclude Include="..\Header\BoxCollider.h" />
+    <ClInclude Include="..\Header\SphereCollider.h" />
+    <ClInclude Include="..\Header\CapsuleCollider.h" />
     <ClInclude Include="..\Header\Camera.h" />
     <ClInclude Include="..\Header\Canvas.h" />
     <ClInclude Include="..\Header\Collider.h" />
@@ -233,6 +235,8 @@ call copy.bat</Command>
     </ClCompile>
     <ClCompile Include="..\Code\AnimatorControllerEditorBox.cpp" />
     <ClCompile Include="..\Code\BoxCollider.cpp" />
+    <ClCompile Include="..\Code\SphereCollider.cpp" />
+    <ClCompile Include="..\Code\CapsuleCollider.cpp" />
     <ClCompile Include="..\Code\Camera.cpp" />
     <ClCompile Include="..\Code\Canvas.cpp" />
     <ClCompile Include="..\Code\Collider.cpp" />

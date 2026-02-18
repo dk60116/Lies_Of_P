@@ -15,6 +15,8 @@
 #include "Image.h"
 #include "Text.h"
 #include "BoxCollider.h"
+#include "SphereCollider.h"
+#include "CapsuleCollider.h"
 
 #include <algorithm>
 #include <chrono>
@@ -1222,6 +1224,55 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 ImGui::Text("Size: (%.2f, %.2f, %.2f)", previewSize.x, previewSize.y, previewSize.z);
                 ImGui::Text("Is Trigger: %s", boxCollider->IsTrigger() ? "True" : "False");
             }
+
+            if (CSphereCollider* sphereCollider = dynamic_cast<CSphereCollider*>(component))
+            {
+                _bool isTrigger = sphereCollider->IsTrigger();
+                if (ImGui::Checkbox("Is Trigger", &isTrigger))
+                    sphereCollider->SetTrigger(isTrigger);
+
+                vector3 center = sphereCollider->GetCenter();
+                _float centerValues[3] = { center.x, center.y, center.z };
+                if (ImGui::InputFloat3("Center", centerValues))
+                    sphereCollider->SetCenter(vector3(centerValues[0], centerValues[1], centerValues[2]));
+
+                _float radius = sphereCollider->GetRadius();
+                if (ImGui::InputFloat("Radius", &radius))
+                    sphereCollider->SetRadius(radius);
+
+                ImGui::Separator();
+                ImGui::TextUnformatted("Preview");
+                ImGui::Text("Center: (%.2f, %.2f, %.2f)", center.x, center.y, center.z);
+                ImGui::Text("Radius: %.2f", sphereCollider->GetRadius());
+                ImGui::Text("Is Trigger: %s", sphereCollider->IsTrigger() ? "True" : "False");
+            }
+
+            if (CCapsuleCollider* capsuleCollider = dynamic_cast<CCapsuleCollider*>(component))
+            {
+                _bool isTrigger = capsuleCollider->IsTrigger();
+                if (ImGui::Checkbox("Is Trigger", &isTrigger))
+                    capsuleCollider->SetTrigger(isTrigger);
+
+                vector3 center = capsuleCollider->GetCenter();
+                _float centerValues[3] = { center.x, center.y, center.z };
+                if (ImGui::InputFloat3("Center", centerValues))
+                    capsuleCollider->SetCenter(vector3(centerValues[0], centerValues[1], centerValues[2]));
+
+                _float radius = capsuleCollider->GetRadius();
+                if (ImGui::InputFloat("Radius", &radius))
+                    capsuleCollider->SetRadius(radius);
+
+                _float height = capsuleCollider->GetHeight();
+                if (ImGui::InputFloat("Height", &height))
+                    capsuleCollider->SetHeight(height);
+
+                ImGui::Separator();
+                ImGui::TextUnformatted("Preview");
+                ImGui::Text("Center: (%.2f, %.2f, %.2f)", center.x, center.y, center.z);
+                ImGui::Text("Radius: %.2f", capsuleCollider->GetRadius());
+                ImGui::Text("Height: %.2f", capsuleCollider->GetHeight());
+                ImGui::Text("Is Trigger: %s", capsuleCollider->IsTrigger() ? "True" : "False");
+            }
         }
     }
 
@@ -1568,6 +1619,18 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
         {
             if (!_obj->GetComponent<CBoxCollider>())
                 _obj->AddComponent<CBoxCollider>();
+        }
+
+        if (ImGui::MenuItem("SphereCollider"))
+        {
+            if (!_obj->GetComponent<CSphereCollider>())
+                _obj->AddComponent<CSphereCollider>();
+        }
+
+        if (ImGui::MenuItem("CapsuleCollider"))
+        {
+            if (!_obj->GetComponent<CCapsuleCollider>())
+                _obj->AddComponent<CCapsuleCollider>();
         }
 
         ImGui::EndMenu();

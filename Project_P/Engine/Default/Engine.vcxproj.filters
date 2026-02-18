@@ -196,6 +196,12 @@
     <ClInclude Include="..\Header\BoxCollider.h">
       <Filter>Components\Physics\Collider</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\SphereCollider.h">
+      <Filter>Components\Physics\Collider</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\CapsuleCollider.h">
+      <Filter>Components\Physics\Collider</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Engine">
@@ -519,6 +525,12 @@
       <Filter>Components\Physics</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\BoxCollider.cpp">
+      <Filter>Components\Physics\Collider</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\SphereCollider.cpp">
+      <Filter>Components\Physics\Collider</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\CapsuleCollider.cpp">
       <Filter>Components\Physics\Collider</Filter>
     </ClCompile>
     <ClCompile Include="JoltIssueReportingBridge.cpp">
