@@ -37,6 +37,7 @@
 #include "SkinnedMeshRenderer.h"
 #include "Physics.h"
 #include "Collider.h"
+#include "BoxCollider.h"
 #include "RigidBody.h"
 #include "Animator.h"
 #include "AnimatorController.h"

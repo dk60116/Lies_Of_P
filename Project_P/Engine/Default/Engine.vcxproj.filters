@@ -193,7 +193,7 @@
     <ClInclude Include="..\Header\RigidBody.h">
       <Filter>Components\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="..\Header\BoxCollier.h">
+    <ClInclude Include="..\Header\BoxCollider.h">
       <Filter>Components\Physics\Collider</Filter>
     </ClInclude>
   </ItemGroup>
@@ -518,7 +518,7 @@
     <ClCompile Include="..\Code\RigidBody.cpp">
       <Filter>Components\Physics</Filter>
     </ClCompile>
-    <ClCompile Include="..\Code\BoxCollier.cpp">
+    <ClCompile Include="..\Code\BoxCollider.cpp">
       <Filter>Components\Physics\Collider</Filter>
     </ClCompile>
     <ClCompile Include="JoltIssueReportingBridge.cpp">

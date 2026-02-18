@@ -3,15 +3,14 @@
 
 NS_BEGIN(Engine)
 
-class CBoxCollier : public CCollider
+class CBoxCollider : public CCollider
 {
-public:
 protected:
-	explicit CBoxCollier();
-	~CBoxCollier();
+	explicit CBoxCollider();
+	~CBoxCollider();
 
-private:
-	static CBoxCollier* Create();
+public:
+	static CBoxCollider* Create();
 	CComponent* Clone() const override;
 
 public:
