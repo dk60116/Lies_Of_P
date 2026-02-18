@@ -29,6 +29,8 @@ protected:
 
 private:
 	vector3 m_vSize;
+	class CMeshBuffer* m_pLineMesh;
+	class CMaterial* m_pLineMaterial;
 };
 
 NS_END
