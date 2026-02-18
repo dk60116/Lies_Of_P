@@ -18,6 +18,7 @@ public:
 	void Update() override;
 	void FixedUpdate() override;
 	void Render_Editor() override;
+	void Render_Gizmo() override;
 
 	const vector3& GetSize() const;
 	void SetSize(const vector3& size);
