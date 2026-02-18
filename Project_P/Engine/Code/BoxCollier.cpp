@@ -1,23 +1,23 @@
 #include "epch.h"
 #include "BoxCollier.h"
 
-CBoxCollier::CBoxCollier()
+CBoxCollider::CBoxCollider()
     : m_vSize(vector3::one())
 {
 }
 
-CBoxCollier::~CBoxCollier()
+CBoxCollider::~CBoxCollider()
 {
 }
 
-CBoxCollier* CBoxCollier::Create()
+CBoxCollider* CBoxCollider::Create()
 {
-    return new CBoxCollier();
+    return new CBoxCollider();
 }
 
-CComponent* CBoxCollier::Clone() const
+CComponent* CBoxCollider::Clone() const
 {
-    CBoxCollier* clone = new CBoxCollier();
+    CBoxCollider* clone = new CBoxCollider();
 
     clone->m_bIsTrigger = m_bIsTrigger;
     clone->m_vCenter = m_vCenter;
@@ -27,7 +27,7 @@ CComponent* CBoxCollier::Clone() const
     return clone;
 }
 
-HRESULT CBoxCollier::Initialize()
+HRESULT CBoxCollider::Initialize()
 {
     if (FAILED(__super::Initialize()))
         return E_FAIL;
@@ -35,39 +35,39 @@ HRESULT CBoxCollier::Initialize()
     return S_OK;
 }
 
-void CBoxCollier::Update()
+void CBoxCollider::Update()
 {
 }
 
-void CBoxCollier::FixedUpdate()
+void CBoxCollider::FixedUpdate()
 {
 }
 
-void CBoxCollier::Render_Editor()
+void CBoxCollider::Render_Editor()
 {
 }
 
-void CBoxCollier::OnDestroy()
+void CBoxCollider::OnDestroy()
 {
     __super::OnDestroy();
 }
 
-void CBoxCollier::BuildShapeIfNeeded()
+void CBoxCollider::BuildShapeIfNeeded()
 {
     if (!m_bShapeDirty && m_pShape != nullptr)
         return;
 
-    // ±âÁ¸ Ä³½Ã ÇØÁ¦
+    // ê¸°ì¡´ ìºì‹œ í•´ì œ
     ReleaseShape();
 
-    // 0/À½¼ö ¹æÁö + half extent
+    // 0/ìŒìˆ˜ ë°©ì§€ + half extent
     const float sx = max(m_vSize.x, 0.001f);
     const float sy = max(m_vSize.y, 0.001f);
     const float sz = max(m_vSize.z, 0.001f);
 
     const JPH::Vec3 halfExtent(sx * 0.5f, sy * 0.5f, sz * 0.5f);
 
-    // Box Shape »ı¼º
+    // Box Shape ìƒì„±
     JPH::BoxShapeSettings boxSettings(halfExtent);
     JPH::ShapeSettings::ShapeResult boxResult = boxSettings.Create();
 
@@ -77,14 +77,14 @@ void CBoxCollier::BuildShapeIfNeeded()
         return;
     }
 
-    // ShapeResult´Â Result<Ref<Shape>> ÀÌ¹Ç·Î, Get()À¸·Î Ref¸¦ ¹Ş°í raw ptrÀ» ²¨³½´Ù
+    // ShapeResultëŠ” Result<Ref<Shape>> ì´ë¯€ë¡œ, Get()ìœ¼ë¡œ Refë¥¼ ë°›ê³  raw ptrì„ êº¼ë‚¸ë‹¤
     JPH::Ref<JPH::Shape> boxRef = boxResult.Get();
     const JPH::Shape* baseShape = boxRef.GetPtr();
 
-    // ¸â¹ö(raw ptr)·Î µé°í ÀÖÀ» °Å¸é AddRef·Î ¼ö¸í È®º¸
+    // ë©¤ë²„(raw ptr)ë¡œ ë“¤ê³  ìˆì„ ê±°ë©´ AddRefë¡œ ìˆ˜ëª… í™•ë³´
     baseShape->AddRef();
 
-    // center ¿ÀÇÁ¼Â Àû¿ë(Unity BoxCollider.center)
+    // center ì˜¤í”„ì…‹ ì ìš©(Unity BoxCollider.center)
     const bool centerIsZero =
         (m_vCenter.x == 0.f && m_vCenter.y == 0.f && m_vCenter.z == 0.f);
 
@@ -97,7 +97,7 @@ void CBoxCollier::BuildShapeIfNeeded()
 
         if (!rtResult.HasError())
         {
-            // ÃÖÁ¾ shape°¡ ¹Ù²î¾úÀ¸´Ï baseShape ÂüÁ¶´Â ³»·ÁÁØ´Ù
+            // ìµœì¢… shapeê°€ ë°”ë€Œì—ˆìœ¼ë‹ˆ baseShape ì°¸ì¡°ëŠ” ë‚´ë ¤ì¤€ë‹¤
             baseShape->Release();
 
             JPH::Ref<JPH::Shape> rtRef = rtResult.Get();
@@ -108,7 +108,7 @@ void CBoxCollier::BuildShapeIfNeeded()
         }
         else
         {
-            // ¿ÀÇÁ¼Â shape »ı¼º ½ÇÆĞ ½Ã base À¯Áö
+            // ì˜¤í”„ì…‹ shape ìƒì„± ì‹¤íŒ¨ ì‹œ base ìœ ì§€
             m_pShape = baseShape;
         }
     }
