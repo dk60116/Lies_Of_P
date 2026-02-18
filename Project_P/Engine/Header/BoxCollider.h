@@ -3,7 +3,7 @@
 
 NS_BEGIN(Engine)
 
-class CBoxCollider : public CCollider
+class ENGINE_DLL CBoxCollider : public CCollider
 {
 protected:
 	explicit CBoxCollider();
