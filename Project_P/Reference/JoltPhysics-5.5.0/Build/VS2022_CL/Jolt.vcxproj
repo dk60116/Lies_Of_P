@@ -93,7 +93,7 @@
       <PrecompiledHeaderFile>C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/Jolt.dir/Debug/cmake_pch.hxx</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/Jolt.dir/Debug//cmake_pch.pch</PrecompiledHeaderOutputFile>
       <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <SupportJustMyCode>
       </SupportJustMyCode>
