@@ -132,6 +132,9 @@ void CSphereCollider::Render_Gizmo()
     const _matrix centerOffset = XMMatrixTranslation(m_vCenter.x, m_vCenter.y, m_vCenter.z);
     const _matrix world = centerOffset * objectWorld;
 
+    const _float4 colliderColor = IsInContact() ? _float4(1.f, 0.f, 0.f, 1.f) : _float4(0.f, 1.f, 0.f, 1.f);
+    m_pLineMaterial->Set_BaseColor(colliderColor);
+
     _float3 camPos = _float3();
     _matrix matView = cam->Get_ViewMatrix();
     _matrix matProj = cam->Get_ProjectionMatrix();

@@ -8,6 +8,7 @@ CCollider::CCollider()
 	, m_bIsTrigger(false)
 	, m_bShapeDirty(true)
 	, m_pShape(nullptr)
+    , m_bInContact(false)
 {
 	m_strName = L"Collider";
 }
@@ -71,7 +72,17 @@ void CCollider::SetCenter(const vector3& center)
 	m_bShapeDirty = true;
 }
 
-Shape* CCollider::GetShadpe()
+const Shape* CCollider::GetShape() const
 {
-	return m_pShape;
+    return m_pShape;
+}
+
+const _bool CCollider::IsInContact() const
+{
+    return m_bInContact;
+}
+
+void CCollider::SetInContact(const _bool inContact)
+{
+    m_bInContact = inContact;
 }

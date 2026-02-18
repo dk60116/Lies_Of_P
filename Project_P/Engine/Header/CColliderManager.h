@@ -32,11 +32,15 @@ public:
 private:
     enum class EContactType { Enter, Stay, Exit };
 
+    void QueueContactEvent(const BodyID& a, const BodyID& b, EContactType type, bool isTriggerHint = false);
+    void DispatchQueuedEvents();
+
     struct ContactEvent
     {
         class CRigidBody* a = nullptr;
         class CRigidBody* b = nullptr;
         _bool isTrigger = false;
+        uint64_t key = 0;
         EContactType type;
     };
 
@@ -126,22 +130,41 @@ private:
     class ContactListenerImpl final : public JPH::ContactListener
     {
     public:
+        explicit ContactListenerImpl(CColliderManager* owner = nullptr)
+            : m_pOwner(owner)
+        {
+        }
+
+        void SetOwner(CColliderManager* owner)
+        {
+            m_pOwner = owner;
+        }
+
         ValidateResult OnContactValidate(const Body&, const Body&, RVec3Arg, const CollideShapeResult&) override
         {
             return ValidateResult::AcceptAllContactsForThisBodyPair;
         }
 
-        void OnContactAdded(const Body&, const Body&, const ContactManifold&, ContactSettings&) override
+        void OnContactAdded(const Body& body1, const Body& body2, const ContactManifold&, ContactSettings&) override
         {
+            if (m_pOwner)
+                m_pOwner->QueueContactEvent(body1.GetID(), body2.GetID(), EContactType::Enter);
         }
 
-        void OnContactPersisted(const Body&, const Body&, const ContactManifold&, ContactSettings&) override
+        void OnContactPersisted(const Body& body1, const Body& body2, const ContactManifold&, ContactSettings&) override
         {
+            if (m_pOwner)
+                m_pOwner->QueueContactEvent(body1.GetID(), body2.GetID(), EContactType::Stay);
         }
 
-        void OnContactRemoved(const SubShapeIDPair&) override
+        void OnContactRemoved(const SubShapeIDPair& pair) override
         {
+            if (m_pOwner)
+                m_pOwner->QueueContactEvent(pair.GetBody1ID(), pair.GetBody2ID(), EContactType::Exit);
         }
+
+    private:
+        CColliderManager* m_pOwner;
     };
 
 private:

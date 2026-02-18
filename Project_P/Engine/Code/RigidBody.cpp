@@ -9,6 +9,8 @@
 
 CRigidBody::CRigidBody()
     : m_lColliderList({})
+    , m_ColliderContactRefCounts({})
+    , m_iContactPairCount(0)
     , m_bBodyDirty(false)
     , m_iBodyID(0)
     , m_bHasBody(false)
@@ -34,23 +36,13 @@ CRigidBody* CRigidBody::Create()
 CComponent* CRigidBody::Clone() const
 {
     CRigidBody* clone = new CRigidBody();
-
+    clone->m_bKinematic = m_bKinematic;
+    clone->m_fMass = m_fMass;
     return clone;
 }
 
 HRESULT CRigidBody::Initialize()
 {
-    auto& componentList = m_pGameObject->Get_ComponentList();
-
-    for (TRAVERSAL_ITER(componentList, it))
-    {
-        if (auto c = dynamic_cast<CCollider*>(*it))
-        {
-            m_lColliderList.push_back(c);
-            c->AddRef();
-        }
-    }
-
     return S_OK;
 }
 
@@ -89,6 +81,7 @@ void CRigidBody::FixedUpdate()
 
 void CRigidBody::OnCollisionEnter(CCollider* _other)
 {
+    UpdateContactState(true);
 }
 
 void CRigidBody::OnCollisionStay(CCollider* _other)
@@ -97,10 +90,12 @@ void CRigidBody::OnCollisionStay(CCollider* _other)
 
 void CRigidBody::OnCollisionExit(CCollider* other)
 {
+    UpdateContactState(false);
 }
 
 void CRigidBody::OnTriggerEnter(CCollider* other)
 {
+    UpdateContactState(true);
 }
 
 void CRigidBody::OnTriggerStay(CCollider* _other)
@@ -109,10 +104,14 @@ void CRigidBody::OnTriggerStay(CCollider* _other)
 
 void CRigidBody::OnTriggerExit(CCollider* _other)
 {
+    UpdateContactState(false);
 }
 
 void CRigidBody::OnDestroy()
 {
+    DestroyBodies();
+    ClearContactState();
+
     for (TRAVERSAL_ITER(m_lColliderList, it))
         Safe_Release(*it);
 
@@ -153,6 +152,7 @@ void CRigidBody::RebuildBodiesIfNeeded()
     auto& sys = CColliderManager::GetInstance().GetSystem();
     BodyInterface& bi = sys.GetBodyInterface();
 
+    ClearContactState();
     DestroyBodies();
 
     if (m_pCompoundShape) 
@@ -161,7 +161,10 @@ void CRigidBody::RebuildBodiesIfNeeded()
         m_pCompoundShape = nullptr;
     }
     if (m_pSensorCompoundShape) 
-        m_pSensorCompoundShape->Release(); m_pSensorCompoundShape = nullptr;
+    {
+        m_pSensorCompoundShape->Release();
+        m_pSensorCompoundShape = nullptr;
+    }
 
     m_pCompoundShape = BuildCompoundShape(false);
     m_pSensorCompoundShape = BuildCompoundShape(true);
@@ -181,11 +184,14 @@ void CRigidBody::RebuildBodiesIfNeeded()
         BodyCreationSettings bcs(m_pCompoundShape, jpos, jrot, motion, layer);
 
         Body* body = bi.CreateBody(bcs);
-        m_iBodyID = body->GetID();
-        body->SetUserData(reinterpret_cast<uint64_t>(this));
+        if (body)
+        {
+            m_iBodyID = body->GetID();
+            body->SetUserData(reinterpret_cast<uint64_t>(this));
 
-        bi.AddBody(m_iBodyID, JPH::EActivation::Activate);
-        m_bHasBody = true;
+            bi.AddBody(m_iBodyID, JPH::EActivation::Activate);
+            m_bHasBody = true;
+        }
     }
 
     if (m_pSensorCompoundShape)
@@ -194,11 +200,14 @@ void CRigidBody::RebuildBodiesIfNeeded()
         sbcs.mIsSensor = true; 
 
         Body* sbody = bi.CreateBody(sbcs);
-        m_iSensorBodyID = sbody->GetID();
-        sbody->SetUserData(reinterpret_cast<uint64_t>(this));
+        if (sbody)
+        {
+            m_iSensorBodyID = sbody->GetID();
+            sbody->SetUserData(reinterpret_cast<uint64_t>(this));
 
-        bi.AddBody(m_iSensorBodyID, JPH::EActivation::Activate);
-        m_bHasSensorBody = true;
+            bi.AddBody(m_iSensorBodyID, JPH::EActivation::Activate);
+            m_bHasSensorBody = true;
+        }
     }
 
     m_bBodyDirty = false;
@@ -206,6 +215,24 @@ void CRigidBody::RebuildBodiesIfNeeded()
 
 void CRigidBody::DestroyBodies()
 {
+    auto& sys = CColliderManager::GetInstance().GetSystem();
+    BodyInterface& bi = sys.GetBodyInterface();
+
+    if (m_bHasBody)
+    {
+        bi.RemoveBody(m_iBodyID);
+        bi.DestroyBody(m_iBodyID);
+        m_iBodyID = BodyID();
+        m_bHasBody = false;
+    }
+
+    if (m_bHasSensorBody)
+    {
+        bi.RemoveBody(m_iSensorBodyID);
+        bi.DestroyBody(m_iSensorBodyID);
+        m_iSensorBodyID = BodyID();
+        m_bHasSensorBody = false;
+    }
 }
 
 const Shape* CRigidBody::BuildCompoundShape(bool trigger_only)
@@ -244,6 +271,54 @@ const Shape* CRigidBody::BuildCompoundShape(bool trigger_only)
     return shape;
 }
 
+
+void CRigidBody::UpdateContactState(const _bool entering)
+{
+    if (entering)
+    {
+        ++m_iContactPairCount;
+        for (CCollider* collider : m_lColliderList)
+        {
+            if (!collider)
+                continue;
+
+            _int& count = m_ColliderContactRefCounts[collider];
+            ++count;
+            collider->SetInContact(true);
+        }
+        return;
+    }
+
+    m_iContactPairCount = max(0, m_iContactPairCount - 1);
+
+    for (CCollider* collider : m_lColliderList)
+    {
+        if (!collider)
+            continue;
+
+        auto it = m_ColliderContactRefCounts.find(collider);
+        if (it == m_ColliderContactRefCounts.end())
+            continue;
+
+        it->second = max(0, it->second - 1);
+        collider->SetInContact(it->second > 0);
+    }
+}
+
+void CRigidBody::ClearContactState()
+{
+    m_iContactPairCount = 0;
+
+    for (CCollider* collider : m_lColliderList)
+    {
+        if (!collider)
+            continue;
+
+        collider->SetInContact(false);
+    }
+
+    m_ColliderContactRefCounts.clear();
+}
 void CRigidBody::AddCollider(CCollider* _collider)
 {
     auto it = find(m_lColliderList.begin(), m_lColliderList.end(), _collider);
@@ -255,6 +330,8 @@ void CRigidBody::AddCollider(CCollider* _collider)
     {
         m_lColliderList.push_back(_collider);
         m_lColliderList.back()->AddRef();
+        m_ColliderContactRefCounts[_collider] = 0;
+        _collider->SetInContact(false);
     }
 
     MarkBodyDirty();
@@ -269,6 +346,8 @@ void CRigidBody::RemvoeCollier(CCollider* _collider)
 
     if (_collider)
     {
+        _collider->SetInContact(false);
+        m_ColliderContactRefCounts.erase(_collider);
         m_lColliderList.remove(_collider);
         Safe_Release(_collider);
     }

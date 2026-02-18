@@ -156,6 +156,9 @@ void CBoxCollider::Render_Gizmo()
         {0, 4}, {1, 5}, {2, 6}, {3, 7}
     };
 
+    const _float4 colliderColor = IsInContact() ? _float4(1.f, 0.f, 0.f, 1.f) : _float4(0.f, 1.f, 0.f, 1.f);
+    m_pLineMaterial->Set_BaseColor(colliderColor);
+
     _float3 camPos = _float3();
     _matrix matView = cam->Get_ViewMatrix();
     _matrix matProj = cam->Get_ProjectionMatrix();

@@ -1,5 +1,6 @@
 #pragma once
-#include "Component.h"\
+#include "Component.h"
+#include <unordered_map>
 
 using namespace JPH;
 
@@ -44,7 +45,13 @@ public:
 	void RemvoeCollier(CCollider* _collider);
 
 private:
+	void UpdateContactState(const _bool entering);
+	void ClearContactState();
+
+private:
 	list<CCollider*> m_lColliderList;
+	unordered_map<class CCollider*, _int> m_ColliderContactRefCounts;
+	_int m_iContactPairCount;
 
 	_bool m_bBodyDirty;
 

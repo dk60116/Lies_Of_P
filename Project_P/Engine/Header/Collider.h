@@ -10,6 +10,8 @@ NS_BEGIN(Engine)
 
 class ENGINE_DLL CCollider abstract : public CComponent
 {
+    friend class CRigidBody;
+
 public:
 	enum class ColliderType { Cube, Sphere, Capsule, Mesh };
 
@@ -28,7 +30,10 @@ public:
     void SetTrigger(const _bool isTrigger);
     void SetCenter(const vector3& center);
 
-    Shape* GetShadpe();
+    const Shape* GetShape() const;
+
+    const _bool IsInContact() const;
+    void SetInContact(const _bool inContact);
 
 protected:
     virtual void BuildShapeIfNeeded() PURE;
@@ -41,6 +46,8 @@ protected:
 
     _bool m_bShapeDirty;
     const mutable Shape* m_pShape;
+
+    _bool m_bInContact;
 };
 
 NS_END
