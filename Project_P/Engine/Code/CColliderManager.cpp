@@ -3,7 +3,8 @@
 
 namespace
 {
-    std::once_flag g_JoltInitOnce;
+    mutex g_JoltInitMutex;
+    bool g_JoltInitialized = false;
 }
 
 CColliderManager::CColliderManager()
@@ -39,15 +40,20 @@ HRESULT CColliderManager::Initialize()
     if (m_bInitialized)
         return S_OK;
 
-    std::call_once(g_JoltInitOnce, []()
     {
-        RegisterDefaultAllocator();
+        lock_guard<mutex> lock(g_JoltInitMutex);
 
-        if (Factory::sInstance == nullptr)
-            Factory::sInstance = new Factory();
+        if (!g_JoltInitialized)
+        {
+            RegisterDefaultAllocator();
 
-        RegisterTypes();
-    });
+            if (Factory::sInstance == nullptr)
+                Factory::sInstance = new Factory();
+
+            RegisterTypes();
+            g_JoltInitialized = true;
+        }
+    }
 
     constexpr _uint kTempAllocatorSize = 16 * 1024 * 1024;
     m_pTempAllocator = new JPH::TempAllocatorImpl(kTempAllocatorSize);
