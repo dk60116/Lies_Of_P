@@ -23,15 +23,77 @@
 
 namespace
 {
-	void DrawSelectedMeshBoundingBox(CCamera* camera)
+	_bool BuildLineWorldMatrix(const _vector& a, const _vector& b, _matrix& outWorld)
+	{
+		_vector delta = b - a;
+		_float length = XMVectorGetX(XMVector3Length(delta));
+
+		if (length <= 0.0001f)
+			return false;
+
+		_vector dir = XMVector3Normalize(delta);
+		_vector xAxis = XMVectorSet(1.f, 0.f, 0.f, 0.f);
+		_float dot = XMVectorGetX(XMVector3Dot(xAxis, dir));
+		_matrix rot = XMMatrixIdentity();
+
+		if (dot < 0.9999f)
+		{
+			if (dot > -0.9999f)
+			{
+				_vector axis = XMVector3Normalize(XMVector3Cross(xAxis, dir));
+				_float angle = acosf(dot);
+				rot = XMMatrixRotationAxis(axis, angle);
+			}
+			else
+			{
+				rot = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 0.f), XM_PI);
+			}
+		}
+
+		_vector mid = (a + b) * 0.5f;
+		_matrix scale = XMMatrixScaling(length, 1.f, 1.f);
+		_matrix trans = XMMatrixTranslationFromVector(mid);
+		outWorld = scale * rot * trans;
+		return true;
+	}
+
+	_bool BuildLineResources(CCamera* camera, CMeshBuffer*& outLineMesh, CMaterial*& outLineMat, _float3& outCamPos, _matrix& outView, _matrix& outProj)
 	{
 		if (!camera)
+			return false;
+
+		outLineMesh = CResources::GetInstance().LoadOnGame<CMeshBuffer>(L"Line (Mesh Buffer)");
+		outLineMat = CResources::GetInstance().LoadOnGame<CMaterial>(L"DefaultLineMaterial (Material)");
+
+		if (!outLineMesh || !outLineMat)
+			return false;
+
+		_vector camPosV = camera->Get_Transform()->Get_Position().toXMVector();
+		XMStoreFloat3(&outCamPos, camPosV);
+		outView = camera->Get_ViewMatrix();
+		outProj = camera->Get_ProjectionMatrix();
+		return true;
+	}
+
+	void DrawLineSegment(CMeshBuffer* lineMesh, CMaterial* lineMat, const _float3& camPos, const _matrix& view, const _matrix& proj, const _vector& a, const _vector& b)
+	{
+		_matrix world = XMMatrixIdentity();
+		if (!BuildLineWorldMatrix(a, b, world))
 			return;
 
-		CMeshBuffer* lineMesh = CResources::GetInstance().LoadOnGame<CMeshBuffer>(L"Line (Mesh Buffer)");
-		CMaterial* lineMat = CResources::GetInstance().LoadOnGame<CMaterial>(L"DefaultLineMaterial (Material)");
+		lineMat->Bind_Matrix(world);
+		lineMat->Bind_Camera(camPos, view, proj, 0);
+		lineMesh->Render();
+	}
 
-		if (!lineMesh || !lineMat)
+	void DrawSelectedMeshBoundingBox(CCamera* camera)
+	{
+		CMeshBuffer* lineMesh = nullptr;
+		CMaterial* lineMat = nullptr;
+		_float3 camPos = {};
+		_matrix view = XMMatrixIdentity();
+		_matrix proj = XMMatrixIdentity();
+		if (!BuildLineResources(camera, lineMesh, lineMat, camPos, view, proj))
 			return;
 
 		CGameObject* selected = CEditor::GetInstance().Get_SelectedGameObject();
@@ -116,50 +178,65 @@ namespace
 			{0,4}, {1,5}, {2,6}, {3,7}
 		};
 
-		_vector camPosV = camera->Get_Transform()->Get_Position().toXMVector();
-		_float3 camPos = {};
-		XMStoreFloat3(&camPos, camPosV);
-		_matrix view = camera->Get_ViewMatrix();
-		_matrix proj = camera->Get_ProjectionMatrix();
-
 		for (const auto& edge : edges)
 		{
 			_vector a = worldCorners[edge[0]];
 			_vector b = worldCorners[edge[1]];
-			_vector delta = b - a;
-			_float length = XMVectorGetX(XMVector3Length(delta));
-
-			if (length <= 0.0001f)
-				continue;
-
-			_vector dir = XMVector3Normalize(delta);
-			_vector xAxis = XMVectorSet(1.f, 0.f, 0.f, 0.f);
-			_float dot = XMVectorGetX(XMVector3Dot(xAxis, dir));
-			_matrix rot = XMMatrixIdentity();
-
-			if (dot < 0.9999f)
-			{
-				if (dot > -0.9999f)
-				{
-					_vector axis = XMVector3Normalize(XMVector3Cross(xAxis, dir));
-					_float angle = acosf(dot);
-					rot = XMMatrixRotationAxis(axis, angle);
-				}
-				else
-				{
-					rot = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 0.f), XM_PI);
-				}
-			}
-
-			_vector mid = (a + b) * 0.5f;
-			_matrix scale = XMMatrixScaling(length, 1.f, 1.f);
-			_matrix trans = XMMatrixTranslationFromVector(mid);
-			_matrix world = scale * rot * trans;
-
-			lineMat->Bind_Matrix(world);
-			lineMat->Bind_Camera(camPos, view, proj, 0);
-			lineMesh->Render();
+			DrawLineSegment(lineMesh, lineMat, camPos, view, proj, a, b);
 		}
+	}
+
+	void DrawSelectedCameraFrustum(CCamera* camera)
+	{
+		CMeshBuffer* lineMesh = nullptr;
+		CMaterial* lineMat = nullptr;
+		_float3 camPos = {};
+		_matrix view = XMMatrixIdentity();
+		_matrix proj = XMMatrixIdentity();
+		if (!BuildLineResources(camera, lineMesh, lineMat, camPos, view, proj))
+			return;
+
+		CGameObject* selected = CEditor::GetInstance().Get_SelectedGameObject();
+		if (!selected)
+			return;
+
+		CCamera* selectedCamera = selected->GetComponent<CCamera>();
+		if (!selectedCamera || selectedCamera == camera)
+			return;
+
+		_matrix selectedView = selectedCamera->Get_ViewMatrix();
+		_matrix selectedProj = selectedCamera->Get_ProjectionMatrix();
+		_matrix invVP = XMMatrixInverse(nullptr, selectedView * selectedProj);
+
+		const _vector clipCorners[8] =
+		{
+			XMVectorSet(-1.f,  1.f, 0.f, 1.f),
+			XMVectorSet( 1.f,  1.f, 0.f, 1.f),
+			XMVectorSet( 1.f, -1.f, 0.f, 1.f),
+			XMVectorSet(-1.f, -1.f, 0.f, 1.f),
+			XMVectorSet(-1.f,  1.f, 1.f, 1.f),
+			XMVectorSet( 1.f,  1.f, 1.f, 1.f),
+			XMVectorSet( 1.f, -1.f, 1.f, 1.f),
+			XMVectorSet(-1.f, -1.f, 1.f, 1.f)
+		};
+
+		_vector worldCorners[8] = {};
+		for (_uint i = 0; i < 8; ++i)
+		{
+			_vector world = XMVector4Transform(clipCorners[i], invVP);
+			_vector worldW = XMVectorSplatW(world);
+			worldCorners[i] = XMVectorDivide(world, worldW);
+		}
+
+		constexpr _uint edges[12][2] =
+		{
+			{0,1}, {1,2}, {2,3}, {3,0},
+			{4,5}, {5,6}, {6,7}, {7,4},
+			{0,4}, {1,5}, {2,6}, {3,7}
+		};
+
+		for (const auto& edge : edges)
+			DrawLineSegment(lineMesh, lineMat, camPos, view, proj, worldCorners[edge[0]], worldCorners[edge[1]]);
 	}
 }
 
@@ -563,6 +640,7 @@ void CScene::Render_Editor()
 	}
 
 	DrawSelectedMeshBoundingBox(m_pEditorCamera);
+	DrawSelectedCameraFrustum(m_pEditorCamera);
 	m_pEditorCamera->RenderMesh();
 
 	m_pEditorCamera->RenderShadowDepthPass(rtVP);
