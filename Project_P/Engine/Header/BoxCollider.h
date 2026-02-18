@@ -19,6 +19,8 @@ public:
 	void FixedUpdate() override;
 	void Render_Editor() override;
 
+	const vector3& GetSize() const;
+
 	void OnDestroy() override;
 
 protected:

@@ -47,6 +47,11 @@ void CBoxCollider::Render_Editor()
 {
 }
 
+const vector3& CBoxCollider::GetSize() const
+{
+    return m_vSize;
+}
+
 void CBoxCollider::OnDestroy()
 {
     __super::OnDestroy();
@@ -65,7 +70,7 @@ void CBoxCollider::BuildShapeIfNeeded()
 
     const JPH::Vec3 halfExtent(sx * 0.5f, sy * 0.5f, sz * 0.5f);
 
-    // Box Shape »ý¼º
+    // Box Shape Â»Ã½Â¼Âº
     JPH::BoxShapeSettings boxSettings(halfExtent);
     JPH::ShapeSettings::ShapeResult boxResult = boxSettings.Create();
 

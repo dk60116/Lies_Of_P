@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "HierachyBox.h"
+#include "BoxCollider.h"
 
 #include <algorithm>
 #include <cctype>
@@ -331,8 +332,26 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filte
 		m_openToSelected = false;
 	}
 
-	if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+	const _bool itemHovered = ImGui::IsItemHovered();
+	if (itemHovered && ImGui::IsMouseDoubleClicked(0))
 		CEditor::GetInstance().MoveTo_SelectedGameObject(_obj);
+
+	if (itemHovered)
+	{
+		if (CBoxCollider* boxCollider = _obj->GetComponent<CBoxCollider>())
+		{
+			const vector3& center = boxCollider->GetCenter();
+			const vector3& size = boxCollider->GetSize();
+
+			ImGui::BeginTooltip();
+			ImGui::TextUnformatted("BoxCollider");
+			ImGui::Separator();
+			ImGui::Text("Center: (%.2f, %.2f, %.2f)", center.x, center.y, center.z);
+			ImGui::Text("Size: (%.2f, %.2f, %.2f)", size.x, size.y, size.z);
+			ImGui::Text("Is Trigger: %s", boxCollider->IsTrigger() ? "True" : "False");
+			ImGui::EndTooltip();
+		}
+	}
 
 	if (hasChildren && nodeOpen)
 	{

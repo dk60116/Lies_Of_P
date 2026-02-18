@@ -23,6 +23,9 @@ public:
     void Update() override;
     void OnDestroy() override;
 
+    const _bool IsTrigger() const;
+    const vector3& GetCenter() const;
+
 protected:
     virtual void BuildShapeIfNeeded() PURE;
     virtual void ReleaseShape();

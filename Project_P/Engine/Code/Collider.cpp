@@ -41,3 +41,13 @@ void CCollider::OnDestroy()
 {
 	ReleaseShape();
 }
+
+const _bool CCollider::IsTrigger() const
+{
+	return m_bIsTrigger;
+}
+
+const vector3& CCollider::GetCenter() const
+{
+	return m_vCenter;
+}
