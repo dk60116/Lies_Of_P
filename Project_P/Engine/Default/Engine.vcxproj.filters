@@ -202,6 +202,9 @@
     <ClInclude Include="..\Header\CapsuleCollider.h">
       <Filter>Components\Physics\Collider</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\CColliderManager.h">
+      <Filter>Physics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Engine">
@@ -535,6 +538,9 @@
     </ClCompile>
     <ClCompile Include="JoltIssueReportingBridge.cpp">
       <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\CColliderManager.cpp">
+      <Filter>Physics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

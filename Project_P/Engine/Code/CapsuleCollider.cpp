@@ -256,8 +256,8 @@ void CCapsuleCollider::BuildShapeIfNeeded()
     const _float radius = max(m_fRadius, 0.001f);
     const _float halfHeight = max(m_fHeight * 0.5f, 0.f);
 
-    JPH::CapsuleShapeSettings capsuleSettings(halfHeight, radius);
-    JPH::ShapeSettings::ShapeResult capsuleResult = capsuleSettings.Create();
+    CapsuleShapeSettings capsuleSettings(halfHeight, radius);
+    ShapeSettings::ShapeResult capsuleResult = capsuleSettings.Create();
 
     if (capsuleResult.HasError())
     {
@@ -265,8 +265,8 @@ void CCapsuleCollider::BuildShapeIfNeeded()
         return;
     }
 
-    JPH::Ref<JPH::Shape> capsuleRef = capsuleResult.Get();
-    const JPH::Shape* baseShape = capsuleRef.GetPtr();
+    Ref<Shape> capsuleRef = capsuleResult.Get();
+    const Shape* baseShape = capsuleRef.GetPtr();
     baseShape->AddRef();
 
     const _bool centerIsZero =
@@ -274,10 +274,10 @@ void CCapsuleCollider::BuildShapeIfNeeded()
 
     if (!centerIsZero)
     {
-        const JPH::Vec3 center(m_vCenter.x, m_vCenter.y, m_vCenter.z);
+        const Vec3 center(m_vCenter.x, m_vCenter.y, m_vCenter.z);
 
-        JPH::RotatedTranslatedShapeSettings rtSettings(center, JPH::Quat::sIdentity(), baseShape);
-        JPH::ShapeSettings::ShapeResult rtResult = rtSettings.Create();
+        RotatedTranslatedShapeSettings rtSettings(center, JPH::Quat::sIdentity(), baseShape);
+        ShapeSettings::ShapeResult rtResult = rtSettings.Create();
 
         if (!rtResult.HasError())
         {

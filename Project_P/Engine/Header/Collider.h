@@ -28,6 +28,8 @@ public:
     void SetTrigger(const _bool isTrigger);
     void SetCenter(const vector3& center);
 
+    Shape* GetShadpe();
+
 protected:
     virtual void BuildShapeIfNeeded() PURE;
     virtual void ReleaseShape();
@@ -38,7 +40,7 @@ protected:
     vector3 m_vCenter;
 
     _bool m_bShapeDirty;
-    const mutable JPH::Shape* m_pShape;
+    const mutable Shape* m_pShape;
 };
 
 NS_END

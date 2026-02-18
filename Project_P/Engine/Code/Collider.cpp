@@ -18,6 +18,9 @@ CCollider::~CCollider()
 
 HRESULT CCollider::Initialize()
 {
+	if (auto rig = m_pGameObject->GetComponent<CRigidBody>())
+		rig->AddCollider(this);
+
 	return S_OK;
 }
 
@@ -40,6 +43,9 @@ void CCollider::ReleaseShape()
 
 void CCollider::OnDestroy()
 {
+	if (auto rig = m_pGameObject->GetComponent<CRigidBody>())
+		rig->RemvoeCollier(this);
+
 	ReleaseShape();
 }
 
@@ -63,4 +69,9 @@ void CCollider::SetCenter(const vector3& center)
 {
 	m_vCenter = center;
 	m_bShapeDirty = true;
+}
+
+Shape* CCollider::GetShadpe()
+{
+	return m_pShape;
 }

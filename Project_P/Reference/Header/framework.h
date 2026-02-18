@@ -36,6 +36,7 @@ using Microsoft::WRL::ComPtr;
 #include <memory.h>
 #include <tchar.h>
 #include <algorithm>
+#include <cstdint>
 
 #ifdef new
 #undef new

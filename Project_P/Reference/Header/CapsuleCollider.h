@@ -3,14 +3,14 @@
 
 NS_BEGIN(Engine)
 
-class ENGINE_DLL CSphereCollider : public CCollider
+class ENGINE_DLL CCapsuleCollider : public CCollider
 {
 protected:
-    explicit CSphereCollider();
-    ~CSphereCollider();
+    explicit CCapsuleCollider();
+    ~CCapsuleCollider();
 
 public:
-    static CSphereCollider* Create();
+    static CCapsuleCollider* Create();
     CComponent* Clone() const override;
 
 public:
@@ -21,15 +21,18 @@ public:
     void Render_Gizmo() override;
 
     const _float GetRadius() const;
+    const _float GetHeight() const;
     void SetRadius(const _float radius);
+    void SetHeight(const _float height);
 
     void OnDestroy() override;
 
-public:
+protected:
     void BuildShapeIfNeeded() override;
 
 private:
     _float m_fRadius;
+    _float m_fHeight;
     class CMeshBuffer* m_pLineMesh;
     class CMaterial* m_pLineMaterial;
 };

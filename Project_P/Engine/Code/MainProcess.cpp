@@ -37,6 +37,8 @@ HRESULT CMainProcess::Initialize()
         return E_FAIL;
     if (FAILED(CInput::GetInstance().Initialize()))
         return E_FAIL;
+    if (FAILED(CColliderManager::GetInstance().Initialize()))
+        return E_FAIL;
     if (FAILED(CUIManager::GetInstance().Initialize()))
         return E_FAIL;
 

@@ -36,6 +36,7 @@
 #include "MeshRenderer.h"
 #include "SkinnedMeshRenderer.h"
 #include "Physics.h"
+#include "CColliderManager.h"
 #include "Collider.h"
 #include "BoxCollider.h"
 #include "RigidBody.h"
