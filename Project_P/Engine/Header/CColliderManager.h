@@ -181,8 +181,6 @@ private:
     ContactListenerImpl m_ContactListener;
 
     _bool m_bInitialized;
-    _bool m_bOwnFactoryInstance;
-    _bool m_bTypesRegistered;
 
 public:
     static uint64_t MakePairKey(const BodyID& a, const BodyID& b)

@@ -1,6 +1,11 @@
 #include "epch.h"
 #include <Jolt/Physics/Body/BodyLock.h>
 
+namespace
+{
+    std::once_flag g_JoltInitOnce;
+}
+
 CColliderManager::CColliderManager()
 	: m_BPLayerInterface()
 	, m_ObjectVsBPLayerFilter()
@@ -11,8 +16,6 @@ CColliderManager::CColliderManager()
 	, m_BodyActivationListener()
 	, m_ContactListener(this)
 	, m_bInitialized(false)
-    , m_bOwnFactoryInstance(false)
-    , m_bTypesRegistered(false)
     , m_EventMutex()
     , m_Events({})
     , m_ActivePairs({})
@@ -36,19 +39,15 @@ HRESULT CColliderManager::Initialize()
     if (m_bInitialized)
         return S_OK;
 
-    RegisterDefaultAllocator();
-
-    if (Factory::sInstance == nullptr)
+    std::call_once(g_JoltInitOnce, []()
     {
-        Factory::sInstance = new Factory();
-        m_bOwnFactoryInstance = true;
-    }
+        RegisterDefaultAllocator();
 
-    if (m_bOwnFactoryInstance)
-    {
+        if (Factory::sInstance == nullptr)
+            Factory::sInstance = new Factory();
+
         RegisterTypes();
-        m_bTypesRegistered = true;
-    }
+    });
 
     constexpr _uint kTempAllocatorSize = 16 * 1024 * 1024;
     m_pTempAllocator = new JPH::TempAllocatorImpl(kTempAllocatorSize);
@@ -107,18 +106,6 @@ void CColliderManager::Release()
     delete m_pTempAllocator;
     m_pTempAllocator = nullptr;
 
-    if (m_bTypesRegistered)
-    {
-        UnregisterTypes();
-        m_bTypesRegistered = false;
-    }
-
-    if (m_bOwnFactoryInstance && Factory::sInstance != nullptr)
-    {
-        delete Factory::sInstance;
-        Factory::sInstance = nullptr;
-        m_bOwnFactoryInstance = false;
-    }
 
     {
         lock_guard<mutex> lock(m_EventMutex);
