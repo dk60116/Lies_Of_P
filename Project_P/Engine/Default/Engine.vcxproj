@@ -112,16 +112,17 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);../Header</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);../Header;../../Reference/JoltPhysics-5.5.0</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>epch.h</PrecompiledHeaderFile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>ENGINE_EXPORTS;ASSIMP_BUILD_NO_EXPORT</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d11.lib;DirectXTK_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;Jolt.lib;DirectXTK_Debug.lib;Jolt_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../Reference/Library;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
@@ -136,18 +137,19 @@ call copy.bat</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);../Header</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);../Header;../../Reference/JoltPhysics-5.5.0</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>epch.h</PrecompiledHeaderFile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>ENGINE_EXPORTS;ASSIMP_BUILD_NO_EXPORT</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d11.lib;DirectXTK_Release.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;Jolt.lib;DirectXTK_Release.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../Reference/Library;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
@@ -160,8 +162,10 @@ call copy.bat</Command>
     <ClInclude Include="..\Header\AnimatorController.h" />
     <ClInclude Include="..\Header\Animator.h" />
     <ClInclude Include="..\Header\AnimatorControllerEditorBox.h" />
+    <ClInclude Include="..\Header\BoxCollier.h" />
     <ClInclude Include="..\Header\Camera.h" />
     <ClInclude Include="..\Header\Canvas.h" />
+    <ClInclude Include="..\Header\Collider.h" />
     <ClInclude Include="..\Header\Component.h" />
     <ClInclude Include="..\Header\RenderTarget.h" />
     <ClInclude Include="..\Header\Display.h" />
@@ -199,6 +203,7 @@ call copy.bat</Command>
     <ClInclude Include="..\Header\framework.h" />
     <ClInclude Include="..\Header\RectTransform.h" />
     <ClInclude Include="..\Header\EngineResource.h" />
+    <ClInclude Include="..\Header\RigidBody.h" />
     <ClInclude Include="..\Header\Scene.h" />
     <ClInclude Include="..\Header\SceneLoader.h" />
     <ClInclude Include="..\Header\SceneManager.h" />
@@ -227,8 +232,10 @@ call copy.bat</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Code\AnimatorControllerEditorBox.cpp" />
+    <ClCompile Include="..\Code\BoxCollier.cpp" />
     <ClCompile Include="..\Code\Camera.cpp" />
     <ClCompile Include="..\Code\Canvas.cpp" />
+    <ClCompile Include="..\Code\Collider.cpp" />
     <ClCompile Include="..\Code\Component.cpp" />
     <ClCompile Include="..\Code\RenderTarget.cpp" />
     <ClCompile Include="..\Code\Display.cpp" />
@@ -307,6 +314,7 @@ call copy.bat</Command>
     <ClCompile Include="..\Code\MeshRenderer.cpp" />
     <ClCompile Include="..\Code\RectTransform.cpp" />
     <ClCompile Include="..\Code\EngineResource.cpp" />
+    <ClCompile Include="..\Code\RigidBody.cpp" />
     <ClCompile Include="..\Code\Scene.cpp" />
     <ClCompile Include="..\Code\MainProcess.cpp" />
     <ClCompile Include="..\Code\Object.cpp" />
@@ -336,6 +344,7 @@ call copy.bat</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="JoltIssueReportingBridge.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Engine.rc" />

@@ -1,0 +1,40 @@
+#pragma once
+#include "Component.h"
+#include <Jolt/Physics/Collision/Shape/Shape.h>
+#include <Jolt/Math/Vec3.h>
+#include <Jolt/Math/Quat.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h> 
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h> 
+
+NS_BEGIN(Engine)
+
+class ENGINE_DLL CCollider abstract : public CComponent
+{
+public:
+	enum class ColliderType { Cube, Sphere, Capsule, Mesh };
+
+protected:
+	explicit CCollider();
+	~CCollider();
+
+public:
+    HRESULT Initialize() override;
+    void Awake() override;
+    void Update() override;
+    void OnDestroy() override;
+
+protected:
+    virtual void BuildShapeIfNeeded() PURE;
+    virtual void ReleaseShape();
+
+protected:
+    class CRigidBody* m_pRigidBody;
+    _bool m_bIsTrigger;
+    vector3 m_vCenter;
+
+    _bool m_bShapeDirty;
+    const mutable JPH::Shape* m_pShape;
+};
+
+NS_END
+

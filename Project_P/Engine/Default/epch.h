@@ -36,6 +36,8 @@
 #include "MeshRenderer.h"
 #include "SkinnedMeshRenderer.h"
 #include "Physics.h"
+#include "Collider.h"
+#include "RigidBody.h"
 #include "Animator.h"
 #include "AnimatorController.h"
 #include "SkyBox.h"

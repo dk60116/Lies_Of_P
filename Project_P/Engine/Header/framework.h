@@ -17,6 +17,7 @@
 #include <WICTextureLoader.h>
 #include <SpriteFont.h>
 #include <SpriteBatch.h>
+
 #pragma comment(lib, "d3dcompiler.lib")
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
@@ -44,6 +45,8 @@ using Microsoft::WRL::ComPtr;
 #include "imgui.h"
 #include "ImGuizmo.h"
 #include <imgui_stdlib.h>
+
+#include "Jolt/Jolt.h"
 
 #ifdef NEED_RESTORE_NEW
 #define new DEBUG_NEW

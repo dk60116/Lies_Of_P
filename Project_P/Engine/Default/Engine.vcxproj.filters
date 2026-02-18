@@ -187,6 +187,15 @@
     <ClInclude Include="..\Header\AnimatorControllerEditorBox.h">
       <Filter>Editor\EditorBox</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\Collider.h">
+      <Filter>Components\Physics\Collider</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\RigidBody.h">
+      <Filter>Components\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\BoxCollier.h">
+      <Filter>Components\Physics\Collider</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Engine">
@@ -296,6 +305,12 @@
     </Filter>
     <Filter Include="Resource\MeshBuffer\System\Random">
       <UniqueIdentifier>{71d9ef5a-ecf0-4d3a-8ff6-8bae57cf54fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\Physics">
+      <UniqueIdentifier>{7ffe2f61-ec4a-4a7e-8862-2083083cb657}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\Physics\Collider">
+      <UniqueIdentifier>{4057fe5d-c1af-49f4-a1f7-986a9b2ca3a7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -496,6 +511,18 @@
     </ClCompile>
     <ClCompile Include="..\Code\AnimatorControllerEditorBox.cpp">
       <Filter>Editor\EditorBox</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\Collider.cpp">
+      <Filter>Components\Physics\Collider</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\RigidBody.cpp">
+      <Filter>Components\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\BoxCollier.cpp">
+      <Filter>Components\Physics\Collider</Filter>
+    </ClCompile>
+    <ClCompile Include="JoltIssueReportingBridge.cpp">
+      <Filter>Engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
