@@ -1213,6 +1213,14 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 _float sizeValues[3] = { size.x, size.y, size.z };
                 if (ImGui::InputFloat3("Size", sizeValues))
                     boxCollider->SetSize(vector3(sizeValues[0], sizeValues[1], sizeValues[2]));
+
+                vector3 previewCenter = boxCollider->GetCenter();
+                vector3 previewSize = boxCollider->GetSize();
+                ImGui::Separator();
+                ImGui::TextUnformatted("Preview");
+                ImGui::Text("Center: (%.2f, %.2f, %.2f)", previewCenter.x, previewCenter.y, previewCenter.z);
+                ImGui::Text("Size: (%.2f, %.2f, %.2f)", previewSize.x, previewSize.y, previewSize.z);
+                ImGui::Text("Is Trigger: %s", boxCollider->IsTrigger() ? "True" : "False");
             }
         }
     }
