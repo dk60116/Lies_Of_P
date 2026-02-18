@@ -9,6 +9,7 @@ CCollider::CCollider()
 	, m_bShapeDirty(true)
 	, m_pShape(nullptr)
 {
+	m_strName = L"Collider";
 }
 
 CCollider::~CCollider()

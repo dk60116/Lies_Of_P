@@ -4,6 +4,7 @@
 CBoxCollider::CBoxCollider()
     : m_vSize(vector3::one())
 {
+    m_strName = L"Box Collider";
 }
 
 CBoxCollider::~CBoxCollider()
