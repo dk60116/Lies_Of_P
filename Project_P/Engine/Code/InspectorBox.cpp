@@ -14,6 +14,7 @@
 #include "Terrain.h"
 #include "Image.h"
 #include "Text.h"
+#include "BoxCollider.h"
 
 #include <algorithm>
 #include <chrono>
@@ -1534,6 +1535,17 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
     {
         if (!_obj->GetComponent<CTerrain>())
             _obj->AddComponent<CTerrain>();
+    }
+
+    if (ImGui::BeginMenu("Collider"))
+    {
+        if (ImGui::MenuItem("BoxCollider"))
+        {
+            if (!_obj->GetComponent<CBoxCollider>())
+                _obj->AddComponent<CBoxCollider>();
+        }
+
+        ImGui::EndMenu();
     }
 
 
