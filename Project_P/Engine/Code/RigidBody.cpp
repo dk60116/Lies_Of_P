@@ -52,6 +52,7 @@ CRigidBody::CRigidBody()
     , m_bHasSensorBody(false)
     , m_pCompoundShape(nullptr)
     , m_pSensorCompoundShape(nullptr)
+    , m_bUseGravity(true)
     , m_bKinematic(false)
     , m_fMass(1.f)
 {
@@ -326,6 +327,11 @@ void CRigidBody::SetKinematic(_bool _kinematic)
     m_bBodyDirty = true;
 }
 
+void CRigidBody::SetUseGravity(_bool _value)
+{
+    m_bUseGravity = _value;
+}
+
 _float CRigidBody::GetMass() const
 {
     return m_fMass;
@@ -365,6 +371,11 @@ CCollider* CRigidBody::GetEventCollider(_bool _triggerEvent) const
 void CRigidBody::MarkBodyDirty()
 {
     m_bBodyDirty = true;
+}
+
+_bool CRigidBody::UseGraviry()
+{
+    return m_bUseGravity;
 }
 
 void CRigidBody::RebuildBodiesIfDirty()
