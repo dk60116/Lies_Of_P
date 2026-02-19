@@ -11,6 +11,14 @@ namespace
 {
     inline Vec3 ToJPHVec3(const vector3& v) { return Vec3(v.x, v.y, v.z); }
 
+    inline _matrix ToWorldMatrix(const RVec3& p, const Quat& q)
+    {
+        const _matrix S = XMMatrixScaling(1.f, 1.f, 1.f);
+        const _matrix R = XMMatrixRotationQuaternion(XMVectorSet(q.GetX(), q.GetY(), q.GetZ(), q.GetW()));
+        const _matrix T = XMMatrixTranslation(static_cast<_float>(p.GetX()), static_cast<_float>(p.GetY()), static_cast<_float>(p.GetZ()));
+        return S * R * T;
+    }
+
     inline void DecomposeWorldMatrix(const _matrix& m, Vec3& outPos, Quat& outRot)
     {
         XMVECTOR s, r, t;
@@ -100,6 +108,11 @@ void CRigidBody::Awake()
 void CRigidBody::FixedUpdate()
 {
     RebuildBodiesIfDirty();
+
+    if (m_bKinematic)
+        SyncKinematicToJolt();
+    else
+        SyncDynamicFromJolt();
 }
 
 void CRigidBody::OnCollisionEnter(CCollider* _other)
@@ -420,12 +433,80 @@ void CRigidBody::RebuildBodiesIfDirty()
 
 void CRigidBody::DestroyBodies()
 {
+    BodyInterface& bodyInterface = GetBI();
+
+    if (m_bHasBody)
+    {
+        if (bodyInterface.IsAdded(m_iBodyID))
+            bodyInterface.RemoveBody(m_iBodyID);
+
+        bodyInterface.DestroyBody(m_iBodyID);
+        m_iBodyID = BodyID();
+        m_bHasBody = false;
+    }
+
+    if (m_bHasSensorBody)
+    {
+        if (bodyInterface.IsAdded(m_iSensorBodyID))
+            bodyInterface.RemoveBody(m_iSensorBodyID);
+
+        bodyInterface.DestroyBody(m_iSensorBodyID);
+        m_iSensorBodyID = BodyID();
+        m_bHasSensorBody = false;
+    }
+
+    if (m_pCompoundShape)
+    {
+        m_pCompoundShape->Release();
+        m_pCompoundShape = nullptr;
+    }
+
+    if (m_pSensorCompoundShape)
+    {
+        m_pSensorCompoundShape->Release();
+        m_pSensorCompoundShape = nullptr;
+    }
 }
 
 void CRigidBody::SyncKinematicToJolt()
 {
+    const _matrix world = Get_Transform()->Get_WorldMatrix();
+    Vec3 pos;
+    Quat rot;
+    DecomposeWorldMatrix(world, pos, rot);
+
+    BodyInterface& bodyInterface = GetBI();
+
+    if (m_bHasBody)
+    {
+        bodyInterface.SetPositionAndRotation(m_iBodyID, RVec3(pos.GetX(), pos.GetY(), pos.GetZ()), rot, EActivation::Activate);
+        bodyInterface.SetLinearAndAngularVelocity(m_iBodyID, Vec3::sZero(), Vec3::sZero());
+    }
+
+    if (m_bHasSensorBody)
+    {
+        bodyInterface.SetPositionAndRotation(m_iSensorBodyID, RVec3(pos.GetX(), pos.GetY(), pos.GetZ()), rot, EActivation::Activate);
+        bodyInterface.SetLinearAndAngularVelocity(m_iSensorBodyID, Vec3::sZero(), Vec3::sZero());
+    }
 }
 
 void CRigidBody::SyncDynamicFromJolt()
 {
+    if (!m_bHasBody)
+        return;
+
+    BodyLockInterfaceLocking& lockInterface = GetPS().GetBodyLockInterface();
+    BodyLockRead lock(lockInterface, m_iBodyID);
+    if (!lock.Succeeded())
+        return;
+
+    const Body& body = lock.GetBody();
+    const _matrix world = ToWorldMatrix(body.GetPosition(), body.GetRotation());
+    Get_Transform()->SetTransformForMatrix(world);
+
+    if (m_bHasSensorBody)
+    {
+        BodyInterface& bodyInterface = GetBI();
+        bodyInterface.SetPositionAndRotation(m_iSensorBodyID, body.GetPosition(), body.GetRotation(), EActivation::DontActivate);
+    }
 }
