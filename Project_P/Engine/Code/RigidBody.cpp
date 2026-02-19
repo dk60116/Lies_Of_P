@@ -1,6 +1,9 @@
 #include "epch.h"
 #include "RigidBody.h"
 #include "Collider.h"
+#ifndef _CLIENT_BUILD
+#include "Editor.h"
+#endif
 
 #include <algorithm>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
@@ -518,6 +521,12 @@ void CRigidBody::SyncDynamicFromJolt()
     Quat tfRot;
     DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), tfPos, tfRot);
 
+    _bool forceTransformOverride = false;
+#ifndef _CLIENT_BUILD
+    CGameObject* selected = CEditor::GetInstance().Get_SelectedGameObject();
+    forceTransformOverride = (selected != nullptr && selected == m_pGameObject);
+#endif
+
     const RVec3 joltPos = GetBI().GetPosition(sourceBodyId);
     const Quat joltRot = GetBI().GetRotation(sourceBodyId);
 
@@ -528,7 +537,7 @@ void CRigidBody::SyncDynamicFromJolt()
     const float rotDot = tfRot.GetX() * joltRot.GetX() + tfRot.GetY() * joltRot.GetY() + tfRot.GetZ() * joltRot.GetZ() + tfRot.GetW() * joltRot.GetW();
     const float absRotDot = fabsf(rotDot);
 
-    const _bool transformOverridden = posDiffSq > 0.000001f || absRotDot < 0.9999f;
+    const _bool transformOverridden = forceTransformOverride || posDiffSq > 0.000001f || absRotDot < 0.9999f;
 
     if (transformOverridden)
     {
