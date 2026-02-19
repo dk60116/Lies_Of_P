@@ -524,20 +524,29 @@ void CRigidBody::SyncDynamicFromJolt()
     _bool forceTransformOverride = false;
 #ifndef _CLIENT_BUILD
     CGameObject* selected = CEditor::GetInstance().Get_SelectedGameObject();
-    forceTransformOverride = (selected != nullptr && selected == m_pGameObject);
+    if (selected != nullptr && selected == m_pGameObject)
+    {
+        const vector3& prevPos = Get_Transform()->Get_PrevPosition();
+        const quaternion& prevRot = Get_Transform()->Get_PrevQuaternion();
+        const vector3& currPos = Get_Transform()->Get_Position();
+        const quaternion currRot = Get_Transform()->Get_Quaternion();
+
+        const float dx = currPos.x - prevPos.x;
+        const float dy = currPos.y - prevPos.y;
+        const float dz = currPos.z - prevPos.z;
+        const float posDiffSq = dx * dx + dy * dy + dz * dz;
+
+        const float rotDot = prevRot.x * currRot.x + prevRot.y * currRot.y + prevRot.z * currRot.z + prevRot.w * currRot.w;
+        const float absRotDot = fabsf(rotDot);
+
+        forceTransformOverride = posDiffSq > 0.000001f || absRotDot < 0.9999f;
+    }
 #endif
 
     const RVec3 joltPos = GetBI().GetPosition(sourceBodyId);
     const Quat joltRot = GetBI().GetRotation(sourceBodyId);
 
-    const Vec3 joltPosF(static_cast<float>(joltPos.GetX()), static_cast<float>(joltPos.GetY()), static_cast<float>(joltPos.GetZ()));
-    const Vec3 diff = tfPos - joltPosF;
-    const float posDiffSq = diff.Dot(diff);
-
-    const float rotDot = tfRot.GetX() * joltRot.GetX() + tfRot.GetY() * joltRot.GetY() + tfRot.GetZ() * joltRot.GetZ() + tfRot.GetW() * joltRot.GetW();
-    const float absRotDot = fabsf(rotDot);
-
-    const _bool transformOverridden = forceTransformOverride || posDiffSq > 0.000001f || absRotDot < 0.9999f;
+    const _bool transformOverridden = forceTransformOverride;
 
     if (transformOverridden)
     {
