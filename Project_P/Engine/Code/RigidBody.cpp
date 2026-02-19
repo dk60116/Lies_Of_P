@@ -114,6 +114,8 @@ void CRigidBody::OnCollisionEnter(CCollider* _other)
         if (!component || component == this || !component->Get_Enable())
             continue;
 
+        CDebug::LogError(L"ColEnter: " + _other->Get_GameObject()->Get_ObjectName());
+
         component->OnCollisionEnter(_other);
     }
 }

@@ -47,6 +47,11 @@ public:
 
 public:
 	void MarkBodyDirty();
+	_bool IsKinematic() const;
+	void SetKinematic(_bool _kinematic);
+	_float GetMass() const;
+	void SetMass(_float _mass);
+	CCollider* GetEventCollider(_bool _triggerEvent) const;
 
 private:
 	void RebuildBodiesIfDirty();
@@ -74,4 +79,3 @@ private:
 };
 
 NS_END
-
