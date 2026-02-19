@@ -428,6 +428,9 @@ void CPhysics::SetFixedDeltaTime(const _float _fixedDt)
 	if (_fixedDt <= 0.0f)
 		return;
 
+	if (m_fFixedDeltaTime == _fixedDt)
+		return;
+
 	m_fFixedDeltaTime = _fixedDt;
 	m_fAccumulator = 0.0f;
 }
