@@ -49,6 +49,8 @@ public:
 	void MarkBodyDirty();
 	_bool IsKinematic() const;
 	void SetKinematic(_bool _kinematic);
+	_bool IsUseGravity() const;
+	void SetUseGravity(_bool _useGravity);
 	_float GetMass() const;
 	void SetMass(_float _mass);
 	CCollider* GetEventCollider(_bool _triggerEvent) const;
@@ -75,6 +77,7 @@ private:
 	const Shape* m_pSensorCompoundShape;
 
 	_bool m_bKinematic;
+	_bool m_bUseGravity;
 	_float m_fMass;
 };
 

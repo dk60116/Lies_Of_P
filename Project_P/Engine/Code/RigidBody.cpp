@@ -45,6 +45,7 @@ CRigidBody::CRigidBody()
     , m_pCompoundShape(nullptr)
     , m_pSensorCompoundShape(nullptr)
     , m_bKinematic(false)
+    , m_bUseGravity(true)
     , m_fMass(1.f)
 {
     m_strName = L"RigidBody";
@@ -64,6 +65,7 @@ CComponent* CRigidBody::Clone() const
     CRigidBody* clone = new CRigidBody();
 
     clone->m_bKinematic = m_bKinematic;
+    clone->m_bUseGravity = m_bUseGravity;
     clone->m_fMass = m_fMass;
 
     return clone;
@@ -313,6 +315,28 @@ void CRigidBody::SetKinematic(_bool _kinematic)
     m_bBodyDirty = true;
 }
 
+
+_bool CRigidBody::IsUseGravity() const
+{
+    return m_bUseGravity;
+}
+
+void CRigidBody::SetUseGravity(_bool _useGravity)
+{
+    if (m_bUseGravity == _useGravity)
+        return;
+
+    m_bUseGravity = _useGravity;
+
+    const EMotionType motion = m_bKinematic ? EMotionType::Kinematic : EMotionType::Dynamic;
+
+    if (m_bHasBody)
+        GetBI().SetGravityFactor(m_iBodyID, motion == EMotionType::Dynamic && m_bUseGravity ? 1.f : 0.f);
+
+    if (m_bHasSensorBody)
+        GetBI().SetGravityFactor(m_iSensorBodyID, motion == EMotionType::Dynamic && m_bUseGravity ? 1.f : 0.f);
+}
+
 _float CRigidBody::GetMass() const
 {
     return m_fMass;
@@ -392,6 +416,7 @@ void CRigidBody::RebuildBodiesIfDirty()
         m_bHasBody = true;
 
         GetBI().SetUserData(m_iBodyID, (uint64)this);
+        GetBI().SetGravityFactor(m_iBodyID, motion == EMotionType::Dynamic && m_bUseGravity ? 1.f : 0.f);
 
         GetBI().AddBody(m_iBodyID, EActivation::Activate);
     }
@@ -412,6 +437,7 @@ void CRigidBody::RebuildBodiesIfDirty()
         m_bHasSensorBody = true;
 
         GetBI().SetUserData(m_iSensorBodyID, (uint64)this);
+        GetBI().SetGravityFactor(m_iSensorBodyID, motion == EMotionType::Dynamic && m_bUseGravity ? 1.f : 0.f);
         GetBI().AddBody(m_iSensorBodyID, EActivation::Activate);
     }
 

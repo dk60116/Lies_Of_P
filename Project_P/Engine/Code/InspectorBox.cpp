@@ -1281,6 +1281,10 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 if (ImGui::Checkbox("Kinematic", &isKinematic))
                     rigidBody->SetKinematic(isKinematic);
 
+                _bool useGravity = rigidBody->IsUseGravity();
+                if (ImGui::Checkbox("Use Gravity", &useGravity))
+                    rigidBody->SetUseGravity(useGravity);
+
                 _float mass = rigidBody->GetMass();
                 if (ImGui::InputFloat("Mass", &mass, 0.1f, 1.f, "%.3f"))
                     rigidBody->SetMass(mass);
