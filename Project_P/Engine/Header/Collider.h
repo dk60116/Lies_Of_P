@@ -36,6 +36,8 @@ public:
     void BeginContact();
     void EndContact();
 
+    void SetRigidBody(class CRigidBody* rigidBody);
+
 public:
     virtual void BuildShapeIfNeeded() PURE;
     virtual void ReleaseShape();

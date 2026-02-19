@@ -78,15 +78,6 @@ HRESULT CRigidBody::Initialize()
     for (TRAVERSAL_ITER(componentList, it))
     {
         if (auto c = dynamic_cast<CCollider*>(*it))
-        {
-            m_lColliderList.push_back(c);
-            c->AddRef();
-        }
-    }
-
-    for (TRAVERSAL_ITER(componentList, it))
-    {
-        if (auto c = dynamic_cast<CCollider*>(*it))
             AddCollider(c);
     }
 
@@ -116,7 +107,8 @@ void CRigidBody::OnCollisionEnter(CCollider* _other)
         if (!component || component == this || !component->Get_Enable())
             continue;
 
-        CDebug::LogError(L"ColEnter: " + _other->Get_GameObject()->Get_ObjectName());
+        if (_other && _other->Get_GameObject())
+            CDebug::LogError(L"ColEnter: " + _other->Get_GameObject()->Get_ObjectName());
 
         component->OnCollisionEnter(_other);
     }
@@ -204,8 +196,15 @@ void CRigidBody::OnTriggerExit(CCollider* _other)
 
 void CRigidBody::OnDestroy()
 {
+    DestroyBodies();
+
     for (TRAVERSAL_ITER(m_lColliderList, it))
+    {
+        if (*it)
+            (*it)->SetRigidBody(nullptr);
+
         Safe_Release(*it);
+    }
 
     if (m_pCompoundShape) 
     { 
@@ -268,6 +267,11 @@ void CRigidBody::BuildCompoundShapes(const list<CCollider*>& _colliders, RefCons
     }
 }
 
+const BodyID CRigidBody::GetBodyID() const
+{
+    return m_iBodyID;
+}
+
 const BodyID CRigidBody::GetSensorBodyID() const
 {
     return m_iSensorBodyID;
@@ -283,6 +287,8 @@ void CRigidBody::AddCollider(CCollider* _collider)
     {
         m_lColliderList.push_back(_collider);
         m_lColliderList.back()->AddRef();
+        _collider->SetRigidBody(this);
+        m_bBodyDirty = true;
     }
 }
 
@@ -295,8 +301,10 @@ void CRigidBody::RemvoeCollier(CCollider* _collider)
 
     if (_collider)
     {
+        _collider->SetRigidBody(nullptr);
         m_lColliderList.remove(_collider);
         Safe_Release(_collider);
+        m_bBodyDirty = true;
     }
 }
 
@@ -446,6 +454,33 @@ void CRigidBody::RebuildBodiesIfDirty()
 
 void CRigidBody::DestroyBodies()
 {
+    if (m_bHasBody)
+    {
+        GetBI().RemoveBody(m_iBodyID);
+        GetBI().DestroyBody(m_iBodyID);
+        m_iBodyID = BodyID();
+        m_bHasBody = false;
+    }
+
+    if (m_bHasSensorBody)
+    {
+        GetBI().RemoveBody(m_iSensorBodyID);
+        GetBI().DestroyBody(m_iSensorBodyID);
+        m_iSensorBodyID = BodyID();
+        m_bHasSensorBody = false;
+    }
+
+    if (m_pCompoundShape)
+    {
+        m_pCompoundShape->Release();
+        m_pCompoundShape = nullptr;
+    }
+
+    if (m_pSensorCompoundShape)
+    {
+        m_pSensorCompoundShape->Release();
+        m_pSensorCompoundShape = nullptr;
+    }
 }
 
 void CRigidBody::SyncKinematicToJolt()

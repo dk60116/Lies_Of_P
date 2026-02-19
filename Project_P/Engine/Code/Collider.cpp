@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "Collider.h"
+#include "RigidBody.h"
 
 using namespace JPH;
 
@@ -42,6 +43,12 @@ void CCollider::ReleaseShape()
 	}
 }
 
+
+void CCollider::SetRigidBody(CRigidBody* rigidBody)
+{
+	m_pRigidBody = rigidBody;
+}
+
 void CCollider::OnDestroy()
 {
 	if (m_pRigidBody)
@@ -64,12 +71,18 @@ void CCollider::SetTrigger(const _bool isTrigger)
 {
 	m_bIsTrigger = isTrigger;
 	m_bShapeDirty = true;
+
+	if (m_pRigidBody)
+		m_pRigidBody->MarkBodyDirty();
 }
 
 void CCollider::SetCenter(const vector3& center)
 {
 	m_vCenter = center;
 	m_bShapeDirty = true;
+
+	if (m_pRigidBody)
+		m_pRigidBody->MarkBodyDirty();
 }
 
 const Shape* CCollider::GetShape()
