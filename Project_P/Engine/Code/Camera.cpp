@@ -65,7 +65,6 @@ HRESULT CCamera::Initialize()
 
 	m_bIsEditor = dynamic_cast<CEditorCamera*>(this);
 
-	// Rect
 	m_pRectBuffer = CResources::GetInstance().LoadOnGame<CMeshBuffer>(L"Rect (Mesh Buffer)");
 	if (!m_pRectBuffer)
 	{
@@ -84,7 +83,6 @@ HRESULT CCamera::Initialize()
 	CMaterial* specularMat = Add_RectMaterial(CRenderTarget::RTType::Specular, L"DeferredSpecular (Material)");
 	CMaterial* shadowMaskMat = Add_RectMaterial(CRenderTarget::RTType::ShadowMask, L"ShadowMask (Material)");
 
-	// 디스플레이 등록
 	auto pushDisplay = [&](CRenderTarget::RTType type, CMaterial* mat)
 		{
 			RTDebugDisplay desc = {};
@@ -106,13 +104,11 @@ HRESULT CCamera::Initialize()
 	pushDisplay(CRenderTarget::RTType::Specular, presentMat);
 	pushDisplay(CRenderTarget::RTType::ShadowMask, shadowMaskPresentMat);
 
-	// Debug pipeline states 생성
 	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 
 	if (!device)
 		return E_FAIL;
 
-	// DepthStencil: DepthTest OFF
 	{
 		D3D11_DEPTH_STENCIL_DESC ds = {};
 		ds.DepthEnable = FALSE;
@@ -133,7 +129,6 @@ HRESULT CCamera::Initialize()
 		device->CreateDepthStencilState(&sds, &m_pRTShadowDepthDS);
 	}
 
-	// Rasterizer: Cull OFF
 	{
 		D3D11_RASTERIZER_DESC rs = {};
 		rs.FillMode = D3D11_FILL_SOLID;

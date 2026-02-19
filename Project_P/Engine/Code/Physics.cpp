@@ -26,12 +26,9 @@ namespace Engine
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 		const char* GetBroadPhaseLayerName(BroadPhaseLayer inLayer) const override
 		{
-			switch ((uint)inLayer)
-			{
-			case 0: return "NON_MOVING";
-			case 1: return "MOVING";
-			default: return "UNKNOWN";
-			}
+			if (inLayer == BroadPhaseLayers::NON_MOVING) return "NON_MOVING";
+			if (inLayer == BroadPhaseLayers::MOVING)     return "MOVING";
+			return "UNKNOWN";
 		}
 #endif
 
@@ -79,8 +76,29 @@ namespace Engine
 			return false;
 		}
 	};
-}
 
+	static void JoltTraceImpl(const char* fmt, ...)
+	{
+		char buf[2048];
+		va_list args;
+		va_start(args, fmt);
+		vsnprintf(buf, sizeof(buf), fmt, args);
+		va_end(args);
+
+		OutputDebugStringA(buf);
+		OutputDebugStringA("\n");
+	}
+
+	static _bool JoltAssertFailedImpl(const char* expr, const char* msg, const char* file, JPH::uint line)
+	{
+		char buf[2048];
+		snprintf(buf, sizeof(buf), "Jolt ASSERT: %s | %s (%s:%u)\n",
+			expr, msg ? msg : "", file, line);
+		OutputDebugStringA(buf);
+
+		return true;
+	}
+}
 
 CPhysics::CPhysics()
 	: m_bJoltInitialized(false)
@@ -94,6 +112,7 @@ CPhysics::CPhysics()
 
 CPhysics::~CPhysics()
 {
+	Release();
 }
 
 CPhysics& CPhysics::GetInstance()
@@ -109,6 +128,9 @@ HRESULT CPhysics::Initialize()
 		return S_OK;
 
 	RegisterDefaultAllocator();
+
+	Trace = JoltTraceImpl;
+	JPH_IF_ENABLE_ASSERTS(AssertFailed = JoltAssertFailedImpl;);
 
 	if (Factory::sInstance == nullptr)
 		Factory::sInstance = new Factory();
@@ -142,7 +164,8 @@ HRESULT CPhysics::Initialize()
 	const uint cMaxBodyPairs = 10240;
 	const uint cMaxContactConstraints = 10240;
 
-	m_PhysicsSystem.Init(
+	m_PhysicsSystem.Init
+	(
 		cMaxBodies,
 		cNumBodyMutexes,
 		cMaxBodyPairs,
@@ -161,6 +184,48 @@ HRESULT CPhysics::Initialize()
 
 void CPhysics::Release()
 {
+	if (!m_bJoltInitialized)
+		return;
+
+	if (m_pJobSystem)
+	{
+		delete m_pJobSystem;
+		m_pJobSystem = nullptr;
+	}
+
+	if (m_pTempAllocator)
+	{
+		delete m_pTempAllocator;
+		m_pTempAllocator = nullptr;
+	}
+
+	if (m_pObjectLayerPairFilter)
+	{
+		delete m_pObjectLayerPairFilter;
+		m_pObjectLayerPairFilter = nullptr;
+	}
+
+	if (m_pObjectVsBPLayerFilter)
+	{
+		delete m_pObjectVsBPLayerFilter;
+		m_pObjectVsBPLayerFilter = nullptr;
+	}
+
+	if (m_pBPLayerInterface)
+	{
+		delete m_pBPLayerInterface;
+		m_pBPLayerInterface = nullptr;
+	}
+
+	UnregisterTypes();
+
+	if (Factory::sInstance)
+	{
+		delete Factory::sInstance;
+		Factory::sInstance = nullptr;
+	}
+
+	m_bJoltInitialized = false;
 }
 
 vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray)

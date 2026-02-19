@@ -47,8 +47,6 @@ using Microsoft::WRL::ComPtr;
 #include "ImGuizmo.h"
 #include <imgui_stdlib.h>
 
-#include "Jolt/Jolt.h"
-
 #ifdef NEED_RESTORE_NEW
 #define new DEBUG_NEW
 #undef NEED_RESTORE_NEW

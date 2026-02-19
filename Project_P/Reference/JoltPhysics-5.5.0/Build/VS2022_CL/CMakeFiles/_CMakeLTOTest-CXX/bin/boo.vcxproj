@@ -22,7 +22,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{901F8F58-4EDA-321E-89FF-AF94B2ECCDF8}</ProjectGuid>
+    <ProjectGuid>{03637514-F5A1-3C09-8DFA-622481F7AD30}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
     <Platform>x64</Platform>
@@ -67,25 +67,25 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\Debug\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\Debug\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">boo.dir\Debug\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">boo</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'"></LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\Release\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">boo.dir\Release\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">boo</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'"></LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\MinSizeRel\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\MinSizeRel\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">boo.dir\MinSizeRel\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">boo</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'"></LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\RelWithDebInfo\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\RelWithDebInfo\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">boo.dir\RelWithDebInfo\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">boo</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
@@ -134,9 +134,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
-      <ImportLibrary>C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/Debug/boo.lib</ImportLibrary>
+      <ImportLibrary>C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/Debug/boo.lib</ImportLibrary>
       <LinkErrorReporting></LinkErrorReporting>
-      <ProgramDataBaseFile>C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/Debug/boo.pdb</ProgramDataBaseFile>
+      <ProgramDataBaseFile>C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/Debug/boo.pdb</ProgramDataBaseFile>
       <RandomizedBaseAddress></RandomizedBaseAddress>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -187,9 +187,9 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
-      <ImportLibrary>C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/Release/boo.lib</ImportLibrary>
+      <ImportLibrary>C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/Release/boo.lib</ImportLibrary>
       <LinkErrorReporting></LinkErrorReporting>
-      <ProgramDataBaseFile>C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/Release/boo.pdb</ProgramDataBaseFile>
+      <ProgramDataBaseFile>C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/Release/boo.pdb</ProgramDataBaseFile>
       <RandomizedBaseAddress></RandomizedBaseAddress>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -240,9 +240,9 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
-      <ImportLibrary>C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/MinSizeRel/boo.lib</ImportLibrary>
+      <ImportLibrary>C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/MinSizeRel/boo.lib</ImportLibrary>
       <LinkErrorReporting></LinkErrorReporting>
-      <ProgramDataBaseFile>C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/MinSizeRel/boo.pdb</ProgramDataBaseFile>
+      <ProgramDataBaseFile>C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/MinSizeRel/boo.pdb</ProgramDataBaseFile>
       <RandomizedBaseAddress></RandomizedBaseAddress>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -292,9 +292,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
-      <ImportLibrary>C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/RelWithDebInfo/boo.lib</ImportLibrary>
+      <ImportLibrary>C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/RelWithDebInfo/boo.lib</ImportLibrary>
       <LinkErrorReporting></LinkErrorReporting>
-      <ProgramDataBaseFile>C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/RelWithDebInfo/boo.pdb</ProgramDataBaseFile>
+      <ProgramDataBaseFile>C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/RelWithDebInfo/boo.pdb</ProgramDataBaseFile>
       <RandomizedBaseAddress></RandomizedBaseAddress>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -303,11 +303,11 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\src\CMakeLists.txt">
+    <CustomBuild Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\src\CMakeLists.txt">
       <UseUtf8Encoding>Always</UseUtf8Encoding>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src -BC:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin --check-stamp-file C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/generate.stamp
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src -BC:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin --check-stamp-file C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -315,12 +315,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeCXXCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeRCCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeCXXCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeRCCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src -BC:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin --check-stamp-file C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/generate.stamp
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src -BC:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin --check-stamp-file C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -328,12 +328,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeCXXCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeRCCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeCXXCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeRCCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src -BC:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin --check-stamp-file C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/generate.stamp
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src -BC:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin --check-stamp-file C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -341,12 +341,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeCXXCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeRCCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeCXXCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeRCCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src -BC:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin --check-stamp-file C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/generate.stamp
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src -BC:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin --check-stamp-file C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -354,24 +354,24 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeCXXCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeRCCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeCXXCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeRCCompiler.cmake;C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\4.2.3\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\src\main.cpp" />
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\src\main.cpp" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <ProjectReference Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\ZERO_CHECK.vcxproj">
-      <Project>{9C6387AE-10ED-3BAD-A861-413304079328}</Project>
+    <ProjectReference Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\ZERO_CHECK.vcxproj">
+      <Project>{180DBC87-FEB2-3CA6-9B87-19EFB2A48CFE}</Project>
       <Name>ZERO_CHECK</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
-    <ProjectReference Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\foo.vcxproj">
-      <Project>{7B5D2E12-2DBB-30F1-82BF-5707FE2E19B6}</Project>
+    <ProjectReference Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\_CMakeLTOTest-CXX\bin\foo.vcxproj">
+      <Project>{CE47EAC4-44B7-380E-AA9E-475156235F4E}</Project>
       <Name>foo</Name>
     </ProjectReference>
   </ItemGroup>

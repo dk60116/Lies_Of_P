@@ -115,7 +115,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir);../Header;../../Reference/JoltPhysics-5.5.0</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>epch.h</PrecompiledHeaderFile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>ENGINE_EXPORTS;ASSIMP_BUILD_NO_EXPORT</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ENGINE_EXPORTS;ASSIMP_BUILD_NO_EXPORT;JPH_FLOATING_POINT_EXCEPTIONS_ENABLED=1;JPH_PROFILE_ENABLED=1;JPH_DEBUG_RENDERER=1;JPH_OBJECT_STREAM=1</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
@@ -140,7 +140,7 @@ call copy.bat</Command>
       <AdditionalIncludeDirectories>$(ProjectDir);../Header;../../Reference/JoltPhysics-5.5.0</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>epch.h</PrecompiledHeaderFile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>ENGINE_EXPORTS;ASSIMP_BUILD_NO_EXPORT</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ENGINE_EXPORTS;ASSIMP_BUILD_NO_EXPORT;JPH_FLOATING_POINT_EXCEPTIONS_ENABLED=1;JPH_PROFILE_ENABLED=1;JPH_DEBUG_RENDERER=1;JPH_OBJECT_STREAM=1</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
