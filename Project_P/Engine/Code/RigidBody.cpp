@@ -495,7 +495,7 @@ void CRigidBody::SyncDynamicFromJolt()
     if (!m_bHasBody)
         return;
 
-    BodyLockInterfaceLocking& lockInterface = GetPS().GetBodyLockInterface();
+    const BodyLockInterfaceLocking& lockInterface = GetPS().GetBodyLockInterface();
     BodyLockRead lock(lockInterface, m_iBodyID);
     if (!lock.Succeeded())
         return;
