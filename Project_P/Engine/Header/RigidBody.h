@@ -5,6 +5,8 @@ NS_BEGIN(Engine)
 
 class ENGINE_DLL CRigidBody : public CComponent
 {
+	friend class CGameObject;
+
 protected:
 	explicit CRigidBody();
 	~CRigidBody();
