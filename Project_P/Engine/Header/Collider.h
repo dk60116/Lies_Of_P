@@ -32,6 +32,10 @@ public:
 
     const Shape* GetShape();
 
+    const _bool IsContacting() const;
+    void BeginContact();
+    void EndContact();
+
 public:
     virtual void BuildShapeIfNeeded() PURE;
     virtual void ReleaseShape();
@@ -43,6 +47,7 @@ protected:
 
     _bool m_bShapeDirty;
     const mutable Shape* m_pShape;
+    _int m_iContactCount;
 };
 
 NS_END

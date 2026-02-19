@@ -128,6 +128,11 @@ void CCapsuleCollider::Render_Gizmo()
     if (!cam)
         return;
 
+    if (IsContacting())
+        m_pLineMaterial->Set_BaseColor(_float4(1.f, 0.f, 0.f, 1.f));
+    else
+        m_pLineMaterial->Set_BaseColor(_float4(0.f, 1.f, 0.f, 1.f));
+
     const _float radius = max(m_fRadius, 0.001f);
     const _float halfHeight = max(m_fHeight * 0.5f, 0.f);
     const _uint segmentCount = 36u;

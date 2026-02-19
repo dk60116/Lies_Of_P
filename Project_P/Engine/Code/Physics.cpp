@@ -1,6 +1,7 @@
 #include "epch.h"
 #include "Physics.h"
 #include "RigidBody.h"
+#include "Collider.h"
 
 namespace Engine
 {
@@ -111,6 +112,11 @@ namespace Engine
 			if (!state.a || !state.b)
 				return;
 
+			if (state.aCollider)
+				state.aCollider->EndContact();
+			if (state.bCollider)
+				state.bCollider->EndContact();
+
 			if (state.isTrigger)
 			{
 				state.a->OnTriggerExit(state.bCollider);
@@ -171,6 +177,13 @@ namespace Engine
 			auto [it, inserted] = m_ActivePairs.insert({ key, state });
 			if (!inserted)
 				it->second = state;
+			else
+			{
+				if (col1)
+					col1->BeginContact();
+				if (col2)
+					col2->BeginContact();
+			}
 
 			if (trigger)
 			{

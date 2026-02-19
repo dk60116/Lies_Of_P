@@ -8,6 +8,7 @@ CCollider::CCollider()
 	, m_bIsTrigger(false)
 	, m_bShapeDirty(true)
 	, m_pShape(nullptr)
+	, m_iContactCount(0)
 {
 	m_strName = L"Collider";
 }
@@ -75,4 +76,20 @@ const Shape* CCollider::GetShape()
 {
 	BuildShapeIfNeeded();
 	return m_pShape;
+}
+
+const _bool CCollider::IsContacting() const
+{
+	return m_iContactCount > 0;
+}
+
+void CCollider::BeginContact()
+{
+	++m_iContactCount;
+}
+
+void CCollider::EndContact()
+{
+	if (m_iContactCount > 0)
+		--m_iContactCount;
 }
