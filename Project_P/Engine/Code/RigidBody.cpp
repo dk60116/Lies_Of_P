@@ -352,6 +352,8 @@ void CRigidBody::SetUseGravity(_bool _useGravity)
         GetBI().SetGravityFactor(m_iBodyID, motion == EMotionType::Dynamic && m_bUseGravity ? 1.f : 0.f);
         if (motion == EMotionType::Dynamic && m_bUseGravity)
             GetBI().ActivateBody(m_iBodyID);
+        if (motion == EMotionType::Dynamic && !m_bUseGravity)
+            GetBI().SetLinearAndAngularVelocity(m_iBodyID, Vec3::sZero(), Vec3::sZero());
     }
 
     if (m_bHasSensorBody)
@@ -359,6 +361,8 @@ void CRigidBody::SetUseGravity(_bool _useGravity)
         GetBI().SetGravityFactor(m_iSensorBodyID, motion == EMotionType::Dynamic && m_bUseGravity ? 1.f : 0.f);
         if (motion == EMotionType::Dynamic && m_bUseGravity)
             GetBI().ActivateBody(m_iSensorBodyID);
+        if (motion == EMotionType::Dynamic && !m_bUseGravity)
+            GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, Vec3::sZero(), Vec3::sZero());
     }
 }
 
