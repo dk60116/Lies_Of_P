@@ -17,6 +17,7 @@
 #include "BoxCollider.h"
 #include "SphereCollider.h"
 #include "CapsuleCollider.h"
+#include "RigidBody.h"
 
 #include <algorithm>
 #include <chrono>
@@ -1273,6 +1274,17 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 ImGui::Text("Height: %.2f", capsuleCollider->GetHeight());
                 ImGui::Text("Is Trigger: %s", capsuleCollider->IsTrigger() ? "True" : "False");
             }
+
+            if (CRigidBody* rigidBody = dynamic_cast<CRigidBody*>(component))
+            {
+                _bool isKinematic = rigidBody->IsKinematic();
+                if (ImGui::Checkbox("Kinematic", &isKinematic))
+                    rigidBody->SetKinematic(isKinematic);
+
+                _float mass = rigidBody->GetMass();
+                if (ImGui::InputFloat("Mass", &mass, 0.1f, 1.f, "%.3f"))
+                    rigidBody->SetMass(mass);
+            }
         }
     }
 
@@ -1636,6 +1648,11 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
         ImGui::EndMenu();
     }
 
+    if (ImGui::MenuItem("RigidBody"))
+    {
+        if (!_obj->GetComponent<CRigidBody>())
+            _obj->AddComponent<CRigidBody>();
+    }
 
     ImGui::EndPopup();
 }

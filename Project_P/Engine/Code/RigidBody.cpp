@@ -224,8 +224,39 @@ void CRigidBody::RemvoeCollier(CCollider* _collider)
     }
 }
 
+
+_bool CRigidBody::IsKinematic() const
+{
+    return m_bKinematic;
+}
+
+void CRigidBody::SetKinematic(_bool _kinematic)
+{
+    if (m_bKinematic == _kinematic)
+        return;
+
+    m_bKinematic = _kinematic;
+    m_bBodyDirty = true;
+}
+
+_float CRigidBody::GetMass() const
+{
+    return m_fMass;
+}
+
+void CRigidBody::SetMass(_float _mass)
+{
+    const _float clampedMass = max(_mass, 0.001f);
+    if (m_fMass == clampedMass)
+        return;
+
+    m_fMass = clampedMass;
+    m_bBodyDirty = true;
+}
+
 void CRigidBody::MarkBodyDirty()
 {
+    m_bBodyDirty = true;
 }
 
 void CRigidBody::RebuildBodiesIfDirty()
@@ -243,10 +274,10 @@ void CRigidBody::RebuildBodiesIfDirty()
     Quat rot;
     DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
 
-    // --- ÀÏ¹Ý ¹Ùµð »ý¼º ---
+    // --- Ã€ÃÂ¹Ã Â¹Ã™ÂµÃ° Â»Ã½Â¼Âº ---
     if (bodyCompound != nullptr)
     {
-        // º¸°ü¿ë raw ptr(refcount)
+        // ÂºÂ¸Â°Ã¼Â¿Ã« raw ptr(refcount)
         m_pCompoundShape = bodyCompound.GetPtr();
         m_pCompoundShape->AddRef();
 
