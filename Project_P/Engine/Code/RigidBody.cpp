@@ -513,8 +513,42 @@ void CRigidBody::SyncDynamicFromJolt()
         return;
 
     const BodyID sourceBodyId = m_bHasBody ? m_iBodyID : m_iSensorBodyID;
+
+    Vec3 tfPos;
+    Quat tfRot;
+    DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), tfPos, tfRot);
+
     const RVec3 joltPos = GetBI().GetPosition(sourceBodyId);
     const Quat joltRot = GetBI().GetRotation(sourceBodyId);
+
+    const Vec3 joltPosF(static_cast<float>(joltPos.GetX()), static_cast<float>(joltPos.GetY()), static_cast<float>(joltPos.GetZ()));
+    const Vec3 diff = tfPos - joltPosF;
+    const float posDiffSq = diff.Dot(diff);
+
+    const float rotDot = tfRot.GetX() * joltRot.GetX() + tfRot.GetY() * joltRot.GetY() + tfRot.GetZ() * joltRot.GetZ() + tfRot.GetW() * joltRot.GetW();
+    const float absRotDot = fabsf(rotDot);
+
+    const _bool transformOverridden = posDiffSq > 0.000001f || absRotDot < 0.9999f;
+
+    if (transformOverridden)
+    {
+        const RVec3 targetPos(tfPos.GetX(), tfPos.GetY(), tfPos.GetZ());
+        const Quat targetRot = tfRot;
+
+        if (m_bHasBody)
+        {
+            GetBI().SetPositionAndRotation(m_iBodyID, targetPos, targetRot, EActivation::Activate);
+            GetBI().SetLinearAndAngularVelocity(m_iBodyID, Vec3::sZero(), Vec3::sZero());
+        }
+
+        if (m_bHasSensorBody)
+        {
+            GetBI().SetPositionAndRotation(m_iSensorBodyID, targetPos, targetRot, EActivation::Activate);
+            GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, Vec3::sZero(), Vec3::sZero());
+        }
+
+        return;
+    }
 
     vector3 pos = vector3(static_cast<_float>(joltPos.GetX()), static_cast<_float>(joltPos.GetY()), static_cast<_float>(joltPos.GetZ()));
     quaternion rot = quaternion(joltRot.GetX(), joltRot.GetY(), joltRot.GetZ(), joltRot.GetW());
