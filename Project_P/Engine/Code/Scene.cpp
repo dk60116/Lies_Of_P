@@ -17,6 +17,10 @@
 #include "Terrain.h"
 #include "Image.h"
 #include "Text.h"
+#include "CapsuleCollider.h"
+#include "SphereCollider.h"
+#include "BoxCollider.h"
+#include "RigidBody.h"
 #include <filesystem>
 #include <unordered_map>
 #include <unordered_set>
@@ -924,6 +928,10 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		if (dynamic_cast<CText*>(component)) return L"Text";
 		if (dynamic_cast<CTerrain*>(component)) return L"Terrain";
 		if (dynamic_cast<CUI*>(component)) return L"UI";
+		if (dynamic_cast<CRigidBody*>(component)) return L"RigidBody";
+		if (dynamic_cast<CBoxCollider*>(component)) return L"BoxCollider";
+		if (dynamic_cast<CSphereCollider*>(component)) return L"SphereCollider";
+		if (dynamic_cast<CCapsuleCollider*>(component)) return L"CapsuleCollider";
 		return L"";
 	};
 
@@ -1087,6 +1095,10 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			if (componentName == L"Text" && dynamic_cast<CText*>(component)) return true;
 			if (componentName == L"Terrain" && dynamic_cast<CTerrain*>(component)) return true;
 			if (componentName == L"UI" && dynamic_cast<CUI*>(component)) return true;
+			if (componentName == L"RigidBody" && dynamic_cast<CRigidBody*>(component)) return true;
+			if (componentName == L"BoxCollider" && dynamic_cast<CBoxCollider*>(component)) return true;
+			if (componentName == L"SphereCollider" && dynamic_cast<CSphereCollider*>(component)) return true;
+			if (componentName == L"CapsuleCollider" && dynamic_cast<CCapsuleCollider*>(component)) return true;
 		}
 
 		return false;
@@ -1108,6 +1120,10 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		else if (componentName == L"Text") obj->AddComponent<CText>();
 		else if (componentName == L"Terrain") obj->AddComponent<CTerrain>();
 		else if (componentName == L"UI") obj->AddComponent<CUI>();
+		else if (componentName == L"RigidBody") obj->AddComponent<CRigidBody>();
+		else if (componentName == L"BoxCollider") obj->AddComponent<CBoxCollider>();
+		else if (componentName == L"SphereCollider") obj->AddComponent<CSphereCollider>();
+		else if (componentName == L"CapsuleCollider") obj->AddComponent<CCapsuleCollider>();
 	};
 
 	unordered_map<wstring, size_t> infoIndexByGuid;
