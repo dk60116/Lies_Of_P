@@ -14,6 +14,7 @@
 #include "Terrain.h"
 #include "Image.h"
 #include "Text.h"
+#include "RigidBody.h"
 
 #include <algorithm>
 #include <chrono>
@@ -1196,6 +1197,9 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
 
             if (CMeshFilter* meshFilter = dynamic_cast<CMeshFilter*>(component))
                 RenderMeshFilterComponent(_obj, meshFilter);
+
+            if (CRigidBody* rigidBody = dynamic_cast<CRigidBody*>(component))
+                RenderRigidBodyComponent(rigidBody);
         }
     }
 
@@ -1460,6 +1464,31 @@ void CInspectorBox::RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _m
 
 }
 
+void CInspectorBox::RenderRigidBodyComponent(CRigidBody* _rigidBody)
+{
+    if (!_rigidBody)
+        return;
+
+    ImGui::PushID(_rigidBody);
+
+    ImGui::Checkbox("Use Gravity", &_rigidBody->m_bUseGravity);
+    ImGui::Checkbox("Is Kinematic", &_rigidBody->m_bIsKinematic);
+
+    _float mass = _rigidBody->m_fMass;
+    if (ImGui::InputFloat("Mass", &mass, 0.f, 0.f))
+        _rigidBody->m_fMass = std::max(0.f, mass);
+
+    _float linearDrag = _rigidBody->m_fLinearDrag;
+    if (ImGui::InputFloat("Linear Drag", &linearDrag, 0.f, 0.f))
+        _rigidBody->m_fLinearDrag = std::max(0.f, linearDrag);
+
+    _float angularDrag = _rigidBody->m_fAngularDrag;
+    if (ImGui::InputFloat("Angular Drag", &angularDrag, 0.f, 0.f))
+        _rigidBody->m_fAngularDrag = std::max(0.f, angularDrag);
+
+    ImGui::PopID();
+}
+
 void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
 {
     if (!_obj)
@@ -1536,6 +1565,11 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
             _obj->AddComponent<CTerrain>();
     }
 
+    if (ImGui::MenuItem("RigidBody"))
+    {
+        if (!_obj->GetComponent<CRigidBody>())
+            _obj->AddComponent<CRigidBody>();
+    }
 
     ImGui::EndPopup();
 }

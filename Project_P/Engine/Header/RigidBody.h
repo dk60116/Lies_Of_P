@@ -15,8 +15,12 @@ private:
 
 public:
 	CCollider* m_pCollider;
+	_float m_fMass;
+	_float m_fLinearDrag;
+	_float m_fAngularDrag;
+	_bool m_bUseGravity;
+	_bool m_bIsKinematic;
 	void OnDestroy() override;
 };
 
 NS_END
-
