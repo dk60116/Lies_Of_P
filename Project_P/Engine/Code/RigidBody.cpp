@@ -348,10 +348,18 @@ void CRigidBody::SetUseGravity(_bool _useGravity)
     const EMotionType motion = m_bKinematic ? EMotionType::Kinematic : EMotionType::Dynamic;
 
     if (m_bHasBody)
+    {
         GetBI().SetGravityFactor(m_iBodyID, motion == EMotionType::Dynamic && m_bUseGravity ? 1.f : 0.f);
+        if (motion == EMotionType::Dynamic && m_bUseGravity)
+            GetBI().ActivateBody(m_iBodyID);
+    }
 
     if (m_bHasSensorBody)
+    {
         GetBI().SetGravityFactor(m_iSensorBodyID, motion == EMotionType::Dynamic && m_bUseGravity ? 1.f : 0.f);
+        if (motion == EMotionType::Dynamic && m_bUseGravity)
+            GetBI().ActivateBody(m_iSensorBodyID);
+    }
 }
 
 _float CRigidBody::GetMass() const
