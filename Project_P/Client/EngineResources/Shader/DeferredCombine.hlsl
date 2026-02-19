@@ -11,10 +11,10 @@ cbuffer PerCamera : register(b1)
     float4x4 proj;
 };
 
-Texture2D gAlbedo : register(t0);
+Texture2D<float4> gAlbedo : register(t0);
 Texture2D<float> gDepth : register(t1);
-Texture2D gShading : register(t2);
-Texture2D gSpecular : register(t3);
+Texture2D<float4> gShading : register(t2);
+Texture2D<float4> gSpecular : register(t3);
 Texture2D<float> gShadow : register(t4);
 SamplerState gSampler : register(s0);
 
