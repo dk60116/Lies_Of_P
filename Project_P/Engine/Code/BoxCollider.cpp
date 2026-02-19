@@ -121,6 +121,9 @@ void CBoxCollider::Render_Gizmo()
     if (!m_pLineMesh || !m_pLineMaterial)
         return;
 
+    const _float4 gizmoColor = IsColliding() ? _float4(1.f, 0.f, 0.f, 1.f) : _float4(0.f, 1.f, 0.f, 1.f);
+    m_pLineMaterial->Set_BaseColor(gizmoColor);
+
     CCamera* cam = CSceneManager::GetInstance().Get_EditorCamera();
     if (!cam)
         return;

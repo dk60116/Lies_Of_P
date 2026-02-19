@@ -24,9 +24,12 @@ public:
     void OnDestroy() override;
 
     const _bool IsTrigger() const;
+    const _bool IsColliding() const;
     const vector3& GetCenter() const;
     void SetTrigger(const _bool isTrigger);
     void SetCenter(const vector3& center);
+    void SetColliding(const _bool isColliding);
+    _bool Intersects(CCollider* other);
 
 protected:
     virtual void BuildShapeIfNeeded() PURE;
@@ -39,6 +42,7 @@ protected:
 
     _bool m_bShapeDirty;
     const mutable JPH::Shape* m_pShape;
+    _bool m_bIsColliding;
 };
 
 NS_END

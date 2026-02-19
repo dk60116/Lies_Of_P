@@ -150,6 +150,7 @@ protected:
 private:
     void PickObjectInEditor_Start();
     void PickObjectInEditor_End();
+    void ProcessCollisions();
 
 protected:
     _uint m_iSceneIndex;
@@ -183,6 +184,7 @@ protected:
 
     vector2Int m_vTempPickMousePos;
     _bool m_bSaveRegistrationEnabled;
+    unordered_set<unsigned long long> m_sCollisionPairs;
 };
 
 NS_END

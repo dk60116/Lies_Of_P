@@ -17,6 +17,7 @@
 #include "Terrain.h"
 #include "Image.h"
 #include "Text.h"
+#include "Collider.h"
 #include <filesystem>
 #include <unordered_map>
 #include <unordered_set>
@@ -545,6 +546,8 @@ void CScene::FixedUpdate()
 		if ((*it)->IsActive())
 			(*it)->FixedUpdate();
 	}
+
+	ProcessCollisions();
 }
 
 void CScene::LateUpdateEditor()
@@ -2323,4 +2326,113 @@ ID3D11DepthStencilState* CScene::Get_MeshStencillState() const
 ID3D11DepthStencilState* CScene::Get_UIStencillState() const
 {
 	return m_pUIDepthStencilState;
+}
+
+
+void CScene::ProcessCollisions()
+{
+	vector<CCollider*> colliders = {};
+	colliders.reserve(m_lObjectList.size());
+
+	for (TRAVERSAL_ITER(m_lObjectList, it))
+	{
+		CGameObject* obj = *it;
+		if (!obj || !obj->IsActive())
+			continue;
+
+		CCollider* collider = obj->GetComponent<CCollider>();
+		if (!collider || !collider->Get_Enable())
+			continue;
+
+		collider->SetColliding(false);
+		colliders.push_back(collider);
+	}
+
+	unordered_set<unsigned long long> currentPairs = {};
+	currentPairs.reserve(colliders.size() * 2);
+
+	for (size_t i = 0; i < colliders.size(); ++i)
+	{
+		for (size_t j = i + 1; j < colliders.size(); ++j)
+		{
+			CCollider* a = colliders[i];
+			CCollider* b = colliders[j];
+			if (!a || !b)
+				continue;
+
+			if (!a->Intersects(b))
+				continue;
+
+			a->SetColliding(true);
+			b->SetColliding(true);
+
+			const _uint idA = a->Get_GameObject()->Get_UniqueID();
+			const _uint idB = b->Get_GameObject()->Get_UniqueID();
+			const _uint minId = min(idA, idB);
+			const _uint maxId = max(idA, idB);
+			const unsigned long long key = (static_cast<unsigned long long>(minId) << 32) | static_cast<unsigned long long>(maxId);
+			currentPairs.insert(key);
+
+			const _bool isTriggerPair = a->IsTrigger() || b->IsTrigger();
+			const _bool wasColliding = m_sCollisionPairs.find(key) != m_sCollisionPairs.end();
+
+			if (isTriggerPair)
+			{
+				if (wasColliding)
+				{
+					a->Get_GameObject()->OnTriggerStay(b);
+					b->Get_GameObject()->OnTriggerStay(a);
+				}
+				else
+				{
+					a->Get_GameObject()->OnTriggerEnter(b);
+					b->Get_GameObject()->OnTriggerEnter(a);
+				}
+			}
+			else
+			{
+				if (wasColliding)
+				{
+					a->Get_GameObject()->OnCollisionStay(b);
+					b->Get_GameObject()->OnCollisionStay(a);
+				}
+				else
+				{
+					a->Get_GameObject()->OnCollisionEnter(b);
+					b->Get_GameObject()->OnCollisionEnter(a);
+				}
+			}
+		}
+	}
+
+	for (const unsigned long long pairKey : m_sCollisionPairs)
+	{
+		if (currentPairs.find(pairKey) != currentPairs.end())
+			continue;
+
+		const _uint idA = static_cast<_uint>(pairKey >> 32);
+		const _uint idB = static_cast<_uint>(pairKey & 0xffffffffULL);
+		CGameObject* objA = FindGameObjectOfId(idA);
+		CGameObject* objB = FindGameObjectOfId(idB);
+		if (!objA || !objB)
+			continue;
+
+		CCollider* a = objA->GetComponent<CCollider>();
+		CCollider* b = objB->GetComponent<CCollider>();
+		if (!a || !b)
+			continue;
+
+		if (a->IsTrigger() || b->IsTrigger())
+		{
+			objA->OnTriggerExit(b);
+			objB->OnTriggerExit(a);
+		}
+		else
+		{
+			objA->OnCollisionExit(b);
+			objB->OnCollisionExit(a);
+		}
+	}
+
+	m_sCollisionPairs.swap(currentPairs);
 }
