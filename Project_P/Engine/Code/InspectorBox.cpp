@@ -14,6 +14,7 @@
 #include "Terrain.h"
 #include "Image.h"
 #include "Text.h"
+#include "RigidBody.h"
 
 #include <algorithm>
 #include <chrono>
@@ -1196,6 +1197,9 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
 
             if (CMeshFilter* meshFilter = dynamic_cast<CMeshFilter*>(component))
                 RenderMeshFilterComponent(_obj, meshFilter);
+
+            if (CRigidBody* rigidBody = dynamic_cast<CRigidBody*>(component))
+                RenderRigidBodyComponent(_obj, rigidBody);
         }
     }
 
@@ -1460,6 +1464,59 @@ void CInspectorBox::RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _m
 
 }
 
+void CInspectorBox::RenderRigidBodyComponent(CGameObject* _obj, CRigidBody* _rigidBody)
+{
+    if (!_obj || !_rigidBody)
+        return;
+
+    CCollider* currentCollider = _rigidBody->m_pCollider;
+    string colliderName = "None";
+
+    vector<pair<string, CCollider*>> colliderOptions;
+    list<CComponent*>& components = _obj->Get_ComponentList();
+    for (CComponent* component : components)
+    {
+        CCollider* collider = dynamic_cast<CCollider*>(component);
+        if (!collider)
+            continue;
+
+        string name = CEngineString::WStringToString(collider->Get_UName());
+        if (name.empty())
+            name = "Collider";
+
+        colliderOptions.push_back({ name + "##" + to_string(reinterpret_cast<uintptr_t>(collider)), collider });
+    }
+
+    if (currentCollider)
+    {
+        colliderName = CEngineString::WStringToString(currentCollider->Get_UName());
+        if (colliderName.empty())
+            colliderName = "Collider";
+    }
+
+    const string comboLabel = "Collider##RigidBody_" + to_string(_obj->Get_UniqueID()) + "_" + to_string(reinterpret_cast<uintptr_t>(_rigidBody));
+
+    if (ImGui::BeginCombo(comboLabel.c_str(), colliderName.c_str()))
+    {
+        if (ImGui::Selectable("None", currentCollider == nullptr))
+            _rigidBody->m_pCollider = nullptr;
+
+        for (const auto& colliderEntry : colliderOptions)
+        {
+            CCollider* collider = colliderEntry.second;
+            const bool selected = (collider == currentCollider);
+            if (ImGui::Selectable(colliderEntry.first.c_str(), selected))
+                _rigidBody->m_pCollider = collider;
+
+            if (selected)
+                ImGui::SetItemDefaultFocus();
+        }
+
+        ImGui::EndCombo();
+    }
+}
+
+
 void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
 {
     if (!_obj)
@@ -1536,6 +1593,11 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
             _obj->AddComponent<CTerrain>();
     }
 
+    if (ImGui::MenuItem("RigidBody"))
+    {
+        if (!_obj->GetComponent<CRigidBody>())
+            _obj->AddComponent<CRigidBody>();
+    }
 
     ImGui::EndPopup();
 }

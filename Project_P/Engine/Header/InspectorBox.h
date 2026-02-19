@@ -29,6 +29,7 @@ private:
 	void ShowAddComponentMenu(CGameObject* _obj);
 	void RenderMeshRendererComponent(CMeshRenderer* _meshRenderer);
 	void RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _meshFilter);
+	void RenderRigidBodyComponent(CGameObject* _obj, CRigidBody* _rigidBody);
 	void RenderSelectedAssetInfo(const fs::path& path);
 	void RenderSelectedAssetPreview(const fs::path& path);
 	_float m_fRXDrag, m_fRYDrag, m_fRZDrag;
