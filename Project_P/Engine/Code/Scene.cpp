@@ -958,6 +958,13 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		info.localScale = tf->Get_LocalScale();
 		info.isActive = (*it)->IsActive_Origin();
 
+		if (CRigidBody* rigidBody = (*it)->GetComponent<CRigidBody>())
+		{
+			info.rigidBodyKinematic = rigidBody->IsKinematic();
+			info.rigidBodyUseGravity = rigidBody->IsUseGravity();
+			info.rigidBodyMass = rigidBody->GetMass();
+		}
+
 		CRectTransform* rect = (*it)->GetComponent<CRectTransform>();
 
 		info.isRect = rect ? true : false;
@@ -1200,6 +1207,13 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 	{
 		for (const wstring& componentName : info.componentNames)
 			ensureComponentByName(obj, componentName);
+
+		if (CRigidBody* rigidBody = obj->GetComponent<CRigidBody>())
+		{
+			rigidBody->SetKinematic(info.rigidBodyKinematic);
+			rigidBody->SetUseGravity(info.rigidBodyUseGravity);
+			rigidBody->SetMass(info.rigidBodyMass);
+		}
 
 		if (!info.meshBufferName.empty())
 		{
