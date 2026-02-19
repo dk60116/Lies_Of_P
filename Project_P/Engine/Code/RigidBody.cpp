@@ -93,6 +93,11 @@ void CRigidBody::Awake()
 void CRigidBody::FixedUpdate()
 {
     RebuildBodiesIfDirty();
+
+    if (m_bKinematic)
+        SyncKinematicToJolt();
+    else
+        SyncDynamicFromJolt();
 }
 
 void CRigidBody::OnCollisionEnter(CCollider* _other)
@@ -485,8 +490,41 @@ void CRigidBody::DestroyBodies()
 
 void CRigidBody::SyncKinematicToJolt()
 {
+    Vec3 pos;
+    Quat rot;
+    DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
+
+    if (m_bHasBody)
+    {
+        GetBI().SetPositionAndRotation(m_iBodyID, RVec3(pos), rot, EActivation::DontActivate);
+        GetBI().SetLinearAndAngularVelocity(m_iBodyID, Vec3::sZero(), Vec3::sZero());
+    }
+
+    if (m_bHasSensorBody)
+    {
+        GetBI().SetPositionAndRotation(m_iSensorBodyID, RVec3(pos), rot, EActivation::DontActivate);
+        GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, Vec3::sZero(), Vec3::sZero());
+    }
 }
 
 void CRigidBody::SyncDynamicFromJolt()
 {
+    if (!m_bHasBody && !m_bHasSensorBody)
+        return;
+
+    const BodyID sourceBodyId = m_bHasBody ? m_iBodyID : m_iSensorBodyID;
+    const RVec3 joltPos = GetBI().GetPosition(sourceBodyId);
+    const Quat joltRot = GetBI().GetRotation(sourceBodyId);
+
+    vector3 pos = vector3(static_cast<_float>(joltPos.GetX()), static_cast<_float>(joltPos.GetY()), static_cast<_float>(joltPos.GetZ()));
+    quaternion rot = quaternion(joltRot.GetX(), joltRot.GetY(), joltRot.GetZ(), joltRot.GetW());
+
+    Get_Transform()->Set_Position(pos);
+    Get_Transform()->Set_Quaternion(rot);
+
+    if (m_bHasBody && m_bHasSensorBody)
+    {
+        GetBI().SetPositionAndRotation(m_iSensorBodyID, joltPos, joltRot, EActivation::DontActivate);
+        GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, GetBI().GetLinearVelocity(m_iBodyID), GetBI().GetAngularVelocity(m_iBodyID));
+    }
 }
