@@ -104,26 +104,98 @@ void CRigidBody::FixedUpdate()
 
 void CRigidBody::OnCollisionEnter(CCollider* _other)
 {
+    if (!m_pGameObject)
+        return;
+
+    auto& components = m_pGameObject->Get_ComponentList();
+    for (TRAVERSAL_ITER(components, it))
+    {
+        CComponent* component = *it;
+        if (!component || component == this || !component->Get_Enable())
+            continue;
+
+        component->OnCollisionEnter(_other);
+    }
 }
 
 void CRigidBody::OnCollisionStay(CCollider* _other)
 {
+    if (!m_pGameObject)
+        return;
+
+    auto& components = m_pGameObject->Get_ComponentList();
+    for (TRAVERSAL_ITER(components, it))
+    {
+        CComponent* component = *it;
+        if (!component || component == this || !component->Get_Enable())
+            continue;
+
+        component->OnCollisionStay(_other);
+    }
 }
 
-void CRigidBody::OnCollisionExit(CCollider* other)
+void CRigidBody::OnCollisionExit(CCollider* _other)
 {
+    if (!m_pGameObject)
+        return;
+
+    auto& components = m_pGameObject->Get_ComponentList();
+    for (TRAVERSAL_ITER(components, it))
+    {
+        CComponent* component = *it;
+        if (!component || component == this || !component->Get_Enable())
+            continue;
+
+        component->OnCollisionExit(_other);
+    }
 }
 
-void CRigidBody::OnTriggerEnter(CCollider* other)
+void CRigidBody::OnTriggerEnter(CCollider* _other)
 {
+    if (!m_pGameObject)
+        return;
+
+    auto& components = m_pGameObject->Get_ComponentList();
+    for (TRAVERSAL_ITER(components, it))
+    {
+        CComponent* component = *it;
+        if (!component || component == this || !component->Get_Enable())
+            continue;
+
+        component->OnTriggerEnter(_other);
+    }
 }
 
 void CRigidBody::OnTriggerStay(CCollider* _other)
 {
+    if (!m_pGameObject)
+        return;
+
+    auto& components = m_pGameObject->Get_ComponentList();
+    for (TRAVERSAL_ITER(components, it))
+    {
+        CComponent* component = *it;
+        if (!component || component == this || !component->Get_Enable())
+            continue;
+
+        component->OnTriggerStay(_other);
+    }
 }
 
 void CRigidBody::OnTriggerExit(CCollider* _other)
 {
+    if (!m_pGameObject)
+        return;
+
+    auto& components = m_pGameObject->Get_ComponentList();
+    for (TRAVERSAL_ITER(components, it))
+    {
+        CComponent* component = *it;
+        if (!component || component == this || !component->Get_Enable())
+            continue;
+
+        component->OnTriggerExit(_other);
+    }
 }
 
 void CRigidBody::OnDestroy()
@@ -252,6 +324,27 @@ void CRigidBody::SetMass(_float _mass)
 
     m_fMass = clampedMass;
     m_bBodyDirty = true;
+}
+
+
+CCollider* CRigidBody::GetEventCollider(_bool _triggerEvent) const
+{
+    for (CCollider* collider : m_lColliderList)
+    {
+        if (!collider)
+            continue;
+
+        if (collider->IsTrigger() == _triggerEvent)
+            return collider;
+    }
+
+    for (CCollider* collider : m_lColliderList)
+    {
+        if (collider)
+            return collider;
+    }
+
+    return nullptr;
 }
 
 void CRigidBody::MarkBodyDirty()

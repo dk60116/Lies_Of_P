@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "Physics.h"
+#include "RigidBody.h"
 
 namespace Engine
 {
@@ -77,6 +78,131 @@ namespace Engine
 		}
 	};
 
+	class CPhysics::ContactListenerImpl final : public ContactListener
+	{
+	public:
+		ValidateResult OnContactValidate(const Body& inBody1, const Body& inBody2, RVec3Arg inBaseOffset, const CollideShapeResult& inCollisionResult) override
+		{
+			return ValidateResult::AcceptAllContactsForThisBodyPair;
+		}
+
+		void OnContactAdded(const Body& inBody1, const Body& inBody2, const ContactManifold& inManifold, ContactSettings& ioSettings) override
+		{
+			Dispatch(inBody1, inBody2, true);
+		}
+
+		void OnContactPersisted(const Body& inBody1, const Body& inBody2, const ContactManifold& inManifold, ContactSettings& ioSettings) override
+		{
+			Dispatch(inBody1, inBody2, false);
+		}
+
+		void OnContactRemoved(const SubShapeIDPair& inSubShapePair) override
+		{
+			const BodyID bodyId1 = inSubShapePair.GetBody1ID();
+			const BodyID bodyId2 = inSubShapePair.GetBody2ID();
+
+			auto itA = m_ActivePairs.find(MakePairKey(bodyId1, bodyId2));
+			if (itA == m_ActivePairs.end())
+				return;
+
+			PairState state = itA->second;
+			m_ActivePairs.erase(itA);
+
+			if (!state.a || !state.b)
+				return;
+
+			if (state.isTrigger)
+			{
+				state.a->OnTriggerExit(state.bCollider);
+				state.b->OnTriggerExit(state.aCollider);
+			}
+			else
+			{
+				state.a->OnCollisionExit(state.bCollider);
+				state.b->OnCollisionExit(state.aCollider);
+			}
+		}
+
+	private:
+		struct PairState
+		{
+			CRigidBody* a = nullptr;
+			CRigidBody* b = nullptr;
+			CCollider* aCollider = nullptr;
+			CCollider* bCollider = nullptr;
+			_bool isTrigger = false;
+		};
+
+		using PairKey = uint64;
+
+		static PairKey MakePairKey(const BodyID& a, const BodyID& b)
+		{
+			const uint32 aIndex = a.GetIndexAndSequenceNumber();
+			const uint32 bIndex = b.GetIndexAndSequenceNumber();
+			const uint32 low = min(aIndex, bIndex);
+			const uint32 high = max(aIndex, bIndex);
+			return (static_cast<uint64>(low) << 32) | static_cast<uint64>(high);
+		}
+
+		static CRigidBody* GetRigidBody(const Body& body)
+		{
+			return reinterpret_cast<CRigidBody*>(body.GetUserData());
+		}
+
+		void Dispatch(const Body& body1, const Body& body2, const _bool isEnter)
+		{
+			CRigidBody* rb1 = GetRigidBody(body1);
+			CRigidBody* rb2 = GetRigidBody(body2);
+			if (!rb1 || !rb2)
+				return;
+
+			const _bool trigger = body1.IsSensor() || body2.IsSensor();
+			CCollider* col1 = rb1->GetEventCollider(trigger);
+			CCollider* col2 = rb2->GetEventCollider(trigger);
+
+			PairState state;
+			state.a = rb1;
+			state.b = rb2;
+			state.aCollider = col1;
+			state.bCollider = col2;
+			state.isTrigger = trigger;
+
+			const PairKey key = MakePairKey(body1.GetID(), body2.GetID());
+			auto [it, inserted] = m_ActivePairs.insert({ key, state });
+			if (!inserted)
+				it->second = state;
+
+			if (trigger)
+			{
+				if (isEnter || inserted)
+				{
+					rb1->OnTriggerEnter(col2);
+					rb2->OnTriggerEnter(col1);
+				}
+				else
+				{
+					rb1->OnTriggerStay(col2);
+					rb2->OnTriggerStay(col1);
+				}
+			}
+			else
+			{
+				if (isEnter || inserted)
+				{
+					rb1->OnCollisionEnter(col2);
+					rb2->OnCollisionEnter(col1);
+				}
+				else
+				{
+					rb1->OnCollisionStay(col2);
+					rb2->OnCollisionStay(col1);
+				}
+			}
+		}
+
+		unordered_map<PairKey, PairState> m_ActivePairs;
+	};
+
 	static void JoltTraceImpl(const char* fmt, ...)
 	{
 		char buf[2048];
@@ -107,6 +233,7 @@ CPhysics::CPhysics()
 	, m_pBPLayerInterface(nullptr)
 	, m_pObjectVsBPLayerFilter(nullptr)
 	, m_pObjectLayerPairFilter(nullptr)
+	, m_pContactListener(nullptr)
 	, m_fFixedDeltaTime(1.0f / 60.0f)
 	, m_fAccumulator(0.0f)
 	, m_fMaxFrameDelta(0.25f)
@@ -179,6 +306,8 @@ HRESULT CPhysics::Initialize()
 		*m_pObjectLayerPairFilter
 	);
 
+	m_pContactListener = new ContactListenerImpl();
+	m_PhysicsSystem.SetContactListener(m_pContactListener);
 	m_PhysicsSystem.SetGravity(Vec3(0.f, -9.81f, 0.f));
 	m_PhysicsSystem.OptimizeBroadPhase();
 
@@ -207,6 +336,13 @@ void CPhysics::Release()
 	{
 		delete m_pObjectLayerPairFilter;
 		m_pObjectLayerPairFilter = nullptr;
+	}
+
+	if (m_pContactListener)
+	{
+		m_PhysicsSystem.SetContactListener(nullptr);
+		delete m_pContactListener;
+		m_pContactListener = nullptr;
 	}
 
 	if (m_pObjectVsBPLayerFilter)

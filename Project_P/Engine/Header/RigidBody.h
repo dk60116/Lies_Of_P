@@ -51,6 +51,7 @@ public:
 	void SetKinematic(_bool _kinematic);
 	_float GetMass() const;
 	void SetMass(_float _mass);
+	CCollider* GetEventCollider(_bool _triggerEvent) const;
 
 private:
 	void RebuildBodiesIfDirty();
