@@ -1,8 +1,14 @@
 #pragma once
 
 #include "epch.h"
-#include <Jolt/Physics/Collision/ObjectLayer.h>
-#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
+#include <Jolt/Jolt.h>
+#include <Jolt/Core/Factory.h>
+#include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Core/JobSystemThreadPool.h>
+#include <Jolt/RegisterTypes.h>
+#include <Jolt/Physics/PhysicsSystem.h>
+
+using namespace JPH;
 
 NS_BEGIN(Engine)
 
@@ -21,7 +27,7 @@ namespace BroadPhaseLayers
 	static constexpr _uint NUM_BP_LAYERS = 2;
 };
 
-class ENGINE_DLL CPhysics
+class ENGINE_DLL CPhysics final
 {
 public:
 	struct Ray 
@@ -43,13 +49,34 @@ public:
 	SINGLETONCLASS(CPhysics);
 
 public:
+	HRESULT Initialize();
+	void Release();
+
+public:
 	vector<RAYCASTHIT> Raycast(const Ray& _ray);
 
 private:
-	_bool IntersectRayTriangle(
+	_bool IntersectRayTriangle
+	(
 		const vector3& rayOrigin, const vector3& rayDir,
 		const vector3& v0, const vector3& v1, const vector3& v2,
-		_float& t, vector3& hitNormal);
+		_float& t, vector3& hitNormal
+	);
+
+private:
+	class BroadPhaseLayerInterfaceImpl;
+	class ObjectVsBroadPhaseLayerFilterImpl;
+	class ObjectLayerPairFilterImpl;
+
+	_bool m_bJoltInitialized;
+	TempAllocatorImpl* m_pTempAllocator;
+	JobSystemThreadPool* m_pJobSystem;
+
+	PhysicsSystem m_PhysicsSystem;
+
+	BroadPhaseLayerInterfaceImpl* m_pBPLayerInterface;
+	ObjectVsBroadPhaseLayerFilterImpl* m_pObjectVsBPLayerFilter;
+	ObjectLayerPairFilterImpl* m_pObjectLayerPairFilter;
 };
 
 NS_END

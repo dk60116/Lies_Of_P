@@ -27,7 +27,7 @@ public:
 
     void OnDestroy() override;
 
-protected:
+public:
     void BuildShapeIfNeeded() override;
 
 private:

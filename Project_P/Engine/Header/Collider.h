@@ -6,6 +6,8 @@
 #include <Jolt/Physics/Collision/Shape/BoxShape.h> 
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h> 
 
+using namespace JPH;
+
 NS_BEGIN(Engine)
 
 class ENGINE_DLL CCollider abstract : public CComponent
@@ -28,9 +30,9 @@ public:
     void SetTrigger(const _bool isTrigger);
     void SetCenter(const vector3& center);
 
-    Shape* GetShadpe();
+    const Shape* GetShape();
 
-protected:
+public:
     virtual void BuildShapeIfNeeded() PURE;
     virtual void ReleaseShape();
 

@@ -71,7 +71,7 @@ void CCollider::SetCenter(const vector3& center)
 	m_bShapeDirty = true;
 }
 
-Shape* CCollider::GetShadpe()
+const Shape* CCollider::GetShape()
 {
 	return m_pShape;
 }

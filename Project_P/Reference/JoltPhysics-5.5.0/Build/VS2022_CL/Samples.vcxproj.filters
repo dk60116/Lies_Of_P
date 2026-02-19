@@ -1,975 +1,975 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\Samples.dir\cmake_pch.cxx">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\Samples.dir\cmake_pch.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\SamplesApp.cpp" />
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\BroadPhase\BroadPhaseCastRayTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\SamplesApp.cpp" />
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\BroadPhase\BroadPhaseCastRayTest.cpp">
       <Filter>Tests\BroadPhase</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\BroadPhase\BroadPhaseInsertionTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\BroadPhase\BroadPhaseInsertionTest.cpp">
       <Filter>Tests\BroadPhase</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\BroadPhase\BroadPhaseTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\BroadPhase\BroadPhaseTest.cpp">
       <Filter>Tests\BroadPhase</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterBaseTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterBaseTest.cpp">
       <Filter>Tests\Character</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterPlanetTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterPlanetTest.cpp">
       <Filter>Tests\Character</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterTest.cpp">
       <Filter>Tests\Character</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterVirtualTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterVirtualTest.cpp">
       <Filter>Tests\Character</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterSpaceShipTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterSpaceShipTest.cpp">
       <Filter>Tests\Character</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConeConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConeConstraintTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConstraintPriorityTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConstraintPriorityTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConstraintSingularityTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConstraintSingularityTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConstraintVsCOMChangeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConstraintVsCOMChangeTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\DistanceConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\DistanceConstraintTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\FixedConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\FixedConstraintTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\GearConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\GearConstraintTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\HingeConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\HingeConstraintTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\PointConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\PointConstraintTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\PathConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\PathConstraintTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\PoweredHingeConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\PoweredHingeConstraintTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\PoweredSwingTwistConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\PoweredSwingTwistConstraintTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\PoweredSliderConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\PoweredSliderConstraintTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\PulleyConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\PulleyConstraintTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\RackAndPinionConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\RackAndPinionConstraintTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\SwingTwistConstraintFrictionTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\SwingTwistConstraintFrictionTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\SwingTwistConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\SwingTwistConstraintTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\SixDOFConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\SixDOFConstraintTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\SliderConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\SliderConstraintTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\SpringTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\SpringTest.cpp">
       <Filter>Tests\Constraints</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\CapsuleVsBoxTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\CapsuleVsBoxTest.cpp">
       <Filter>Tests\ConvexCollision</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\ClosestPointTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\ClosestPointTest.cpp">
       <Filter>Tests\ConvexCollision</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\ConvexHullTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\ConvexHullTest.cpp">
       <Filter>Tests\ConvexCollision</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\ConvexHullShrinkTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\ConvexHullShrinkTest.cpp">
       <Filter>Tests\ConvexCollision</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\EPATest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\EPATest.cpp">
       <Filter>Tests\ConvexCollision</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\InteractivePairsTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\InteractivePairsTest.cpp">
       <Filter>Tests\ConvexCollision</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\RandomRayTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\RandomRayTest.cpp">
       <Filter>Tests\ConvexCollision</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ActiveEdgesTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ActiveEdgesTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\AllowedDOFsTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\AllowedDOFsTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\BigVsSmallTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\BigVsSmallTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\EnhancedInternalEdgeRemovalTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\EnhancedInternalEdgeRemovalTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ShapeFilterTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ShapeFilterTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\SimCollideBodyVsBodyTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\SimCollideBodyVsBodyTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\SimShapeFilterTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\SimShapeFilterTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\CenterOfMassTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\CenterOfMassTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ChangeMotionQualityTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ChangeMotionQualityTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ChangeMotionTypeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ChangeMotionTypeTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ChangeShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ChangeShapeTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ChangeObjectLayerTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ChangeObjectLayerTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ContactListenerTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ContactListenerTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ContactManifoldTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ContactManifoldTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ConveyorBeltTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ConveyorBeltTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\DampingTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\DampingTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\DynamicMeshTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\DynamicMeshTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\FrictionTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\FrictionTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\FrictionPerTriangleTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\FrictionPerTriangleTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\FunnelTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\FunnelTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\GravityFactorTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\GravityFactorTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\GyroscopicForceTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\GyroscopicForceTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\HeavyOnLightTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\HeavyOnLightTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\HighSpeedTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\HighSpeedTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\IslandTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\IslandTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\KinematicTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\KinematicTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\LoadSaveBinaryTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\LoadSaveBinaryTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\LoadSaveSceneTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\LoadSaveSceneTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ManifoldReductionTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ManifoldReductionTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ModifyMassTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ModifyMassTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\MultithreadedTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\MultithreadedTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\PyramidTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\PyramidTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\RestitutionTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\RestitutionTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\SensorTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\SensorTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\SimpleTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\SimpleTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\StackTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\StackTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\TwoDFunnelTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\TwoDFunnelTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\WallTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\WallTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ActivateDuringUpdateTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ActivateDuringUpdateTest.cpp">
       <Filter>Tests\General</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\CreateRigTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\CreateRigTest.cpp">
       <Filter>Tests\Rig</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyBendConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyBendConstraintTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyContactListenerTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyContactListenerTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyCosseratRodConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyCosseratRodConstraintTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyCustomUpdateTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyCustomUpdateTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyForceTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyForceTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyFrictionTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyFrictionTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyGravityFactorTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyGravityFactorTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyKinematicTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyKinematicTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyLRAConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyLRAConstraintTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyPressureTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyPressureTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyRestitutionTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyRestitutionTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyShapesTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyShapesTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodySkinnedConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodySkinnedConstraintTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodySensorTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodySensorTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyStressTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyStressTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyUpdatePositionTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyUpdatePositionTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyVertexRadiusTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyVertexRadiusTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyVsFastMovingTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyVsFastMovingTest.cpp">
       <Filter>Tests\SoftBody</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Test.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Test.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Tools\LoadSnapshotTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Tools\LoadSnapshotTest.cpp">
       <Filter>Tests\Tools</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\DynamicScaledShape.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\DynamicScaledShape.cpp">
       <Filter>Tests\ScaledShapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledBoxShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledBoxShapeTest.cpp">
       <Filter>Tests\ScaledShapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledCapsuleShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledCapsuleShapeTest.cpp">
       <Filter>Tests\ScaledShapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledStaticCompoundShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledStaticCompoundShapeTest.cpp">
       <Filter>Tests\ScaledShapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledMutableCompoundShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledMutableCompoundShapeTest.cpp">
       <Filter>Tests\ScaledShapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledOffsetCenterOfMassShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledOffsetCenterOfMassShapeTest.cpp">
       <Filter>Tests\ScaledShapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledConvexHullShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledConvexHullShapeTest.cpp">
       <Filter>Tests\ScaledShapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledCylinderShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledCylinderShapeTest.cpp">
       <Filter>Tests\ScaledShapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledHeightFieldShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledHeightFieldShapeTest.cpp">
       <Filter>Tests\ScaledShapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledMeshShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledMeshShapeTest.cpp">
       <Filter>Tests\ScaledShapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledPlaneShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledPlaneShapeTest.cpp">
       <Filter>Tests\ScaledShapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledSphereShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledSphereShapeTest.cpp">
       <Filter>Tests\ScaledShapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledTaperedCapsuleShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledTaperedCapsuleShapeTest.cpp">
       <Filter>Tests\ScaledShapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledTaperedCylinderShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledTaperedCylinderShapeTest.cpp">
       <Filter>Tests\ScaledShapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledTriangleShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledTriangleShapeTest.cpp">
       <Filter>Tests\ScaledShapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\BoxShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\BoxShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\CapsuleShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\CapsuleShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\DeformedHeightFieldShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\DeformedHeightFieldShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\EmptyShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\EmptyShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\StaticCompoundShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\StaticCompoundShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\MutableCompoundShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\MutableCompoundShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\OffsetCenterOfMassShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\OffsetCenterOfMassShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\ConvexHullShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\ConvexHullShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\CylinderShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\CylinderShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\HeightFieldShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\HeightFieldShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\MeshShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\MeshShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\MeshShapeUserDataTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\MeshShapeUserDataTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\SphereShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\SphereShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\PlaneShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\PlaneShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\RotatedTranslatedShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\RotatedTranslatedShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\TaperedCapsuleShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\TaperedCapsuleShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\TaperedCylinderShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\TaperedCylinderShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\TriangleShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\TriangleShapeTest.cpp">
       <Filter>Tests\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Vehicle\MotorcycleTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Vehicle\MotorcycleTest.cpp">
       <Filter>Tests\Vehicle</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Vehicle\TankTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Vehicle\TankTest.cpp">
       <Filter>Tests\Vehicle</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleConstraintTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleConstraintTest.cpp">
       <Filter>Tests\Vehicle</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleSixDOFTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleSixDOFTest.cpp">
       <Filter>Tests\Vehicle</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleStressTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleStressTest.cpp">
       <Filter>Tests\Vehicle</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleTest.cpp">
       <Filter>Tests\Vehicle</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Water\BoatTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Water\BoatTest.cpp">
       <Filter>Tests\Water</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Water\WaterShapeTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Water\WaterShapeTest.cpp">
       <Filter>Tests\Water</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Utils\ContactListenerImpl.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Utils\ContactListenerImpl.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Utils\RagdollLoader.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Utils\RagdollLoader.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Utils\ShapeCreator.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Utils\ShapeCreator.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Utils\SoftBodyCreator.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Utils\SoftBodyCreator.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\BigWorldTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\BigWorldTest.cpp">
       <Filter>Tests\Rig</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\KinematicRigTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\KinematicRigTest.cpp">
       <Filter>Tests\Rig</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\LoadSaveBinaryRigTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\LoadSaveBinaryRigTest.cpp">
       <Filter>Tests\Rig</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\LoadSaveRigTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\LoadSaveRigTest.cpp">
       <Filter>Tests\Rig</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\LoadRigTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\LoadRigTest.cpp">
       <Filter>Tests\Rig</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\PoweredRigTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\PoweredRigTest.cpp">
       <Filter>Tests\Rig</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\RigPileTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\RigPileTest.cpp">
       <Filter>Tests\Rig</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\SkeletonMapperTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\SkeletonMapperTest.cpp">
       <Filter>Tests\Rig</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\SoftKeyframedRigTest.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\SoftKeyframedRigTest.cpp">
       <Filter>Tests\Rig</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Layers.h" />
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\SamplesApp.h" />
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\BroadPhase\BroadPhaseCastRayTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Layers.h" />
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\SamplesApp.h" />
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\BroadPhase\BroadPhaseCastRayTest.h">
       <Filter>Tests\BroadPhase</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\BroadPhase\BroadPhaseInsertionTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\BroadPhase\BroadPhaseInsertionTest.h">
       <Filter>Tests\BroadPhase</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\BroadPhase\BroadPhaseTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\BroadPhase\BroadPhaseTest.h">
       <Filter>Tests\BroadPhase</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterBaseTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterBaseTest.h">
       <Filter>Tests\Character</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterPlanetTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterPlanetTest.h">
       <Filter>Tests\Character</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterTest.h">
       <Filter>Tests\Character</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterVirtualTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterVirtualTest.h">
       <Filter>Tests\Character</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterSpaceShipTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Character\CharacterSpaceShipTest.h">
       <Filter>Tests\Character</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConeConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConeConstraintTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConstraintPriorityTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConstraintPriorityTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConstraintSingularityTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConstraintSingularityTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConstraintVsCOMChangeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\ConstraintVsCOMChangeTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\DistanceConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\DistanceConstraintTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\FixedConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\FixedConstraintTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\GearConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\GearConstraintTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\HingeConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\HingeConstraintTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\PointConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\PointConstraintTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\PathConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\PathConstraintTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\PoweredHingeConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\PoweredHingeConstraintTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\PoweredSwingTwistConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\PoweredSwingTwistConstraintTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\PoweredSliderConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\PoweredSliderConstraintTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\PulleyConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\PulleyConstraintTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\RackAndPinionConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\RackAndPinionConstraintTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\SwingTwistConstraintFrictionTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\SwingTwistConstraintFrictionTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\SwingTwistConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\SwingTwistConstraintTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\SixDOFConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\SixDOFConstraintTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\SliderConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\SliderConstraintTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Constraints\SpringTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Constraints\SpringTest.h">
       <Filter>Tests\Constraints</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\CapsuleVsBoxTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\CapsuleVsBoxTest.h">
       <Filter>Tests\ConvexCollision</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\ClosestPointTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\ClosestPointTest.h">
       <Filter>Tests\ConvexCollision</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\ConvexHullTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\ConvexHullTest.h">
       <Filter>Tests\ConvexCollision</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\ConvexHullShrinkTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\ConvexHullShrinkTest.h">
       <Filter>Tests\ConvexCollision</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\EPATest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\EPATest.h">
       <Filter>Tests\ConvexCollision</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\InteractivePairsTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\InteractivePairsTest.h">
       <Filter>Tests\ConvexCollision</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\RandomRayTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ConvexCollision\RandomRayTest.h">
       <Filter>Tests\ConvexCollision</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ActiveEdgesTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ActiveEdgesTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\AllowedDOFsTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\AllowedDOFsTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\BigVsSmallTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\BigVsSmallTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\EnhancedInternalEdgeRemovalTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\EnhancedInternalEdgeRemovalTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ShapeFilterTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ShapeFilterTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\SimCollideBodyVsBodyTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\SimCollideBodyVsBodyTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\SimShapeFilterTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\SimShapeFilterTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\CenterOfMassTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\CenterOfMassTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ChangeMotionQualityTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ChangeMotionQualityTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ChangeMotionTypeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ChangeMotionTypeTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ChangeShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ChangeShapeTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ChangeObjectLayerTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ChangeObjectLayerTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ContactListenerTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ContactListenerTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ContactManifoldTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ContactManifoldTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ConveyorBeltTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ConveyorBeltTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\DampingTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\DampingTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\DynamicMeshTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\DynamicMeshTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\FrictionTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\FrictionTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\FrictionPerTriangleTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\FrictionPerTriangleTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\FunnelTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\FunnelTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\GravityFactorTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\GravityFactorTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\GyroscopicForceTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\GyroscopicForceTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\HeavyOnLightTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\HeavyOnLightTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\HighSpeedTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\HighSpeedTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\IslandTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\IslandTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\KinematicTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\KinematicTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\LoadSaveBinaryTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\LoadSaveBinaryTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\LoadSaveSceneTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\LoadSaveSceneTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ManifoldReductionTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ManifoldReductionTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ModifyMassTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ModifyMassTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\MultithreadedTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\MultithreadedTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\PyramidTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\PyramidTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\RestitutionTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\RestitutionTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\SensorTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\SensorTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\SimpleTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\SimpleTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\StackTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\StackTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\TwoDFunnelTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\TwoDFunnelTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\WallTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\WallTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\General\ActivateDuringUpdateTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\General\ActivateDuringUpdateTest.h">
       <Filter>Tests\General</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\CreateRigTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\CreateRigTest.h">
       <Filter>Tests\Rig</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyBendConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyBendConstraintTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyContactListenerTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyContactListenerTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyCosseratRodConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyCosseratRodConstraintTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyCustomUpdateTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyCustomUpdateTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyForceTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyForceTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyFrictionTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyFrictionTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyGravityFactorTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyGravityFactorTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyKinematicTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyKinematicTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyLRAConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyLRAConstraintTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyPressureTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyPressureTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyRestitutionTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyRestitutionTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyShapesTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyShapesTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodySkinnedConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodySkinnedConstraintTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodySensorTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodySensorTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyStressTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyStressTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyUpdatePositionTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyUpdatePositionTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyVertexRadiusTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyVertexRadiusTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyVsFastMovingTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\SoftBody\SoftBodyVsFastMovingTest.h">
       <Filter>Tests\SoftBody</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Test.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Test.h">
       <Filter>Tests</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Tools\LoadSnapshotTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Tools\LoadSnapshotTest.h">
       <Filter>Tests\Tools</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\DynamicScaledShape.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\DynamicScaledShape.h">
       <Filter>Tests\ScaledShapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledBoxShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledBoxShapeTest.h">
       <Filter>Tests\ScaledShapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledCapsuleShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledCapsuleShapeTest.h">
       <Filter>Tests\ScaledShapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledStaticCompoundShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledStaticCompoundShapeTest.h">
       <Filter>Tests\ScaledShapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledMutableCompoundShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledMutableCompoundShapeTest.h">
       <Filter>Tests\ScaledShapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledOffsetCenterOfMassShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledOffsetCenterOfMassShapeTest.h">
       <Filter>Tests\ScaledShapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledConvexHullShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledConvexHullShapeTest.h">
       <Filter>Tests\ScaledShapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledCylinderShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledCylinderShapeTest.h">
       <Filter>Tests\ScaledShapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledHeightFieldShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledHeightFieldShapeTest.h">
       <Filter>Tests\ScaledShapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledMeshShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledMeshShapeTest.h">
       <Filter>Tests\ScaledShapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledPlaneShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledPlaneShapeTest.h">
       <Filter>Tests\ScaledShapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledSphereShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledSphereShapeTest.h">
       <Filter>Tests\ScaledShapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledTaperedCapsuleShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledTaperedCapsuleShapeTest.h">
       <Filter>Tests\ScaledShapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledTaperedCylinderShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledTaperedCylinderShapeTest.h">
       <Filter>Tests\ScaledShapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledTriangleShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\ScaledShapes\ScaledTriangleShapeTest.h">
       <Filter>Tests\ScaledShapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\BoxShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\BoxShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\CapsuleShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\CapsuleShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\DeformedHeightFieldShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\DeformedHeightFieldShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\EmptyShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\EmptyShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\StaticCompoundShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\StaticCompoundShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\MutableCompoundShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\MutableCompoundShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\OffsetCenterOfMassShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\OffsetCenterOfMassShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\ConvexHullShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\ConvexHullShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\CylinderShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\CylinderShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\HeightFieldShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\HeightFieldShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\MeshShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\MeshShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\MeshShapeUserDataTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\MeshShapeUserDataTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\SphereShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\SphereShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\PlaneShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\PlaneShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\RotatedTranslatedShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\RotatedTranslatedShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\TaperedCapsuleShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\TaperedCapsuleShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\TaperedCylinderShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\TaperedCylinderShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Shapes\TriangleShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Shapes\TriangleShapeTest.h">
       <Filter>Tests\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Vehicle\MotorcycleTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Vehicle\MotorcycleTest.h">
       <Filter>Tests\Vehicle</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Vehicle\TankTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Vehicle\TankTest.h">
       <Filter>Tests\Vehicle</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleConstraintTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleConstraintTest.h">
       <Filter>Tests\Vehicle</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleSixDOFTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleSixDOFTest.h">
       <Filter>Tests\Vehicle</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleStressTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleStressTest.h">
       <Filter>Tests\Vehicle</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Vehicle\VehicleTest.h">
       <Filter>Tests\Vehicle</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Water\BoatTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Water\BoatTest.h">
       <Filter>Tests\Water</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Water\WaterShapeTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Water\WaterShapeTest.h">
       <Filter>Tests\Water</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Utils\ContactListenerImpl.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Utils\ContactListenerImpl.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Utils\DebugRendererSP.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Utils\DebugRendererSP.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Utils\RagdollLoader.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Utils\RagdollLoader.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Utils\ShapeCreator.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Utils\ShapeCreator.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Utils\SoftBodyCreator.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Utils\SoftBodyCreator.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\BigWorldTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\BigWorldTest.h">
       <Filter>Tests\Rig</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\KinematicRigTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\KinematicRigTest.h">
       <Filter>Tests\Rig</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\LoadSaveBinaryRigTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\LoadSaveBinaryRigTest.h">
       <Filter>Tests\Rig</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\LoadSaveRigTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\LoadSaveRigTest.h">
       <Filter>Tests\Rig</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\LoadRigTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\LoadRigTest.h">
       <Filter>Tests\Rig</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\PoweredRigTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\PoweredRigTest.h">
       <Filter>Tests\Rig</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\RigPileTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\RigPileTest.h">
       <Filter>Tests\Rig</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\SkeletonMapperTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\SkeletonMapperTest.h">
       <Filter>Tests\Rig</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Tests\Rig\SoftKeyframedRigTest.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Tests\Rig\SoftKeyframedRigTest.h">
       <Filter>Tests\Rig</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\Samples.dir\Debug\cmake_pch.hxx">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\Samples.dir\Debug\cmake_pch.hxx">
       <Filter>Precompile Header File</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\Samples.dir\Release\cmake_pch.hxx">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\Samples.dir\Release\cmake_pch.hxx">
       <Filter>Precompile Header File</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\Samples.dir\Distribution\cmake_pch.hxx">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\Samples.dir\Distribution\cmake_pch.hxx">
       <Filter>Precompile Header File</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\CMakeLists.txt" />
+    <CustomBuild Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Samples\Samples.cmake" />
+    <None Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Samples\Samples.cmake" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Precompile Header File">
-      <UniqueIdentifier>{2C33E5EA-5B70-3015-8DCB-272FB8B769C9}</UniqueIdentifier>
+      <UniqueIdentifier>{5248C2B9-9F0B-3C63-9970-FD163C12D5DD}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{0502A27F-835B-3BA2-B4EE-6615DA2C44BB}</UniqueIdentifier>
+      <UniqueIdentifier>{2E092237-5E3E-31FC-A82A-F4310D6F6C08}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tests">
-      <UniqueIdentifier>{EEC6A1CD-FF8A-3589-A536-B92D3128BAA4}</UniqueIdentifier>
+      <UniqueIdentifier>{1640EDCF-1F20-32E2-9A09-9618C0EC4B22}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tests\BroadPhase">
-      <UniqueIdentifier>{2FA0CAE6-58A9-355E-B8F5-8A121273367F}</UniqueIdentifier>
+      <UniqueIdentifier>{33931D80-3572-3077-85F0-27E44E209AEA}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tests\Character">
-      <UniqueIdentifier>{DD1E3978-9858-33C0-B92F-5884A121FD6C}</UniqueIdentifier>
+      <UniqueIdentifier>{3648D5F5-3E11-3990-8A89-8648F192A69A}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tests\Constraints">
-      <UniqueIdentifier>{CC0D0ECF-D4F9-302C-A082-A048DF21CA00}</UniqueIdentifier>
+      <UniqueIdentifier>{89277712-4024-332A-9598-4F70C09C80D2}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tests\ConvexCollision">
-      <UniqueIdentifier>{76EAFEF6-2E4D-39B6-AB6E-4149CC24E857}</UniqueIdentifier>
+      <UniqueIdentifier>{F319BF0D-C06A-305F-A9B5-91BEB4E419E0}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tests\General">
-      <UniqueIdentifier>{9A00E35B-8FAA-396E-AFB2-F6913233C833}</UniqueIdentifier>
+      <UniqueIdentifier>{7F872BF2-3FEC-34B9-901D-56C4FCB3AAD6}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tests\Rig">
-      <UniqueIdentifier>{29F8BE77-1111-329A-8F40-6B9D9AB71EFB}</UniqueIdentifier>
+      <UniqueIdentifier>{82540308-E00F-3486-BA77-9F094DE4B942}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tests\ScaledShapes">
-      <UniqueIdentifier>{EAD46162-9BE2-3621-8C17-AC73F971D142}</UniqueIdentifier>
+      <UniqueIdentifier>{7C516471-3586-36F7-B329-EE7250BDA80C}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tests\Shapes">
-      <UniqueIdentifier>{E2A764DF-EF61-3551-A382-DA97F90BBB88}</UniqueIdentifier>
+      <UniqueIdentifier>{52832B94-4DBF-3EC4-90B2-2196C3DC5AA0}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tests\SoftBody">
-      <UniqueIdentifier>{CCA2B7A6-6E94-3863-804F-7F8AB4EEFAB0}</UniqueIdentifier>
+      <UniqueIdentifier>{4B73D0F9-5327-3F74-AD24-80054BD686F2}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tests\Tools">
-      <UniqueIdentifier>{6B752895-44E9-37E3-AC69-DF031ED47B75}</UniqueIdentifier>
+      <UniqueIdentifier>{48F53943-1822-3EE1-A2B8-B5138BA9BA09}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tests\Vehicle">
-      <UniqueIdentifier>{B92104FB-7632-3486-B558-F14CB1B3E4B7}</UniqueIdentifier>
+      <UniqueIdentifier>{29DC0748-8016-3EB7-B7B4-B2BB2A90083E}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tests\Water">
-      <UniqueIdentifier>{122D4B1F-8CFE-34C5-B069-A0BD3CB70AE2}</UniqueIdentifier>
+      <UniqueIdentifier>{95EDD0A0-79C4-35A6-A889-570949FB6352}</UniqueIdentifier>
     </Filter>
     <Filter Include="Utils">
-      <UniqueIdentifier>{ACAB2FD4-53DD-31A1-972E-865EBE954F92}</UniqueIdentifier>
+      <UniqueIdentifier>{53D92A9D-351C-34B4-834F-D1F612A640CC}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

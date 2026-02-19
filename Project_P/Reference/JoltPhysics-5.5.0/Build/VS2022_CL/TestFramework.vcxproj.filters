@@ -1,396 +1,396 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\TestFramework.dir\cmake_pch.cxx">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\TestFramework.dir\cmake_pch.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Application\Application.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Application\Application.cpp">
       <Filter>Application</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Application\DebugUI.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Application\DebugUI.cpp">
       <Filter>Application</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\External\Perlin.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\External\Perlin.cpp">
       <Filter>External</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Image\BlitSurface.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Image\BlitSurface.cpp">
       <Filter>Image</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Image\LoadBMP.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Image\LoadBMP.cpp">
       <Filter>Image</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Image\LoadTGA.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Image\LoadTGA.cpp">
       <Filter>Image</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Image\Surface.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Image\Surface.cpp">
       <Filter>Image</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Image\ZoomImage.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Image\ZoomImage.cpp">
       <Filter>Image</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DebugRendererImp.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DebugRendererImp.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\Font.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\Font.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\Renderer.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\Renderer.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\RenderPrimitive.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\RenderPrimitive.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIAnimation.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIAnimation.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIAnimationSlide.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIAnimationSlide.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIButton.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIButton.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UICheckBox.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UICheckBox.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIComboBox.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIComboBox.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIElement.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIElement.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIHorizontalStack.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIHorizontalStack.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIImage.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIImage.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIManager.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIManager.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UISlider.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UISlider.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIStaticText.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIStaticText.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UITextButton.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UITextButton.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIVerticalStack.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIVerticalStack.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Utils\CustomMemoryHook.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Utils\CustomMemoryHook.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Utils\ReadData.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Utils\ReadData.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Input\Win\KeyboardWin.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Input\Win\KeyboardWin.cpp">
       <Filter>Input\Win</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Input\Win\MouseWin.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Input\Win\MouseWin.cpp">
       <Filter>Input\Win</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\ConstantBufferDX12.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\ConstantBufferDX12.cpp">
       <Filter>Renderer\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\FatalErrorIfFailedDX12.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\FatalErrorIfFailedDX12.cpp">
       <Filter>Renderer\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\PipelineStateDX12.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\PipelineStateDX12.cpp">
       <Filter>Renderer\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\RendererDX12.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\RendererDX12.cpp">
       <Filter>Renderer\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\RenderInstancesDX12.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\RenderInstancesDX12.cpp">
       <Filter>Renderer\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\RenderPrimitiveDX12.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\RenderPrimitiveDX12.cpp">
       <Filter>Renderer\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\TextureDX12.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\TextureDX12.cpp">
       <Filter>Renderer\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Utils\AssetStream.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Utils\AssetStream.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Utils\Log.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Utils\Log.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Window\ApplicationWindowWin.cpp">
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Window\ApplicationWindowWin.cpp">
       <Filter>Window</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Application\Application.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Application\Application.h">
       <Filter>Application</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Application\DebugUI.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Application\DebugUI.h">
       <Filter>Application</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Application\EntryPoint.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Application\EntryPoint.h">
       <Filter>Application</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\External\Perlin.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\External\Perlin.h">
       <Filter>External</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\External\stb_truetype.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\External\stb_truetype.h">
       <Filter>External</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Image\BlitSurface.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Image\BlitSurface.h">
       <Filter>Image</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Image\LoadBMP.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Image\LoadBMP.h">
       <Filter>Image</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Image\LoadTGA.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Image\LoadTGA.h">
       <Filter>Image</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Image\Surface.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Image\Surface.h">
       <Filter>Image</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Image\ZoomImage.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Image\ZoomImage.h">
       <Filter>Image</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Input\Keyboard.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Input\Keyboard.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Input\Mouse.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Input\Mouse.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DebugRendererImp.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DebugRendererImp.h">
       <Filter>Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\Font.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\Font.h">
       <Filter>Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\Frustum.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\Frustum.h">
       <Filter>Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\PipelineState.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\PipelineState.h">
       <Filter>Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\PixelShader.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\PixelShader.h">
       <Filter>Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\Renderer.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\Renderer.h">
       <Filter>Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\RenderInstances.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\RenderInstances.h">
       <Filter>Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\RenderPrimitive.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\RenderPrimitive.h">
       <Filter>Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\Texture.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\Texture.h">
       <Filter>Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\VertexShader.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\VertexShader.h">
       <Filter>Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\TestFramework.h" />
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIAnimation.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\TestFramework.h" />
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIAnimation.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIAnimationSlide.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIAnimationSlide.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIButton.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIButton.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UICheckBox.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UICheckBox.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIComboBox.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIComboBox.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIElement.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIElement.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIEventListener.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIEventListener.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIHorizontalStack.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIHorizontalStack.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIImage.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIImage.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIManager.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIManager.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UISlider.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UISlider.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIStaticText.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIStaticText.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UITextButton.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UITextButton.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UITexturedQuad.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UITexturedQuad.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\UI\UIVerticalStack.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\UI\UIVerticalStack.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Utils\CustomMemoryHook.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Utils\CustomMemoryHook.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Utils\AssetStream.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Utils\AssetStream.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Utils\Log.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Utils\Log.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Utils\ReadData.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Utils\ReadData.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Window\ApplicationWindow.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Window\ApplicationWindow.h">
       <Filter>Window</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Input\Win\KeyboardWin.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Input\Win\KeyboardWin.h">
       <Filter>Input\Win</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Input\Win\MouseWin.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Input\Win\MouseWin.h">
       <Filter>Input\Win</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\ConstantBufferDX12.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\ConstantBufferDX12.h">
       <Filter>Renderer\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\CommandQueueDX12.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\CommandQueueDX12.h">
       <Filter>Renderer\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\DescriptorHeapDX12.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\DescriptorHeapDX12.h">
       <Filter>Renderer\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\FatalErrorIfFailedDX12.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\FatalErrorIfFailedDX12.h">
       <Filter>Renderer\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\PipelineStateDX12.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\PipelineStateDX12.h">
       <Filter>Renderer\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\PixelShaderDX12.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\PixelShaderDX12.h">
       <Filter>Renderer\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\RendererDX12.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\RendererDX12.h">
       <Filter>Renderer\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\RenderInstancesDX12.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\RenderInstancesDX12.h">
       <Filter>Renderer\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\RenderPrimitiveDX12.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\RenderPrimitiveDX12.h">
       <Filter>Renderer\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\TextureDX12.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\TextureDX12.h">
       <Filter>Renderer\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\VertexShaderDX12.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Renderer\DX12\VertexShaderDX12.h">
       <Filter>Renderer\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\Window\ApplicationWindowWin.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\Window\ApplicationWindowWin.h">
       <Filter>Window</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Assets\Shaders\DX\VertexConstants.h">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Assets\Shaders\DX\VertexConstants.h">
       <Filter>Assets\Shaders\DX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\TestFramework.dir\Debug\cmake_pch.hxx">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\TestFramework.dir\Debug\cmake_pch.hxx">
       <Filter>Precompile Header File</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\TestFramework.dir\Release\cmake_pch.hxx">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\TestFramework.dir\Release\cmake_pch.hxx">
       <Filter>Precompile Header File</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\TestFramework.dir\Distribution\cmake_pch.hxx">
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\TestFramework.dir\Distribution\cmake_pch.hxx">
       <Filter>Precompile Header File</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\CMakeLists.txt" />
+    <CustomBuild Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Build\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Assets\Shaders\DX\FontVertexShader.hlsl">
+    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Assets\Shaders\DX\FontVertexShader.hlsl">
       <Filter>Assets\Shaders\DX</Filter>
     </FXCompile>
-    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Assets\Shaders\DX\LineVertexShader.hlsl">
+    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Assets\Shaders\DX\LineVertexShader.hlsl">
       <Filter>Assets\Shaders\DX</Filter>
     </FXCompile>
-    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Assets\Shaders\DX\TriangleDepthVertexShader.hlsl">
+    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Assets\Shaders\DX\TriangleDepthVertexShader.hlsl">
       <Filter>Assets\Shaders\DX</Filter>
     </FXCompile>
-    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Assets\Shaders\DX\TriangleVertexShader.hlsl">
+    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Assets\Shaders\DX\TriangleVertexShader.hlsl">
       <Filter>Assets\Shaders\DX</Filter>
     </FXCompile>
-    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Assets\Shaders\DX\UIVertexShader.hlsl">
+    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Assets\Shaders\DX\UIVertexShader.hlsl">
       <Filter>Assets\Shaders\DX</Filter>
     </FXCompile>
-    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Assets\Shaders\DX\FontPixelShader.hlsl">
+    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Assets\Shaders\DX\FontPixelShader.hlsl">
       <Filter>Assets\Shaders\DX</Filter>
     </FXCompile>
-    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Assets\Shaders\DX\LinePixelShader.hlsl">
+    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Assets\Shaders\DX\LinePixelShader.hlsl">
       <Filter>Assets\Shaders\DX</Filter>
     </FXCompile>
-    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Assets\Shaders\DX\TriangleDepthPixelShader.hlsl">
+    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Assets\Shaders\DX\TriangleDepthPixelShader.hlsl">
       <Filter>Assets\Shaders\DX</Filter>
     </FXCompile>
-    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Assets\Shaders\DX\TrianglePixelShader.hlsl">
+    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Assets\Shaders\DX\TrianglePixelShader.hlsl">
       <Filter>Assets\Shaders\DX</Filter>
     </FXCompile>
-    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Assets\Shaders\DX\UIPixelShader.hlsl">
+    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Assets\Shaders\DX\UIPixelShader.hlsl">
       <Filter>Assets\Shaders\DX</Filter>
     </FXCompile>
-    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Assets\Shaders\DX\UIPixelShaderUntextured.hlsl">
+    <FXCompile Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\Assets\Shaders\DX\UIPixelShaderUntextured.hlsl">
       <Filter>Assets\Shaders\DX</Filter>
     </FXCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\TestFramework\TestFramework.cmake" />
+    <None Include="C:\Git\Lies_Of_P\Project_P\Engine\JoltEngine\JoltPhysics-5.5.0\TestFramework\TestFramework.cmake" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Application">
-      <UniqueIdentifier>{783FC238-3208-3A0A-8849-DE2021A1D80A}</UniqueIdentifier>
+      <UniqueIdentifier>{F620F74B-7A49-3E1B-B8DD-229A0405652A}</UniqueIdentifier>
     </Filter>
     <Filter Include="Assets">
-      <UniqueIdentifier>{DC1A8A37-E9F2-30C7-822D-5F85C9CBF1F4}</UniqueIdentifier>
+      <UniqueIdentifier>{99BA1606-4B0C-3537-B8FB-6E805FD4C6F9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Assets\Shaders">
-      <UniqueIdentifier>{27A9F5ED-80B1-3C20-91F4-8095A765449A}</UniqueIdentifier>
+      <UniqueIdentifier>{AAB28249-037E-3CDC-AB05-335E46241203}</UniqueIdentifier>
     </Filter>
     <Filter Include="Assets\Shaders\DX">
-      <UniqueIdentifier>{F1713FA8-6F77-34F2-8352-A23E12AA1C9C}</UniqueIdentifier>
+      <UniqueIdentifier>{5A7822A7-BD9A-345E-9D5C-CCC50588C21F}</UniqueIdentifier>
     </Filter>
     <Filter Include="External">
-      <UniqueIdentifier>{A80ACA25-3B6C-33C3-9D26-36B761FCC0EE}</UniqueIdentifier>
+      <UniqueIdentifier>{01B29890-990A-35D7-A462-3154F5140D7C}</UniqueIdentifier>
     </Filter>
     <Filter Include="Image">
-      <UniqueIdentifier>{0507FEF1-0C22-3946-B160-C0DA28068E39}</UniqueIdentifier>
+      <UniqueIdentifier>{FE494BCB-6F8F-3E5C-AF34-8A2C0B352E2C}</UniqueIdentifier>
     </Filter>
     <Filter Include="Input">
-      <UniqueIdentifier>{AF050E56-2FB7-3DE3-A690-663B705D7077}</UniqueIdentifier>
+      <UniqueIdentifier>{7BF7DFC1-50BF-362E-B1AB-719BFDF0C89D}</UniqueIdentifier>
     </Filter>
     <Filter Include="Input\Win">
-      <UniqueIdentifier>{E4233A2E-A10E-394F-881D-4F9300803CB6}</UniqueIdentifier>
+      <UniqueIdentifier>{ADF14A59-8A19-39F9-91AD-DF9EB13572B7}</UniqueIdentifier>
     </Filter>
     <Filter Include="Precompile Header File">
-      <UniqueIdentifier>{2C33E5EA-5B70-3015-8DCB-272FB8B769C9}</UniqueIdentifier>
+      <UniqueIdentifier>{5248C2B9-9F0B-3C63-9970-FD163C12D5DD}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer">
-      <UniqueIdentifier>{1C2DDEB9-FEA0-388A-85F7-FC939D854770}</UniqueIdentifier>
+      <UniqueIdentifier>{2D77037B-0967-3656-B368-6EAA019D8237}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer\DX12">
-      <UniqueIdentifier>{39977710-7D25-39FB-8F82-E9D3E87186C5}</UniqueIdentifier>
+      <UniqueIdentifier>{00BBF711-58A7-3A4E-96CD-D1FEC10361E9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{0502A27F-835B-3BA2-B4EE-6615DA2C44BB}</UniqueIdentifier>
+      <UniqueIdentifier>{2E092237-5E3E-31FC-A82A-F4310D6F6C08}</UniqueIdentifier>
     </Filter>
     <Filter Include="UI">
-      <UniqueIdentifier>{33EA1044-C83D-3434-99C3-2D6DF63B7B65}</UniqueIdentifier>
+      <UniqueIdentifier>{A7F25963-8516-3667-B651-EB87665F1A55}</UniqueIdentifier>
     </Filter>
     <Filter Include="Utils">
-      <UniqueIdentifier>{ACAB2FD4-53DD-31A1-972E-865EBE954F92}</UniqueIdentifier>
+      <UniqueIdentifier>{53D92A9D-351C-34B4-834F-D1F612A640CC}</UniqueIdentifier>
     </Filter>
     <Filter Include="Window">
-      <UniqueIdentifier>{205BEEE7-66DA-39E5-A014-44F9BC712E2C}</UniqueIdentifier>
+      <UniqueIdentifier>{E48048E3-A85B-3E97-8E2A-9C03FC4168A3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

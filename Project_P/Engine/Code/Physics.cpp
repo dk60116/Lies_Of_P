@@ -1,7 +1,94 @@
 #include "epch.h"
 #include "Physics.h"
 
+namespace Engine
+{
+	class CPhysics::BroadPhaseLayerInterfaceImpl final : public BroadPhaseLayerInterface
+	{
+	public:
+		BroadPhaseLayerInterfaceImpl()
+		{
+			mObjectToBroadPhase[Layers::NON_MOVING] = BroadPhaseLayers::NON_MOVING;
+			mObjectToBroadPhase[Layers::MOVING] = BroadPhaseLayers::MOVING;
+			mObjectToBroadPhase[Layers::SENSOR] = BroadPhaseLayers::MOVING;
+		}
+
+		uint GetNumBroadPhaseLayers() const override
+		{
+			return BroadPhaseLayers::NUM_BP_LAYERS;
+		}
+
+		BroadPhaseLayer GetBroadPhaseLayer(ObjectLayer inLayer) const override
+		{
+			return mObjectToBroadPhase[inLayer];
+		}
+
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+		const char* GetBroadPhaseLayerName(BroadPhaseLayer inLayer) const override
+		{
+			switch ((uint)inLayer)
+			{
+			case 0: return "NON_MOVING";
+			case 1: return "MOVING";
+			default: return "UNKNOWN";
+			}
+		}
+#endif
+
+	private:
+		BroadPhaseLayer mObjectToBroadPhase[Layers::NUM_LAYERS];
+	};
+
+	class CPhysics::ObjectVsBroadPhaseLayerFilterImpl final : public ObjectVsBroadPhaseLayerFilter
+	{
+	public:
+		_bool ShouldCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2) const override
+		{
+			switch (inLayer1)
+			{
+			case Layers::NON_MOVING:
+				return inLayer2 == BroadPhaseLayers::MOVING;
+			case Layers::MOVING:
+				return true;
+			case Layers::SENSOR:
+				return true;
+
+			default:
+				return false;
+			}
+		}
+	};
+
+	class CPhysics::ObjectLayerPairFilterImpl final : public ObjectLayerPairFilter
+	{
+	public:
+		_bool ShouldCollide(ObjectLayer inObject1, ObjectLayer inObject2) const override
+		{
+			if (inObject1 == Layers::SENSOR && inObject2 == Layers::SENSOR)
+				return false;
+
+			if (inObject1 == Layers::NON_MOVING)
+				return (inObject2 == Layers::MOVING) || (inObject2 == Layers::SENSOR);
+
+			if (inObject1 == Layers::MOVING)
+				return (inObject2 == Layers::NON_MOVING) || (inObject2 == Layers::MOVING) || (inObject2 == Layers::SENSOR);
+
+			if (inObject1 == Layers::SENSOR)
+				return (inObject2 == Layers::NON_MOVING) || (inObject2 == Layers::MOVING);
+
+			return false;
+		}
+	};
+}
+
+
 CPhysics::CPhysics()
+	: m_bJoltInitialized(false)
+	, m_pTempAllocator(nullptr)
+	, m_pJobSystem(nullptr)
+	, m_pBPLayerInterface(nullptr)
+	, m_pObjectVsBPLayerFilter(nullptr)
+	, m_pObjectLayerPairFilter(nullptr)
 {
 }
 
@@ -14,6 +101,66 @@ CPhysics& CPhysics::GetInstance()
 	static CPhysics inst;
 
 	return inst;
+}
+
+HRESULT CPhysics::Initialize()
+{
+	if (m_bJoltInitialized)
+		return S_OK;
+
+	RegisterDefaultAllocator();
+
+	if (Factory::sInstance == nullptr)
+		Factory::sInstance = new Factory();
+
+	RegisterTypes();
+
+	if (!m_pBPLayerInterface)      
+		m_pBPLayerInterface = new BroadPhaseLayerInterfaceImpl();
+	if (!m_pObjectVsBPLayerFilter) 
+		m_pObjectVsBPLayerFilter = new ObjectVsBroadPhaseLayerFilterImpl();
+	if (!m_pObjectLayerPairFilter) 
+		m_pObjectLayerPairFilter = new ObjectLayerPairFilterImpl();
+
+	if (!m_pTempAllocator)
+	{
+		const uint tempSize = 16 * 1024 * 1024;
+		m_pTempAllocator = new TempAllocatorImpl(tempSize);
+	}
+
+	if (!m_pJobSystem)
+	{
+		uint hw = std::thread::hardware_concurrency();
+		if (hw == 0) hw = 4;
+		uint numThreads = (hw > 1) ? (hw - 1) : 1;
+
+		m_pJobSystem = new JobSystemThreadPool(cMaxPhysicsJobs, cMaxPhysicsBarriers, numThreads);
+	}
+
+	const uint cMaxBodies = 10240;
+	const uint cNumBodyMutexes = 0;     
+	const uint cMaxBodyPairs = 10240;
+	const uint cMaxContactConstraints = 10240;
+
+	m_PhysicsSystem.Init(
+		cMaxBodies,
+		cNumBodyMutexes,
+		cMaxBodyPairs,
+		cMaxContactConstraints,
+		*m_pBPLayerInterface,
+		*m_pObjectVsBPLayerFilter,
+		*m_pObjectLayerPairFilter
+	);
+
+	m_PhysicsSystem.SetGravity(Vec3(0.f, -9.81f, 0.f));
+	m_PhysicsSystem.OptimizeBroadPhase();
+
+	m_bJoltInitialized = true;
+	return S_OK;
+}
+
+void CPhysics::Release()
+{
 }
 
 vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray)

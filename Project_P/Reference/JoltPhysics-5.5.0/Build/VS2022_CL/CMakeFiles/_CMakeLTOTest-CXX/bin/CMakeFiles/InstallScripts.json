@@ -1,7 +1,7 @@
 {
 	"InstallScripts" : 
 	[
-		"C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/cmake_install.cmake"
+		"C:/Git/Lies_Of_P/Project_P/Engine/JoltEngine/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

@@ -85,6 +85,30 @@ void CComponent::OnMouseUp()
 {
 }
 
+void CComponent::OnCollisionEnter(CCollider* _other)
+{
+}
+
+void CComponent::OnCollisionStay(CCollider* _other)
+{
+}
+
+void CComponent::OnCollisionExit(CCollider* _other)
+{
+}
+
+void CComponent::OnTriggerEnter(CCollider* _other)
+{
+}
+
+void CComponent::OnTriggerStay(CCollider* _other)
+{
+}
+
+void CComponent::OnTriggerExit(CCollider* _other)
+{
+}
+
 void CComponent::OnPreCull_Editor()
 {
 }

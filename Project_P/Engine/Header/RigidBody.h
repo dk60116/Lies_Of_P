@@ -1,5 +1,12 @@
 #pragma once
-#include "Component.h"\
+#include "Component.h"
+
+#include <Jolt/Physics/Body/BodyInterface.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
+#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Physics/Body/BodyLock.h>
 
 using namespace JPH;
 
@@ -28,16 +35,11 @@ public:
 	void OnDestroy() override;
 
 public:
+	static void BuildCompoundShapes(const list<CCollider*>& _colliders, RefConst<Shape>& _outBodyCompound, RefConst<Shape>& _outSensorCompound);
+
+public:
 	const BodyID GetBodyID() const;
 	const BodyID GetSensorBodyID() const;
-
-	void MarkBodyDirty();
-
-private:
-	void RebuildBodiesIfNeeded();
-	void DestroyBodies();
-
-	const Shape* BuildCompoundShape(bool trigger_only);
 
 public:
 	void AddCollider(CCollider* _collider);

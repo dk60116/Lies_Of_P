@@ -7,6 +7,56 @@
 #include <Jolt/Physics/Body/BodyInterface.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 
+namespace
+{
+    // =========================
+    // TODO: 엔진 수학 타입 변환
+    // =========================
+    inline Vec3 ToJPHVec3(const vector3& v)
+    {
+        return Vec3(v.x, v.y, v.z);
+    }
+
+    // 만약 quaternion 타입이 있다면 여기서 변환해 주세요.
+    // inline Quat ToJPHQuat(const quaternion& q) { return Quat(q.x, q.y, q.z, q.w); }
+
+    inline void ReleaseShapePtr(const Shape*& s)
+    {
+        if (s)
+        {
+            s->Release();
+            s = nullptr;
+        }
+    }
+
+    inline PhysicsSystem& GetPhysicsSystem()
+    {
+        // 예: return CPhysics::GetInstance().GetJoltSystem();
+        extern PhysicsSystem& GGetJoltPhysicsSystem(); 
+        return GGetJoltPhysicsSystem();
+    }
+
+    inline BodyInterface& GetBodyInterface()
+    {
+        return GetPhysicsSystem().GetBodyInterface();
+    }
+
+    inline ObjectLayer GetDefaultObjectLayer(_bool /*isSensor*/, _bool /*isKinematic*/)
+    {
+        return ObjectLayer(0);
+    }
+
+    inline EMotionType GetMotionType(bool isKinematic)
+    {
+        return isKinematic ? EMotionType::Kinematic : EMotionType::Dynamic;
+    }
+
+    inline EActivation ActivateMode()
+    {
+        return EActivation::Activate;
+    }
+}
+
 CRigidBody::CRigidBody()
     : m_lColliderList({})
     , m_bBodyDirty(false)
@@ -35,6 +85,9 @@ CComponent* CRigidBody::Clone() const
 {
     CRigidBody* clone = new CRigidBody();
 
+    clone->m_bKinematic = m_bKinematic;
+    clone->m_fMass = m_fMass;
+
     return clone;
 }
 
@@ -56,35 +109,15 @@ HRESULT CRigidBody::Initialize()
 
 void CRigidBody::Awake()
 {
-    CColliderManager::GetInstance().RegisterRigidBody(this);
-
     auto& componentList = m_pGameObject->Get_ComponentList();
 
     for (TRAVERSAL_ITER(componentList, it))
         if (auto c = dynamic_cast<CCollider*>(*it))
             AddCollider(c);
-
-    MarkBodyDirty();
 }
 
 void CRigidBody::FixedUpdate()
 {
-    RebuildBodiesIfNeeded();
-
-    if (m_bHasSensorBody)
-    {
-        auto& sys = CColliderManager::GetInstance().GetSystem();
-        BodyInterface& bi = sys.GetBodyInterface();
-
-        auto& tr = *m_pGameObject->Get_Transform();
-        const vector3 pos = tr.Get_Position();
-        const quaternion rot = tr.Get_Quaternion();
-
-        const JPH::RVec3 jpos(pos.x, pos.y, pos.z);
-        const JPH::Quat  jrot(rot.x, rot.y, rot.z, rot.w);
-
-        bi.SetPositionAndRotation(m_iSensorBodyID, jpos, jrot, EActivation::DontActivate);
-    }
 }
 
 void CRigidBody::OnCollisionEnter(CCollider* _other)
@@ -126,124 +159,61 @@ void CRigidBody::OnDestroy()
         m_pSensorCompoundShape->Release();
         m_pSensorCompoundShape = nullptr; 
     }
-
-    CColliderManager::GetInstance().UnregisterRigidBody(this);
 }
-
-const BodyID CRigidBody::GetBodyID() const
+void CRigidBody::BuildCompoundShapes(const list<CCollider*>& _colliders, RefConst<Shape>& _outBodyCompound, RefConst<Shape>& _outSensorCompound)
 {
-    return m_iBodyID;
+    StaticCompoundShapeSettings bodySettings;
+    StaticCompoundShapeSettings sensorSettings;
+
+    bool hasBodyChild = false;
+    bool hasSensorChild = false;
+
+    for (CCollider* col : _colliders)
+    {
+        if (!col)
+            continue;
+
+        const Shape* childShape = col->GetShape(); // <- CCollider에서 dirty 처리/shape 생성이 되어 있어야 함
+        if (!childShape)
+            continue;
+
+        const Vec3 localCenter = ToJPHVec3(col->GetCenter());
+        const Quat localRot = Quat::sIdentity(); // 필요하면 콜라이더 로컬 회전도 지원
+
+        if (col->IsTrigger())
+        {
+            sensorSettings.AddShape(localCenter, localRot, childShape);
+            hasSensorChild = true;
+        }
+        else
+        {
+            bodySettings.AddShape(localCenter, localRot, childShape);
+            hasBodyChild = true;
+        }
+    }
+
+    _outBodyCompound = nullptr;
+    _outSensorCompound = nullptr;
+
+    if (hasBodyChild)
+    {
+        ShapeSettings::ShapeResult r = bodySettings.Create();
+        if (!r.HasError())
+            _outBodyCompound = r.Get(); 
+    }
+
+    if (hasSensorChild)
+    {
+        ShapeSettings::ShapeResult r = sensorSettings.Create();
+        if (!r.HasError())
+            _outSensorCompound = r.Get();
+    }
 }
 
 const BodyID CRigidBody::GetSensorBodyID() const
 {
     return m_iSensorBodyID;
 }
-
-void CRigidBody::MarkBodyDirty()
-{
-    m_bBodyDirty = true;
-}
-
-void CRigidBody::RebuildBodiesIfNeeded()
-{
-    if (!m_bBodyDirty)
-        return;
-
-    auto& sys = CColliderManager::GetInstance().GetSystem();
-    BodyInterface& bi = sys.GetBodyInterface();
-
-    DestroyBodies();
-
-    if (m_pCompoundShape) 
-    { 
-        m_pCompoundShape->Release();
-        m_pCompoundShape = nullptr;
-    }
-    if (m_pSensorCompoundShape) 
-        m_pSensorCompoundShape->Release(); m_pSensorCompoundShape = nullptr;
-
-    m_pCompoundShape = BuildCompoundShape(false);
-    m_pSensorCompoundShape = BuildCompoundShape(true);
-
-    CTransform* tr = m_pGameObject->Get_Transform();
-    const vector3 pos = tr->Get_Position();
-    const quaternion rot = tr->Get_Quaternion();
-
-    const RVec3 jpos(pos.x, pos.y, pos.z);
-    const Quat  jrot(rot.x, rot.y, rot.z, rot.w);
-
-    if (m_pCompoundShape)
-    {
-        const EMotionType motion = m_bKinematic ? JPH::EMotionType::Kinematic : JPH::EMotionType::Dynamic;
-        const ObjectLayer layer = m_bKinematic ? Layers::MOVING : Layers::MOVING;
-
-        BodyCreationSettings bcs(m_pCompoundShape, jpos, jrot, motion, layer);
-
-        Body* body = bi.CreateBody(bcs);
-        m_iBodyID = body->GetID();
-        body->SetUserData(reinterpret_cast<uint64_t>(this));
-
-        bi.AddBody(m_iBodyID, JPH::EActivation::Activate);
-        m_bHasBody = true;
-    }
-
-    if (m_pSensorCompoundShape)
-    {
-        BodyCreationSettings sbcs(m_pSensorCompoundShape, jpos, jrot, EMotionType::Kinematic, Layers::SENSOR);
-        sbcs.mIsSensor = true; 
-
-        Body* sbody = bi.CreateBody(sbcs);
-        m_iSensorBodyID = sbody->GetID();
-        sbody->SetUserData(reinterpret_cast<uint64_t>(this));
-
-        bi.AddBody(m_iSensorBodyID, JPH::EActivation::Activate);
-        m_bHasSensorBody = true;
-    }
-
-    m_bBodyDirty = false;
-}
-
-void CRigidBody::DestroyBodies()
-{
-}
-
-const Shape* CRigidBody::BuildCompoundShape(bool trigger_only)
-{
-    StaticCompoundShapeSettings compound;
-    _bool added = false;
-
-    for (CCollider* c : m_lColliderList)
-    {
-        if (!c) 
-            continue;
-        if (c->IsTrigger() != trigger_only) 
-            continue;
-
-        c->BuildShapeIfNeeded();
-
-        const Shape* s = c->GetShape();
-        if (!s)
-            continue;
-
-        compound.AddShape(Vec3::sZero(), Quat::sIdentity(), s);
-        added = true;
-    }
-
-    if (!added)
-        return nullptr;
-
-    auto res = compound.Create();
-    if (res.HasError())
-        return nullptr;
-
-    Ref<Shape> ref = res.Get();
-    const Shape* shape = ref.GetPtr();
-    shape->AddRef();
-
-    return shape;
-}
-
 void CRigidBody::AddCollider(CCollider* _collider)
 {
     auto it = find(m_lColliderList.begin(), m_lColliderList.end(), _collider);
@@ -256,8 +226,6 @@ void CRigidBody::AddCollider(CCollider* _collider)
         m_lColliderList.push_back(_collider);
         m_lColliderList.back()->AddRef();
     }
-
-    MarkBodyDirty();
 }
 
 void CRigidBody::RemvoeCollier(CCollider* _collider)
@@ -272,6 +240,4 @@ void CRigidBody::RemvoeCollier(CCollider* _collider)
         m_lColliderList.remove(_collider);
         Safe_Release(_collider);
     }
-
-    MarkBodyDirty();
 }
