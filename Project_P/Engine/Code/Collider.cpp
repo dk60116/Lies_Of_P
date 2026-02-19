@@ -43,8 +43,8 @@ void CCollider::ReleaseShape()
 
 void CCollider::OnDestroy()
 {
-	if (auto rig = m_pGameObject->GetComponent<CRigidBody>())
-		rig->RemvoeCollier(this);
+	if (m_pRigidBody)
+		m_pRigidBody->RemvoeCollier(this);
 
 	ReleaseShape();
 }
@@ -73,5 +73,6 @@ void CCollider::SetCenter(const vector3& center)
 
 const Shape* CCollider::GetShape()
 {
+	BuildShapeIfNeeded();
 	return m_pShape;
 }

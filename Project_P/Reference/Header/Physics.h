@@ -53,6 +53,19 @@ public:
 	void Release();
 
 public:
+	void Tick(_float _deltaSeconds);
+	void Step(const _float _fixedDeltaSeconds);
+
+public:
+	void  SetFixedDeltaTime(const _float _fixedDt);  
+	_float GetFixedDeltaTime() const;
+
+	void  SetMaxSubSteps(const _uint _maxSubSteps); 
+	void  ResetStepper();
+
+public:
+	PhysicsSystem& GetPhysicsSystem();
+
 	vector<RAYCASTHIT> Raycast(const Ray& _ray);
 
 private:
@@ -77,6 +90,12 @@ private:
 	BroadPhaseLayerInterfaceImpl* m_pBPLayerInterface;
 	ObjectVsBroadPhaseLayerFilterImpl* m_pObjectVsBPLayerFilter;
 	ObjectLayerPairFilterImpl* m_pObjectLayerPairFilter;
+
+	_float m_fFixedDeltaTime;   
+	_float m_fAccumulator;    
+	_float m_fMaxFrameDelta;    
+	_uint m_iMaxSubSteps;
+	_int m_iCollisionSteps;
 };
 
 NS_END

@@ -8,6 +8,7 @@ CSceneManager::CSceneManager()
 	, m_bLoading(false)
 	, m_pEditorCamObj(nullptr)
 	, m_pEditorCamera(nullptr)
+	, m_sTimeSetting({})
 	, m_sLightSetting({})
 {
 }
@@ -151,6 +152,11 @@ void CSceneManager::LoadComplete()
 CCamera* CSceneManager::Get_EditorCamera()
 {
 	return m_pCrtScene->Get_EditorCamera();
+}
+
+const CSceneManager::TimeSettings& CSceneManager::Get_TimeSetting()
+{
+	return m_sTimeSetting;
 }
 
 const CSceneManager::LightSettings& CSceneManager::Get_LightSetting()

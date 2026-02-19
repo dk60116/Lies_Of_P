@@ -45,6 +45,16 @@ public:
 	void AddCollider(CCollider* _collider);
 	void RemvoeCollier(CCollider* _collider);
 
+public:
+	void MarkBodyDirty();
+
+private:
+	void RebuildBodiesIfDirty();
+	void DestroyBodies();
+
+	void SyncKinematicToJolt();
+	void SyncDynamicFromJolt();
+
 private:
 	list<CCollider*> m_lColliderList;
 

@@ -9,51 +9,29 @@
 
 namespace
 {
-    // =========================
-    // TODO: 엔진 수학 타입 변환
-    // =========================
-    inline Vec3 ToJPHVec3(const vector3& v)
+    inline Vec3 ToJPHVec3(const vector3& v) { return Vec3(v.x, v.y, v.z); }
+
+    inline void DecomposeWorldMatrix(const _matrix& m, Vec3& outPos, Quat& outRot)
     {
-        return Vec3(v.x, v.y, v.z);
+        XMVECTOR s, r, t;
+        XMMatrixDecompose(&s, &r, &t, m);
+        XMFLOAT3 p;
+        XMStoreFloat3(&p, t);
+        outPos = Vec3(p.x, p.y, p.z);
+
+        XMFLOAT4 q;
+        XMStoreFloat4(&q, r);
+        outRot = Quat(q.x, q.y, q.z, q.w);
     }
 
-    // 만약 quaternion 타입이 있다면 여기서 변환해 주세요.
-    // inline Quat ToJPHQuat(const quaternion& q) { return Quat(q.x, q.y, q.z, q.w); }
-
-    inline void ReleaseShapePtr(const Shape*& s)
+    inline PhysicsSystem& GetPS()
     {
-        if (s)
-        {
-            s->Release();
-            s = nullptr;
-        }
+        return CPhysics::GetInstance().GetPhysicsSystem();
     }
 
-    inline PhysicsSystem& GetPhysicsSystem()
+    inline BodyInterface& GetBI()
     {
-        // 예: return CPhysics::GetInstance().GetJoltSystem();
-        extern PhysicsSystem& GGetJoltPhysicsSystem(); 
-        return GGetJoltPhysicsSystem();
-    }
-
-    inline BodyInterface& GetBodyInterface()
-    {
-        return GetPhysicsSystem().GetBodyInterface();
-    }
-
-    inline ObjectLayer GetDefaultObjectLayer(_bool /*isSensor*/, _bool /*isKinematic*/)
-    {
-        return ObjectLayer(0);
-    }
-
-    inline EMotionType GetMotionType(bool isKinematic)
-    {
-        return isKinematic ? EMotionType::Kinematic : EMotionType::Dynamic;
-    }
-
-    inline EActivation ActivateMode()
-    {
-        return EActivation::Activate;
+        return GetPS().GetBodyInterface();
     }
 }
 
@@ -104,20 +82,24 @@ HRESULT CRigidBody::Initialize()
         }
     }
 
+    for (TRAVERSAL_ITER(componentList, it))
+    {
+        if (auto c = dynamic_cast<CCollider*>(*it))
+            AddCollider(c);
+    }
+
     return S_OK;
 }
 
 void CRigidBody::Awake()
 {
-    auto& componentList = m_pGameObject->Get_ComponentList();
-
-    for (TRAVERSAL_ITER(componentList, it))
-        if (auto c = dynamic_cast<CCollider*>(*it))
-            AddCollider(c);
+    MarkBodyDirty();
+    RebuildBodiesIfDirty();
 }
 
 void CRigidBody::FixedUpdate()
 {
+    RebuildBodiesIfDirty();
 }
 
 void CRigidBody::OnCollisionEnter(CCollider* _other)
@@ -173,12 +155,12 @@ void CRigidBody::BuildCompoundShapes(const list<CCollider*>& _colliders, RefCons
         if (!col)
             continue;
 
-        const Shape* childShape = col->GetShape(); // <- CCollider에서 dirty 처리/shape 생성이 되어 있어야 함
+        const Shape* childShape = col->GetShape();
         if (!childShape)
             continue;
 
         const Vec3 localCenter = ToJPHVec3(col->GetCenter());
-        const Quat localRot = Quat::sIdentity(); // 필요하면 콜라이더 로컬 회전도 지원
+        const Quat localRot = Quat::sIdentity();
 
         if (col->IsTrigger())
         {
@@ -240,4 +222,84 @@ void CRigidBody::RemvoeCollier(CCollider* _collider)
         m_lColliderList.remove(_collider);
         Safe_Release(_collider);
     }
+}
+
+void CRigidBody::MarkBodyDirty()
+{
+}
+
+void CRigidBody::RebuildBodiesIfDirty()
+{
+    if (!m_bBodyDirty)
+        return;
+
+    DestroyBodies();
+
+    RefConst<Shape> bodyCompound;
+    RefConst<Shape> sensorCompound;
+    BuildCompoundShapes(m_lColliderList, bodyCompound, sensorCompound);
+
+    Vec3 pos;
+    Quat rot;
+    DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
+
+    // --- 일반 바디 생성 ---
+    if (bodyCompound != nullptr)
+    {
+        // 보관용 raw ptr(refcount)
+        m_pCompoundShape = bodyCompound.GetPtr();
+        m_pCompoundShape->AddRef();
+
+        const EMotionType motion = m_bKinematic ? EMotionType::Kinematic : EMotionType::Dynamic;
+        const ObjectLayer layer = Layers::MOVING;
+
+        BodyCreationSettings settings(m_pCompoundShape, pos, rot, motion, layer);
+
+        if (!m_bKinematic)
+        {
+            settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+            settings.mMassPropertiesOverride.mMass = m_fMass;
+        }
+
+        Body* body = GetBI().CreateBody(settings);
+        m_iBodyID = body->GetID();
+        m_bHasBody = true;
+
+        GetBI().SetUserData(m_iBodyID, (uint64)this);
+
+        GetBI().AddBody(m_iBodyID, EActivation::Activate);
+    }
+
+    if (sensorCompound != nullptr)
+    {
+        m_pSensorCompoundShape = sensorCompound.GetPtr();
+        m_pSensorCompoundShape->AddRef();
+
+        const EMotionType motion = m_bKinematic ? EMotionType::Kinematic : EMotionType::Dynamic;
+        const ObjectLayer layer = Layers::SENSOR;
+
+        BodyCreationSettings settings(m_pSensorCompoundShape, pos, rot, motion, layer);
+        settings.mIsSensor = true;
+
+        Body* body = GetBI().CreateBody(settings);
+        m_iSensorBodyID = body->GetID();
+        m_bHasSensorBody = true;
+
+        GetBI().SetUserData(m_iSensorBodyID, (uint64)this);
+        GetBI().AddBody(m_iSensorBodyID, EActivation::Activate);
+    }
+
+    m_bBodyDirty = false;
+}
+
+void CRigidBody::DestroyBodies()
+{
+}
+
+void CRigidBody::SyncKinematicToJolt()
+{
+}
+
+void CRigidBody::SyncDynamicFromJolt()
+{
 }

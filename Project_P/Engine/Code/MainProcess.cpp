@@ -84,6 +84,8 @@ void CMainProcess::Update_MainApp()
 
     CTime::GetInstance().Update();
     CInput::GetInstance().Update();
+    CPhysics::GetInstance().SetFixedDeltaTime(CSceneManager::GetInstance().Get_TimeSetting().fixedTimeStep);
+    CPhysics::GetInstance().Tick(DELTA_TIME);
 
     CGraphicDevice& graphicDev = CGraphicDevice::GetInstance();
 
@@ -117,5 +119,6 @@ void CMainProcess::Update_MainApp()
 
 void CMainProcess::Release_MainApp()
 {
+    CPhysics::GetInstance().Release();
     CDebug::GetInstance().Release();
 }

@@ -12,6 +12,16 @@ class ENGINE_DLL CSceneManager final
 public:
 	enum shadowQualityOptions { Low, Middle, High, SuperHigh, Ultra };
 
+	struct TimeSettings
+	{
+		_float fixedTimeStep = 0.02f;
+		_float timeSclae = 1.f;
+	};
+
+	struct PhysicsSettings
+	{
+	};
+
 	struct LightSettings
 	{
 		shadowQualityOptions shadowQuality = SuperHigh;
@@ -37,6 +47,7 @@ public:
 	class CCamera* Get_EditorCamera();
 
 public:
+	const TimeSettings& Get_TimeSetting();
 	const LightSettings& Get_LightSetting();
 	void Set_ShadowQuality(const shadowQualityOptions option);
 
@@ -51,6 +62,7 @@ private:
 	class CEditorCamera* m_pEditorCamera;
 
 private:
+	TimeSettings m_sTimeSetting;
 	LightSettings m_sLightSetting;
 };
 

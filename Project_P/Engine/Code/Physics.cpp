@@ -107,12 +107,16 @@ CPhysics::CPhysics()
 	, m_pBPLayerInterface(nullptr)
 	, m_pObjectVsBPLayerFilter(nullptr)
 	, m_pObjectLayerPairFilter(nullptr)
+	, m_fFixedDeltaTime(1.0f / 60.0f)
+	, m_fAccumulator(0.0f)
+	, m_fMaxFrameDelta(0.25f)
+	, m_iMaxSubSteps(8)
+	, m_iCollisionSteps(1)
 {
 }
 
 CPhysics::~CPhysics()
 {
-	Release();
 }
 
 CPhysics& CPhysics::GetInstance()
@@ -152,7 +156,7 @@ HRESULT CPhysics::Initialize()
 
 	if (!m_pJobSystem)
 	{
-		uint hw = std::thread::hardware_concurrency();
+		uint hw = thread::hardware_concurrency();
 		if (hw == 0) hw = 4;
 		uint numThreads = (hw > 1) ? (hw - 1) : 1;
 
@@ -228,6 +232,77 @@ void CPhysics::Release()
 	m_bJoltInitialized = false;
 }
 
+void CPhysics::Tick(_float _deltaSeconds)
+{
+	if (!m_bJoltInitialized)
+		return;
+
+	if (_deltaSeconds <= 0.0f)
+		return;
+
+	if (_deltaSeconds > m_fMaxFrameDelta)
+		_deltaSeconds = m_fMaxFrameDelta;
+
+	m_fAccumulator += _deltaSeconds;
+
+	_uint steps = 0;
+	while (m_fAccumulator >= m_fFixedDeltaTime && steps < m_iMaxSubSteps)
+	{
+		Step(m_fFixedDeltaTime);
+		m_fAccumulator -= m_fFixedDeltaTime;
+		++steps;
+	}
+
+	if (steps == m_iMaxSubSteps)
+		m_fAccumulator = 0.0f;
+}
+
+void CPhysics::Step(const _float _fixedDeltaSeconds)
+{
+	if (!m_bJoltInitialized)
+		return;
+
+	if (_fixedDeltaSeconds <= 0.0f)
+		return;
+
+	const EPhysicsUpdateError err =
+		m_PhysicsSystem.Update((_float)_fixedDeltaSeconds, m_iCollisionSteps, m_pTempAllocator, m_pJobSystem);
+
+	if (err != EPhysicsUpdateError::None)
+	{
+		OutputDebugStringA("Jolt PhysicsSystem::Update error\n");
+	}
+}
+
+void CPhysics::SetFixedDeltaTime(const _float _fixedDt)
+{
+	if (_fixedDt <= 0.0f)
+		return;
+
+	m_fFixedDeltaTime = _fixedDt;
+	m_fAccumulator = 0.0f;
+}
+
+_float CPhysics::GetFixedDeltaTime() const
+{
+	return m_fFixedDeltaTime;
+}
+
+void CPhysics::SetMaxSubSteps(const _uint _maxSubSteps)
+{
+	m_iMaxSubSteps = (_maxSubSteps == 0) ? 1 : _maxSubSteps;
+}
+
+void CPhysics::ResetStepper()
+{
+	m_fAccumulator = 0.f;
+}
+
+PhysicsSystem& CPhysics::GetPhysicsSystem()
+{
+	return m_PhysicsSystem;
+}
+
 vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray)
 {
     vector<RAYCASTHIT> hits;
@@ -283,24 +358,24 @@ vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray)
 
 _bool CPhysics::IntersectRayTriangle(const vector3& rayOrigin, const vector3& rayDir, const vector3& v0, const vector3& v1, const vector3& v2, _float& t, vector3& hitNormal)
 {
-	const float EPSILON = 0.000001f;
+	const _float EPSILON = 0.000001f;
 
 	vector3 edge1 = v1 - v0;
 	vector3 edge2 = v2 - v0;
 
 	vector3 h = rayDir.cross(edge2);
-	float a = edge1.dot(h);
+	_float a = edge1.dot(h);
 	if (fabs(a) < EPSILON)
 		return false;
 
-	float f = 1.0f / a;
+	_float f = 1.0f / a;
 	vector3 s = rayOrigin - v0;
-	float u = f * s.dot(h);
+	_float u = f * s.dot(h);
 	if (u < 0.0f || u > 1.0f)
 		return false;
 
 	vector3 q = s.cross(edge1);
-	float v = f * rayDir.dot(q);
+	_float v = f * rayDir.dot(q);
 	if (v < 0.0f || u + v > 1.0f)
 		return false;
 
