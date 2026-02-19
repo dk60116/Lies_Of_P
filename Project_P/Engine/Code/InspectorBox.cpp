@@ -14,6 +14,7 @@
 #include "Terrain.h"
 #include "Image.h"
 #include "Text.h"
+#include "RigidBody.h"
 
 #include <algorithm>
 #include <chrono>
@@ -1196,6 +1197,9 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
 
             if (CMeshFilter* meshFilter = dynamic_cast<CMeshFilter*>(component))
                 RenderMeshFilterComponent(_obj, meshFilter);
+
+            if (CRigidBody* rigidBody = dynamic_cast<CRigidBody*>(component))
+                RenderRigidBodyComponent(rigidBody);
         }
     }
 
@@ -1460,6 +1464,19 @@ void CInspectorBox::RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _m
 
 }
 
+void CInspectorBox::RenderRigidBodyComponent(CRigidBody* _rigidBody)
+{
+    if (!_rigidBody)
+        return;
+
+    ImGui::InputFloat("Mass", &_rigidBody->m_fMass, 0.f);
+    if (_rigidBody->m_fMass < 0.f)
+        _rigidBody->m_fMass = 0.f;
+
+    ImGui::Checkbox("Use Gravity", &_rigidBody->m_bUseGravity);
+    ImGui::Checkbox("Is Kinematic", &_rigidBody->m_bIsKinematic);
+}
+
 void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
 {
     if (!_obj)
@@ -1536,6 +1553,11 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
             _obj->AddComponent<CTerrain>();
     }
 
+    if (ImGui::MenuItem("RigidBody"))
+    {
+        if (!_obj->GetComponent<CRigidBody>())
+            _obj->AddComponent<CRigidBody>();
+    }
 
     ImGui::EndPopup();
 }

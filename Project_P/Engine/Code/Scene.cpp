@@ -17,6 +17,7 @@
 #include "Terrain.h"
 #include "Image.h"
 #include "Text.h"
+#include "RigidBody.h"
 #include <filesystem>
 #include <unordered_map>
 #include <unordered_set>
@@ -1009,6 +1010,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			if (componentName == L"Text" && dynamic_cast<CText*>(component)) return true;
 			if (componentName == L"Terrain" && dynamic_cast<CTerrain*>(component)) return true;
 			if (componentName == L"UI" && dynamic_cast<CUI*>(component)) return true;
+			if (componentName == L"RigidBody" && dynamic_cast<CRigidBody*>(component)) return true;
 		}
 
 		return false;
@@ -1030,6 +1032,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		else if (componentName == L"Text") obj->AddComponent<CText>();
 		else if (componentName == L"Terrain") obj->AddComponent<CTerrain>();
 		else if (componentName == L"UI") obj->AddComponent<CUI>();
+		else if (componentName == L"RigidBody") obj->AddComponent<CRigidBody>();
 	};
 
 	unordered_map<wstring, size_t> infoIndexByGuid;
