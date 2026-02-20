@@ -106,36 +106,43 @@ namespace Engine
 			if (itA == m_ActivePairs.end())
 				return;
 
-			PairState state = itA->second;
+			const PairState state = itA->second;
 			m_ActivePairs.erase(itA);
 
-			if (!state.a || !state.b)
+			BodyInterface& bodyInterface = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
+			CRigidBody* rb1 = reinterpret_cast<CRigidBody*>(bodyInterface.GetUserData(bodyId1));
+			CRigidBody* rb2 = reinterpret_cast<CRigidBody*>(bodyInterface.GetUserData(bodyId2));
+
+			if (!rb1 && !rb2)
 				return;
 
-			if (state.aCollider)
-				state.aCollider->EndContact();
-			if (state.bCollider)
-				state.bCollider->EndContact();
+			CCollider* col1 = rb1 ? rb1->GetEventCollider(state.isTrigger) : nullptr;
+			CCollider* col2 = rb2 ? rb2->GetEventCollider(state.isTrigger) : nullptr;
+
+			if (col1)
+				col1->EndContact();
+			if (col2)
+				col2->EndContact();
 
 			if (state.isTrigger)
 			{
-				state.a->OnTriggerExit(state.bCollider);
-				state.b->OnTriggerExit(state.aCollider);
+				if (rb1)
+					rb1->OnTriggerExit(col2);
+				if (rb2)
+					rb2->OnTriggerExit(col1);
 			}
 			else
 			{
-				state.a->OnCollisionExit(state.bCollider);
-				state.b->OnCollisionExit(state.aCollider);
+				if (rb1)
+					rb1->OnCollisionExit(col2);
+				if (rb2)
+					rb2->OnCollisionExit(col1);
 			}
 		}
 
 	private:
 		struct PairState
 		{
-			CRigidBody* a = nullptr;
-			CRigidBody* b = nullptr;
-			CCollider* aCollider = nullptr;
-			CCollider* bCollider = nullptr;
 			_bool isTrigger = false;
 		};
 
@@ -167,10 +174,6 @@ namespace Engine
 			CCollider* col2 = rb2->GetEventCollider(trigger);
 
 			PairState state;
-			state.a = rb1;
-			state.b = rb2;
-			state.aCollider = col1;
-			state.bCollider = col2;
 			state.isTrigger = trigger;
 
 			const PairKey key = MakePairKey(body1.GetID(), body2.GetID());
