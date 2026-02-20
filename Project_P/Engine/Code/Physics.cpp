@@ -105,21 +105,28 @@ namespace Engine
 			if (itA == m_ActivePairs.end())
 				return;
 
-			PairState state = itA->second;
-			m_ActivePairs.erase(itA);
+			PairState& state = itA->second;
+			if (state.activeContactCount > 0)
+				--state.activeContactCount;
 
-			if (!state.a || !state.b)
+			if (state.activeContactCount > 0)
 				return;
 
-			if (state.isTrigger)
+			PairState exitState = state;
+			m_ActivePairs.erase(itA);
+
+			if (!exitState.a || !exitState.b)
+				return;
+
+			if (exitState.isTrigger)
 			{
-				state.a->OnTriggerExit(state.bCollider);
-				state.b->OnTriggerExit(state.aCollider);
+				exitState.a->OnTriggerExit(exitState.bCollider);
+				exitState.b->OnTriggerExit(exitState.aCollider);
 			}
 			else
 			{
-				state.a->OnCollisionExit(state.bCollider);
-				state.b->OnCollisionExit(state.aCollider);
+				exitState.a->OnCollisionExit(exitState.bCollider);
+				exitState.b->OnCollisionExit(exitState.aCollider);
 			}
 		}
 
@@ -131,6 +138,7 @@ namespace Engine
 			CCollider* aCollider = nullptr;
 			CCollider* bCollider = nullptr;
 			_bool isTrigger = false;
+			uint32 activeContactCount = 0;
 		};
 
 		using PairKey = uint64;
@@ -160,21 +168,35 @@ namespace Engine
 			CCollider* col1 = rb1->GetEventCollider(trigger);
 			CCollider* col2 = rb2->GetEventCollider(trigger);
 
-			PairState state;
-			state.a = rb1;
-			state.b = rb2;
-			state.aCollider = col1;
-			state.bCollider = col2;
-			state.isTrigger = trigger;
-
 			const PairKey key = MakePairKey(body1.GetID(), body2.GetID());
-			auto [it, inserted] = m_ActivePairs.insert({ key, state });
-			if (!inserted)
-				it->second = state;
+			auto [it, inserted] = m_ActivePairs.try_emplace(key);
+			PairState& state = it->second;
+
+			if (inserted)
+			{
+				state.a = rb1;
+				state.b = rb2;
+				state.aCollider = col1;
+				state.bCollider = col2;
+				state.isTrigger = trigger;
+				state.activeContactCount = 0;
+			}
+			else
+			{
+				state.a = rb1;
+				state.b = rb2;
+				state.aCollider = col1;
+				state.bCollider = col2;
+				state.isTrigger = trigger;
+			}
+
+			const _bool wasInactive = (state.activeContactCount == 0);
+			if (isEnter)
+				++state.activeContactCount;
 
 			if (trigger)
 			{
-				if (isEnter || inserted)
+				if (isEnter && wasInactive)
 				{
 					rb1->OnTriggerEnter(col2);
 					rb2->OnTriggerEnter(col1);
@@ -187,7 +209,7 @@ namespace Engine
 			}
 			else
 			{
-				if (isEnter || inserted)
+				if (isEnter && wasInactive)
 				{
 					rb1->OnCollisionEnter(col2);
 					rb2->OnCollisionEnter(col1);

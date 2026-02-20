@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "Collider.h"
+#include "RigidBody.h"
 
 using namespace JPH;
 
@@ -19,7 +20,10 @@ CCollider::~CCollider()
 HRESULT CCollider::Initialize()
 {
 	if (auto rig = m_pGameObject->GetComponent<CRigidBody>())
+	{
+		m_pRigidBody = rig;
 		rig->AddCollider(this);
+	}
 
 	return S_OK;
 }
@@ -44,7 +48,10 @@ void CCollider::ReleaseShape()
 void CCollider::OnDestroy()
 {
 	if (m_pRigidBody)
+	{
 		m_pRigidBody->RemvoeCollier(this);
+		m_pRigidBody = nullptr;
+	}
 
 	ReleaseShape();
 }
@@ -63,12 +70,18 @@ void CCollider::SetTrigger(const _bool isTrigger)
 {
 	m_bIsTrigger = isTrigger;
 	m_bShapeDirty = true;
+
+	if (m_pRigidBody)
+		m_pRigidBody->MarkBodyDirty();
 }
 
 void CCollider::SetCenter(const vector3& center)
 {
 	m_vCenter = center;
 	m_bShapeDirty = true;
+
+	if (m_pRigidBody)
+		m_pRigidBody->MarkBodyDirty();
 }
 
 const Shape* CCollider::GetShape()

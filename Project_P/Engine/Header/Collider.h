@@ -12,6 +12,8 @@ NS_BEGIN(Engine)
 
 class ENGINE_DLL CCollider abstract : public CComponent
 {
+	friend class CRigidBody;
+
 public:
 	enum class ColliderType { Cube, Sphere, Capsule, Mesh };
 
