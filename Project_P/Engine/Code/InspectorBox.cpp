@@ -1181,8 +1181,11 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
     ImGui::Text("Components");
 
     list<CComponent*>& components = _obj->Get_ComponentList();
-    for (CComponent* component : components)
+    for (auto it = components.begin(); it != components.end();)
     {
+        CComponent* component = *it;
+        ++it;
+
         if (!component)
             continue;
 
@@ -1196,6 +1199,13 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
         const string headerLabel = componentName + "##" + to_string(reinterpret_cast<uintptr_t>(component));
         if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
         {
+            const string removeButtonLabel = "Remove Component##" + to_string(reinterpret_cast<uintptr_t>(component));
+            if (ImGui::Button(removeButtonLabel.c_str()))
+            {
+                _obj->RemoveComponent(component);
+                break;
+            }
+
             if (CMeshRenderer* meshRenderer = dynamic_cast<CMeshRenderer*>(component))
                 RenderMeshRendererComponent(meshRenderer);
 

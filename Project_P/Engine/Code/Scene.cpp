@@ -1968,6 +1968,12 @@ CLight* CScene::Add_Light(CLight* _light)
 	return m_lLightList.back();
 }
 
+void CScene::Remove_Light(CLight* _light)
+{
+	if (_light)
+		m_lLightList.remove(_light);
+}
+
 vector<_matrix>& CScene::Get_LightData()
 {
 	return m_vLightData;
@@ -2005,6 +2011,15 @@ CCanvas* CScene::Add_Canvas(CCanvas* _canvas)
 	m_lCanvasList.back()->AddRef();
 
 	return m_lCanvasList.back();
+}
+
+void CScene::Remove_Canvas(CCanvas* _canvas)
+{
+	if (!_canvas)
+		return;
+
+	m_lCanvasList.remove(_canvas);
+	Safe_Release(_canvas);
 }
 
 HRESULT CScene::SaveScene(const wstring& _filePath)

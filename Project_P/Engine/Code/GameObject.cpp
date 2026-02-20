@@ -310,6 +310,43 @@ void CGameObject::Destroy()
 	m_bKill = true;
 }
 
+_bool CGameObject::RemoveComponent(CComponent* _component)
+{
+	if (!_component)
+		return false;
+
+	auto it = find(m_lComponentList.begin(), m_lComponentList.end(), _component);
+	if (it == m_lComponentList.end())
+		return false;
+
+	if (dynamic_cast<CTransform*>(_component) || dynamic_cast<CRectTransform*>(_component))
+		return false;
+
+	if (CCamera* cam = dynamic_cast<CCamera*>(_component))
+	{
+		if (m_pScene)
+			m_pScene->Remove_Camera(cam);
+	}
+
+	if (CLight* light = dynamic_cast<CLight*>(_component))
+	{
+		if (m_pScene)
+			m_pScene->Remove_Light(light);
+	}
+
+	if (CCanvas* canvas = dynamic_cast<CCanvas*>(_component))
+	{
+		if (m_pScene)
+			m_pScene->Remove_Canvas(canvas);
+	}
+
+	_component->OnDestroy();
+	m_lComponentList.erase(it);
+	Safe_Release(_component);
+
+	return true;
+}
+
 const _bool CGameObject::IsActive() const
 {
 	return m_bActive;
