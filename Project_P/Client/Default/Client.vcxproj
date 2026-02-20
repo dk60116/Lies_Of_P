@@ -107,7 +107,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions);JPH_FLOATING_POINT_EXCEPTIONS_ENABLED=1;JPH_PROFILE_ENABLED=1;JPH_DEBUG_RENDERER=1;JPH_OBJECT_STREAM=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions);JPH_FLOATING_POINT_EXCEPTIONS_ENABLED=1;JPH_PROFILE_ENABLED=1;JPH_DEBUG_RENDERER=1;JPH_OBJECT_STREAM=1;JPH_USE_AVX2;JPH_USE_AVX;JPH_USE_SSE4_1;JPH_USE_SSE4_2;JPH_USE_LZCNT;JPH_USE_TZCNT;JPH_USE_F16C;JPH_USE_FMADD</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../Header;../Include;../../Reference/Header;../../Reference/JoltPhysics-5.5.0;$(ProjectDir)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -127,7 +127,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions);JPH_FLOATING_POINT_EXCEPTIONS_ENABLED=1;JPH_PROFILE_ENABLED=1;JPH_DEBUG_RENDERER=1;JPH_OBJECT_STREAM=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions);JPH_FLOATING_POINT_EXCEPTIONS_ENABLED=1;JPH_PROFILE_ENABLED=1;JPH_DEBUG_RENDERER=1;JPH_OBJECT_STREAM=1;JPH_USE_AVX2;JPH_USE_AVX;JPH_USE_SSE4_1;JPH_USE_SSE4_2;JPH_USE_LZCNT;JPH_USE_TZCNT;JPH_USE_F16C;JPH_USE_FMADD</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../Header;../Include;../../Reference/Header;../../Reference/JoltPhysics-5.5.0;$(ProjectDir)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
