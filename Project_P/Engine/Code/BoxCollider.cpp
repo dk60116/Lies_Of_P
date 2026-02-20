@@ -102,6 +102,7 @@ HRESULT CBoxCollider::Initialize()
 
 void CBoxCollider::Update()
 {
+    __super::Update();
 }
 
 void CBoxCollider::FixedUpdate()

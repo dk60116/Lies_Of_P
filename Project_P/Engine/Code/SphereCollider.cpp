@@ -103,6 +103,7 @@ HRESULT CSphereCollider::Initialize()
 
 void CSphereCollider::Update()
 {
+    __super::Update();
 }
 
 void CSphereCollider::FixedUpdate()

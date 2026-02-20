@@ -105,6 +105,7 @@ HRESULT CCapsuleCollider::Initialize()
 
 void CCapsuleCollider::Update()
 {
+    __super::Update();
 }
 
 void CCapsuleCollider::FixedUpdate()
