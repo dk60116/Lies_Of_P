@@ -534,15 +534,26 @@ void CRigidBody::SyncDynamicFromJolt()
     Quat tfRot;
     DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), tfPos, tfRot);
 
+    const RVec3 joltPos = GetBI().GetPosition(sourceBodyId);
+    const Quat joltRot = GetBI().GetRotation(sourceBodyId);
+
     _bool forceTransformOverride = false;
 #ifndef _CLIENT_BUILD
     CGameObject* selected = CEditor::GetInstance().Get_SelectedGameObject();
     if (selected != nullptr && selected == m_pGameObject)
-        forceTransformOverride = ImGuizmo::IsUsing();
-#endif
+    {
+        const _float dx = static_cast<_float>(joltPos.GetX()) - tfPos.GetX();
+        const _float dy = static_cast<_float>(joltPos.GetY()) - tfPos.GetY();
+        const _float dz = static_cast<_float>(joltPos.GetZ()) - tfPos.GetZ();
+        const _float posDeltaSq = dx * dx + dy * dy + dz * dz;
 
-    const RVec3 joltPos = GetBI().GetPosition(sourceBodyId);
-    const Quat joltRot = GetBI().GetRotation(sourceBodyId);
+        const _float rotDotRaw = joltRot.GetX() * tfRot.GetX() + joltRot.GetY() * tfRot.GetY() + joltRot.GetZ() * tfRot.GetZ() + joltRot.GetW() * tfRot.GetW();
+        const _float rotDotAbs = fabsf(rotDotRaw);
+
+        const _bool inspectorTransformChanged = posDeltaSq > 0.000001f || rotDotAbs < 0.9999f;
+        forceTransformOverride = ImGuizmo::IsUsing() || inspectorTransformChanged;
+    }
+#endif
 
     const _bool transformOverridden = forceTransformOverride;
 
