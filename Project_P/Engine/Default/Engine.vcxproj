@@ -357,6 +357,11 @@ call copy.bat</Command>
   <ItemGroup>
     <ResourceCompile Include="Engine.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\Jolt.vcxproj">
+      <Project>{B69CF1D2-0A0F-3AF6-BCCA-348D062C2494}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
