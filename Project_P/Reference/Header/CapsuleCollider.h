@@ -5,11 +5,13 @@ NS_BEGIN(Engine)
 
 class ENGINE_DLL CCapsuleCollider : public CCollider
 {
+    friend class CGameObject;
+
 protected:
     explicit CCapsuleCollider();
     ~CCapsuleCollider();
 
-public:
+private:
     static CCapsuleCollider* Create();
     CComponent* Clone() const override;
 

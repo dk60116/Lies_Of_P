@@ -205,6 +205,9 @@
     <ClInclude Include="..\Header\CColliderManager.h">
       <Filter>Physics</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\MeshCollider.h">
+      <Filter>Components\Physics\Collider</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Engine">
@@ -541,6 +544,9 @@
     </ClCompile>
     <ClCompile Include="..\Code\CColliderManager.cpp">
       <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\MeshCollider.cpp">
+      <Filter>Components\Physics\Collider</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
