@@ -10,6 +10,8 @@
 #include <cstdint>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 
+NS_BEGIN(Engine)
+
 namespace
 {
     _bool BuildLineWorldMatrix(const _vector& a, const _vector& b, _matrix& outWorld)
@@ -373,3 +375,5 @@ void CMeshCollider::BuildShapeIfNeeded()
 
     m_bShapeDirty = false;
 }
+
+NS_END
