@@ -14,11 +14,13 @@ NS_BEGIN(Engine)
 
 class ENGINE_DLL CRigidBody final : public CComponent
 {
+	friend class CGameObject;
+
 protected:
 	explicit CRigidBody();
 	~CRigidBody();
 
-public:
+private:
 	static CRigidBody* Create();
 	CComponent* Clone() const override;
 
