@@ -80,6 +80,7 @@ private:
 	class BroadPhaseLayerInterfaceImpl;
 	class ObjectVsBroadPhaseLayerFilterImpl;
 	class ObjectLayerPairFilterImpl;
+	class ContactListenerImpl;
 
 	_bool m_bJoltInitialized;
 	TempAllocatorImpl* m_pTempAllocator;
@@ -90,6 +91,7 @@ private:
 	BroadPhaseLayerInterfaceImpl* m_pBPLayerInterface;
 	ObjectVsBroadPhaseLayerFilterImpl* m_pObjectVsBPLayerFilter;
 	ObjectLayerPairFilterImpl* m_pObjectLayerPairFilter;
+	ContactListenerImpl* m_pContactListener;
 
 	_float m_fFixedDeltaTime;   
 	_float m_fAccumulator;    
