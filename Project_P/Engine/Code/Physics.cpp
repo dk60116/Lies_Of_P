@@ -328,6 +328,12 @@ HRESULT CPhysics::Initialize()
 	return S_OK;
 }
 
+
+_bool CPhysics::IsInitialized() const
+{
+	return m_bJoltInitialized;
+}
+
 void CPhysics::Release()
 {
 	if (!m_bJoltInitialized)

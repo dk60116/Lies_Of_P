@@ -37,6 +37,11 @@ namespace
     {
         return GetPS().GetBodyInterface();
     }
+
+    inline _bool IsPhysicsReady()
+    {
+        return CPhysics::GetInstance().IsInitialized();
+    }
 }
 
 CRigidBody::CRigidBody()
@@ -363,6 +368,9 @@ void CRigidBody::SetUseGravity(_bool _useGravity)
 
     const EMotionType motion = m_bKinematic ? EMotionType::Kinematic : EMotionType::Dynamic;
 
+    if (!IsPhysicsReady())
+        return;
+
     if (m_bHasBody)
     {
         GetBI().SetGravityFactor(m_iBodyID, motion == EMotionType::Dynamic && m_bUseGravity ? 1.f : 0.f);
@@ -532,6 +540,9 @@ void CRigidBody::RebuildBodiesIfDirty()
     if (!m_bBodyDirty)
         return;
 
+    if (!IsPhysicsReady())
+        return;
+
     DestroyBodies();
 
     RefConst<Shape> bodyCompound;
@@ -567,6 +578,9 @@ void CRigidBody::RebuildBodiesIfDirty()
         }
 
         Body* body = GetBI().CreateBody(settings);
+        if (!body)
+            return;
+
         m_iBodyID = body->GetID();
         m_bHasBody = true;
 
@@ -588,6 +602,9 @@ void CRigidBody::RebuildBodiesIfDirty()
         settings.mIsSensor = true;
 
         Body* body = GetBI().CreateBody(settings);
+        if (!body)
+            return;
+
         m_iSensorBodyID = body->GetID();
         m_bHasSensorBody = true;
 
@@ -601,18 +618,26 @@ void CRigidBody::RebuildBodiesIfDirty()
 
 void CRigidBody::DestroyBodies()
 {
+    const _bool physicsReady = IsPhysicsReady();
+
     if (m_bHasBody)
     {
-        GetBI().RemoveBody(m_iBodyID);
-        GetBI().DestroyBody(m_iBodyID);
+        if (physicsReady)
+        {
+            GetBI().RemoveBody(m_iBodyID);
+            GetBI().DestroyBody(m_iBodyID);
+        }
         m_iBodyID = BodyID();
         m_bHasBody = false;
     }
 
     if (m_bHasSensorBody)
     {
-        GetBI().RemoveBody(m_iSensorBodyID);
-        GetBI().DestroyBody(m_iSensorBodyID);
+        if (physicsReady)
+        {
+            GetBI().RemoveBody(m_iSensorBodyID);
+            GetBI().DestroyBody(m_iSensorBodyID);
+        }
         m_iSensorBodyID = BodyID();
         m_bHasSensorBody = false;
     }
@@ -632,6 +657,9 @@ void CRigidBody::DestroyBodies()
 
 void CRigidBody::SyncKinematicToJolt()
 {
+    if (!IsPhysicsReady())
+        return;
+
     if (!m_bHasBody && !m_bHasSensorBody)
         return;
 
@@ -656,6 +684,9 @@ void CRigidBody::SyncKinematicToJolt()
 
 void CRigidBody::SyncDynamicFromJolt()
 {
+    if (!IsPhysicsReady())
+        return;
+
     if (!m_bHasBody && !m_bHasSensorBody)
         return;
 

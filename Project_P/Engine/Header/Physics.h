@@ -51,6 +51,7 @@ public:
 public:
 	HRESULT Initialize();
 	void Release();
+	_bool IsInitialized() const;
 
 public:
 	void Tick(_float _deltaSeconds);
