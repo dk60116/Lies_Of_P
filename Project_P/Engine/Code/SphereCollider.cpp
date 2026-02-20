@@ -128,7 +128,9 @@ void CSphereCollider::Render_Gizmo()
     else
         m_pLineMaterial->Set_BaseColor(_float4(0.f, 1.f, 0.f, 1.f));
 
-    const _float radius = max(m_fRadius, 0.001f);
+    const vector3 scale = Get_Transform()->Get_LocalScale();
+    const _float maxScale = max(fabsf(scale.x), max(fabsf(scale.y), fabsf(scale.z)));
+    const _float radius = max(m_fRadius * maxScale, 0.001f);
     const _uint segmentCount = 36u;
     const _matrix objectWorld = Get_Transform()->Get_WorldMatrix();
     const _matrix centerOffset = XMMatrixTranslation(m_vCenter.x, m_vCenter.y, m_vCenter.z);
@@ -209,7 +211,9 @@ void CSphereCollider::BuildShapeIfNeeded()
 
     ReleaseShape();
 
-    const _float radius = max(m_fRadius, 0.001f);
+    const vector3 scale = Get_Transform()->Get_LocalScale();
+    const _float maxScale = max(fabsf(scale.x), max(fabsf(scale.y), fabsf(scale.z)));
+    const _float radius = max(m_fRadius * maxScale, 0.001f);
     JPH::SphereShapeSettings sphereSettings(radius);
     JPH::ShapeSettings::ShapeResult sphereResult = sphereSettings.Create();
 
@@ -228,7 +232,7 @@ void CSphereCollider::BuildShapeIfNeeded()
 
     if (!centerIsZero)
     {
-        const JPH::Vec3 center(m_vCenter.x, m_vCenter.y, m_vCenter.z);
+        const JPH::Vec3 center(m_vCenter.x * scale.x, m_vCenter.y * scale.y, m_vCenter.z * scale.z);
 
         JPH::RotatedTranslatedShapeSettings rtSettings(center, JPH::Quat::sIdentity(), baseShape);
         JPH::ShapeSettings::ShapeResult rtResult = rtSettings.Create();

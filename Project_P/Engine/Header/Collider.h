@@ -46,6 +46,7 @@ protected:
     class CRigidBody* m_pRigidBody;
     _bool m_bIsTrigger;
     vector3 m_vCenter;
+    vector3 m_vCachedScale;
 
     _bool m_bShapeDirty;
     const mutable Shape* m_pShape;

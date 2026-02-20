@@ -201,9 +201,10 @@ void CBoxCollider::BuildShapeIfNeeded()
 
     ReleaseShape();
 
-    const float sx = max(m_vSize.x, 0.001f);
-    const float sy = max(m_vSize.y, 0.001f);
-    const float sz = max(m_vSize.z, 0.001f);
+    const vector3 scale = Get_Transform()->Get_LocalScale();
+    const float sx = max(m_vSize.x * fabsf(scale.x), 0.001f);
+    const float sy = max(m_vSize.y * fabsf(scale.y), 0.001f);
+    const float sz = max(m_vSize.z * fabsf(scale.z), 0.001f);
 
     const JPH::Vec3 halfExtent(sx * 0.5f, sy * 0.5f, sz * 0.5f);
 
@@ -226,7 +227,7 @@ void CBoxCollider::BuildShapeIfNeeded()
 
     if (!centerIsZero)
     {
-        const JPH::Vec3 center(m_vCenter.x, m_vCenter.y, m_vCenter.z);
+        const JPH::Vec3 center(m_vCenter.x * scale.x, m_vCenter.y * scale.y, m_vCenter.z * scale.z);
 
         JPH::RotatedTranslatedShapeSettings rtSettings(center, JPH::Quat::sIdentity(), baseShape);
         JPH::ShapeSettings::ShapeResult rtResult = rtSettings.Create();

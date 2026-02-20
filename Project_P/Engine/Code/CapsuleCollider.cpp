@@ -130,8 +130,12 @@ void CCapsuleCollider::Render_Gizmo()
     else
         m_pLineMaterial->Set_BaseColor(_float4(0.f, 1.f, 0.f, 1.f));
 
-    const _float radius = max(m_fRadius, 0.001f);
-    const _float halfHeight = max(m_fHeight * 0.5f, 0.f);
+    const vector3 scale = Get_Transform()->Get_LocalScale();
+    const _float radialScale = max(fabsf(scale.x), fabsf(scale.z));
+    const _float heightScale = fabsf(scale.y);
+
+    const _float radius = max(m_fRadius * radialScale, 0.001f);
+    const _float halfHeight = max(m_fHeight * heightScale * 0.5f, 0.f);
     const _uint segmentCount = 36u;
 
     const _matrix objectWorld = Get_Transform()->Get_WorldMatrix();
@@ -255,8 +259,12 @@ void CCapsuleCollider::BuildShapeIfNeeded()
 
     ReleaseShape();
 
-    const _float radius = max(m_fRadius, 0.001f);
-    const _float halfHeight = max(m_fHeight * 0.5f, 0.f);
+    const vector3 scale = Get_Transform()->Get_LocalScale();
+    const _float radialScale = max(fabsf(scale.x), fabsf(scale.z));
+    const _float heightScale = fabsf(scale.y);
+
+    const _float radius = max(m_fRadius * radialScale, 0.001f);
+    const _float halfHeight = max(m_fHeight * heightScale * 0.5f, 0.f);
 
     CapsuleShapeSettings capsuleSettings(halfHeight, radius);
     ShapeSettings::ShapeResult capsuleResult = capsuleSettings.Create();
@@ -276,7 +284,7 @@ void CCapsuleCollider::BuildShapeIfNeeded()
 
     if (!centerIsZero)
     {
-        const Vec3 center(m_vCenter.x, m_vCenter.y, m_vCenter.z);
+        const Vec3 center(m_vCenter.x * scale.x, m_vCenter.y * scale.y, m_vCenter.z * scale.z);
 
         RotatedTranslatedShapeSettings rtSettings(center, JPH::Quat::sIdentity(), baseShape);
         ShapeSettings::ShapeResult rtResult = rtSettings.Create();

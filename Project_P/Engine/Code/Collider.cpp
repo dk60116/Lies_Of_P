@@ -7,6 +7,7 @@ using namespace JPH;
 CCollider::CCollider()
 	: m_pRigidBody(nullptr)
 	, m_bIsTrigger(false)
+	, m_vCachedScale(vector3::one())
 	, m_bShapeDirty(true)
 	, m_pShape(nullptr)
 	, m_iContactCount(0)
@@ -28,10 +29,24 @@ HRESULT CCollider::Initialize()
 
 void CCollider::Awake()
 {
+	m_vCachedScale = m_pGameObject->Get_Transform()->Get_LocalScale();
 }
 
 void CCollider::Update()
 {
+	const vector3 scale = m_pGameObject->Get_Transform()->Get_LocalScale();
+	const _float dx = fabsf(scale.x - m_vCachedScale.x);
+	const _float dy = fabsf(scale.y - m_vCachedScale.y);
+	const _float dz = fabsf(scale.z - m_vCachedScale.z);
+
+	if (dx > 0.0001f || dy > 0.0001f || dz > 0.0001f)
+	{
+		m_vCachedScale = scale;
+		m_bShapeDirty = true;
+
+		if (m_pRigidBody)
+			m_pRigidBody->MarkBodyDirty();
+	}
 }
 
 void CCollider::ReleaseShape()
