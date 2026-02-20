@@ -669,15 +669,18 @@ void CRigidBody::SyncDynamicFromJolt()
     CGameObject* selected = CEditor::GetInstance().Get_SelectedGameObject();
     if (selected != nullptr && selected == m_pGameObject)
     {
-        const _float dx = static_cast<_float>(joltPos.GetX()) - tfPos.GetX();
-        const _float dy = static_cast<_float>(joltPos.GetY()) - tfPos.GetY();
-        const _float dz = static_cast<_float>(joltPos.GetZ()) - tfPos.GetZ();
-        const _float posDeltaSq = dx * dx + dy * dy + dz * dz;
+        const vector3 prevPos = Get_Transform()->Get_PrevPosition();
+        const quaternion prevRot = Get_Transform()->Get_PrevQuaternion();
 
-        const _float rotDotRaw = joltRot.GetX() * tfRot.GetX() + joltRot.GetY() * tfRot.GetY() + joltRot.GetZ() * tfRot.GetZ() + joltRot.GetW() * tfRot.GetW();
-        const _float rotDotAbs = fabsf(rotDotRaw);
+        const _float dpx = prevPos.x - tfPos.GetX();
+        const _float dpy = prevPos.y - tfPos.GetY();
+        const _float dpz = prevPos.z - tfPos.GetZ();
+        const _float editedPosDeltaSq = dpx * dpx + dpy * dpy + dpz * dpz;
 
-        const _bool inspectorTransformChanged = posDeltaSq > 0.0004f || rotDotAbs < 0.999f;
+        const _float prevRotDotRaw = prevRot.x * tfRot.GetX() + prevRot.y * tfRot.GetY() + prevRot.z * tfRot.GetZ() + prevRot.w * tfRot.GetW();
+        const _float prevRotDotAbs = fabsf(prevRotDotRaw);
+
+        const _bool inspectorTransformChanged = editedPosDeltaSq > 0.0004f || prevRotDotAbs < 0.999f;
         forceTransformOverride = ImGuizmo::IsUsing() || inspectorTransformChanged;
     }
 #endif
