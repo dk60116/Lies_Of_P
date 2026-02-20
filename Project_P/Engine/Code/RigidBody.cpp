@@ -689,7 +689,7 @@ void CRigidBody::SyncDynamicFromJolt()
         const _float rotDotRaw = joltRot.GetX() * tfRot.GetX() + joltRot.GetY() * tfRot.GetY() + joltRot.GetZ() * tfRot.GetZ() + joltRot.GetW() * tfRot.GetW();
         const _float rotDotAbs = fabsf(rotDotRaw);
 
-        const _bool inspectorTransformChanged = posDeltaSq > 0.000001f || rotDotAbs < 0.9999f;
+        const _bool inspectorTransformChanged = posDeltaSq > 0.0004f || rotDotAbs < 0.999f;
         forceTransformOverride = ImGuizmo::IsUsing() || inspectorTransformChanged;
     }
 #endif
