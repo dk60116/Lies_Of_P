@@ -198,7 +198,7 @@ public:
 	void							UnlockAllBodies() const;
 
 	/// Function to update body's layer (should only be called by the BodyInterface since it also requires updating the broadphase)
-	inline void						SetBodyObjectLayerInternal(Body &ioBody, ObjectLayer inLayer) const { ioBody.mObjectLayer = inLayer; ioBody.mBroadPhaseLayer = mBroadPhaseLayerInterface->GetBroadPhaseLayer(inLayer); }
+	inline void						SetBodyObjectLayerInternal(Body &ioBody, ObjectLayer inLayer) const { ioBody.mObjectLayer = inLayer; ioBody.mBroadPhaseLayer = mBroadPhaseLayerInterface != nullptr? mBroadPhaseLayerInterface->GetBroadPhaseLayer(inLayer) : BroadPhaseLayer(0); }
 
 	/// Set the Body::EFlags::InvalidateContactCache flag for the specified body. This means that the collision cache is invalid for any body pair involving that body until the next physics step.
 	void							InvalidateContactCacheForBody(Body &ioBody);
