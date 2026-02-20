@@ -635,12 +635,6 @@ void CRigidBody::SyncKinematicToJolt()
     Quat rot;
     DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
 
-    vector3 constrainedPos(static_cast<_float>(pos.GetX()), static_cast<_float>(pos.GetY()), static_cast<_float>(pos.GetZ()));
-    quaternion constrainedRot(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
-    ApplyAxisConstraints(constrainedPos, constrainedRot);
-    pos = Vec3(constrainedPos.x, constrainedPos.y, constrainedPos.z);
-    rot = Quat(constrainedRot.x, constrainedRot.y, constrainedRot.z, constrainedRot.w);
-
     if (m_bHasBody)
     {
         GetBI().SetPositionAndRotation(m_iBodyID, RVec3(pos), rot, EActivation::DontActivate);
@@ -666,12 +660,6 @@ void CRigidBody::SyncDynamicFromJolt()
     Vec3 tfPos;
     Quat tfRot;
     DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), tfPos, tfRot);
-
-    vector3 constrainedTfPos(static_cast<_float>(tfPos.GetX()), static_cast<_float>(tfPos.GetY()), static_cast<_float>(tfPos.GetZ()));
-    quaternion constrainedTfRot(tfRot.GetX(), tfRot.GetY(), tfRot.GetZ(), tfRot.GetW());
-    ApplyAxisConstraints(constrainedTfPos, constrainedTfRot);
-    tfPos = Vec3(constrainedTfPos.x, constrainedTfPos.y, constrainedTfPos.z);
-    tfRot = Quat(constrainedTfRot.x, constrainedTfRot.y, constrainedTfRot.z, constrainedTfRot.w);
 
     const RVec3 joltPos = GetBI().GetPosition(sourceBodyId);
     const Quat joltRot = GetBI().GetRotation(sourceBodyId);
@@ -700,6 +688,23 @@ void CRigidBody::SyncDynamicFromJolt()
     {
         const RVec3 targetPos(tfPos.GetX(), tfPos.GetY(), tfPos.GetZ());
         const Quat targetRot = tfRot;
+
+        vector3 editedPos(static_cast<_float>(tfPos.GetX()), static_cast<_float>(tfPos.GetY()), static_cast<_float>(tfPos.GetZ()));
+        vector3 editedEuler = quaternion(tfRot.GetX(), tfRot.GetY(), tfRot.GetZ(), tfRot.GetW()).to_euler();
+
+        if (m_bConstPositionX)
+            m_vConstPosition.x = editedPos.x;
+        if (m_bConstPositionY)
+            m_vConstPosition.y = editedPos.y;
+        if (m_bConstPositionZ)
+            m_vConstPosition.z = editedPos.z;
+
+        if (m_bConstRotationX)
+            m_vConstRotation.x = editedEuler.x;
+        if (m_bConstRotationY)
+            m_vConstRotation.y = editedEuler.y;
+        if (m_bConstRotationZ)
+            m_vConstRotation.z = editedEuler.z;
 
         if (m_bHasBody)
         {

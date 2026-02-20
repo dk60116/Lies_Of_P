@@ -1290,27 +1290,33 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                     rigidBody->SetMass(mass);
 
                 _bool constPosX = rigidBody->IsConstPositionX();
-                if (ImGui::Checkbox("Const Position X", &constPosX))
-                    rigidBody->SetConstPositionX(constPosX);
-
                 _bool constPosY = rigidBody->IsConstPositionY();
-                if (ImGui::Checkbox("Const Position Y", &constPosY))
-                    rigidBody->SetConstPositionY(constPosY);
-
                 _bool constPosZ = rigidBody->IsConstPositionZ();
-                if (ImGui::Checkbox("Const Position Z", &constPosZ))
+
+                ImGui::TextUnformatted("Freeze Location");
+                ImGui::SameLine();
+                if (ImGui::Checkbox("X##FreezePosX", &constPosX))
+                    rigidBody->SetConstPositionX(constPosX);
+                ImGui::SameLine();
+                if (ImGui::Checkbox("Y##FreezePosY", &constPosY))
+                    rigidBody->SetConstPositionY(constPosY);
+                ImGui::SameLine();
+                if (ImGui::Checkbox("Z##FreezePosZ", &constPosZ))
                     rigidBody->SetConstPositionZ(constPosZ);
 
                 _bool constRotX = rigidBody->IsConstRotationX();
-                if (ImGui::Checkbox("Const Rotation X", &constRotX))
-                    rigidBody->SetConstRotationX(constRotX);
-
                 _bool constRotY = rigidBody->IsConstRotationY();
-                if (ImGui::Checkbox("Const Rotation Y", &constRotY))
-                    rigidBody->SetConstRotationY(constRotY);
-
                 _bool constRotZ = rigidBody->IsConstRotationZ();
-                if (ImGui::Checkbox("Const Rotation Z", &constRotZ))
+
+                ImGui::TextUnformatted("Freeze Rotation");
+                ImGui::SameLine();
+                if (ImGui::Checkbox("X##FreezeRotX", &constRotX))
+                    rigidBody->SetConstRotationX(constRotX);
+                ImGui::SameLine();
+                if (ImGui::Checkbox("Y##FreezeRotY", &constRotY))
+                    rigidBody->SetConstRotationY(constRotY);
+                ImGui::SameLine();
+                if (ImGui::Checkbox("Z##FreezeRotZ", &constRotZ))
                     rigidBody->SetConstRotationZ(constRotZ);
             }
         }
