@@ -656,7 +656,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 8;
+	const _uint version = 9;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -690,6 +690,12 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyKinematic), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyUseGravity), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyMass), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&info.rigidBodyConstPositionX), sizeof(_bool));
+		out.write(reinterpret_cast<const char*>(&info.rigidBodyConstPositionY), sizeof(_bool));
+		out.write(reinterpret_cast<const char*>(&info.rigidBodyConstPositionZ), sizeof(_bool));
+		out.write(reinterpret_cast<const char*>(&info.rigidBodyConstRotationX), sizeof(_bool));
+		out.write(reinterpret_cast<const char*>(&info.rigidBodyConstRotationY), sizeof(_bool));
+		out.write(reinterpret_cast<const char*>(&info.rigidBodyConstRotationZ), sizeof(_bool));
 
 		out.write(reinterpret_cast<const char*>(&info.isRect), sizeof(_bool));
 		if (info.isRect)
@@ -852,6 +858,16 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 			in.read(reinterpret_cast<char*>(&info.rigidBodyKinematic), sizeof(_bool));
 			in.read(reinterpret_cast<char*>(&info.rigidBodyUseGravity), sizeof(_bool));
 			in.read(reinterpret_cast<char*>(&info.rigidBodyMass), sizeof(_float));
+		}
+
+		if (version >= 9)
+		{
+			in.read(reinterpret_cast<char*>(&info.rigidBodyConstPositionX), sizeof(_bool));
+			in.read(reinterpret_cast<char*>(&info.rigidBodyConstPositionY), sizeof(_bool));
+			in.read(reinterpret_cast<char*>(&info.rigidBodyConstPositionZ), sizeof(_bool));
+			in.read(reinterpret_cast<char*>(&info.rigidBodyConstRotationX), sizeof(_bool));
+			in.read(reinterpret_cast<char*>(&info.rigidBodyConstRotationY), sizeof(_bool));
+			in.read(reinterpret_cast<char*>(&info.rigidBodyConstRotationZ), sizeof(_bool));
 		}
 
 		_bool isRect = false;

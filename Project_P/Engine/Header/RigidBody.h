@@ -53,6 +53,18 @@ public:
 	void SetUseGravity(_bool _useGravity);
 	_float GetMass() const;
 	void SetMass(_float _mass);
+	_bool IsConstPositionX() const;
+	void SetConstPositionX(_bool _value);
+	_bool IsConstPositionY() const;
+	void SetConstPositionY(_bool _value);
+	_bool IsConstPositionZ() const;
+	void SetConstPositionZ(_bool _value);
+	_bool IsConstRotationX() const;
+	void SetConstRotationX(_bool _value);
+	_bool IsConstRotationY() const;
+	void SetConstRotationY(_bool _value);
+	_bool IsConstRotationZ() const;
+	void SetConstRotationZ(_bool _value);
 	CCollider* GetEventCollider(_bool _triggerEvent) const;
 
 private:
@@ -61,6 +73,7 @@ private:
 
 	void SyncKinematicToJolt();
 	void SyncDynamicFromJolt();
+	void ApplyAxisConstraints(vector3& _pos, quaternion& _rot);
 
 private:
 	list<CCollider*> m_lColliderList;
@@ -79,6 +92,15 @@ private:
 	_bool m_bKinematic;
 	_bool m_bUseGravity;
 	_float m_fMass;
+
+	_bool m_bConstPositionX;
+	_bool m_bConstPositionY;
+	_bool m_bConstPositionZ;
+	_bool m_bConstRotationX;
+	_bool m_bConstRotationY;
+	_bool m_bConstRotationZ;
+	vector3 m_vConstPosition;
+	vector3 m_vConstRotation;
 };
 
 NS_END

@@ -40,6 +40,12 @@ public:
         _bool rigidBodyKinematic = false;
         _bool rigidBodyUseGravity = true;
         _float rigidBodyMass = 1.f;
+        _bool rigidBodyConstPositionX = false;
+        _bool rigidBodyConstPositionY = false;
+        _bool rigidBodyConstPositionZ = false;
+        _bool rigidBodyConstRotationX = false;
+        _bool rigidBodyConstRotationY = false;
+        _bool rigidBodyConstRotationZ = false;
         _bool isRect = false;
         SCENERECTINFO rectInfo = {};
         vector<wstring> componentNames = {};

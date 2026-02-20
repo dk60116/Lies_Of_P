@@ -963,6 +963,12 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			info.rigidBodyKinematic = rigidBody->IsKinematic();
 			info.rigidBodyUseGravity = rigidBody->IsUseGravity();
 			info.rigidBodyMass = rigidBody->GetMass();
+			info.rigidBodyConstPositionX = rigidBody->IsConstPositionX();
+			info.rigidBodyConstPositionY = rigidBody->IsConstPositionY();
+			info.rigidBodyConstPositionZ = rigidBody->IsConstPositionZ();
+			info.rigidBodyConstRotationX = rigidBody->IsConstRotationX();
+			info.rigidBodyConstRotationY = rigidBody->IsConstRotationY();
+			info.rigidBodyConstRotationZ = rigidBody->IsConstRotationZ();
 		}
 
 		CRectTransform* rect = (*it)->GetComponent<CRectTransform>();
@@ -1213,6 +1219,12 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			rigidBody->SetKinematic(info.rigidBodyKinematic);
 			rigidBody->SetUseGravity(info.rigidBodyUseGravity);
 			rigidBody->SetMass(info.rigidBodyMass);
+			rigidBody->SetConstPositionX(info.rigidBodyConstPositionX);
+			rigidBody->SetConstPositionY(info.rigidBodyConstPositionY);
+			rigidBody->SetConstPositionZ(info.rigidBodyConstPositionZ);
+			rigidBody->SetConstRotationX(info.rigidBodyConstRotationX);
+			rigidBody->SetConstRotationY(info.rigidBodyConstRotationY);
+			rigidBody->SetConstRotationZ(info.rigidBodyConstRotationZ);
 		}
 
 		if (!info.meshBufferName.empty())

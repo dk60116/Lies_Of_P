@@ -1288,6 +1288,30 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 _float mass = rigidBody->GetMass();
                 if (ImGui::InputFloat("Mass", &mass, 0.1f, 1.f, "%.3f"))
                     rigidBody->SetMass(mass);
+
+                _bool constPosX = rigidBody->IsConstPositionX();
+                if (ImGui::Checkbox("Const Position X", &constPosX))
+                    rigidBody->SetConstPositionX(constPosX);
+
+                _bool constPosY = rigidBody->IsConstPositionY();
+                if (ImGui::Checkbox("Const Position Y", &constPosY))
+                    rigidBody->SetConstPositionY(constPosY);
+
+                _bool constPosZ = rigidBody->IsConstPositionZ();
+                if (ImGui::Checkbox("Const Position Z", &constPosZ))
+                    rigidBody->SetConstPositionZ(constPosZ);
+
+                _bool constRotX = rigidBody->IsConstRotationX();
+                if (ImGui::Checkbox("Const Rotation X", &constRotX))
+                    rigidBody->SetConstRotationX(constRotX);
+
+                _bool constRotY = rigidBody->IsConstRotationY();
+                if (ImGui::Checkbox("Const Rotation Y", &constRotY))
+                    rigidBody->SetConstRotationY(constRotY);
+
+                _bool constRotZ = rigidBody->IsConstRotationZ();
+                if (ImGui::Checkbox("Const Rotation Z", &constRotZ))
+                    rigidBody->SetConstRotationZ(constRotZ);
             }
         }
     }

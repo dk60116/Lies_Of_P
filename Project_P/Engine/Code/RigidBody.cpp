@@ -51,6 +51,14 @@ CRigidBody::CRigidBody()
     , m_bKinematic(false)
     , m_bUseGravity(true)
     , m_fMass(1.f)
+    , m_bConstPositionX(false)
+    , m_bConstPositionY(false)
+    , m_bConstPositionZ(false)
+    , m_bConstRotationX(false)
+    , m_bConstRotationY(false)
+    , m_bConstRotationZ(false)
+    , m_vConstPosition(vector3::zero())
+    , m_vConstRotation(vector3::zero())
 {
     m_strName = L"RigidBody";
 }
@@ -71,6 +79,14 @@ CComponent* CRigidBody::Clone() const
     clone->m_bKinematic = m_bKinematic;
     clone->m_bUseGravity = m_bUseGravity;
     clone->m_fMass = m_fMass;
+    clone->m_bConstPositionX = m_bConstPositionX;
+    clone->m_bConstPositionY = m_bConstPositionY;
+    clone->m_bConstPositionZ = m_bConstPositionZ;
+    clone->m_bConstRotationX = m_bConstRotationX;
+    clone->m_bConstRotationY = m_bConstRotationY;
+    clone->m_bConstRotationZ = m_bConstRotationZ;
+    clone->m_vConstPosition = m_vConstPosition;
+    clone->m_vConstRotation = m_vConstRotation;
 
     return clone;
 }
@@ -382,6 +398,110 @@ void CRigidBody::SetMass(_float _mass)
 }
 
 
+_bool CRigidBody::IsConstPositionX() const { return m_bConstPositionX; }
+void CRigidBody::SetConstPositionX(_bool _value)
+{
+    if (m_bConstPositionX == _value)
+        return;
+
+    m_bConstPositionX = _value;
+    if (_value)
+        m_vConstPosition.x = Get_Transform()->Get_Position().x;
+}
+
+_bool CRigidBody::IsConstPositionY() const { return m_bConstPositionY; }
+void CRigidBody::SetConstPositionY(_bool _value)
+{
+    if (m_bConstPositionY == _value)
+        return;
+
+    m_bConstPositionY = _value;
+    if (_value)
+        m_vConstPosition.y = Get_Transform()->Get_Position().y;
+}
+
+_bool CRigidBody::IsConstPositionZ() const { return m_bConstPositionZ; }
+void CRigidBody::SetConstPositionZ(_bool _value)
+{
+    if (m_bConstPositionZ == _value)
+        return;
+
+    m_bConstPositionZ = _value;
+    if (_value)
+        m_vConstPosition.z = Get_Transform()->Get_Position().z;
+}
+
+_bool CRigidBody::IsConstRotationX() const { return m_bConstRotationX; }
+void CRigidBody::SetConstRotationX(_bool _value)
+{
+    if (m_bConstRotationX == _value)
+        return;
+
+    m_bConstRotationX = _value;
+    if (_value)
+        m_vConstRotation.x = Get_Transform()->Get_EulerAngles().x;
+}
+
+_bool CRigidBody::IsConstRotationY() const { return m_bConstRotationY; }
+void CRigidBody::SetConstRotationY(_bool _value)
+{
+    if (m_bConstRotationY == _value)
+        return;
+
+    m_bConstRotationY = _value;
+    if (_value)
+        m_vConstRotation.y = Get_Transform()->Get_EulerAngles().y;
+}
+
+_bool CRigidBody::IsConstRotationZ() const { return m_bConstRotationZ; }
+void CRigidBody::SetConstRotationZ(_bool _value)
+{
+    if (m_bConstRotationZ == _value)
+        return;
+
+    m_bConstRotationZ = _value;
+    if (_value)
+        m_vConstRotation.z = Get_Transform()->Get_EulerAngles().z;
+}
+
+void CRigidBody::ApplyAxisConstraints(vector3& _pos, quaternion& _rot)
+{
+    vector3 euler = _rot.to_euler();
+
+    if (m_bConstPositionX)
+        _pos.x = m_vConstPosition.x;
+    else
+        m_vConstPosition.x = _pos.x;
+
+    if (m_bConstPositionY)
+        _pos.y = m_vConstPosition.y;
+    else
+        m_vConstPosition.y = _pos.y;
+
+    if (m_bConstPositionZ)
+        _pos.z = m_vConstPosition.z;
+    else
+        m_vConstPosition.z = _pos.z;
+
+    if (m_bConstRotationX)
+        euler.x = m_vConstRotation.x;
+    else
+        m_vConstRotation.x = euler.x;
+
+    if (m_bConstRotationY)
+        euler.y = m_vConstRotation.y;
+    else
+        m_vConstRotation.y = euler.y;
+
+    if (m_bConstRotationZ)
+        euler.z = m_vConstRotation.z;
+    else
+        m_vConstRotation.z = euler.z;
+
+    _rot = euler.to_quaternion();
+}
+
+
 CCollider* CRigidBody::GetEventCollider(_bool _triggerEvent) const
 {
     for (CCollider* collider : m_lColliderList)
@@ -515,6 +635,12 @@ void CRigidBody::SyncKinematicToJolt()
     Quat rot;
     DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
 
+    vector3 constrainedPos(static_cast<_float>(pos.GetX()), static_cast<_float>(pos.GetY()), static_cast<_float>(pos.GetZ()));
+    quaternion constrainedRot(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
+    ApplyAxisConstraints(constrainedPos, constrainedRot);
+    pos = Vec3(constrainedPos.x, constrainedPos.y, constrainedPos.z);
+    rot = Quat(constrainedRot.x, constrainedRot.y, constrainedRot.z, constrainedRot.w);
+
     if (m_bHasBody)
     {
         GetBI().SetPositionAndRotation(m_iBodyID, RVec3(pos), rot, EActivation::DontActivate);
@@ -540,6 +666,12 @@ void CRigidBody::SyncDynamicFromJolt()
     Vec3 tfPos;
     Quat tfRot;
     DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), tfPos, tfRot);
+
+    vector3 constrainedTfPos(static_cast<_float>(tfPos.GetX()), static_cast<_float>(tfPos.GetY()), static_cast<_float>(tfPos.GetZ()));
+    quaternion constrainedTfRot(tfRot.GetX(), tfRot.GetY(), tfRot.GetZ(), tfRot.GetW());
+    ApplyAxisConstraints(constrainedTfPos, constrainedTfRot);
+    tfPos = Vec3(constrainedTfPos.x, constrainedTfPos.y, constrainedTfPos.z);
+    tfRot = Quat(constrainedTfRot.x, constrainedTfRot.y, constrainedTfRot.z, constrainedTfRot.w);
 
     const RVec3 joltPos = GetBI().GetPosition(sourceBodyId);
     const Quat joltRot = GetBI().GetRotation(sourceBodyId);
@@ -587,12 +719,20 @@ void CRigidBody::SyncDynamicFromJolt()
     vector3 pos = vector3(static_cast<_float>(joltPos.GetX()), static_cast<_float>(joltPos.GetY()), static_cast<_float>(joltPos.GetZ()));
     quaternion rot = quaternion(joltRot.GetX(), joltRot.GetY(), joltRot.GetZ(), joltRot.GetW());
 
+    ApplyAxisConstraints(pos, rot);
+
     Get_Transform()->Set_Position(pos);
     Get_Transform()->Set_Quaternion(rot);
 
+    if (m_bHasBody)
+        GetBI().SetPositionAndRotation(m_iBodyID, RVec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), EActivation::DontActivate);
+
+    if (m_bHasSensorBody)
+        GetBI().SetPositionAndRotation(m_iSensorBodyID, RVec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), EActivation::DontActivate);
+
     if (m_bHasBody && m_bHasSensorBody)
     {
-        GetBI().SetPositionAndRotation(m_iSensorBodyID, joltPos, joltRot, EActivation::DontActivate);
+        GetBI().SetPositionAndRotation(m_iSensorBodyID, RVec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), EActivation::DontActivate);
         GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, GetBI().GetLinearVelocity(m_iBodyID), GetBI().GetAngularVelocity(m_iBodyID));
     }
 }
