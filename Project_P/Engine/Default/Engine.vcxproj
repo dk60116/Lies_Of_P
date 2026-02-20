@@ -112,10 +112,10 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);../Header;../../Reference/JoltPhysics-5.5.0</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);../Header;../../Reference/JoltPhysics-5.5.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>epch.h</PrecompiledHeaderFile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>ENGINE_EXPORTS;ASSIMP_BUILD_NO_EXPORT;JPH_FLOATING_POINT_EXCEPTIONS_ENABLED=1;JPH_PROFILE_ENABLED=1;JPH_DEBUG_RENDERER=1;JPH_OBJECT_STREAM=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;ENGINE_EXPORTS;ASSIMP_BUILD_NO_EXPORT;JPH_FLOATING_POINT_EXCEPTIONS_ENABLED=1;JPH_PROFILE_ENABLED=1;JPH_DEBUG_RENDERER=1;JPH_OBJECT_STREAM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
@@ -123,7 +123,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>d3d11.lib;DirectXTK_Debug.lib;Jolt_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../../Reference/Library;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../Reference/JoltPhysics-5.5.0/Build/VS2022_CL/$(Configuration);../../Reference/Library;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>cd $(ProjectDir)../../
@@ -137,10 +137,10 @@ call copy.bat</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);../Header;../../Reference/JoltPhysics-5.5.0</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);../Header;../../Reference/JoltPhysics-5.5.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>epch.h</PrecompiledHeaderFile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>ENGINE_EXPORTS;ASSIMP_BUILD_NO_EXPORT;JPH_FLOATING_POINT_EXCEPTIONS_ENABLED=1;JPH_PROFILE_ENABLED=1;JPH_DEBUG_RENDERER=1;JPH_OBJECT_STREAM=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;ENGINE_EXPORTS;ASSIMP_BUILD_NO_EXPORT;JPH_FLOATING_POINT_EXCEPTIONS_ENABLED=1;JPH_PROFILE_ENABLED=1;JPH_DEBUG_RENDERER=1;JPH_OBJECT_STREAM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
@@ -150,7 +150,7 @@ call copy.bat</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>d3d11.lib;DirectXTK_Release.lib;Jolt.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../../Reference/Library;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../Reference/JoltPhysics-5.5.0/Build/VS2022_CL/$(Configuration);../../Reference/Library;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>cd $(ProjectDir)../../
@@ -356,6 +356,14 @@ call copy.bat</Command>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Engine.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\Jolt.vcxproj">
+      <Project>{b69cf1d2-0a0f-3af6-bcca-348d062c2494}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
