@@ -42,6 +42,7 @@ namespace
 CRigidBody::CRigidBody()
     : m_lColliderList({})
     , m_bBodyDirty(false)
+    , m_bIsDestroying(false)
     , m_iBodyID(0)
     , m_bHasBody(false)
     , m_iSensorBodyID(0)
@@ -112,6 +113,9 @@ void CRigidBody::Awake()
 
 void CRigidBody::FixedUpdate()
 {
+	if (m_bIsDestroying)
+		return;
+
     RebuildBodiesIfDirty();
 
     if (m_bKinematic)
@@ -122,6 +126,9 @@ void CRigidBody::FixedUpdate()
 
 void CRigidBody::OnCollisionEnter(CCollider* _other)
 {
+	if (m_bIsDestroying)
+		return;
+
 	if (!m_pGameObject)
 		return;
 
@@ -132,15 +139,15 @@ void CRigidBody::OnCollisionEnter(CCollider* _other)
 		if (!component || component == this || !component->Get_Enable())
 			continue;
 
-        if (_other && _other->Get_GameObject())
-            CDebug::LogError(L"ColEnter: " + _other->Get_GameObject()->Get_ObjectName());
-
         component->OnCollisionEnter(_other);
     }
 }
 
 void CRigidBody::OnCollisionStay(CCollider* _other)
 {
+	if (m_bIsDestroying)
+		return;
+
 	if (!m_pGameObject)
 		return;
 
@@ -157,6 +164,9 @@ void CRigidBody::OnCollisionStay(CCollider* _other)
 
 void CRigidBody::OnCollisionExit(CCollider* _other)
 {
+	if (m_bIsDestroying)
+		return;
+
 	if (!m_pGameObject)
 		return;
 
@@ -173,6 +183,9 @@ void CRigidBody::OnCollisionExit(CCollider* _other)
 
 void CRigidBody::OnTriggerEnter(CCollider* _other)
 {
+	if (m_bIsDestroying)
+		return;
+
 	if (!m_pGameObject)
 		return;
 
@@ -189,6 +202,9 @@ void CRigidBody::OnTriggerEnter(CCollider* _other)
 
 void CRigidBody::OnTriggerStay(CCollider* _other)
 {
+	if (m_bIsDestroying)
+		return;
+
 	if (!m_pGameObject)
 		return;
 
@@ -205,6 +221,9 @@ void CRigidBody::OnTriggerStay(CCollider* _other)
 
 void CRigidBody::OnTriggerExit(CCollider* _other)
 {
+	if (m_bIsDestroying)
+		return;
+
 	if (!m_pGameObject)
 		return;
 
@@ -221,6 +240,8 @@ void CRigidBody::OnTriggerExit(CCollider* _other)
 
 void CRigidBody::OnDestroy()
 {
+	m_bIsDestroying = true;
+
     DestroyBodies();
 
     for (TRAVERSAL_ITER(m_lColliderList, it))
@@ -236,11 +257,13 @@ void CRigidBody::OnDestroy()
         m_pCompoundShape->Release(); 
         m_pCompoundShape = nullptr; 
     }
-    if (m_pSensorCompoundShape) 
-    { 
-        m_pSensorCompoundShape->Release();
-        m_pSensorCompoundShape = nullptr; 
-    }
+	if (m_pSensorCompoundShape) 
+	{ 
+		m_pSensorCompoundShape->Release();
+		m_pSensorCompoundShape = nullptr; 
+	}
+
+	m_lColliderList.clear();
 }
 void CRigidBody::BuildCompoundShapes(const list<CCollider*>& _colliders, RefConst<Shape>& _outBodyCompound, RefConst<Shape>& _outSensorCompound)
 {
@@ -504,6 +527,9 @@ void CRigidBody::ApplyAxisConstraints(vector3& _pos, quaternion& _rot)
 
 CCollider* CRigidBody::GetEventCollider(_bool _triggerEvent) const
 {
+	if (m_bIsDestroying)
+		return nullptr;
+
     for (CCollider* collider : m_lColliderList)
     {
         if (!collider)

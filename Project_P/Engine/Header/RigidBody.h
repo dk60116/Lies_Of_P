@@ -81,6 +81,7 @@ private:
 	list<CCollider*> m_lColliderList;
 
 	_bool m_bBodyDirty;
+	_bool m_bIsDestroying;
 
 	BodyID m_iBodyID;
 	_bool m_bHasBody;

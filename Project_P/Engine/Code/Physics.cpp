@@ -173,6 +173,9 @@ namespace Engine
 			CCollider* col1 = rb1->GetEventCollider(trigger);
 			CCollider* col2 = rb2->GetEventCollider(trigger);
 
+			if (!col1 && !col2)
+				return;
+
 			PairState state;
 			state.isTrigger = trigger;
 
