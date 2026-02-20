@@ -21,7 +21,18 @@ CCollider::~CCollider()
 
 HRESULT CCollider::Initialize()
 {
-	if (auto rig = m_pGameObject->GetComponent<CRigidBody>())
+	CRigidBody* rig = m_pGameObject->GetComponent<CRigidBody>();
+	if (!rig)
+	{
+		rig = m_pGameObject->AddComponent<CRigidBody>();
+		if (rig)
+		{
+			rig->SetKinematic(true);
+			rig->SetUseGravity(false);
+		}
+	}
+
+	if (rig)
 		rig->AddCollider(this);
 
 	return S_OK;
