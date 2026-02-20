@@ -3,7 +3,6 @@
 #include "Resources.h"
 #include "MeshBuffer.h"
 #include "Material.h"
-#include "Editor.h"
 #include "SceneManager.h"
 #include "Camera.h"
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
@@ -116,9 +115,6 @@ void CSphereCollider::Render_Editor()
 void CSphereCollider::Render_Gizmo()
 {
 #ifndef _CLIENT_BUILD
-    if (m_pGameObject != CEditor::GetInstance().Get_SelectedGameObject())
-        return;
-
     if (!m_pLineMesh || !m_pLineMaterial)
         return;
 

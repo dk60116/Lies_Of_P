@@ -3,7 +3,6 @@
 #include "Resources.h"
 #include "MeshBuffer.h"
 #include "Material.h"
-#include "Editor.h"
 #include "SceneManager.h"
 #include "Camera.h"
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
@@ -118,9 +117,6 @@ void CCapsuleCollider::Render_Editor()
 void CCapsuleCollider::Render_Gizmo()
 {
 #ifndef _CLIENT_BUILD
-    if (m_pGameObject != CEditor::GetInstance().Get_SelectedGameObject())
-        return;
-
     if (!m_pLineMesh || !m_pLineMaterial)
         return;
 

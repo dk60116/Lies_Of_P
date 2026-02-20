@@ -3,7 +3,6 @@
 #include "Resources.h"
 #include "MeshBuffer.h"
 #include "Material.h"
-#include "Editor.h"
 #include "SceneManager.h"
 #include "Camera.h"
 
@@ -115,9 +114,6 @@ void CBoxCollider::Render_Editor()
 void CBoxCollider::Render_Gizmo()
 {
 #ifndef _CLIENT_BUILD
-    if (m_pGameObject != CEditor::GetInstance().Get_SelectedGameObject())
-        return;
-
     if (!m_pLineMesh || !m_pLineMaterial)
         return;
 
