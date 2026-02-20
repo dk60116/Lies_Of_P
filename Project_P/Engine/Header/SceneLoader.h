@@ -3,6 +3,7 @@
 #include "epch.h"
 #include "MeshBuffer.h"
 #include "SkyBox.h"
+#include <atomic>
 
 NS_BEGIN(Engine)
 
@@ -35,10 +36,11 @@ private:
 private:
 	HANDLE m_hThread;
 	CRITICAL_SECTION m_pCriticalSection;
+	_bool m_bCriticalSectionInitialized;
 
 	vector<string> m_mReadyFiles_Name, m_mReadyFiles_Path, m_mReadyFiles_Format;
 
-	_bool m_bRunning;
+	std::atomic_bool m_bRunning;
 	_bool m_bLoading;
 
 	_uint m_iTootalFile;

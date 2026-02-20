@@ -4,6 +4,7 @@
 CSceneLoader::CSceneLoader()
 	: m_hThread(nullptr)
 	, m_pCriticalSection()
+	, m_bCriticalSectionInitialized(false)
 	, m_mReadyFiles_Name({})
 	, m_mReadyFiles_Path({})
 	, m_mReadyFiles_Format({})
@@ -34,15 +35,24 @@ unsigned __stdcall CSceneLoader::ThreadMain(void* pParam)
 
 HRESULT CSceneLoader::Initialize()
 {
+	if (GetInstance().m_bCriticalSectionInitialized)
+		return S_OK;
+
 	InitializeCriticalSection(&GetInstance().m_pCriticalSection);
+	GetInstance().m_bCriticalSectionInitialized = true;
+	GetInstance().m_bRunning = true;
+	GetInstance().m_bLoading = false;
 
 	GetInstance().m_hThread = (HANDLE)_beginthreadex
 	(nullptr, 0, ThreadMain, &GetInstance(), 0, nullptr);
 
 	if (!GetInstance().m_hThread)
+	{
+		GetInstance().m_bRunning = false;
+		DeleteCriticalSection(&GetInstance().m_pCriticalSection);
+		GetInstance().m_bCriticalSectionInitialized = false;
 		return E_FAIL;
-
-	GetInstance().m_bRunning = true;
+	}
 
 	return S_OK;
 }
@@ -75,11 +85,15 @@ void CSceneLoader::StartLoading(vector<string>& _nameList, vector<string>& _file
 
 void CSceneLoader::ThreadLoadingLoop()
 {
-	while (GetInstance().m_bRunning)
+	while (GetInstance().m_bRunning.load())
 	{
 		EnterCriticalSection(&GetInstance().m_pCriticalSection);
 
-		if (!GetInstance().m_mReadyFiles_Name.empty())
+		const size_t nameCount = GetInstance().m_mReadyFiles_Name.size();
+		const size_t pathCount = GetInstance().m_mReadyFiles_Path.size();
+		const size_t formatCount = GetInstance().m_mReadyFiles_Format.size();
+
+		if (nameCount > 0 && pathCount > 0 && formatCount > 0)
 		{
 			GetInstance().m_bLoading = true;
 
@@ -217,6 +231,16 @@ void CSceneLoader::ThreadLoadingLoop()
 
 			++GetInstance().m_iLoadedFile;
 		}
+		else if (nameCount > 0 || pathCount > 0 || formatCount > 0)
+		{
+			GetInstance().m_mReadyFiles_Name.clear();
+			GetInstance().m_mReadyFiles_Path.clear();
+			GetInstance().m_mReadyFiles_Format.clear();
+			GetInstance().m_iTootalFile = 0;
+			GetInstance().m_iLoadedFile = 0;
+			GetInstance().m_bLoading = false;
+			LeaveCriticalSection(&GetInstance().m_pCriticalSection);
+		}
 		else
 		{
 			GetInstance().m_bLoading = false;
@@ -228,11 +252,27 @@ void CSceneLoader::ThreadLoadingLoop()
 
 void CSceneLoader::Shutdown()
 {
-	GetInstance().m_bRunning = false;
+	GetInstance().m_bRunning.store(false);
+	GetInstance().m_bLoading = false;
+
+	if (!GetInstance().m_hThread)
+	{
+		if (GetInstance().m_bCriticalSectionInitialized)
+		{
+			DeleteCriticalSection(&GetInstance().m_pCriticalSection);
+			GetInstance().m_bCriticalSectionInitialized = false;
+		}
+		return;
+	}
 
 	WaitForSingleObject(GetInstance().m_hThread, INFINITE);
 	CloseHandle(GetInstance().m_hThread);
-	DeleteCriticalSection(&GetInstance().m_pCriticalSection);
+	GetInstance().m_hThread = nullptr;
+	if (GetInstance().m_bCriticalSectionInitialized)
+	{
+		DeleteCriticalSection(&GetInstance().m_pCriticalSection);
+		GetInstance().m_bCriticalSectionInitialized = false;
+	}
 }
 
 vector<wstring> CSceneLoader::FormatToRootNode(const wstring& _format)
