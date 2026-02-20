@@ -558,6 +558,7 @@ void CRigidBody::RebuildBodiesIfDirty()
         {
             settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
             settings.mMassPropertiesOverride.mMass = m_fMass;
+            settings.mMotionQuality = EMotionQuality::LinearCast;
         }
 
         Body* body = GetBI().CreateBody(settings);
