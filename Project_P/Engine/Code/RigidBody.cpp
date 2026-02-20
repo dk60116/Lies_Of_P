@@ -558,7 +558,9 @@ void CRigidBody::RebuildBodiesIfDirty()
         {
             settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
             settings.mMassPropertiesOverride.mMass = m_fMass;
-            settings.mMotionQuality = EMotionQuality::LinearCast;
+
+            const _float innerRadius = m_pCompoundShape ? m_pCompoundShape->GetInnerRadius() : 0.f;
+            settings.mMotionQuality = innerRadius > 0.f ? EMotionQuality::LinearCast : EMotionQuality::Discrete;
 
             if (m_bConstPositionX && m_bConstPositionY && m_bConstPositionZ)
                 settings.mAllowSleeping = false;
