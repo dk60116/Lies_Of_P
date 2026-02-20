@@ -7,6 +7,7 @@
 #include "SceneManager.h"
 #include "Camera.h"
 #include <unordered_set>
+#include <cstdint>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 
 namespace
@@ -45,11 +46,11 @@ namespace
         return true;
     }
 
-    _uint64 MakeEdgeKey(_uint a, _uint b)
+    uint64_t MakeEdgeKey(_uint a, _uint b)
     {
         const _uint minIdx = min(a, b);
         const _uint maxIdx = max(a, b);
-        return (static_cast<_uint64>(minIdx) << 32) | static_cast<_uint64>(maxIdx);
+        return (static_cast<uint64_t>(minIdx) << 32) | static_cast<uint64_t>(maxIdx);
     }
 }
 
@@ -173,20 +174,20 @@ void CMeshCollider::Render_Gizmo()
     _vector r = XMQuaternionIdentity();
     _vector t = XMVectorZero();
     XMMatrixDecompose(&s, &r, &t, world);
-    const _matrix worldNoScale = XMMatrixAffineTransform(XMVectorSet(1.f, 1.f, 1.f, 0.f), XMVectorZero(), r, t);
+    const _matrix worldNoScale = XMMatrixRotationQuaternion(r) * XMMatrixTranslationFromVector(t);
 
     _float3 camPos = _float3();
     _matrix matView = cam->Get_ViewMatrix();
     _matrix matProj = cam->Get_ProjectionMatrix();
 
-    unordered_set<_uint64> visitedEdges;
+    unordered_set<uint64_t> visitedEdges;
 
     auto drawEdge = [&](_uint ia, _uint ib)
     {
         if (ia >= vertices.size() || ib >= vertices.size())
             return;
 
-        const _uint64 edgeKey = MakeEdgeKey(ia, ib);
+        const uint64_t edgeKey = MakeEdgeKey(ia, ib);
         if (visitedEdges.find(edgeKey) != visitedEdges.end())
             return;
 
