@@ -706,16 +706,25 @@ void CRigidBody::SyncDynamicFromJolt()
         if (m_bConstRotationZ)
             m_vConstRotation.z = editedEuler.z;
 
+        const _bool isGizmoEditing =
+#ifndef _CLIENT_BUILD
+            ImGuizmo::IsUsing();
+#else
+            false;
+#endif
+
         if (m_bHasBody)
         {
             GetBI().SetPositionAndRotation(m_iBodyID, targetPos, targetRot, EActivation::Activate);
-            GetBI().SetLinearAndAngularVelocity(m_iBodyID, Vec3::sZero(), Vec3::sZero());
+            if (isGizmoEditing)
+                GetBI().SetLinearAndAngularVelocity(m_iBodyID, Vec3::sZero(), Vec3::sZero());
         }
 
         if (m_bHasSensorBody)
         {
             GetBI().SetPositionAndRotation(m_iSensorBodyID, targetPos, targetRot, EActivation::Activate);
-            GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, Vec3::sZero(), Vec3::sZero());
+            if (isGizmoEditing)
+                GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, Vec3::sZero(), Vec3::sZero());
         }
 
         return;
