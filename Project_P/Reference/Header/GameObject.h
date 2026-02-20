@@ -78,6 +78,9 @@ public:
 	T* AddComponent();
 	template<typename T>
 	T* GetComponent();
+	template<typename T>
+	_bool RemoveComponent();
+	_bool RemoveComponent(CComponent* _component);
 
 	const _bool IsActive() const;
 	const _bool IsActive_Origin() const;
@@ -202,6 +205,16 @@ inline T* CGameObject::GetComponent()
 	}
 
 	return nullptr;
+}
+
+template<typename T>
+inline _bool CGameObject::RemoveComponent()
+{
+	T* component = GetComponent<T>();
+	if (!component)
+		return false;
+
+	return RemoveComponent(component);
 }
 
 template<typename T>
