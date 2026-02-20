@@ -29,6 +29,8 @@ HRESULT CMainProcess::Initialize()
         return E_FAIL;
     if (FAILED(CResources::GetInstance().Initialize()))
         return E_FAIL;
+    if (FAILED(CPhysics::GetInstance().Initialize()))
+        return E_FAIL;
     if (FAILED(CSceneManager::GetInstance().Initialize()))
         return E_FAIL;
     if (FAILED(CRenderTargetManager::GetInstance().Initialize()))
@@ -36,8 +38,6 @@ HRESULT CMainProcess::Initialize()
     if (FAILED(CSceneLoader::GetInstance().Initialize()))
         return E_FAIL;
     if (FAILED(CInput::GetInstance().Initialize()))
-        return E_FAIL;
-    if (FAILED(CPhysics::GetInstance().Initialize()))
         return E_FAIL;
     if (FAILED(CUIManager::GetInstance().Initialize()))
         return E_FAIL;
