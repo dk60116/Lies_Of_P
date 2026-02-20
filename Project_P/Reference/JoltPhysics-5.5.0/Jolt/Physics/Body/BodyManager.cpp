@@ -185,6 +185,9 @@ BodyManager::BodyStats BodyManager::GetBodyStats() const
 
 Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettings) const
 {
+	if (mBroadPhaseLayerInterface == nullptr)
+		return nullptr;
+
 	// Fill in basic properties
 	Body *body;
 	if (inBodyCreationSettings.HasMassProperties())
@@ -245,6 +248,9 @@ Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettin
 /// Create a soft body using creation settings. The returned body will not be part of the body manager yet.
 Body *BodyManager::AllocateSoftBody(const SoftBodyCreationSettings &inSoftBodyCreationSettings) const
 {
+	if (mBroadPhaseLayerInterface == nullptr)
+		return nullptr;
+
 	// Fill in basic properties
 	SoftBodyWithMotionPropertiesAndShape *bmp = new SoftBodyWithMotionPropertiesAndShape;
 	SoftBodyMotionProperties *mp = &bmp->mMotionProperties;
