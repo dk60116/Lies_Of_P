@@ -29,7 +29,13 @@ void BodyInterface::ActivateBodyInternal(Body &ioBody) const
 
 Body *BodyInterface::CreateBody(const BodyCreationSettings &inSettings)
 {
+	if (mBodyManager == nullptr)
+		return nullptr;
+
 	Body *body = mBodyManager->AllocateBody(inSettings);
+	if (body == nullptr)
+		return nullptr;
+
 	if (!mBodyManager->AddBody(body))
 	{
 		mBodyManager->FreeBody(body);
@@ -40,7 +46,13 @@ Body *BodyInterface::CreateBody(const BodyCreationSettings &inSettings)
 
 Body *BodyInterface::CreateSoftBody(const SoftBodyCreationSettings &inSettings)
 {
+	if (mBodyManager == nullptr)
+		return nullptr;
+
 	Body *body = mBodyManager->AllocateSoftBody(inSettings);
+	if (body == nullptr)
+		return nullptr;
+
 	if (!mBodyManager->AddBody(body))
 	{
 		mBodyManager->FreeBody(body);
@@ -51,7 +63,13 @@ Body *BodyInterface::CreateSoftBody(const SoftBodyCreationSettings &inSettings)
 
 Body *BodyInterface::CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSettings &inSettings)
 {
+	if (mBodyManager == nullptr)
+		return nullptr;
+
 	Body *body = mBodyManager->AllocateBody(inSettings);
+	if (body == nullptr)
+		return nullptr;
+
 	if (!mBodyManager->AddBodyWithCustomID(body, inBodyID))
 	{
 		mBodyManager->FreeBody(body);
@@ -62,7 +80,13 @@ Body *BodyInterface::CreateBodyWithID(const BodyID &inBodyID, const BodyCreation
 
 Body *BodyInterface::CreateSoftBodyWithID(const BodyID &inBodyID, const SoftBodyCreationSettings &inSettings)
 {
+	if (mBodyManager == nullptr)
+		return nullptr;
+
 	Body *body = mBodyManager->AllocateSoftBody(inSettings);
+	if (body == nullptr)
+		return nullptr;
+
 	if (!mBodyManager->AddBodyWithCustomID(body, inBodyID))
 	{
 		mBodyManager->FreeBody(body);
@@ -73,17 +97,18 @@ Body *BodyInterface::CreateSoftBodyWithID(const BodyID &inBodyID, const SoftBody
 
 Body *BodyInterface::CreateBodyWithoutID(const BodyCreationSettings &inSettings) const
 {
-	return mBodyManager->AllocateBody(inSettings);
+	return mBodyManager != nullptr? mBodyManager->AllocateBody(inSettings) : nullptr;
 }
 
 Body *BodyInterface::CreateSoftBodyWithoutID(const SoftBodyCreationSettings &inSettings) const
 {
-	return mBodyManager->AllocateSoftBody(inSettings);
+	return mBodyManager != nullptr? mBodyManager->AllocateSoftBody(inSettings) : nullptr;
 }
 
 void BodyInterface::DestroyBodyWithoutID(Body *inBody) const
 {
-	mBodyManager->FreeBody(inBody);
+	if (mBodyManager != nullptr && inBody != nullptr)
+		mBodyManager->FreeBody(inBody);
 }
 
 bool BodyInterface::AssignBodyID(Body *ioBody)
