@@ -17,6 +17,7 @@
 #include "BoxCollider.h"
 #include "SphereCollider.h"
 #include "CapsuleCollider.h"
+#include "MeshCollider.h"
 #include "RigidBody.h"
 
 #include <algorithm>
@@ -1275,6 +1276,23 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 ImGui::Text("Is Trigger: %s", capsuleCollider->IsTrigger() ? "True" : "False");
             }
 
+            if (CMeshCollider* meshCollider = dynamic_cast<CMeshCollider*>(component))
+            {
+                _bool isTrigger = meshCollider->IsTrigger();
+                if (ImGui::Checkbox("Is Trigger", &isTrigger))
+                    meshCollider->SetTrigger(isTrigger);
+
+                vector3 center = meshCollider->GetCenter();
+                _float centerValues[3] = { center.x, center.y, center.z };
+                if (ImGui::InputFloat3("Center", centerValues))
+                    meshCollider->SetCenter(vector3(centerValues[0], centerValues[1], centerValues[2]));
+
+                ImGui::Separator();
+                ImGui::TextUnformatted("Preview");
+                ImGui::Text("Center: (%.2f, %.2f, %.2f)", center.x, center.y, center.z);
+                ImGui::Text("Is Trigger: %s", meshCollider->IsTrigger() ? "True" : "False");
+            }
+
             if (CRigidBody* rigidBody = dynamic_cast<CRigidBody*>(component))
             {
                 _bool isKinematic = rigidBody->IsKinematic();
@@ -1677,6 +1695,12 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
         {
             if (!_obj->GetComponent<CCapsuleCollider>())
                 _obj->AddComponent<CCapsuleCollider>();
+        }
+
+        if (ImGui::MenuItem("MeshCollider"))
+        {
+            if (!_obj->GetComponent<CMeshCollider>())
+                _obj->AddComponent<CMeshCollider>();
         }
 
         ImGui::EndMenu();

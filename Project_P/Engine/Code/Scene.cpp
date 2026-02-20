@@ -20,6 +20,7 @@
 #include "CapsuleCollider.h"
 #include "SphereCollider.h"
 #include "BoxCollider.h"
+#include "MeshCollider.h"
 #include "RigidBody.h"
 #include <filesystem>
 #include <unordered_map>
@@ -932,6 +933,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		if (dynamic_cast<CBoxCollider*>(component)) return L"BoxCollider";
 		if (dynamic_cast<CSphereCollider*>(component)) return L"SphereCollider";
 		if (dynamic_cast<CCapsuleCollider*>(component)) return L"CapsuleCollider";
+		if (dynamic_cast<CMeshCollider*>(component)) return L"MeshCollider";
 		return L"";
 	};
 
@@ -1112,6 +1114,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			if (componentName == L"BoxCollider" && dynamic_cast<CBoxCollider*>(component)) return true;
 			if (componentName == L"SphereCollider" && dynamic_cast<CSphereCollider*>(component)) return true;
 			if (componentName == L"CapsuleCollider" && dynamic_cast<CCapsuleCollider*>(component)) return true;
+			if (componentName == L"MeshCollider" && dynamic_cast<CMeshCollider*>(component)) return true;
 		}
 
 		return false;
@@ -1137,6 +1140,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		else if (componentName == L"BoxCollider") obj->AddComponent<CBoxCollider>();
 		else if (componentName == L"SphereCollider") obj->AddComponent<CSphereCollider>();
 		else if (componentName == L"CapsuleCollider") obj->AddComponent<CCapsuleCollider>();
+		else if (componentName == L"MeshCollider") obj->AddComponent<CMeshCollider>();
 	};
 
 	unordered_map<wstring, size_t> infoIndexByGuid;
