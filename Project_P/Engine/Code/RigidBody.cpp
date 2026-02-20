@@ -567,6 +567,9 @@ void CRigidBody::RebuildBodiesIfDirty()
         }
 
         Body* body = GetBI().CreateBody(settings);
+        if (body == nullptr)
+            return;
+
         m_iBodyID = body->GetID();
         m_bHasBody = true;
 
@@ -588,6 +591,9 @@ void CRigidBody::RebuildBodiesIfDirty()
         settings.mIsSensor = true;
 
         Body* body = GetBI().CreateBody(settings);
+        if (body == nullptr)
+            return;
+
         m_iSensorBodyID = body->GetID();
         m_bHasSensorBody = true;
 
