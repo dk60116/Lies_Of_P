@@ -1,6 +1,7 @@
 #include "epch.h"
 #include "RigidBody.h"
 #include "Collider.h"
+#include "Physics.h"
 #ifndef _CLIENT_BUILD
 #include "Editor.h"
 #include "ImGuizmo.h"
@@ -603,6 +604,7 @@ void CRigidBody::DestroyBodies()
 {
 	if (m_bHasBody)
 	{
+		CPhysics::GetInstance().RemoveContactPairs(m_iBodyID);
 		GetBI().RemoveBody(m_iBodyID);
 		GetBI().DestroyBody(m_iBodyID);
 		m_iBodyID = BodyID();
@@ -611,6 +613,7 @@ void CRigidBody::DestroyBodies()
 
 	if (m_bHasSensorBody)
 	{
+		CPhysics::GetInstance().RemoveContactPairs(m_iSensorBodyID);
 		GetBI().RemoveBody(m_iSensorBodyID);
 		GetBI().DestroyBody(m_iSensorBodyID);
 		m_iSensorBodyID = BodyID();

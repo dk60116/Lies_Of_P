@@ -65,6 +65,7 @@ public:
 
 public:
 	PhysicsSystem& GetPhysicsSystem();
+	void RemoveContactPairs(const BodyID& _bodyID);
 
 	vector<RAYCASTHIT> Raycast(const Ray& _ray);
 
@@ -101,4 +102,3 @@ private:
 };
 
 NS_END
-

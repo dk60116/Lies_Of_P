@@ -82,6 +82,34 @@ namespace Engine
 	class CPhysics::ContactListenerImpl final : public ContactListener
 	{
 	public:
+		void RemovePairsForBody(const BodyID& _bodyID)
+		{
+			for (auto it = m_ActivePairs.begin(); it != m_ActivePairs.end();)
+			{
+				PairState state = it->second;
+				_bool removePair = false;
+
+				if (state.a)
+					removePair = state.a->GetBodyID() == _bodyID || state.a->GetSensorBodyID() == _bodyID;
+
+				if (!removePair && state.b)
+					removePair = state.b->GetBodyID() == _bodyID || state.b->GetSensorBodyID() == _bodyID;
+
+				if (!removePair)
+				{
+					++it;
+					continue;
+				}
+
+				if (state.aCollider)
+					state.aCollider->EndContact();
+				if (state.bCollider)
+					state.bCollider->EndContact();
+
+				it = m_ActivePairs.erase(it);
+			}
+		}
+
 		ValidateResult OnContactValidate(const Body& inBody1, const Body& inBody2, RVec3Arg inBaseOffset, const CollideShapeResult& inCollisionResult) override
 		{
 			return ValidateResult::AcceptAllContactsForThisBodyPair;
@@ -453,6 +481,14 @@ void CPhysics::ResetStepper()
 PhysicsSystem& CPhysics::GetPhysicsSystem()
 {
 	return m_PhysicsSystem;
+}
+
+void CPhysics::RemoveContactPairs(const BodyID& _bodyID)
+{
+	if (!m_pContactListener)
+		return;
+
+	m_pContactListener->RemovePairsForBody(_bodyID);
 }
 
 vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray)
