@@ -155,7 +155,7 @@ HWND CEditor::CreateEditorWindow()
 	WNDCLASS wc = {};
 	wc.lpfnWndProc = EditorWndProc;
 	wc.hInstance = CDisplay::GetInstance().Get_HInstance();
-	wc.lpszClassName = "Editor";
+	wc.lpszClassName = L"Editor";
 
 	RegisterClass(&wc);
 
@@ -184,7 +184,7 @@ HWND CEditor::CreateEditorWindow()
 	(
 		0,
 		wc.lpszClassName,
-		"Editor",
+		L"Editor",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT,
 		rc.right - rc.left, rc.bottom - rc.top,

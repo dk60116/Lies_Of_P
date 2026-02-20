@@ -38,6 +38,8 @@ static bool JoltAssertFailedImpl(const char* expr, const char* msg, const char* 
 
 namespace JPH
 {
-    TraceFunction         Trace = &JoltTraceImpl;
-    AssertFailedFunction  AssertFailed = &JoltAssertFailedImpl;
+    TraceFunction Trace = &JoltTraceImpl;
+#ifdef JPH_ENABLE_ASSERTS
+    AssertFailedFunction AssertFailed = &JoltAssertFailedImpl;
+#endif
 }
