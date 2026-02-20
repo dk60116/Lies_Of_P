@@ -205,19 +205,16 @@ void CRigidBody::OnTriggerExit(CCollider* _other)
 
 void CRigidBody::OnDestroy()
 {
-    for (TRAVERSAL_ITER(m_lColliderList, it))
-        Safe_Release(*it);
+    DestroyBodies();
 
-    if (m_pCompoundShape) 
-    { 
-        m_pCompoundShape->Release(); 
-        m_pCompoundShape = nullptr; 
+    for (TRAVERSAL_ITER(m_lColliderList, it))
+    {
+        if (*it && (*it)->m_pRigidBody == this)
+            (*it)->m_pRigidBody = nullptr;
+        Safe_Release(*it);
     }
-    if (m_pSensorCompoundShape) 
-    { 
-        m_pSensorCompoundShape->Release();
-        m_pSensorCompoundShape = nullptr; 
-    }
+
+    m_lColliderList.clear();
 }
 void CRigidBody::BuildCompoundShapes(const list<CCollider*>& _colliders, RefConst<Shape>& _outBodyCompound, RefConst<Shape>& _outSensorCompound)
 {
@@ -396,12 +393,14 @@ void CRigidBody::RebuildBodiesIfDirty()
         }
 
         Body* body = GetBI().CreateBody(settings);
-        m_iBodyID = body->GetID();
-        m_bHasBody = true;
+        if (body)
+        {
+            m_iBodyID = body->GetID();
+            m_bHasBody = true;
 
-        GetBI().SetUserData(m_iBodyID, (uint64)this);
-
-        GetBI().AddBody(m_iBodyID, EActivation::Activate);
+            GetBI().SetUserData(m_iBodyID, (uint64)this);
+            GetBI().AddBody(m_iBodyID, EActivation::Activate);
+        }
     }
 
     if (sensorCompound != nullptr)
@@ -416,11 +415,14 @@ void CRigidBody::RebuildBodiesIfDirty()
         settings.mIsSensor = true;
 
         Body* body = GetBI().CreateBody(settings);
-        m_iSensorBodyID = body->GetID();
-        m_bHasSensorBody = true;
+        if (body)
+        {
+            m_iSensorBodyID = body->GetID();
+            m_bHasSensorBody = true;
 
-        GetBI().SetUserData(m_iSensorBodyID, (uint64)this);
-        GetBI().AddBody(m_iSensorBodyID, EActivation::Activate);
+            GetBI().SetUserData(m_iSensorBodyID, (uint64)this);
+            GetBI().AddBody(m_iSensorBodyID, EActivation::Activate);
+        }
     }
 
     m_bBodyDirty = false;
