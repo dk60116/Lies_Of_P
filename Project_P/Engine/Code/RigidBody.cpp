@@ -559,6 +559,9 @@ void CRigidBody::RebuildBodiesIfDirty()
             settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
             settings.mMassPropertiesOverride.mMass = m_fMass;
             settings.mMotionQuality = EMotionQuality::LinearCast;
+
+            if (m_bConstPositionX && m_bConstPositionY && m_bConstPositionZ)
+                settings.mAllowSleeping = false;
         }
 
         Body* body = GetBI().CreateBody(settings);
@@ -739,14 +742,35 @@ void CRigidBody::SyncDynamicFromJolt()
 
     ApplyAxisConstraints(pos, rot);
 
+    const _bool lockAllPosition = m_bConstPositionX && m_bConstPositionY && m_bConstPositionZ;
+    const _bool lockAllRotation = m_bConstRotationX && m_bConstRotationY && m_bConstRotationZ;
+    const EActivation activation = lockAllPosition ? EActivation::Activate : EActivation::DontActivate;
+
     Get_Transform()->Set_Position(pos);
     Get_Transform()->Set_Quaternion(rot);
 
     if (m_bHasBody)
-        GetBI().SetPositionAndRotation(m_iBodyID, RVec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), EActivation::DontActivate);
+        GetBI().SetPositionAndRotation(m_iBodyID, RVec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), activation);
 
     if (m_bHasSensorBody)
-        GetBI().SetPositionAndRotation(m_iSensorBodyID, RVec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), EActivation::DontActivate);
+        GetBI().SetPositionAndRotation(m_iSensorBodyID, RVec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), activation);
+
+    if (lockAllPosition || lockAllRotation)
+    {
+        if (m_bHasBody)
+        {
+            const Vec3 linearVel = lockAllPosition ? Vec3::sZero() : GetBI().GetLinearVelocity(m_iBodyID);
+            const Vec3 angularVel = lockAllRotation ? Vec3::sZero() : GetBI().GetAngularVelocity(m_iBodyID);
+            GetBI().SetLinearAndAngularVelocity(m_iBodyID, linearVel, angularVel);
+        }
+
+        if (m_bHasSensorBody)
+        {
+            const Vec3 linearVel = lockAllPosition ? Vec3::sZero() : GetBI().GetLinearVelocity(m_iSensorBodyID);
+            const Vec3 angularVel = lockAllRotation ? Vec3::sZero() : GetBI().GetAngularVelocity(m_iSensorBodyID);
+            GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, linearVel, angularVel);
+        }
+    }
 
     if (m_bHasBody && m_bHasSensorBody)
     {
