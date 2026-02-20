@@ -506,6 +506,11 @@ void CRigidBody::DestroyBodies()
 
 void CRigidBody::SyncKinematicToJolt()
 {
+    if (!m_bHasBody && !m_bHasSensorBody)
+        return;
+
+    Get_Transform()->Update();
+
     Vec3 pos;
     Quat rot;
     DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
@@ -527,6 +532,8 @@ void CRigidBody::SyncDynamicFromJolt()
 {
     if (!m_bHasBody && !m_bHasSensorBody)
         return;
+
+    Get_Transform()->Update();
 
     const BodyID sourceBodyId = m_bHasBody ? m_iBodyID : m_iSensorBodyID;
 
