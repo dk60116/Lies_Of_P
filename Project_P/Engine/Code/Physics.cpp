@@ -87,13 +87,7 @@ namespace Engine
 			for (auto it = m_ActivePairs.begin(); it != m_ActivePairs.end();)
 			{
 				PairState state = it->second;
-				_bool removePair = false;
-
-				if (state.a)
-					removePair = state.a->GetBodyID() == _bodyID || state.a->GetSensorBodyID() == _bodyID;
-
-				if (!removePair && state.b)
-					removePair = state.b->GetBodyID() == _bodyID || state.b->GetSensorBodyID() == _bodyID;
+				const _bool removePair = state.bodyA == _bodyID || state.bodyB == _bodyID;
 
 				if (!removePair)
 				{
@@ -137,9 +131,6 @@ namespace Engine
 			PairState state = itA->second;
 			m_ActivePairs.erase(itA);
 
-			if (!state.a || !state.b)
-				return;
-
 			if (state.aCollider)
 				state.aCollider->EndContact();
 			if (state.bCollider)
@@ -147,21 +138,27 @@ namespace Engine
 
 			if (state.isTrigger)
 			{
-				state.a->OnTriggerExit(state.bCollider);
-				state.b->OnTriggerExit(state.aCollider);
+				DispatchTriggerExit(state.aRigidBody, state.aStandaloneCollider, state.bCollider);
+				DispatchTriggerExit(state.bRigidBody, state.bStandaloneCollider, state.aCollider);
 			}
 			else
 			{
-				state.a->OnCollisionExit(state.bCollider);
-				state.b->OnCollisionExit(state.aCollider);
+				DispatchCollisionExit(state.aRigidBody, state.aStandaloneCollider, state.bCollider);
+				DispatchCollisionExit(state.bRigidBody, state.bStandaloneCollider, state.aCollider);
 			}
 		}
 
 	private:
+		static constexpr uint64 COLLIDER_USER_DATA_FLAG = 1ull;
+
 		struct PairState
 		{
-			CRigidBody* a = nullptr;
-			CRigidBody* b = nullptr;
+			BodyID bodyA;
+			BodyID bodyB;
+			CRigidBody* aRigidBody = nullptr;
+			CRigidBody* bRigidBody = nullptr;
+			CCollider* aStandaloneCollider = nullptr;
+			CCollider* bStandaloneCollider = nullptr;
 			CCollider* aCollider = nullptr;
 			CCollider* bCollider = nullptr;
 			_bool isTrigger = false;
@@ -178,25 +175,218 @@ namespace Engine
 			return (static_cast<uint64>(low) << 32) | static_cast<uint64>(high);
 		}
 
-		static CRigidBody* GetRigidBody(const Body& body)
+		static void DecodeUserData(const Body& _body, CRigidBody*& _outRigidBody, CCollider*& _outStandaloneCollider)
 		{
-			return reinterpret_cast<CRigidBody*>(body.GetUserData());
+			_outRigidBody = nullptr;
+			_outStandaloneCollider = nullptr;
+
+			const uint64 userData = _body.GetUserData();
+			if (userData == 0)
+				return;
+
+			if ((userData & COLLIDER_USER_DATA_FLAG) != 0)
+			{
+				const uint64 ptrValue = userData & ~COLLIDER_USER_DATA_FLAG;
+				_outStandaloneCollider = reinterpret_cast<CCollider*>(static_cast<uintptr_t>(ptrValue));
+				return;
+			}
+
+			_outRigidBody = reinterpret_cast<CRigidBody*>(static_cast<uintptr_t>(userData));
+		}
+
+		static CCollider* ResolveEventCollider(CRigidBody* _rigidBody, CCollider* _standaloneCollider, const _bool _triggerEvent)
+		{
+			if (_rigidBody)
+				return _rigidBody->GetEventCollider(_triggerEvent);
+
+			return _standaloneCollider;
+		}
+
+		static void DispatchStandaloneCollisionEnter(CCollider* _standaloneCollider, CCollider* _other)
+		{
+			if (!_standaloneCollider || !_standaloneCollider->Get_GameObject())
+				return;
+
+			auto& components = _standaloneCollider->Get_GameObject()->Get_ComponentList();
+			for (TRAVERSAL_ITER(components, it))
+			{
+				CComponent* component = *it;
+				if (!component || component == _standaloneCollider || !component->Get_Enable())
+					continue;
+
+				component->OnCollisionEnter(_other);
+			}
+		}
+
+		static void DispatchStandaloneCollisionStay(CCollider* _standaloneCollider, CCollider* _other)
+		{
+			if (!_standaloneCollider || !_standaloneCollider->Get_GameObject())
+				return;
+
+			auto& components = _standaloneCollider->Get_GameObject()->Get_ComponentList();
+			for (TRAVERSAL_ITER(components, it))
+			{
+				CComponent* component = *it;
+				if (!component || component == _standaloneCollider || !component->Get_Enable())
+					continue;
+
+				component->OnCollisionStay(_other);
+			}
+		}
+
+		static void DispatchStandaloneCollisionExit(CCollider* _standaloneCollider, CCollider* _other)
+		{
+			if (!_standaloneCollider || !_standaloneCollider->Get_GameObject())
+				return;
+
+			auto& components = _standaloneCollider->Get_GameObject()->Get_ComponentList();
+			for (TRAVERSAL_ITER(components, it))
+			{
+				CComponent* component = *it;
+				if (!component || component == _standaloneCollider || !component->Get_Enable())
+					continue;
+
+				component->OnCollisionExit(_other);
+			}
+		}
+
+		static void DispatchStandaloneTriggerEnter(CCollider* _standaloneCollider, CCollider* _other)
+		{
+			if (!_standaloneCollider || !_standaloneCollider->Get_GameObject())
+				return;
+
+			auto& components = _standaloneCollider->Get_GameObject()->Get_ComponentList();
+			for (TRAVERSAL_ITER(components, it))
+			{
+				CComponent* component = *it;
+				if (!component || component == _standaloneCollider || !component->Get_Enable())
+					continue;
+
+				component->OnTriggerEnter(_other);
+			}
+		}
+
+		static void DispatchStandaloneTriggerStay(CCollider* _standaloneCollider, CCollider* _other)
+		{
+			if (!_standaloneCollider || !_standaloneCollider->Get_GameObject())
+				return;
+
+			auto& components = _standaloneCollider->Get_GameObject()->Get_ComponentList();
+			for (TRAVERSAL_ITER(components, it))
+			{
+				CComponent* component = *it;
+				if (!component || component == _standaloneCollider || !component->Get_Enable())
+					continue;
+
+				component->OnTriggerStay(_other);
+			}
+		}
+
+		static void DispatchStandaloneTriggerExit(CCollider* _standaloneCollider, CCollider* _other)
+		{
+			if (!_standaloneCollider || !_standaloneCollider->Get_GameObject())
+				return;
+
+			auto& components = _standaloneCollider->Get_GameObject()->Get_ComponentList();
+			for (TRAVERSAL_ITER(components, it))
+			{
+				CComponent* component = *it;
+				if (!component || component == _standaloneCollider || !component->Get_Enable())
+					continue;
+
+				component->OnTriggerExit(_other);
+			}
+		}
+
+		static void DispatchCollisionEnter(CRigidBody* _rigidBody, CCollider* _standaloneCollider, CCollider* _other)
+		{
+			if (_rigidBody)
+			{
+				_rigidBody->OnCollisionEnter(_other);
+				return;
+			}
+
+			DispatchStandaloneCollisionEnter(_standaloneCollider, _other);
+		}
+
+		static void DispatchCollisionStay(CRigidBody* _rigidBody, CCollider* _standaloneCollider, CCollider* _other)
+		{
+			if (_rigidBody)
+			{
+				_rigidBody->OnCollisionStay(_other);
+				return;
+			}
+
+			DispatchStandaloneCollisionStay(_standaloneCollider, _other);
+		}
+
+		static void DispatchCollisionExit(CRigidBody* _rigidBody, CCollider* _standaloneCollider, CCollider* _other)
+		{
+			if (_rigidBody)
+			{
+				_rigidBody->OnCollisionExit(_other);
+				return;
+			}
+
+			DispatchStandaloneCollisionExit(_standaloneCollider, _other);
+		}
+
+		static void DispatchTriggerEnter(CRigidBody* _rigidBody, CCollider* _standaloneCollider, CCollider* _other)
+		{
+			if (_rigidBody)
+			{
+				_rigidBody->OnTriggerEnter(_other);
+				return;
+			}
+
+			DispatchStandaloneTriggerEnter(_standaloneCollider, _other);
+		}
+
+		static void DispatchTriggerStay(CRigidBody* _rigidBody, CCollider* _standaloneCollider, CCollider* _other)
+		{
+			if (_rigidBody)
+			{
+				_rigidBody->OnTriggerStay(_other);
+				return;
+			}
+
+			DispatchStandaloneTriggerStay(_standaloneCollider, _other);
+		}
+
+		static void DispatchTriggerExit(CRigidBody* _rigidBody, CCollider* _standaloneCollider, CCollider* _other)
+		{
+			if (_rigidBody)
+			{
+				_rigidBody->OnTriggerExit(_other);
+				return;
+			}
+
+			DispatchStandaloneTriggerExit(_standaloneCollider, _other);
 		}
 
 		void Dispatch(const Body& body1, const Body& body2, const _bool isEnter)
 		{
-			CRigidBody* rb1 = GetRigidBody(body1);
-			CRigidBody* rb2 = GetRigidBody(body2);
-			if (!rb1 || !rb2)
+			CRigidBody* rb1 = nullptr;
+			CRigidBody* rb2 = nullptr;
+			CCollider* standaloneCol1 = nullptr;
+			CCollider* standaloneCol2 = nullptr;
+			DecodeUserData(body1, rb1, standaloneCol1);
+			DecodeUserData(body2, rb2, standaloneCol2);
+
+			if (!rb1 && !rb2)
 				return;
 
 			const _bool trigger = body1.IsSensor() || body2.IsSensor();
-			CCollider* col1 = rb1->GetEventCollider(trigger);
-			CCollider* col2 = rb2->GetEventCollider(trigger);
+			CCollider* col1 = ResolveEventCollider(rb1, standaloneCol1, trigger);
+			CCollider* col2 = ResolveEventCollider(rb2, standaloneCol2, trigger);
 
 			PairState state;
-			state.a = rb1;
-			state.b = rb2;
+			state.bodyA = body1.GetID();
+			state.bodyB = body2.GetID();
+			state.aRigidBody = rb1;
+			state.bRigidBody = rb2;
+			state.aStandaloneCollider = standaloneCol1;
+			state.bStandaloneCollider = standaloneCol2;
 			state.aCollider = col1;
 			state.bCollider = col2;
 			state.isTrigger = trigger;
@@ -217,26 +407,26 @@ namespace Engine
 			{
 				if (isEnter || inserted)
 				{
-					rb1->OnTriggerEnter(col2);
-					rb2->OnTriggerEnter(col1);
+					DispatchTriggerEnter(rb1, standaloneCol1, col2);
+					DispatchTriggerEnter(rb2, standaloneCol2, col1);
 				}
 				else
 				{
-					rb1->OnTriggerStay(col2);
-					rb2->OnTriggerStay(col1);
+					DispatchTriggerStay(rb1, standaloneCol1, col2);
+					DispatchTriggerStay(rb2, standaloneCol2, col1);
 				}
 			}
 			else
 			{
 				if (isEnter || inserted)
 				{
-					rb1->OnCollisionEnter(col2);
-					rb2->OnCollisionEnter(col1);
+					DispatchCollisionEnter(rb1, standaloneCol1, col2);
+					DispatchCollisionEnter(rb2, standaloneCol2, col1);
 				}
 				else
 				{
-					rb1->OnCollisionStay(col2);
-					rb2->OnCollisionStay(col1);
+					DispatchCollisionStay(rb1, standaloneCol1, col2);
+					DispatchCollisionStay(rb2, standaloneCol2, col1);
 				}
 			}
 		}

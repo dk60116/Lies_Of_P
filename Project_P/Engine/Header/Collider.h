@@ -5,6 +5,7 @@
 #include <Jolt/Math/Quat.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h> 
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h> 
+#include <Jolt/Physics/Body/BodyID.h>
 
 using namespace JPH;
 
@@ -42,6 +43,11 @@ public:
     virtual void BuildShapeIfNeeded() PURE;
     virtual void ReleaseShape();
 
+private:
+    void RefreshStandaloneBody();
+    void CreateStandaloneBody();
+    void DestroyStandaloneBody();
+
 protected:
     class CRigidBody* m_pRigidBody;
     _bool m_bIsTrigger;
@@ -51,6 +57,12 @@ protected:
     _bool m_bShapeDirty;
     const mutable Shape* m_pShape;
     _int m_iContactCount;
+
+    BodyID m_iStandaloneBodyID;
+    _bool m_bHasStandaloneBody;
+    _bool m_bStandaloneBodyDirty;
+    vector3 m_vCachedWorldPosition;
+    quaternion m_vCachedWorldRotation;
 };
 
 NS_END
