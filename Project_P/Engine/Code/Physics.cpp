@@ -2,6 +2,7 @@
 #include "Physics.h"
 #include "RigidBody.h"
 #include "Collider.h"
+#include <new>
 
 namespace Engine
 {
@@ -333,6 +334,10 @@ void CPhysics::Release()
 	if (!m_bJoltInitialized)
 		return;
 
+	m_PhysicsSystem.SetContactListener(nullptr);
+	m_PhysicsSystem.~PhysicsSystem();
+	new (&m_PhysicsSystem) PhysicsSystem();
+
 	if (m_pJobSystem)
 	{
 		delete m_pJobSystem;
@@ -353,7 +358,6 @@ void CPhysics::Release()
 
 	if (m_pContactListener)
 	{
-		m_PhysicsSystem.SetContactListener(nullptr);
 		delete m_pContactListener;
 		m_pContactListener = nullptr;
 	}
