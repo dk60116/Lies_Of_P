@@ -601,21 +601,21 @@ void CRigidBody::RebuildBodiesIfDirty()
 
 void CRigidBody::DestroyBodies()
 {
-    //if (m_bHasBody)
-    //{
-    //    GetBI().RemoveBody(m_iBodyID);
-    //    GetBI().DestroyBody(m_iBodyID);
-    //    m_iBodyID = BodyID();
-    //    m_bHasBody = false;
-    //}
+	if (m_bHasBody)
+	{
+		GetBI().RemoveBody(m_iBodyID);
+		GetBI().DestroyBody(m_iBodyID);
+		m_iBodyID = BodyID();
+		m_bHasBody = false;
+	}
 
-    //if (m_bHasSensorBody)
-    //{
-    //    GetBI().RemoveBody(m_iSensorBodyID);
-    //    GetBI().DestroyBody(m_iSensorBodyID);
-    //    m_iSensorBodyID = BodyID();
-    //    m_bHasSensorBody = false;
-    //}
+	if (m_bHasSensorBody)
+	{
+		GetBI().RemoveBody(m_iSensorBodyID);
+		GetBI().DestroyBody(m_iSensorBodyID);
+		m_iSensorBodyID = BodyID();
+		m_bHasSensorBody = false;
+	}
 
     if (m_pCompoundShape)
     {
