@@ -577,17 +577,14 @@ void CRigidBody::RebuildBodiesIfDirty()
                 settings.mAllowSleeping = false;
         }
 
-        Body* body = GetBI().CreateBody(settings);
-        if (!body)
+        m_iBodyID = GetBI().CreateAndAddBody(settings, EActivation::Activate);
+        if (m_iBodyID.IsInvalid())
             return;
 
-        m_iBodyID = body->GetID();
         m_bHasBody = true;
 
         GetBI().SetUserData(m_iBodyID, (uint64)this);
         GetBI().SetGravityFactor(m_iBodyID, motion == EMotionType::Dynamic && m_bUseGravity ? 1.f : 0.f);
-
-        GetBI().AddBody(m_iBodyID, EActivation::Activate);
     }
 
     if (sensorCompound != nullptr)
@@ -601,16 +598,14 @@ void CRigidBody::RebuildBodiesIfDirty()
         BodyCreationSettings settings(m_pSensorCompoundShape, pos, rot, motion, layer);
         settings.mIsSensor = true;
 
-        Body* body = GetBI().CreateBody(settings);
-        if (!body)
+        m_iSensorBodyID = GetBI().CreateAndAddBody(settings, EActivation::Activate);
+        if (m_iSensorBodyID.IsInvalid())
             return;
 
-        m_iSensorBodyID = body->GetID();
         m_bHasSensorBody = true;
 
         GetBI().SetUserData(m_iSensorBodyID, (uint64)this);
         GetBI().SetGravityFactor(m_iSensorBodyID, motion == EMotionType::Dynamic && m_bUseGravity ? 1.f : 0.f);
-        GetBI().AddBody(m_iSensorBodyID, EActivation::Activate);
     }
 
     m_bBodyDirty = false;
