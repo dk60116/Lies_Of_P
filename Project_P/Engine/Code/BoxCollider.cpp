@@ -189,10 +189,10 @@ void CBoxCollider::SetSize(const vector3& size)
 
 void CBoxCollider::OnDestroy()
 {
+    __super::OnDestroy();
+
     Safe_Release(m_pLineMesh);
     Safe_Release(m_pLineMaterial);
-
-    __super::OnDestroy();
 }
 
 void CBoxCollider::BuildShapeIfNeeded()

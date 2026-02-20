@@ -602,23 +602,23 @@ void CRigidBody::RebuildBodiesIfDirty()
 
 void CRigidBody::DestroyBodies()
 {
-	if (m_bHasBody)
-	{
-		CPhysics::GetInstance().RemoveContactPairs(m_iBodyID);
-		GetBI().RemoveBody(m_iBodyID);
-		GetBI().DestroyBody(m_iBodyID);
-		m_iBodyID = BodyID();
-		m_bHasBody = false;
-	}
+	//if (m_bHasBody)
+	//{
+	//	CPhysics::GetInstance().RemoveContactPairs(m_iBodyID);
+	//	GetBI().RemoveBody(m_iBodyID);
+	//	GetBI().DestroyBody(m_iBodyID);
+	//	m_iBodyID = BodyID();
+	//	m_bHasBody = false;
+	//}
 
-	if (m_bHasSensorBody)
-	{
-		CPhysics::GetInstance().RemoveContactPairs(m_iSensorBodyID);
-		GetBI().RemoveBody(m_iSensorBodyID);
-		GetBI().DestroyBody(m_iSensorBodyID);
-		m_iSensorBodyID = BodyID();
-		m_bHasSensorBody = false;
-	}
+	//if (m_bHasSensorBody)
+	//{
+	//	CPhysics::GetInstance().RemoveContactPairs(m_iSensorBodyID);
+	//	GetBI().RemoveBody(m_iSensorBodyID);
+	//	GetBI().DestroyBody(m_iSensorBodyID);
+	//	m_iSensorBodyID = BodyID();
+	//	m_bHasSensorBody = false;
+	//}
 
     if (m_pCompoundShape)
     {

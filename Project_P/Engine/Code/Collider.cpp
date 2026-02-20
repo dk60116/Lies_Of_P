@@ -243,6 +243,9 @@ void CCollider::DestroyStandaloneBody()
 	if (!m_bHasStandaloneBody)
 		return;
 
+	if (!m_pRigidBody)
+		return;
+
 	BodyInterface& bodyInterface = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
 	CPhysics::GetInstance().RemoveContactPairs(m_iStandaloneBodyID);
 	bodyInterface.RemoveBody(m_iStandaloneBodyID);
