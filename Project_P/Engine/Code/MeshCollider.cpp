@@ -7,7 +7,9 @@
 #include "SceneManager.h"
 #include "Camera.h"
 #include <unordered_set>
+#include <unordered_map>
 #include <cstdint>
+#include <cmath>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 
 namespace
@@ -51,6 +53,142 @@ namespace
         const _uint minIdx = min(a, b);
         const _uint maxIdx = max(a, b);
         return (static_cast<uint64_t>(minIdx) << 32) | static_cast<uint64_t>(maxIdx);
+    }
+
+    struct MeshShapeCacheKey
+    {
+        const CMeshBuffer* mesh = nullptr;
+        int sx = 0;
+        int sy = 0;
+        int sz = 0;
+        int meshScale = 0;
+
+        _bool operator==(const MeshShapeCacheKey& rhs) const
+        {
+            return mesh == rhs.mesh
+                && sx == rhs.sx
+                && sy == rhs.sy
+                && sz == rhs.sz
+                && meshScale == rhs.meshScale;
+        }
+    };
+
+    struct MeshShapeCacheKeyHasher
+    {
+        size_t operator()(const MeshShapeCacheKey& key) const
+        {
+            const size_t h0 = hash<const CMeshBuffer*>()(key.mesh);
+            const size_t h1 = hash<int>()(key.sx);
+            const size_t h2 = hash<int>()(key.sy);
+            const size_t h3 = hash<int>()(key.sz);
+            const size_t h4 = hash<int>()(key.meshScale);
+
+            size_t h = h0;
+            h ^= h1 + 0x9e3779b9 + (h << 6) + (h >> 2);
+            h ^= h2 + 0x9e3779b9 + (h << 6) + (h >> 2);
+            h ^= h3 + 0x9e3779b9 + (h << 6) + (h >> 2);
+            h ^= h4 + 0x9e3779b9 + (h << 6) + (h >> 2);
+            return h;
+        }
+    };
+
+    unordered_map<MeshShapeCacheKey, JPH::RefConst<JPH::Shape>, MeshShapeCacheKeyHasher> g_MeshShapeCache;
+
+    int QuantizeScale(_float v)
+    {
+        return static_cast<int>(roundf(v * 10000.f));
+    }
+
+    MeshShapeCacheKey MakeCacheKey(const CMeshBuffer* meshBuffer, const vector3& scale, const _float meshScale)
+    {
+        MeshShapeCacheKey key;
+        key.mesh = meshBuffer;
+        key.sx = QuantizeScale(scale.x);
+        key.sy = QuantizeScale(scale.y);
+        key.sz = QuantizeScale(scale.z);
+        key.meshScale = QuantizeScale(meshScale);
+        return key;
+    }
+
+    const JPH::Shape* BuildOrGetCachedMeshShape(CMeshBuffer* meshBuffer, const vector3& scale, const _float meshScale)
+    {
+        if (!meshBuffer)
+            return nullptr;
+
+        const MeshShapeCacheKey cacheKey = MakeCacheKey(meshBuffer, scale, meshScale);
+        auto cacheIt = g_MeshShapeCache.find(cacheKey);
+        if (cacheIt != g_MeshShapeCache.end())
+        {
+            const JPH::Shape* cachedShape = cacheIt->second.GetPtr();
+            if (cachedShape)
+                cachedShape->AddRef();
+            return cachedShape;
+        }
+
+        vector<VertexTexNormalTangentBuffer> vertices = meshBuffer->Get_VertexBuffer();
+        if (vertices.size() < 3)
+            return nullptr;
+
+        vector<_uint> indices = meshBuffer->Get_IndexBuffer();
+
+        JPH::TriangleList triangles;
+
+        if (indices.size() >= 3)
+        {
+            triangles.reserve(indices.size() / 3);
+
+            for (size_t i = 0; i + 2 < indices.size(); i += 3)
+            {
+                const _uint i0 = indices[i];
+                const _uint i1 = indices[i + 1];
+                const _uint i2 = indices[i + 2];
+
+                if (i0 >= vertices.size() || i1 >= vertices.size() || i2 >= vertices.size())
+                    continue;
+
+                const _float3& p0 = vertices[i0].position;
+                const _float3& p1 = vertices[i1].position;
+                const _float3& p2 = vertices[i2].position;
+
+                triangles.emplace_back(
+                    JPH::Vec3(p0.x * scale.x * meshScale, p0.y * scale.y * meshScale, p0.z * scale.z * meshScale),
+                    JPH::Vec3(p1.x * scale.x * meshScale, p1.y * scale.y * meshScale, p1.z * scale.z * meshScale),
+                    JPH::Vec3(p2.x * scale.x * meshScale, p2.y * scale.y * meshScale, p2.z * scale.z * meshScale));
+            }
+        }
+        else
+        {
+            triangles.reserve(vertices.size() / 3);
+
+            for (size_t i = 0; i + 2 < vertices.size(); i += 3)
+            {
+                const _float3& p0 = vertices[i].position;
+                const _float3& p1 = vertices[i + 1].position;
+                const _float3& p2 = vertices[i + 2].position;
+
+                triangles.emplace_back(
+                    JPH::Vec3(p0.x * scale.x * meshScale, p0.y * scale.y * meshScale, p0.z * scale.z * meshScale),
+                    JPH::Vec3(p1.x * scale.x * meshScale, p1.y * scale.y * meshScale, p1.z * scale.z * meshScale),
+                    JPH::Vec3(p2.x * scale.x * meshScale, p2.y * scale.y * meshScale, p2.z * scale.z * meshScale));
+            }
+        }
+
+        if (triangles.empty())
+            return nullptr;
+
+        JPH::MeshShapeSettings meshSettings(triangles);
+        JPH::ShapeSettings::ShapeResult meshResult = meshSettings.Create();
+
+        if (meshResult.HasError())
+            return nullptr;
+
+        JPH::RefConst<JPH::Shape> meshRef = meshResult.Get();
+        g_MeshShapeCache.insert({ cacheKey, meshRef });
+
+        const JPH::Shape* builtShape = meshRef.GetPtr();
+        if (builtShape)
+            builtShape->AddRef();
+        return builtShape;
     }
 }
 
@@ -268,78 +406,15 @@ void CMeshCollider::BuildShapeIfNeeded()
         return;
     }
 
-    vector<VertexTexNormalTangentBuffer> vertices = meshBuffer->Get_VertexBuffer();
-    if (vertices.size() < 3)
-    {
-        m_bShapeDirty = false;
-        return;
-    }
-
-    vector<_uint> indices = meshBuffer->Get_IndexBuffer();
-
     const vector3 scale = Get_Transform()->Get_LocalScale();
     const _float meshScale = renderer->GetScaleFactor();
 
-    JPH::TriangleList triangles;
-
-    if (indices.size() >= 3)
-    {
-        triangles.reserve(indices.size() / 3);
-
-        for (size_t i = 0; i + 2 < indices.size(); i += 3)
-        {
-            const _uint i0 = indices[i];
-            const _uint i1 = indices[i + 1];
-            const _uint i2 = indices[i + 2];
-
-            if (i0 >= vertices.size() || i1 >= vertices.size() || i2 >= vertices.size())
-                continue;
-
-            const _float3& p0 = vertices[i0].position;
-            const _float3& p1 = vertices[i1].position;
-            const _float3& p2 = vertices[i2].position;
-
-            triangles.emplace_back(
-                JPH::Vec3(p0.x * scale.x * meshScale, p0.y * scale.y * meshScale, p0.z * scale.z * meshScale),
-                JPH::Vec3(p1.x * scale.x * meshScale, p1.y * scale.y * meshScale, p1.z * scale.z * meshScale),
-                JPH::Vec3(p2.x * scale.x * meshScale, p2.y * scale.y * meshScale, p2.z * scale.z * meshScale));
-        }
-    }
-    else
-    {
-        triangles.reserve(vertices.size() / 3);
-
-        for (size_t i = 0; i + 2 < vertices.size(); i += 3)
-        {
-            const _float3& p0 = vertices[i].position;
-            const _float3& p1 = vertices[i + 1].position;
-            const _float3& p2 = vertices[i + 2].position;
-
-            triangles.emplace_back(
-                JPH::Vec3(p0.x * scale.x * meshScale, p0.y * scale.y * meshScale, p0.z * scale.z * meshScale),
-                JPH::Vec3(p1.x * scale.x * meshScale, p1.y * scale.y * meshScale, p1.z * scale.z * meshScale),
-                JPH::Vec3(p2.x * scale.x * meshScale, p2.y * scale.y * meshScale, p2.z * scale.z * meshScale));
-        }
-    }
-
-    if (triangles.empty())
+    const JPH::Shape* baseShape = BuildOrGetCachedMeshShape(meshBuffer, scale, meshScale);
+    if (!baseShape)
     {
         m_bShapeDirty = false;
         return;
     }
-
-    JPH::MeshShapeSettings meshSettings(triangles);
-    JPH::ShapeSettings::ShapeResult meshResult = meshSettings.Create();
-
-    if (meshResult.HasError())
-    {
-        m_bShapeDirty = false;
-        return;
-    }
-
-    JPH::Ref<JPH::Shape> meshRef = meshResult.Get();
-    const JPH::Shape* baseShape = meshRef.GetPtr();
-    baseShape->AddRef();
 
     const _bool centerIsZero =
         (m_vCenter.x == 0.f && m_vCenter.y == 0.f && m_vCenter.z == 0.f);
