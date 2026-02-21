@@ -187,7 +187,12 @@ void CSceneManager::StopScene()
 	if (!m_pCrtScene || m_bLoading)
 		return;
 
+	const wstring currentSceneName = m_pCrtScene->Get_SceneName();
+
 	m_ePlayState = PlayState::Stopped;
+	m_bSceneAwakened = false;
+
+	LoadScene(currentSceneName);
 }
 
 const _bool CSceneManager::IsPlaying() const
