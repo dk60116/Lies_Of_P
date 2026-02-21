@@ -68,6 +68,9 @@ private:
 
 	CTransform* m_pWeaponHolder;
 
+	CCapsuleCollider* m_pBodyCollider;
+	CRigidBody* m_pRigidBody;
+
 public:
 	const _uint GetLightAttackComboCount() const;
 	void SetLightAttakComboCount(const _uint _count);

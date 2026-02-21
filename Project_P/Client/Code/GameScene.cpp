@@ -44,8 +44,6 @@ HRESULT CGameScene::Initialize()
 	CGameObject* playerObj = Add_GameObject(L"Player");
 	m_pPlayer = playerObj->AddComponent<CPlayer>();
 
-	playerObj->AddComponent<CBoxCollider>();
-
 	//CGameObject* mapObj = Add_GameObject(L"Map");
 	//mapObj->AddComponent<CMap_01_SilentStreet>();
 

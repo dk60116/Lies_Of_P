@@ -16,6 +16,8 @@ CPlayer::CPlayer()
 	, m_vHairs({})
 	, m_iLightAttackComboCount(0)
 	, m_pWeaponHolder(nullptr)
+	, m_pBodyCollider(nullptr)
+	, m_pRigidBody(nullptr)
 {
 	m_strName = L"Player";
 }
@@ -133,6 +135,16 @@ HRESULT CPlayer::Initialize()
 	m_pWeaponObj->Get_Transform()->Set_LocalPosition(vector3::zero());
 	m_pWeaponObj->Get_Transform()->Set_LocalEulerAngles(vector3::back() * 90.f);
 	m_pWeaponObj->Get_Transform()->Set_LocalScale(0.5f);
+
+	m_pBodyCollider = m_pGameObject->AddComponent<CCapsuleCollider>();
+	m_pBodyCollider->SetCenter(vector3::up() * 1.65f);
+	m_pBodyCollider->SetHeight(2.5f);
+
+	m_pRigidBody = m_pGameObject->AddComponent<CRigidBody>();
+	m_pRigidBody->SetConstRotationX(true);
+	m_pRigidBody->SetConstRotationY(true);
+	m_pRigidBody->SetConstRotationZ(true);
+	m_pRigidBody->SetUseGravity(true);
 
 	return S_OK;
 }
