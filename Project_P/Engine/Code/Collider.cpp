@@ -243,7 +243,7 @@ void CCollider::CreateStandaloneBody()
 
 void CCollider::DestroyStandaloneBody()
 {
-	if (!m_bHasStandaloneBody || !m_pRigidBody)
+	if (!m_bHasStandaloneBody || m_pRigidBody)
 		return;
 
 	BodyInterface& bodyInterface = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
@@ -258,7 +258,7 @@ void CCollider::DestroyStandaloneBody()
 
 void CCollider::SyncStandaloneBodyTransform()
 {
-	if (!m_bHasStandaloneBody ||!m_pRigidBody)
+	if (!m_bHasStandaloneBody || m_pRigidBody)
 		return;
 
 	Vec3 pos;
