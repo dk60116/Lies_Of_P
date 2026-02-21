@@ -217,6 +217,7 @@ void CCollider::CreateStandaloneBody()
 		return;
 
 	const Shape* shape = GetShape();
+
 	if (!shape)
 		return;
 
@@ -242,7 +243,7 @@ void CCollider::CreateStandaloneBody()
 
 void CCollider::DestroyStandaloneBody()
 {
-	if (!m_bHasStandaloneBody)
+	if (!m_bHasStandaloneBody || m_pRigidBody)
 		return;
 
 	BodyInterface& bodyInterface = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();

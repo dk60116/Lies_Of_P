@@ -47,6 +47,7 @@ private:
     void RefreshStandaloneBody();
     void CreateStandaloneBody();
     void DestroyStandaloneBody();
+    void SyncStandaloneBodyTransform();
 
 protected:
     class CRigidBody* m_pRigidBody;
