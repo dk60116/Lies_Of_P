@@ -56,8 +56,7 @@ CSceneManager& CSceneManager::GetInstance()
 
 HRESULT CSceneManager::Initialize()
 {
-	m_mLayerList.insert({ 0u, L"No Layer" });
-	m_mLayerList.insert({ 1u, L"Default" });
+	m_mLayerList.insert({ 0u, L"Default" });
 
 	for (_uint i = 1; i < 32; ++i)
 		m_mLayerList.insert({ 1u << (_uint)i, L"Layer_" +  to_wstring(i)});
@@ -348,6 +347,9 @@ void CSceneManager::AddLayer(_uint _index, const wstring& _name)
 {
 	if (_index >= 32u)
 		return;
+	if (_index == 0u)
+		return;
+
 	const _uint mask = (1u << _index);
 	m_mLayerList[mask] = _name;
 	SaveEngineSettings();
