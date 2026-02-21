@@ -844,13 +844,22 @@ void CRigidBody::SyncDynamicFromJolt()
             static_cast<float>((targetPos.GetY() - joltPos.GetY()) / fixedDt),
             static_cast<float>((targetPos.GetZ() - joltPos.GetZ()) / fixedDt));
 
+        const _float overrideDx = static_cast<_float>(targetPos.GetX() - joltPos.GetX());
+        const _float overrideDy = static_cast<_float>(targetPos.GetY() - joltPos.GetY());
+        const _float overrideDz = static_cast<_float>(targetPos.GetZ() - joltPos.GetZ());
+        const _float overridePosDeltaSq = overrideDx * overrideDx + overrideDy * overrideDy + overrideDz * overrideDz;
+        const _bool hasPositionCorrection = overridePosDeltaSq > 1e-6f;
+
         if (m_bHasBody)
         {
             GetBI().SetPositionAndRotation(m_iBodyID, targetPos, targetRot, EActivation::Activate);
             if (isGizmoEditing)
                 GetBI().SetLinearAndAngularVelocity(m_iBodyID, Vec3::sZero(), Vec3::sZero());
             else
-                GetBI().SetLinearAndAngularVelocity(m_iBodyID, targetLinearVelocity, Vec3::sZero());
+            {
+                const Vec3 nextLinearVelocity = hasPositionCorrection ? targetLinearVelocity : GetBI().GetLinearVelocity(m_iBodyID);
+                GetBI().SetLinearAndAngularVelocity(m_iBodyID, nextLinearVelocity, Vec3::sZero());
+            }
         }
 
         if (m_bHasSensorBody)
@@ -859,7 +868,10 @@ void CRigidBody::SyncDynamicFromJolt()
             if (isGizmoEditing)
                 GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, Vec3::sZero(), Vec3::sZero());
             else
-                GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, targetLinearVelocity, Vec3::sZero());
+            {
+                const Vec3 nextLinearVelocity = hasPositionCorrection ? targetLinearVelocity : GetBI().GetLinearVelocity(m_iSensorBodyID);
+                GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, nextLinearVelocity, Vec3::sZero());
+            }
         }
 
         CacheLastSyncedTransform(currentTfPos, currentTfRot);
