@@ -750,7 +750,6 @@ void CInspectorBox::Render()
     if (selectedObj)
     {
         _bool active = selectedObj->IsActive();
-        _bool isStatic = selectedObj->IsStatic(CGameObject::STATIC_METHOD::TransformStatic);
 
         _float baseY = ImGui::GetCursorPosY();
 
@@ -785,8 +784,49 @@ void CInspectorBox::Render()
 
         Toggle_End();
 
-        if (ImGui::Checkbox("Static", &isStatic))
-            selectedObj->SetStatic(CGameObject::STATIC_METHOD::TransformStatic, isStatic);
+        struct StaticOption
+        {
+            const char* label;
+            CGameObject::STATIC_METHOD method;
+        };
+
+        StaticOption staticOptions[] =
+        {
+            { "TransformStatic", CGameObject::STATIC_METHOD::TransformStatic }
+        };
+
+        string staticPreview = "None";
+        _uint selectedStaticCount = 0;
+
+        for (const auto& option : staticOptions)
+        {
+            if (selectedObj->IsStatic(option.method))
+            {
+                if (selectedStaticCount == 0)
+                    staticPreview = option.label;
+                else
+                    staticPreview += ", " + string(option.label);
+
+                ++selectedStaticCount;
+            }
+        }
+
+        if (selectedStaticCount > 1)
+            staticPreview = to_string(selectedStaticCount) + " Selected";
+
+        string staticComboId = "Static##" + to_string(selectedObj->Get_UniqueID());
+        if (ImGui::BeginCombo(staticComboId.c_str(), staticPreview.c_str()))
+        {
+            for (const auto& option : staticOptions)
+            {
+                _bool enabled = selectedObj->IsStatic(option.method);
+                string optionId = string(option.label) + "##" + to_string(selectedObj->Get_UniqueID());
+                if (ImGui::Checkbox(optionId.c_str(), &enabled))
+                    selectedObj->SetStatic(option.method, enabled);
+            }
+
+            ImGui::EndCombo();
+        }
 
         if (!selectedObj)
             return;
