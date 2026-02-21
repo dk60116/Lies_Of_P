@@ -483,11 +483,11 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     ApplyAxisConstraints(targetPos, targetRot);
 
     const vector3 appliedDelta = targetPos - vector3(static_cast<_float>(pos.GetX()), static_cast<_float>(pos.GetY()), static_cast<_float>(pos.GetZ()));
-    const _float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
+    const _float frameDt = max(DELTA_TIME, 0.0001f);
     const Vec3 deltaVelocity(
-        static_cast<float>(appliedDelta.x / fixedDt),
-        static_cast<float>(appliedDelta.y / fixedDt),
-        static_cast<float>(appliedDelta.z / fixedDt));
+        static_cast<float>(appliedDelta.x / frameDt),
+        static_cast<float>(appliedDelta.y / frameDt),
+        static_cast<float>(appliedDelta.z / frameDt));
 
     if (!m_bKinematic)
     {
