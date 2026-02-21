@@ -32,7 +32,6 @@ public:
 
 private:
     class CMeshBuffer* m_pCachedMeshBuffer;
-    class CMeshBuffer* m_pLineMesh;
     class CMaterial* m_pLineMaterial;
     _bool m_bShowGizmo;
 };
