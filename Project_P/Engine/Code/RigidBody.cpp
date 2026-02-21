@@ -483,13 +483,12 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     ApplyAxisConstraints(targetPos, targetRot);
 
     const vector3 appliedDelta = targetPos - vector3(static_cast<_float>(pos.GetX()), static_cast<_float>(pos.GetY()), static_cast<_float>(pos.GetZ()));
-    const _float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
-    const Vec3 deltaVelocity(
-        static_cast<float>(appliedDelta.x / fixedDt),
-        static_cast<float>(appliedDelta.y / fixedDt),
-        static_cast<float>(appliedDelta.z / fixedDt));
-
     const _bool hasDynamicBody = !m_bKinematic && (m_bHasBody || m_bHasSensorBody);
+    const _float velocityDt = hasDynamicBody ? max(DELTA_TIME, 0.0001f) : max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
+    const Vec3 deltaVelocity(
+        static_cast<float>(appliedDelta.x / velocityDt),
+        static_cast<float>(appliedDelta.y / velocityDt),
+        static_cast<float>(appliedDelta.z / velocityDt));
 
     if (!hasDynamicBody)
     {
