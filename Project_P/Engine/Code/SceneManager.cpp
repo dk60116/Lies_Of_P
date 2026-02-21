@@ -1,6 +1,11 @@
 #include "epch.h"
 #include "SceneManager.h"
 
+namespace
+{
+	const char* kEngineSettingsPath = "../Engine/Default/EngineSettings.setting";
+}
+
 CSceneManager::CSceneManager()
 	: m_pCrtScene(nullptr)
 	, m_pTempScene(nullptr)
@@ -38,6 +43,8 @@ HRESULT CSceneManager::Initialize()
 
 	for (_uint i = 1; i < 32; ++i)
 		m_mLayerList.insert({ 1u << (_uint)i, L"Layer_" +  to_wstring(i)});
+
+	LoadLayerSettings();
 
 	return S_OK;
 }
@@ -306,6 +313,65 @@ void CSceneManager::AddLayer(_uint _index, const wstring& _name)
 		return;
 	const _uint mask = (1u << _index);
 	m_mLayerList[mask] = _name;
+	SaveLayerSettings();
+}
+
+const map<_uint, wstring>& CSceneManager::Get_LayerList() const
+{
+	return m_mLayerList;
+}
+
+void CSceneManager::SaveLayerSettings() const
+{
+	ofstream outFile(kEngineSettingsPath, ios::trunc);
+	if (!outFile.is_open())
+		return;
+
+	for (_uint i = 1u; i < 32u; ++i)
+	{
+		const _uint mask = (1u << i);
+		auto it = m_mLayerList.find(mask);
+		if (it == m_mLayerList.end())
+			continue;
+
+		outFile << i << "=" << CEngineString::WStringToString(it->second) << "\n";
+	}
+}
+
+void CSceneManager::LoadLayerSettings()
+{
+	ifstream inFile(kEngineSettingsPath);
+	if (!inFile.is_open())
+		return;
+
+	string line;
+	while (getline(inFile, line))
+	{
+		line = CEngineString::Trim(line);
+		if (line.empty())
+			continue;
+
+		size_t delim = line.find('=');
+		if (delim == string::npos)
+			continue;
+
+		string idxText = CEngineString::Trim(line.substr(0, delim));
+		string nameText = CEngineString::Trim(line.substr(delim + 1));
+		if (idxText.empty() || nameText.empty())
+			continue;
+
+		try
+		{
+			unsigned long idx = stoul(idxText);
+			if (idx < 1u || idx >= 32u)
+				continue;
+
+			m_mLayerList[1u << static_cast<_uint>(idx)] = CEngineString::StringToWString(nameText);
+		}
+		catch (...)
+		{
+		}
+	}
 }
 
 const _uint CSceneManager::NameToLayer(const wstring& _name) const

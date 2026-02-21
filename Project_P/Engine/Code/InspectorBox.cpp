@@ -882,6 +882,62 @@ void CInspectorBox::Render()
             ImGui::EndPopup();
         }
 
+        CSceneManager& sceneManager = CSceneManager::GetInstance();
+        const auto& layerList = sceneManager.Get_LayerList();
+        _uint selectedLayerIndex = 0u;
+        _uint selectedLayerMask = selectedObj->GetLayer();
+
+        if (selectedLayerMask > 0u)
+        {
+            for (_uint i = 1u; i < 32u; ++i)
+            {
+                if (selectedLayerMask == (1u << i))
+                {
+                    selectedLayerIndex = i;
+                    break;
+                }
+            }
+        }
+
+        string selectedLayerName = CEngineString::WStringToString(sceneManager.LayerToName(selectedLayerMask));
+        if (selectedLayerName.empty())
+            selectedLayerName = "No Layer";
+
+        const string layerComboId = "Layer##" + to_string(selectedObj->Get_UniqueID());
+        if (ImGui::BeginCombo(layerComboId.c_str(), selectedLayerName.c_str()))
+        {
+            for (_uint i = 0u; i < 32u; ++i)
+            {
+                const _uint layerMask = (i == 0u) ? 0u : (1u << i);
+                auto it = layerList.find(layerMask);
+                if (it == layerList.end())
+                    continue;
+
+                const string layerName = CEngineString::WStringToString(it->second);
+                const string optionLabel = to_string(i) + ": " + layerName;
+                const bool isSelected = (selectedLayerMask == layerMask);
+                if (ImGui::Selectable(optionLabel.c_str(), isSelected))
+                    selectedObj->SetLayer(layerMask);
+
+                if (isSelected)
+                    ImGui::SetItemDefaultFocus();
+            }
+
+            ImGui::EndCombo();
+        }
+
+        if (selectedLayerIndex > 0u)
+        {
+            string editName = selectedLayerName;
+            const string inputId = "Layer Name##" + to_string(selectedObj->Get_UniqueID()) + "_" + to_string(selectedLayerIndex);
+            if (ImGui::InputText(inputId.c_str(), &editName, ImGuiInputTextFlags_EnterReturnsTrue))
+            {
+                const string trimmedName = CEngineString::Trim(editName);
+                if (!trimmedName.empty())
+                    sceneManager.AddLayer(selectedLayerIndex, CEngineString::StringToWString(trimmedName));
+            }
+        }
+
         if (!selectedObj)
             return;
 
