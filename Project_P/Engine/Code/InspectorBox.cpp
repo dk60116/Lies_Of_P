@@ -884,20 +884,7 @@ void CInspectorBox::Render()
 
         CSceneManager& sceneManager = CSceneManager::GetInstance();
         const auto& layerList = sceneManager.Get_LayerList();
-        _uint selectedLayerIndex = 0u;
         _uint selectedLayerMask = selectedObj->GetLayer();
-
-        if (selectedLayerMask > 0u)
-        {
-            for (_uint i = 1u; i < 32u; ++i)
-            {
-                if (selectedLayerMask == (1u << i))
-                {
-                    selectedLayerIndex = i;
-                    break;
-                }
-            }
-        }
 
         string selectedLayerName = CEngineString::WStringToString(sceneManager.LayerToName(selectedLayerMask));
         if (selectedLayerName.empty())
@@ -926,18 +913,6 @@ void CInspectorBox::Render()
             ImGui::EndCombo();
         }
 
-        if (selectedLayerIndex > 0u)
-        {
-            string editName = selectedLayerName;
-            const string inputId = "Layer Name##" + to_string(selectedObj->Get_UniqueID()) + "_" + to_string(selectedLayerIndex);
-            if (ImGui::InputText(inputId.c_str(), &editName, ImGuiInputTextFlags_EnterReturnsTrue))
-            {
-                const string trimmedName = CEngineString::Trim(editName);
-                if (!trimmedName.empty())
-                    sceneManager.AddLayer(selectedLayerIndex, CEngineString::StringToWString(trimmedName));
-            }
-        }
-
         if (!selectedObj)
             return;
 
@@ -959,6 +934,9 @@ void CInspectorBox::Render()
         RenderSelectedAssetInfo(editor.Get_SelectedAssetPath());
         RenderSelectedAssetPreview(editor.Get_SelectedAssetPath());
     }
+
+    if (selectedObj && ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows) && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered())
+        editor.Set_SelectedGameObject(nullptr);
 
     RenderTexturePickerWindow();
 

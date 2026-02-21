@@ -2392,6 +2392,8 @@ void CScene::PickObjectInEditor_End()
 			CGameObject* pickedObj = FindGameObjectOfId(id);
 			if (id != 0 && pickedObj)
 				CEditor::GetInstance().Set_SelectedGameObject(pickedObj, true);
+			else
+				CEditor::GetInstance().Set_SelectedGameObject(nullptr);
 		}
 	}
 }
