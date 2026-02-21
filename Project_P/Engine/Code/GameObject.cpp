@@ -361,6 +361,19 @@ void CGameObject::SetActive(const _bool _active)
 {
 	m_bActive = _active;
 	m_bActive_Origin = _active;
+	m_bPrevActive = _active;
+
+	_bool parentActive = true;
+	if (m_pTransform)
+	{
+		if (CTransform* parent = m_pTransform->Get_Parent())
+		{
+			if (parent->Get_GameObject())
+				parentActive = parent->Get_GameObject()->IsRecursiveActive();
+		}
+	}
+
+	Set_RecursiveActive(parentActive && m_bActive);
 }
 
 list<CComponent*>& CGameObject::Get_ComponentList()
@@ -628,7 +641,10 @@ void CGameObject::Set_RecursiveActive(const _bool _active)
 		for (auto child : children)
 		{
 			if (child && child->Get_GameObject())
-				child->Get_GameObject()->Set_RecursiveActive(_active);
+			{
+				CGameObject* childObj = child->Get_GameObject();
+				childObj->Set_RecursiveActive(_active && childObj->m_bActive);
+			}
 		}
 	}
 }
