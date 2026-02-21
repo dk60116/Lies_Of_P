@@ -508,6 +508,18 @@ void CScene::Update_Editor()
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->Update_Editor();
 
+	if (!CSceneManager::GetInstance().IsPlaying())
+	{
+		if (m_pEditorCamera && m_pEditorCamera->Get_GameObject() && m_pEditorCamera->Get_GameObject()->IsRecursiveActive() && m_pEditorCamera->Get_Enable())
+			m_pEditorCamera->Update();
+
+		for (TRAVERSAL_ITER(m_lCameraList, it))
+		{
+			if ((*it) && (*it)->Get_GameObject() && (*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
+				(*it)->Update();
+		}
+	}
+
 	CPhysics::RAYCASTHIT firstHit = {};
 
 	if (CInput::GetInstance().GetKey_Editor(CONTROL))
