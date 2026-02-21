@@ -207,6 +207,8 @@ void CCollider::RefreshStandaloneBody()
 
 	if (!m_bHasStandaloneBody)
 		CreateStandaloneBody();
+
+	SyncStandaloneBodyTransform();
 }
 
 void CCollider::CreateStandaloneBody()
@@ -243,9 +245,6 @@ void CCollider::DestroyStandaloneBody()
 	if (!m_bHasStandaloneBody)
 		return;
 
-	if (!m_pRigidBody)
-		return;
-
 	BodyInterface& bodyInterface = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
 	CPhysics::GetInstance().RemoveContactPairs(m_iStandaloneBodyID);
 	bodyInterface.RemoveBody(m_iStandaloneBodyID);
@@ -254,4 +253,17 @@ void CCollider::DestroyStandaloneBody()
 	m_iStandaloneBodyID = BodyID();
 	m_bHasStandaloneBody = false;
 	m_iContactCount = 0;
+}
+
+void CCollider::SyncStandaloneBodyTransform()
+{
+	if (!m_bHasStandaloneBody || m_pRigidBody)
+		return;
+
+	Vec3 pos;
+	Quat rot;
+	DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
+
+	BodyInterface& bodyInterface = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
+	bodyInterface.SetPositionAndRotation(m_iStandaloneBodyID, RVec3(pos), rot, EActivation::Activate);
 }
