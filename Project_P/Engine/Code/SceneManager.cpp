@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "SceneManager.h"
+#include "RenderTargetManager.h"
 
 namespace
 {
@@ -341,6 +342,9 @@ void CSceneManager::Set_ShadowQuality(const shadowQualityOptions option)
 		m_sLightSetting.shadowMapSize = 16384;
 		break;
 	}
+
+	if (IsPlayMode())
+		CRenderTargetManager::GetInstance().RefreshShadowDepthTarget();
 }
 
 void CSceneManager::AddLayer(_uint _index, const wstring& _name)

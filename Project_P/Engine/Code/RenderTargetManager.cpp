@@ -81,6 +81,22 @@ HRESULT CRenderTargetManager::Resize(ID3D11Device* device, UINT width, UINT heig
     return CreateTargets(device, (_uint)width, (_uint)height, _isEditor);
 }
 
+
+HRESULT CRenderTargetManager::RefreshShadowDepthTarget()
+{
+    ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
+    if (!device || m_iWidth == 0 || m_iHeight == 0)
+        return E_FAIL;
+
+    auto& rt = PickRTMap(this, false);
+    auto it = rt.find(CRenderTarget::RTType::ShadowDepth);
+    if (it != rt.end())
+        it->second.Destroy();
+
+    const _uint shadowMapSize = CSceneManager::GetInstance().Get_LightSetting().shadowMapSize;
+    return rt[CRenderTarget::RTType::ShadowDepth].Create(CRenderTarget::RTType::ShadowDepth, device, shadowMapSize, shadowMapSize, DXGI_FORMAT_R32_TYPELESS, true);
+}
+
 void CRenderTargetManager::Bind_RenderTarget(const CRenderTarget::RTType type, ID3D11DeviceContext* context, const D3D11_VIEWPORT* vp, const _bool _isEditor)
 {
     if (!context)
@@ -91,7 +107,7 @@ void CRenderTargetManager::Bind_RenderTarget(const CRenderTarget::RTType type, I
     if (it == rtMap.end())
         return;
 
-    Unbind_AllSRVs_PS(context); // SRV/RTV ÇØÀúµå ¹æÁö (ÇÊ¼ö)
+    Unbind_AllSRVs_PS(context); // SRV/RTV Ã‡Ã˜Ã€ÃºÂµÃ¥ Â¹Ã¦ÃÃ¶ (Ã‡ÃŠÂ¼Ã¶)
 
     CRenderTarget& rt = it->second;
 

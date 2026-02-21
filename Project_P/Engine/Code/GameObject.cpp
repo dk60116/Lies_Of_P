@@ -36,7 +36,7 @@ CGameObject::CGameObject(const wstring _name, ID3D11Device* _pDevice, ID3D11Devi
 	, m_bSaveTarget(true)
 	, m_bKill(false)
 	, m_bTransformStatic(false)
-	, m_iLayer(1)
+	, m_iLayer(0)
 {
 	m_strName = L"Game Object";
 	m_pDevice->AddRef();

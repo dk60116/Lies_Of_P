@@ -13,6 +13,7 @@ public:
     void Release();
 
     HRESULT Resize(ID3D11Device* device, UINT width, UINT height, const _bool _isEditor = false);
+    HRESULT RefreshShadowDepthTarget();
 
 public:
     void Bind_RenderTarget(const CRenderTarget::RTType type, ID3D11DeviceContext* context, const D3D11_VIEWPORT* vp, const _bool _isEditor = false);
