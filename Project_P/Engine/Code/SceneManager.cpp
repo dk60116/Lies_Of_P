@@ -132,26 +132,40 @@ void CSceneManager::LoadScene(CScene* _scene)
 
 void CSceneManager::LoadComplete()
 {
+	const PlayState prevPlayState = m_ePlayState;
+
 	m_pCrtScene = nullptr;
 	m_pCrtScene = m_pTempScene;
 	m_pTempScene = nullptr;
 
-	if (m_pCrtScene)
+	if (!m_pCrtScene)
 	{
-		m_pCrtScene->Set_SaveRegistrationEnabled(false);
-		m_pCrtScene->Initialize();
 		m_bLoading = false;
-		m_bSceneAwakened = false;
-		m_ePlayState = PlayState::Stopped;
-		m_pCrtScene->Set_SaveRegistrationEnabled(true);
+		return;
 	}
+
+	m_pCrtScene->Set_SaveRegistrationEnabled(false);
+	m_pCrtScene->Initialize();
+	m_bLoading = false;
+	m_bSceneAwakened = false;
+	m_pCrtScene->Set_SaveRegistrationEnabled(true);
 
 	wstring file = m_pCrtScene->Get_SceneName() + L".scenedata";
 	auto sceneTransformInfo = CResources::GetInstance().ReadSceneObjectTransformInfos(file);
-
 	m_pCrtScene->Bind_ObjectsTransform(sceneTransformInfo);
-	m_pCrtScene->Set_SaveRegistrationEnabled(false);
-	m_pCrtScene->Set_SaveRegistrationEnabled(true);
+
+	if (prevPlayState != PlayState::Stopped)
+	{
+		m_pCrtScene->Set_SaveRegistrationEnabled(false);
+		m_pCrtScene->Awake();
+		m_pCrtScene->Set_SaveRegistrationEnabled(true);
+		m_bSceneAwakened = true;
+		m_ePlayState = prevPlayState;
+	}
+	else
+	{
+		m_ePlayState = PlayState::Stopped;
+	}
 }
 
 void CSceneManager::PlayScene()
