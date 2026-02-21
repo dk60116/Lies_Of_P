@@ -108,7 +108,7 @@ void CTopToolBar::ShowPlayButtons()
 
 	const char* playLabel = "\xE2\x96\xB6";
 	const char* stopLabel = "\xE2\x96\xA0";
-	const char* pauseLabel = "\xE2\x9D\x9A\xE2\x9D\x9A";
+	const char* pauseLabel = "||";
 
 	const _float buttonWidth = 36.f;
 	const ImVec2 buttonSize(buttonWidth, 0.f);
