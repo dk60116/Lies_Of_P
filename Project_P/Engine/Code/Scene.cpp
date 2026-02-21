@@ -522,7 +522,7 @@ void CScene::Update_Editor()
 
 	CPhysics::RAYCASTHIT firstHit = {};
 
-	if (CInput::GetInstance().GetKey_Editor(CONTROL))
+	if (!CSceneManager::GetInstance().IsPlayMode() && CInput::GetInstance().GetKey_Editor(CONTROL))
 	{
 		if (CInput::GetInstance().GetKeyDown_Editor(S))
 		{
@@ -2036,6 +2036,12 @@ void CScene::Remove_Canvas(CCanvas* _canvas)
 
 HRESULT CScene::SaveScene(const wstring& _filePath)
 {
+	if (CSceneManager::GetInstance().IsPlayMode())
+	{
+		CDebug::LogError(L"SaveScene blocked during Play mode.");
+		return E_FAIL;
+	}
+
 	wstring sceneDataPath = L"BinaryAssets/SceneData/" + m_strSceneName + L".scenedata";
 	if (FAILED(CResources::GetInstance().SaveSceneObjectTransformInfos(sceneDataPath, Convert_ObjectsTransformInfo())))
 		return E_FAIL;
