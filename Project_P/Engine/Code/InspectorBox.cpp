@@ -750,6 +750,7 @@ void CInspectorBox::Render()
     if (selectedObj)
     {
         _bool active = selectedObj->IsActive();
+        _bool isStatic = selectedObj->IsStatic(CGameObject::STATIC_METHOD::TransformStatic);
 
         _float baseY = ImGui::GetCursorPosY();
 
@@ -783,6 +784,9 @@ void CInspectorBox::Render()
         }
 
         Toggle_End();
+
+        if (ImGui::Checkbox("Static", &isStatic))
+            selectedObj->SetStatic(CGameObject::STATIC_METHOD::TransformStatic, isStatic);
 
         if (!selectedObj)
             return;
