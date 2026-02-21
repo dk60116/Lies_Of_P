@@ -145,7 +145,7 @@ void CPlayerControllerContext::AddPosition(const vector3& delta)
 {
 	if (!m_pPlayer) 
 		return;
-	m_pPlayer->Get_Transform()->Add_Position(delta);
+	m_pPlayer->Get_Transform()->Translate(delta);
 }
 
 void CPlayerControllerContext::BeginTurnTo(_float _targetYawDeg)
