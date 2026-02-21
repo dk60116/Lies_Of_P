@@ -58,6 +58,22 @@ namespace
         return static_cast<int>(roundf(v * 10000.f));
     }
 
+
+
+    vector3 ExtractWorldScale(CTransform* transform)
+    {
+        if (!transform)
+            return vector3::one();
+
+        XMVECTOR scaleVec;
+        XMVECTOR rotVec;
+        XMVECTOR transVec;
+        XMMatrixDecompose(&scaleVec, &rotVec, &transVec, transform->Get_WorldMatrix());
+
+        _float3 scale;
+        XMStoreFloat3(&scale, scaleVec);
+        return vector3(scale.x, scale.y, scale.z);
+    }
     MeshShapeCacheKey MakeCacheKey(const CMeshBuffer* meshBuffer, const vector3& scale, const _float meshScale)
     {
         MeshShapeCacheKey key;
@@ -155,6 +171,7 @@ CMeshCollider::CMeshCollider()
     : m_pCachedMeshBuffer(nullptr)
     , m_pLineMaterial(nullptr)
     , m_bShowGizmo(true)
+    , m_vCachedWorldScale(vector3::one())
 {
     m_strName = L"Mesh Collider";
 }
@@ -176,6 +193,7 @@ CComponent* CMeshCollider::Clone() const
     clone->m_vCenter = m_vCenter;
     clone->m_bShapeDirty = true;
     clone->m_bShowGizmo = m_bShowGizmo;
+    clone->m_vCachedWorldScale = m_vCachedWorldScale;
 
     return clone;
 }
@@ -213,7 +231,17 @@ void CMeshCollider::Update()
     {
         m_pCachedMeshBuffer = currentMesh;
         NotifyShapeChanged();
+    }
 
+    const vector3 worldScale = ExtractWorldScale(Get_Transform());
+    const _float dx = fabsf(worldScale.x - m_vCachedWorldScale.x);
+    const _float dy = fabsf(worldScale.y - m_vCachedWorldScale.y);
+    const _float dz = fabsf(worldScale.z - m_vCachedWorldScale.z);
+
+    if (dx > 0.0001f || dy > 0.0001f || dz > 0.0001f)
+    {
+        m_vCachedWorldScale = worldScale;
+        NotifyShapeChanged();
     }
 }
 
@@ -251,7 +279,7 @@ void CMeshCollider::Render_Gizmo()
     else
         m_pLineMaterial->Set_BaseColor(_float4(0.f, 1.f, 0.f, 1.f));
 
-    const vector3 scale = Get_Transform()->Get_LocalScale();
+    const vector3 scale = ExtractWorldScale(Get_Transform());
     const _float meshScale = renderer->GetScaleFactor();
     const _matrix centerOffset = XMMatrixTranslation(m_vCenter.x * scale.x * meshScale, m_vCenter.y * scale.y * meshScale, m_vCenter.z * scale.z * meshScale);
     const _matrix gizmoWorld = centerOffset * Get_Transform()->Get_WorldMatrix();
@@ -327,7 +355,8 @@ void CMeshCollider::BuildShapeIfNeeded()
         return;
     }
 
-    const vector3 scale = Get_Transform()->Get_LocalScale();
+    const vector3 scale = ExtractWorldScale(Get_Transform());
+    m_vCachedWorldScale = scale;
     const _float meshScale = renderer->GetScaleFactor();
 
     const JPH::Shape* baseShape = BuildOrGetCachedMeshShape(meshBuffer, scale, meshScale);
