@@ -814,6 +814,25 @@ void CInspectorBox::Render()
         if (selectedStaticCount > 1)
             staticPreview = to_string(selectedStaticCount) + " Selected";
 
+        static CGameObject* pendingStaticTarget = nullptr;
+        static CGameObject::STATIC_METHOD pendingStaticMethod = CGameObject::STATIC_METHOD::TransformStatic;
+        static _bool pendingStaticValue = false;
+        static _bool pendingOpenStaticPopup = false;
+
+        auto applyStaticToHierarchy = [&](auto&& self, CTransform* transform, CGameObject::STATIC_METHOD method, _bool value) -> void
+        {
+            if (!transform)
+                return;
+
+            CGameObject* gameObject = transform->Get_GameObject();
+            if (gameObject)
+                gameObject->SetStatic(method, value);
+
+            for (CTransform* child : transform->Get_ChldList())
+                self(self, child, method, value);
+        };
+
+        string staticPopupId = "Apply Static To Children?##" + to_string(selectedObj->Get_UniqueID());
         string staticComboId = "Static##" + to_string(selectedObj->Get_UniqueID());
         if (ImGui::BeginCombo(staticComboId.c_str(), staticPreview.c_str()))
         {
@@ -822,10 +841,58 @@ void CInspectorBox::Render()
                 _bool enabled = selectedObj->IsStatic(option.method);
                 string optionId = string(option.label) + "##" + to_string(selectedObj->Get_UniqueID());
                 if (ImGui::Checkbox(optionId.c_str(), &enabled))
-                    selectedObj->SetStatic(option.method, enabled);
+                {
+                    CTransform* transform = selectedObj->Get_Transform();
+                    const _bool hasChildren = transform && !transform->Get_ChldList().empty();
+
+                    if (hasChildren)
+                    {
+                        pendingStaticTarget = selectedObj;
+                        pendingStaticMethod = option.method;
+                        pendingStaticValue = enabled;
+                        pendingOpenStaticPopup = true;
+                    }
+                    else
+                        selectedObj->SetStatic(option.method, enabled);
+                }
             }
 
             ImGui::EndCombo();
+        }
+
+        if (pendingOpenStaticPopup)
+        {
+            ImGui::OpenPopup(staticPopupId.c_str());
+            pendingOpenStaticPopup = false;
+        }
+
+        if (ImGui::BeginPopupModal(staticPopupId.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Apply to children too?");
+
+            if (ImGui::Button("Yes"))
+            {
+                if (pendingStaticTarget)
+                {
+                    applyStaticToHierarchy(applyStaticToHierarchy, pendingStaticTarget->Get_Transform(), pendingStaticMethod, pendingStaticValue);
+                    pendingStaticTarget = nullptr;
+                }
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("No"))
+            {
+                if (pendingStaticTarget)
+                {
+                    pendingStaticTarget->SetStatic(pendingStaticMethod, pendingStaticValue);
+                    pendingStaticTarget = nullptr;
+                }
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
         }
 
         if (!selectedObj)
