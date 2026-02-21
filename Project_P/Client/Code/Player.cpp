@@ -142,7 +142,7 @@ HRESULT CPlayer::Initialize()
 
 	m_pRigidBody = m_pGameObject->AddComponent<CRigidBody>();
 	m_pRigidBody->SetConstRotationX(true);
-	m_pRigidBody->SetConstRotationY(true);
+	m_pRigidBody->SetConstRotationY(false);
 	m_pRigidBody->SetConstRotationZ(true);
 	m_pRigidBody->SetUseGravity(true);
 
