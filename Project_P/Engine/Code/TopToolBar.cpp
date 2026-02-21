@@ -104,6 +104,8 @@ void CTopToolBar::ShowPlayButtons()
 {
 	CSceneManager& sceneManager = CSceneManager::GetInstance();
 
+	ImGui::SameLine();
+
 	const char* playLabel = "\xE2\x96\xB6";
 	const char* stopLabel = "\xE2\x96\xA0";
 	const char* pauseLabel = "\xE2\x9D\x9A\xE2\x9D\x9A";
