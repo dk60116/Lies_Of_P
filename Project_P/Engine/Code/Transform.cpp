@@ -486,21 +486,25 @@ void CTransform::Add_Position(const vector3& _value)
 void CTransform::Add_Position(const _float _x, const _float _y, const _float _z)
 {
     m_vPosition += vector3(_x, _y, _z);
+    Bind_Matrix();
 }
 
 void CTransform::Add_PositionX(const _float _value)
 {
     m_vPosition.x += _value;
+    Bind_Matrix();
 }
 
 void CTransform::Add_PositionY(const _float _value)
 {
     m_vPosition.y += _value;
+    Bind_Matrix();
 }
 
 void CTransform::Add_PositionZ(const _float _value)
 {
     m_vPosition.z += _value;
+    Bind_Matrix();
 }
 
 void CTransform::Add_LocalPosition(const vector3& _value)
@@ -512,21 +516,25 @@ void CTransform::Add_LocalPosition(const vector3& _value)
 void CTransform::Add_LocalPosition(const _float _x, const _float _y, const _float _z)
 {
     m_vPosition += vector3(_x, _y, _z);
+    Bind_Matrix();
 }
 
 void CTransform::Add_LocalPositionX(const _float _value)
 {
     m_vPosition.x += _value;
+    Bind_Matrix();
 }
 
 void CTransform::Add_LocalPositionY(const _float _value)
 {
     m_vPosition.y += _value;
+    Bind_Matrix();
 }
 
 void CTransform::Add_LocalPositionZ(const _float _value)
 {
     m_vPosition.z += _value;
+    Bind_Matrix();
 }
 
 void CTransform::Set_Quaternion(const quaternion& _value)
@@ -555,6 +563,8 @@ void CTransform::Set_LocalQuaternion(const quaternion& _value)
     m_vQuaternion = _value;
 
     m_vEulerAngles = m_vQuaternion.to_euler();
+
+    Bind_Matrix();
 }
 
 void CTransform::Add_Quaternion(const quaternion& _delta)
@@ -564,6 +574,8 @@ void CTransform::Add_Quaternion(const quaternion& _delta)
 
     _vector result = XMQuaternionMultiply(dq, q);
     XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), XMQuaternionNormalize(result));
+
+    Bind_Matrix();
 }
 
 void CTransform::Set_EulerAngles(const vector3& _rot)
@@ -583,6 +595,8 @@ void CTransform::Set_EulerAngles(const vector3& _rot)
         SetParent(tempParent);
 
     m_vEulerAngles = _rot;
+
+    Bind_Matrix();
 }
 
 void CTransform::Set_EulerAngles(const _float _x, const _float _y, const _float _z)
