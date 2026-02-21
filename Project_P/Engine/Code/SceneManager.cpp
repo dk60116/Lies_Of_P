@@ -56,8 +56,6 @@ CSceneManager& CSceneManager::GetInstance()
 
 HRESULT CSceneManager::Initialize()
 {
-	Set_ShadowQuality(m_sLightSetting.shadowQuality);
-
 	m_mLayerList.insert({ 0u, L"No Layer" });
 	m_mLayerList.insert({ 1u, L"Default" });
 
@@ -65,6 +63,7 @@ HRESULT CSceneManager::Initialize()
 		m_mLayerList.insert({ 1u << (_uint)i, L"Layer_" +  to_wstring(i)});
 
 	LoadLayerSettings();
+	Set_ShadowQuality(m_sLightSetting.shadowQuality);
 	CTime::GetInstance().SetTimeScale(m_sTimeSetting.timeSclae);
 
 	return S_OK;
@@ -374,6 +373,7 @@ void CSceneManager::SaveEngineSettings() const
 
 	outFile << "TimeFixedStep=" << m_sTimeSetting.fixedTimeStep << "\n";
 	outFile << "TimeScale=" << m_sTimeSetting.timeSclae << "\n";
+	outFile << "LightShadowQuality=" << static_cast<_int>(m_sLightSetting.shadowQuality) << "\n";
 
 	for (_uint i = 1u; i < 32u; ++i)
 	{
@@ -432,6 +432,23 @@ void CSceneManager::LoadLayerSettings()
 				if (parsed < 0.f)
 					parsed = 0.f;
 				m_sTimeSetting.timeSclae = parsed;
+			}
+			catch (...)
+			{
+			}
+			continue;
+		}
+
+		if (idxText == "LightShadowQuality")
+		{
+			try
+			{
+				_int parsed = stoi(nameText);
+				if (parsed < static_cast<_int>(CSceneManager::shadowQualityOptions::Low))
+					parsed = static_cast<_int>(CSceneManager::shadowQualityOptions::Low);
+				if (parsed > static_cast<_int>(CSceneManager::shadowQualityOptions::Ultra))
+					parsed = static_cast<_int>(CSceneManager::shadowQualityOptions::Ultra);
+				m_sLightSetting.shadowQuality = static_cast<CSceneManager::shadowQualityOptions>(parsed);
 			}
 			catch (...)
 			{

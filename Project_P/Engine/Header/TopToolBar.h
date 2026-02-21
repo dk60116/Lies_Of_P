@@ -23,6 +23,7 @@ private:
 	void ShowEditMenu();
 	void ShowProjectSettingsWindow();
 	void ShowProjectSettingsTime();
+	void ShowProjectSettingsLight();
 	void ShowPlayButtons();
 	void Show2DButton();
 	void ShowFPS();
@@ -32,6 +33,7 @@ private:
 	_int m_iProjectSettingsSelection;
 	_float m_fPendingFixedTimeStep;
 	_float m_fPendingTimeScale;
+	_int m_iPendingShadowQuality;
 };
 
 NS_END

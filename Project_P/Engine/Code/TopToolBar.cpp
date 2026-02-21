@@ -6,6 +6,7 @@ CTopToolBar::CTopToolBar()
 	, m_iProjectSettingsSelection(0)
 	, m_fPendingFixedTimeStep(0.02f)
 	, m_fPendingTimeScale(1.f)
+	, m_iPendingShadowQuality(0)
 {
 }
 
@@ -118,9 +119,12 @@ void CTopToolBar::ShowEditMenu()
 	{
 		if (ImGui::MenuItem("ProjectSetting"))
 		{
-			auto timeSetting = CSceneManager::GetInstance().Get_TimeSetting();
+			CSceneManager& sceneManager = CSceneManager::GetInstance();
+			auto timeSetting = sceneManager.Get_TimeSetting();
+			auto lightSetting = sceneManager.Get_LightSetting();
 			m_fPendingFixedTimeStep = timeSetting.fixedTimeStep;
 			m_fPendingTimeScale = timeSetting.timeSclae;
+			m_iPendingShadowQuality = static_cast<_int>(lightSetting.shadowQuality);
 			m_bProjectSettingsWindowOpen = true;
 		}
 
@@ -142,6 +146,8 @@ void CTopToolBar::ShowProjectSettingsWindow()
 		ImGui::BeginChild("ProjectSettingsCategoryList", ImVec2(180.f, 0.f), true);
 		if (ImGui::Selectable("Time", m_iProjectSettingsSelection == 0))
 			m_iProjectSettingsSelection = 0;
+		if (ImGui::Selectable("Light", m_iProjectSettingsSelection == 1))
+			m_iProjectSettingsSelection = 1;
 		ImGui::EndChild();
 
 		ImGui::SameLine();
@@ -149,6 +155,8 @@ void CTopToolBar::ShowProjectSettingsWindow()
 		ImGui::BeginChild("ProjectSettingsEditor", ImVec2(0.f, 0.f), true);
 		if (m_iProjectSettingsSelection == 0)
 			ShowProjectSettingsTime();
+		else if (m_iProjectSettingsSelection == 1)
+			ShowProjectSettingsLight();
 		ImGui::EndChild();
 		ImGui::EndChild();
 
@@ -157,6 +165,7 @@ void CTopToolBar::ShowProjectSettingsWindow()
 			CSceneManager& sceneManager = CSceneManager::GetInstance();
 			sceneManager.Set_FixedTimeStep(m_fPendingFixedTimeStep);
 			sceneManager.Set_TimeScale(m_fPendingTimeScale);
+			sceneManager.Set_ShadowQuality(static_cast<CSceneManager::shadowQualityOptions>(m_iPendingShadowQuality));
 			sceneManager.SaveEngineSettings();
 		}
 	}
@@ -180,6 +189,43 @@ void CTopToolBar::ShowProjectSettingsTime()
 		if (m_fPendingTimeScale < 0.f)
 			m_fPendingTimeScale = 0.f;
 	}
+}
+
+
+void CTopToolBar::ShowProjectSettingsLight()
+{
+	ImGui::Text("Light");
+	ImGui::Separator();
+
+	const char* qualityNames[] = { "Low", "Middle", "High", "SuperHigh", "Ultra" };
+	if (m_iPendingShadowQuality < 0)
+		m_iPendingShadowQuality = 0;
+	if (m_iPendingShadowQuality > 4)
+		m_iPendingShadowQuality = 4;
+
+	ImGui::Combo("Shadow Quality", &m_iPendingShadowQuality, qualityNames, IM_ARRAYSIZE(qualityNames));
+
+	_uint shadowMapSize = 1024u;
+	switch (m_iPendingShadowQuality)
+	{
+	case static_cast<_int>(CSceneManager::shadowQualityOptions::Low):
+		shadowMapSize = 1024u;
+		break;
+	case static_cast<_int>(CSceneManager::shadowQualityOptions::Middle):
+		shadowMapSize = 2048u;
+		break;
+	case static_cast<_int>(CSceneManager::shadowQualityOptions::High):
+		shadowMapSize = 4096u;
+		break;
+	case static_cast<_int>(CSceneManager::shadowQualityOptions::SuperHigh):
+		shadowMapSize = 8192u;
+		break;
+	case static_cast<_int>(CSceneManager::shadowQualityOptions::Ultra):
+		shadowMapSize = 16384u;
+		break;
+	}
+
+	ImGui::Text("Shadow Map Size: %u", shadowMapSize);
 }
 
 void CTopToolBar::ShowPlayButtons()
