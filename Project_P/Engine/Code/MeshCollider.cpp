@@ -262,16 +262,28 @@ void CMeshCollider::Render_Gizmo()
     _matrix matView = cam->Get_ViewMatrix();
     _matrix matProj = cam->Get_ProjectionMatrix();
 
+    ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
+    if (!context)
+        return;
+
+    ID3D11RasterizerState* wireframeRasterizer = CGraphicDevice::GetInstance().Get_Rasterizer_Wireframe();
+
     ID3D11RasterizerState* prevRasterizer = nullptr;
-    m_pContext->RSGetState(&prevRasterizer);
-    m_pContext->RSSetState(CGraphicDevice::GetInstance().Get_Rasterizer_Wireframe());
+    if (wireframeRasterizer)
+    {
+        context->RSGetState(&prevRasterizer);
+        context->RSSetState(wireframeRasterizer);
+    }
 
     m_pLineMaterial->Bind_Matrix(gizmoWorld);
     m_pLineMaterial->Bind_Camera(camPos, matView, matProj, 0);
     meshBuffer->Render();
 
-    m_pContext->RSSetState(prevRasterizer);
-    Safe_Release(prevRasterizer);
+    if (wireframeRasterizer)
+    {
+        context->RSSetState(prevRasterizer);
+        Safe_Release(prevRasterizer);
+    }
 #endif
 }
 
