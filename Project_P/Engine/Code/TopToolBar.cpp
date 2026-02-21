@@ -3,6 +3,7 @@
 
 CTopToolBar::CTopToolBar()
 	: m_bProjectSettingsWindowOpen(false)
+	, m_iProjectSettingsSelection(0)
 {
 }
 
@@ -132,13 +133,41 @@ void CTopToolBar::ShowProjectSettingsWindow()
 	if (!m_bProjectSettingsWindowOpen)
 		return;
 
-	ImGui::SetNextWindowSize(ImVec2(420.f, 240.f), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(720.f, 420.f), ImGuiCond_FirstUseEver);
 
 	if (ImGui::Begin("Project Settings", &m_bProjectSettingsWindowOpen))
 	{
+		ImGui::BeginChild("ProjectSettingsCategoryList", ImVec2(180.f, 0.f), true);
+		if (ImGui::Selectable("Time", m_iProjectSettingsSelection == 0))
+			m_iProjectSettingsSelection = 0;
+		ImGui::EndChild();
+
+		ImGui::SameLine();
+
+		ImGui::BeginChild("ProjectSettingsEditor", ImVec2(0.f, 0.f), true);
+		if (m_iProjectSettingsSelection == 0)
+			ShowProjectSettingsTime();
+		ImGui::EndChild();
 	}
 
 	ImGui::End();
+}
+
+void CTopToolBar::ShowProjectSettingsTime()
+{
+	CSceneManager& sceneManager = CSceneManager::GetInstance();
+	auto timeSetting = sceneManager.Get_TimeSetting();
+	_float fixedTimeStep = timeSetting.fixedTimeStep;
+	_float timeScale = timeSetting.timeSclae;
+
+	ImGui::Text("Time");
+	ImGui::Separator();
+
+	if (ImGui::DragFloat("Fixed Time Step", &fixedTimeStep, 0.0001f, 0.0001f, 1.f, "%.4f"))
+		sceneManager.Set_FixedTimeStep(fixedTimeStep);
+
+	if (ImGui::DragFloat("Time Scale", &timeScale, 0.01f, 0.f, 10.f, "%.2f"))
+		sceneManager.Set_TimeScale(timeScale);
 }
 
 void CTopToolBar::ShowPlayButtons()

@@ -66,6 +66,8 @@ public:
 public:
 	const TimeSettings& Get_TimeSetting();
 	const LightSettings& Get_LightSetting();
+	void Set_FixedTimeStep(const _float value);
+	void Set_TimeScale(const _float value);
 	void Set_ShadowQuality(const shadowQualityOptions option);
 
 public:

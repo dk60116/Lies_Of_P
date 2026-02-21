@@ -22,12 +22,14 @@ private:
 	void ShowSelectSceneButton();
 	void ShowEditMenu();
 	void ShowProjectSettingsWindow();
+	void ShowProjectSettingsTime();
 	void ShowPlayButtons();
 	void Show2DButton();
 	void ShowFPS();
 
 private:
 	_bool m_bProjectSettingsWindowOpen;
+	_int m_iProjectSettingsSelection;
 };
 
 NS_END

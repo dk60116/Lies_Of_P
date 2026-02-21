@@ -171,6 +171,9 @@ void CHierachyBox::Render()
 			for (auto& obj : currentScene->Get_RootObjects())
 				RenderObjectHierarchy(obj, filterLower);
 
+			if (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows) && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered())
+				editor.Set_SelectedGameObject(nullptr);
+
 			if (ImGui::BeginPopupContextWindow("HierarchyScrollContextMenu", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
 			{
 				if (ImGui::MenuItem("Create Empty"))

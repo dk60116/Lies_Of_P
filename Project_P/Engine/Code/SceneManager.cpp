@@ -283,6 +283,23 @@ const CSceneManager::LightSettings& CSceneManager::Get_LightSetting()
 	return m_sLightSetting;
 }
 
+void CSceneManager::Set_FixedTimeStep(const _float value)
+{
+	_float newValue = value;
+	if (newValue < 0.0001f)
+		newValue = 0.0001f;
+	m_sTimeSetting.fixedTimeStep = newValue;
+}
+
+void CSceneManager::Set_TimeScale(const _float value)
+{
+	_float newValue = value;
+	if (newValue < 0.f)
+		newValue = 0.f;
+	m_sTimeSetting.timeSclae = newValue;
+	CTime::GetInstance().SetTimeScale(m_sTimeSetting.timeSclae);
+}
+
 void CSceneManager::Set_ShadowQuality(const shadowQualityOptions option)
 {
 	m_sLightSetting.shadowQuality = option;
