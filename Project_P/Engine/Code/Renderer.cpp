@@ -9,6 +9,8 @@ CRenderer::CRenderer()
 	, m_bUseInstancing(false)
 	, m_iInstanceCount(0)
 	, m_pInstanceBuffer(nullptr)
+	, m_pStaticMatrixBuffer(nullptr)
+	, m_bStaticMatrixUploaded(false)
 	, m_vInstanceTransforms({})
 {
 }
@@ -31,6 +33,7 @@ void CRenderer::OnDestroy()
 	Safe_Release(m_pMaterial);
 	Safe_Release(m_pOutlineMat);
 	Safe_Release(m_pInstanceBuffer);
+	Safe_Release(m_pStaticMatrixBuffer);
 }
 
 HRESULT CRenderer::Initialize()
@@ -46,6 +49,17 @@ HRESULT CRenderer::Initialize()
 		desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
 		if (FAILED(m_pDevice->CreateBuffer(&desc, nullptr, &m_pInstanceBuffer)))
+			return E_FAIL;
+	}
+
+	if (!m_pStaticMatrixBuffer)
+	{
+		D3D11_BUFFER_DESC desc = {};
+		desc.ByteWidth = sizeof(MatrixCB);
+		desc.Usage = D3D11_USAGE_DEFAULT;
+		desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+		if (FAILED(m_pDevice->CreateBuffer(&desc, nullptr, &m_pStaticMatrixBuffer)))
 			return E_FAIL;
 	}
 
@@ -227,4 +241,38 @@ void CRenderer::Bind_InstanceBuffer(const _matrix& _baseWorld)
 
 	m_pContext->UpdateSubresource(m_pInstanceBuffer, 0, nullptr, &cb, 0, 0);
 	m_pContext->VSSetConstantBuffers(4, 1, &m_pInstanceBuffer);
+}
+
+
+_bool CRenderer::TryBindCachedStaticMatrix(const _matrix& _world)
+{
+	if (!m_pGameObject)
+		return false;
+
+	if (!CSceneManager::GetInstance().IsPlaying())
+	{
+		m_bStaticMatrixUploaded = false;
+		return false;
+	}
+
+	if (!m_pGameObject->IsStatic(CGameObject::STATIC_METHOD::TransformStatic))
+	{
+		m_bStaticMatrixUploaded = false;
+		return false;
+	}
+
+	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
+	if (!context || !m_pStaticMatrixBuffer)
+		return false;
+
+	if (!m_bStaticMatrixUploaded)
+	{
+		MatrixCB matrixCB = {};
+		matrixCB.world = XMMatrixTranspose(_world);
+		context->UpdateSubresource(m_pStaticMatrixBuffer, 0, nullptr, &matrixCB, 0, 0);
+		m_bStaticMatrixUploaded = true;
+	}
+
+	context->VSSetConstantBuffers(0, 1, &m_pStaticMatrixBuffer);
+	return true;
 }

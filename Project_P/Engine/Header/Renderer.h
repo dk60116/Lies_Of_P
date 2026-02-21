@@ -44,6 +44,7 @@ public:
 
 protected:
 	void Bind_InstanceBuffer(const _matrix& _baseWorld);
+	_bool TryBindCachedStaticMatrix(const _matrix& _world);
 
 protected:
 	CMaterial* m_pMaterial;
@@ -55,6 +56,8 @@ protected:
 	_bool m_bUseInstancing;
 	_uint m_iInstanceCount;
 	ID3D11Buffer* m_pInstanceBuffer;
+	ID3D11Buffer* m_pStaticMatrixBuffer;
+	_bool m_bStaticMatrixUploaded;
 
 	struct InstanceTransform
 	{

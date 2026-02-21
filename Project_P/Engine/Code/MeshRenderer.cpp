@@ -109,8 +109,8 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 	_matrix matView = _cam->Get_ViewMatrix();
 	_matrix matProj = _cam->Get_ProjectionMatrix();
 
-	// ̴ + ؽó +   ε
-	m_pMaterial->Bind_Matrix(matWorld);
+	if (!TryBindCachedStaticMatrix(matWorld))
+		m_pMaterial->Bind_Matrix(matWorld);
 	m_pMaterial->Bind_Camera(camPos, matView, matProj, 0);
 
 	Bind_InstanceBuffer(matWorld);
@@ -152,7 +152,8 @@ void CMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const CLight:
 	// Shadow depth camPos ǹ Ƿ 
 	_float3 dummyPos = { 0.f, 0.f, 0.f };
 
-	_shadowDepthMat->Bind_Matrix(matWorld);
+	if (!TryBindCachedStaticMatrix(matWorld))
+		_shadowDepthMat->Bind_Matrix(matWorld);
 	_shadowDepthMat->Bind_Camera(dummyPos, matView, matProj, 0);
 
 	Bind_InstanceBuffer(matWorld);
