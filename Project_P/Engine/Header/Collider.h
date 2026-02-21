@@ -50,6 +50,9 @@ private:
     void SyncStandaloneBodyTransform();
 
 protected:
+    void NotifyShapeChanged();
+
+protected:
     class CRigidBody* m_pRigidBody;
     _bool m_bIsTrigger;
     vector3 m_vCenter;
