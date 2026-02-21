@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "Transform.h"
+#include "RigidBody.h"
 
 CTransform::CTransform()
     : m_bIsRootParent(true)
@@ -487,6 +488,20 @@ void CTransform::Add_Position(const _float _x, const _float _y, const _float _z)
 {
     m_vPosition += vector3(_x, _y, _z);
     Bind_Matrix();
+}
+
+void CTransform::Translate(const vector3& _value)
+{
+    if (CRigidBody* rigidBody = m_pGameObject->GetComponent<CRigidBody>())
+    {
+        if (rigidBody->Get_Enable())
+        {
+            rigidBody->Translate(_value);
+            return;
+        }
+    }
+
+    Add_Position(_value);
 }
 
 void CTransform::Add_PositionX(const _float _value)

@@ -466,6 +466,49 @@ void CRigidBody::SetConstRotationZ(_bool _value)
         m_vConstRotation.z = Get_Transform()->Get_EulerAngles().z;
 }
 
+void CRigidBody::Translate(const vector3& _deltaWorld)
+{
+    if (_deltaWorld.lengthSq() <= 0.f)
+        return;
+
+    Get_Transform()->Update();
+
+    Vec3 pos;
+    Quat rot;
+    DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
+
+    vector3 targetPos(static_cast<_float>(pos.GetX()) + _deltaWorld.x, static_cast<_float>(pos.GetY()) + _deltaWorld.y, static_cast<_float>(pos.GetZ()) + _deltaWorld.z);
+    quaternion targetRot(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
+
+    ApplyAxisConstraints(targetPos, targetRot);
+
+    Get_Transform()->Set_Position(targetPos);
+    Get_Transform()->Set_Quaternion(targetRot);
+
+    const RVec3 joltTargetPos(targetPos.x, targetPos.y, targetPos.z);
+    const Quat joltTargetRot(targetRot.x, targetRot.y, targetRot.z, targetRot.w);
+
+    const _float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
+    const Vec3 targetLinearVelocity(
+        static_cast<float>(_deltaWorld.x / fixedDt),
+        static_cast<float>(_deltaWorld.y / fixedDt),
+        static_cast<float>(_deltaWorld.z / fixedDt));
+
+    if (m_bHasBody)
+    {
+        GetBI().SetPositionAndRotation(m_iBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
+        GetBI().SetLinearAndAngularVelocity(m_iBodyID, targetLinearVelocity, GetBI().GetAngularVelocity(m_iBodyID));
+    }
+
+    if (m_bHasSensorBody)
+    {
+        GetBI().SetPositionAndRotation(m_iSensorBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
+        GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, targetLinearVelocity, GetBI().GetAngularVelocity(m_iSensorBodyID));
+    }
+
+    CacheLastSyncedTransform(targetPos, targetRot);
+}
+
 void CRigidBody::ApplyAxisConstraints(vector3& _pos, quaternion& _rot)
 {
     vector3 euler = _rot.to_euler();

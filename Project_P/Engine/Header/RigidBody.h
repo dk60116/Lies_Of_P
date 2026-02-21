@@ -67,6 +67,7 @@ public:
 	void SetConstRotationY(_bool _value);
 	_bool IsConstRotationZ() const;
 	void SetConstRotationZ(_bool _value);
+	void Translate(const vector3& _deltaWorld);
 	CCollider* GetEventCollider(_bool _triggerEvent) const;
 
 private:
