@@ -163,7 +163,18 @@ void CPlayerControllerContext::FixedUpdate()
 	if (sqrLen <= 1e-12f)
 		return;
 
-	m_pPlayer->Get_Transform()->Translate(m_vPendingTranslation);
+	if (CRigidBody* rigidBody = m_pPlayer->Get_GameObject()->GetComponent<CRigidBody>())
+	{
+		if (rigidBody->Get_Enable())
+			rigidBody->Translate(m_vPendingTranslation);
+		else
+			m_pPlayer->Get_Transform()->Add_Position(m_vPendingTranslation);
+	}
+	else
+	{
+		m_pPlayer->Get_Transform()->Add_Position(m_vPendingTranslation);
+	}
+
 	m_vPendingTranslation = vector3::zero();
 }
 void CPlayerControllerContext::BeginTurnTo(_float _targetYawDeg)
@@ -556,6 +567,7 @@ void CPlayerControllerContext::StopMoveImmediate()
 	m_Cv_Move.m_fMove01 = 0.f;
 	m_Cv_Move.m_vMoveWorldDir = vector3::zero();
 	m_Cv_Move.m_fMoveLockTimer = 0.f;
+	m_vPendingTranslation = vector3::zero();
 
 	SetAnimMoveSpeed(0.f);
 }
