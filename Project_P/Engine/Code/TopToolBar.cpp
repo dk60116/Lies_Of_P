@@ -137,6 +137,8 @@ void CTopToolBar::ShowProjectSettingsWindow()
 
 	if (ImGui::Begin("Project Settings", &m_bProjectSettingsWindowOpen))
 	{
+		const _float buttonAreaHeight = ImGui::GetFrameHeightWithSpacing() + 6.f;
+		ImGui::BeginChild("ProjectSettingsContent", ImVec2(0.f, -buttonAreaHeight), false);
 		ImGui::BeginChild("ProjectSettingsCategoryList", ImVec2(180.f, 0.f), true);
 		if (ImGui::Selectable("Time", m_iProjectSettingsSelection == 0))
 			m_iProjectSettingsSelection = 0;
@@ -148,6 +150,10 @@ void CTopToolBar::ShowProjectSettingsWindow()
 		if (m_iProjectSettingsSelection == 0)
 			ShowProjectSettingsTime();
 		ImGui::EndChild();
+		ImGui::EndChild();
+
+		if (ImGui::Button("Save Settings"))
+			CSceneManager::GetInstance().SaveEngineSettings();
 	}
 
 	ImGui::End();

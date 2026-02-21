@@ -935,9 +935,6 @@ void CInspectorBox::Render()
         RenderSelectedAssetPreview(editor.Get_SelectedAssetPath());
     }
 
-    if (selectedObj && ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows) && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered())
-        editor.Set_SelectedGameObject(nullptr);
-
     RenderTexturePickerWindow();
 
 	ImGui::End();

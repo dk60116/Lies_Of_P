@@ -45,6 +45,7 @@ HRESULT CSceneManager::Initialize()
 		m_mLayerList.insert({ 1u << (_uint)i, L"Layer_" +  to_wstring(i)});
 
 	LoadLayerSettings();
+	CTime::GetInstance().SetTimeScale(m_sTimeSetting.timeSclae);
 
 	return S_OK;
 }
@@ -330,7 +331,7 @@ void CSceneManager::AddLayer(_uint _index, const wstring& _name)
 		return;
 	const _uint mask = (1u << _index);
 	m_mLayerList[mask] = _name;
-	SaveLayerSettings();
+	SaveEngineSettings();
 }
 
 const map<_uint, wstring>& CSceneManager::Get_LayerList() const
@@ -340,9 +341,17 @@ const map<_uint, wstring>& CSceneManager::Get_LayerList() const
 
 void CSceneManager::SaveLayerSettings() const
 {
+	SaveEngineSettings();
+}
+
+void CSceneManager::SaveEngineSettings() const
+{
 	ofstream outFile(kEngineSettingsPath, ios::trunc);
 	if (!outFile.is_open())
 		return;
+
+	outFile << "TimeFixedStep=" << m_sTimeSetting.fixedTimeStep << "\n";
+	outFile << "TimeScale=" << m_sTimeSetting.timeSclae << "\n";
 
 	for (_uint i = 1u; i < 32u; ++i)
 	{
@@ -376,6 +385,36 @@ void CSceneManager::LoadLayerSettings()
 		string nameText = CEngineString::Trim(line.substr(delim + 1));
 		if (idxText.empty() || nameText.empty())
 			continue;
+
+		if (idxText == "TimeFixedStep")
+		{
+			try
+			{
+				_float parsed = stof(nameText);
+				if (parsed < 0.0001f)
+					parsed = 0.0001f;
+				m_sTimeSetting.fixedTimeStep = parsed;
+			}
+			catch (...)
+			{
+			}
+			continue;
+		}
+
+		if (idxText == "TimeScale")
+		{
+			try
+			{
+				_float parsed = stof(nameText);
+				if (parsed < 0.f)
+					parsed = 0.f;
+				m_sTimeSetting.timeSclae = parsed;
+			}
+			catch (...)
+			{
+			}
+			continue;
+		}
 
 		try
 		{
