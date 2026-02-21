@@ -27,11 +27,14 @@ public:
 
 public:
     void BuildShapeIfNeeded() override;
+    const _bool IsGizmoVisible() const;
+    void SetGizmoVisible(const _bool visible);
 
 private:
     class CMeshBuffer* m_pCachedMeshBuffer;
     class CMeshBuffer* m_pLineMesh;
     class CMaterial* m_pLineMaterial;
+    _bool m_bShowGizmo;
 };
 
 NS_END

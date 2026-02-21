@@ -196,6 +196,7 @@ CMeshCollider::CMeshCollider()
     : m_pCachedMeshBuffer(nullptr)
     , m_pLineMesh(nullptr)
     , m_pLineMaterial(nullptr)
+    , m_bShowGizmo(false)
 {
     m_strName = L"Mesh Collider";
 }
@@ -277,6 +278,9 @@ void CMeshCollider::Render_Editor()
 void CMeshCollider::Render_Gizmo()
 {
 #ifndef _CLIENT_BUILD
+    if (!m_bShowGizmo)
+        return;
+
     if (!m_pLineMesh || !m_pLineMaterial)
         return;
 
@@ -380,6 +384,17 @@ void CMeshCollider::OnDestroy()
     Safe_Release(m_pLineMaterial);
 
     __super::OnDestroy();
+}
+
+
+const _bool CMeshCollider::IsGizmoVisible() const
+{
+    return m_bShowGizmo;
+}
+
+void CMeshCollider::SetGizmoVisible(const _bool visible)
+{
+    m_bShowGizmo = visible;
 }
 
 void CMeshCollider::BuildShapeIfNeeded()

@@ -1465,6 +1465,10 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 if (ImGui::Checkbox("Is Trigger", &isTrigger))
                     meshCollider->SetTrigger(isTrigger);
 
+                _bool showGizmo = meshCollider->IsGizmoVisible();
+                if (ImGui::Checkbox("Show Gizmo", &showGizmo))
+                    meshCollider->SetGizmoVisible(showGizmo);
+
                 vector3 center = meshCollider->GetCenter();
                 _float centerValues[3] = { center.x, center.y, center.z };
                 if (ImGui::InputFloat3("Center", centerValues))
@@ -1474,6 +1478,7 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 ImGui::TextUnformatted("Preview");
                 ImGui::Text("Center: (%.2f, %.2f, %.2f)", center.x, center.y, center.z);
                 ImGui::Text("Is Trigger: %s", meshCollider->IsTrigger() ? "True" : "False");
+                ImGui::Text("Show Gizmo: %s", meshCollider->IsGizmoVisible() ? "True" : "False");
             }
 
             if (CRigidBody* rigidBody = dynamic_cast<CRigidBody*>(component))
