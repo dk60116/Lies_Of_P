@@ -819,19 +819,6 @@ void CInspectorBox::Render()
         static _bool pendingStaticValue = false;
         static _bool pendingOpenStaticPopup = false;
 
-        auto applyStaticToHierarchy = [&](auto&& self, CTransform* transform, CGameObject::STATIC_METHOD method, _bool value) -> void
-        {
-            if (!transform)
-                return;
-
-            CGameObject* gameObject = transform->Get_GameObject();
-            if (gameObject)
-                gameObject->SetStatic(method, value);
-
-            for (CTransform* child : transform->Get_ChldList())
-                self(self, child, method, value);
-        };
-
         string staticPopupId = "Apply Static To Children?##" + to_string(selectedObj->Get_UniqueID());
         string staticComboId = "Static##" + to_string(selectedObj->Get_UniqueID());
         if (ImGui::BeginCombo(staticComboId.c_str(), staticPreview.c_str()))
@@ -853,7 +840,7 @@ void CInspectorBox::Render()
                         pendingOpenStaticPopup = true;
                     }
                     else
-                        selectedObj->SetStatic(option.method, enabled);
+                        selectedObj->SetStatic(option.method, enabled, false);
                 }
             }
 
@@ -874,7 +861,7 @@ void CInspectorBox::Render()
             {
                 if (pendingStaticTarget)
                 {
-                    applyStaticToHierarchy(applyStaticToHierarchy, pendingStaticTarget->Get_Transform(), pendingStaticMethod, pendingStaticValue);
+                    pendingStaticTarget->SetStatic(pendingStaticMethod, pendingStaticValue, true);
                     pendingStaticTarget = nullptr;
                 }
                 ImGui::CloseCurrentPopup();
@@ -886,7 +873,7 @@ void CInspectorBox::Render()
             {
                 if (pendingStaticTarget)
                 {
-                    pendingStaticTarget->SetStatic(pendingStaticMethod, pendingStaticValue);
+                    pendingStaticTarget->SetStatic(pendingStaticMethod, pendingStaticValue, false);
                     pendingStaticTarget = nullptr;
                 }
                 ImGui::CloseCurrentPopup();

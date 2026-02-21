@@ -645,12 +645,25 @@ const _bool CGameObject::IsStatic(STATIC_METHOD _method) const
 	return false;
 }
 
-void CGameObject::SetStatic(STATIC_METHOD _method, const _bool _value)
+void CGameObject::SetStatic(STATIC_METHOD _method, const _bool _value, const _bool recursiveChild)
 {
 	switch (_method)
 	{
 	case STATIC_METHOD::TransformStatic:
 		m_bTransformStatic = _value;
+		break;
+	}
+
+	if (!recursiveChild || !m_pTransform)
+		return;
+
+	for (CTransform* child : m_pTransform->Get_ChldList())
+	{
+		if (!child)
+			continue;
+
+		if (CGameObject* childObj = child->Get_GameObject())
+			childObj->SetStatic(_method, _value, true);
 	}
 }
 

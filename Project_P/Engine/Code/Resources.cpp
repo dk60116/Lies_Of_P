@@ -656,7 +656,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 9;
+	const _uint version = 10;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -687,6 +687,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 		out.write(reinterpret_cast<const char*>(&info.localQuaternion), sizeof(_float4));
 		out.write(reinterpret_cast<const char*>(&info.localScale), sizeof(_float3));
 		out.write(reinterpret_cast<const char*>(&info.isActive), sizeof(_bool));
+		out.write(reinterpret_cast<const char*>(&info.isTransformStatic), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyKinematic), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyUseGravity), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyMass), sizeof(_float));
@@ -852,6 +853,9 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 		info.isActive = true;
 		if (version >= 7)
 			in.read(reinterpret_cast<char*>(&info.isActive), sizeof(_bool));
+
+		if (version >= 10)
+			in.read(reinterpret_cast<char*>(&info.isTransformStatic), sizeof(_bool));
 
 		if (version >= 8)
 		{

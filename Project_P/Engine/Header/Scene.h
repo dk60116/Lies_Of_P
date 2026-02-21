@@ -37,6 +37,7 @@ public:
         _float4 localQuaternion = {};
         _float3 localScale = {};
         _bool isActive = true;
+        _bool isTransformStatic = false;
         _bool rigidBodyKinematic = false;
         _bool rigidBodyUseGravity = true;
         _float rigidBodyMass = 1.f;

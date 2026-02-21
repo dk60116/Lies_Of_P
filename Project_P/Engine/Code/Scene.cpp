@@ -971,6 +971,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		info.localQuaternion = quat;
 		info.localScale = tf->Get_LocalScale();
 		info.isActive = (*it)->IsActive_Origin();
+		info.isTransformStatic = (*it)->IsStatic(CGameObject::STATIC_METHOD::TransformStatic);
 
 		if (CRigidBody* rigidBody = (*it)->GetComponent<CRigidBody>())
 		{
@@ -1202,6 +1203,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		CTransform* tf = obj->Get_Transform();
 
 		obj->SetActive(info.isActive);
+		obj->SetStatic(CGameObject::STATIC_METHOD::TransformStatic, info.isTransformStatic, false);
 
 		if (!info.isRect)
 			tf->Set_LocalScale(info.localScale);
