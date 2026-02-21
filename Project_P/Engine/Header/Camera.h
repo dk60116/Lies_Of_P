@@ -130,6 +130,10 @@ private:
 
 	CLight* m_pMainLight;
 	CLight::ShadowMatrices m_sMainLightMatrix;
+	CLight::ShadowMatrices m_sPrevMainLightMatrix;
+	ID3D11Texture2D* m_pStaticShadowDepth;
+	ID3D11DepthStencilView* m_pStaticShadowDepthDS;
+	_bool m_bStaticShadowCacheValid;
 
 	ID3D11Texture2D* m_pPickStaging;
 
