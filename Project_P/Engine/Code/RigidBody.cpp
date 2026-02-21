@@ -683,18 +683,16 @@ void CRigidBody::SyncDynamicFromJolt()
     const RVec3 joltPos = GetBI().GetPosition(sourceBodyId);
     const Quat joltRot = GetBI().GetRotation(sourceBodyId);
 
-    const vector3 prevPos = Get_Transform()->Get_PrevPosition();
-    const quaternion prevRot = Get_Transform()->Get_PrevQuaternion();
-
-    const _float dpx = prevPos.x - tfPos.GetX();
-    const _float dpy = prevPos.y - tfPos.GetY();
-    const _float dpz = prevPos.z - tfPos.GetZ();
+    const _float dpx = static_cast<_float>(joltPos.GetX() - tfPos.GetX());
+    const _float dpy = static_cast<_float>(joltPos.GetY() - tfPos.GetY());
+    const _float dpz = static_cast<_float>(joltPos.GetZ() - tfPos.GetZ());
     const _float editedPosDeltaSq = dpx * dpx + dpy * dpy + dpz * dpz;
 
-    const _float prevRotDotRaw = prevRot.x * tfRot.GetX() + prevRot.y * tfRot.GetY() + prevRot.z * tfRot.GetZ() + prevRot.w * tfRot.GetW();
-    const _float prevRotDotAbs = fabsf(prevRotDotRaw);
+    const _float editedRotDotRaw =
+        static_cast<_float>(joltRot.GetX() * tfRot.GetX() + joltRot.GetY() * tfRot.GetY() + joltRot.GetZ() * tfRot.GetZ() + joltRot.GetW() * tfRot.GetW());
+    const _float editedRotDotAbs = fabsf(editedRotDotRaw);
 
-    const _bool transformChangedOutsidePhysics = editedPosDeltaSq > 0.0004f || prevRotDotAbs < 0.999f;
+    const _bool transformChangedOutsidePhysics = editedPosDeltaSq > 1e-8f || editedRotDotAbs < 0.999999f;
 
     _bool forceTransformOverride = transformChangedOutsidePhysics;
 #ifndef _CLIENT_BUILD
@@ -742,30 +740,20 @@ void CRigidBody::SyncDynamicFromJolt()
 
         if (m_bHasBody)
         {
+            GetBI().SetPositionAndRotation(m_iBodyID, targetPos, targetRot, EActivation::Activate);
             if (isGizmoEditing)
-            {
-                GetBI().SetPositionAndRotation(m_iBodyID, targetPos, targetRot, EActivation::Activate);
                 GetBI().SetLinearAndAngularVelocity(m_iBodyID, Vec3::sZero(), Vec3::sZero());
-            }
             else
-            {
                 GetBI().SetLinearAndAngularVelocity(m_iBodyID, targetLinearVelocity, Vec3::sZero());
-                GetBI().ActivateBody(m_iBodyID);
-            }
         }
 
         if (m_bHasSensorBody)
         {
+            GetBI().SetPositionAndRotation(m_iSensorBodyID, targetPos, targetRot, EActivation::Activate);
             if (isGizmoEditing)
-            {
-                GetBI().SetPositionAndRotation(m_iSensorBodyID, targetPos, targetRot, EActivation::Activate);
                 GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, Vec3::sZero(), Vec3::sZero());
-            }
             else
-            {
-                GetBI().SetPositionAndRotation(m_iSensorBodyID, targetPos, targetRot, EActivation::Activate);
                 GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, targetLinearVelocity, Vec3::sZero());
-            }
         }
 
         return;
