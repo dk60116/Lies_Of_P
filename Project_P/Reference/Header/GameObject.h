@@ -121,7 +121,7 @@ public:
 
 public:
 	const _bool IsStatic(STATIC_METHOD _method) const;
-	void SetStatic(STATIC_METHOD _method, const _bool _value);
+	void SetStatic(STATIC_METHOD _method, const _bool _value, const _bool recursiveChild);
 
 private:
 	void Set_RecursiveActive(const _bool _active);
