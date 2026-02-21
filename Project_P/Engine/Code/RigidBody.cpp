@@ -694,7 +694,18 @@ void CRigidBody::SyncDynamicFromJolt()
     const _float editedRotDotRaw = prevRot.x * tfRot.GetX() + prevRot.y * tfRot.GetY() + prevRot.z * tfRot.GetZ() + prevRot.w * tfRot.GetW();
     const _float editedRotDotAbs = fabsf(editedRotDotRaw);
 
-    const _bool transformChangedOutsidePhysics = editedPosDeltaSq > 1e-6f || editedRotDotAbs < 0.999999f;
+    const _float physDx = static_cast<_float>(joltPos.GetX() - tfPos.GetX());
+    const _float physDy = static_cast<_float>(joltPos.GetY() - tfPos.GetY());
+    const _float physDz = static_cast<_float>(joltPos.GetZ() - tfPos.GetZ());
+    const _float diffFromPhysicsPosSq = physDx * physDx + physDy * physDy + physDz * physDz;
+
+    const _float diffFromPhysicsRotDotRaw =
+        static_cast<_float>(joltRot.GetX() * tfRot.GetX() + joltRot.GetY() * tfRot.GetY() + joltRot.GetZ() * tfRot.GetZ() + joltRot.GetW() * tfRot.GetW());
+    const _float diffFromPhysicsRotDotAbs = fabsf(diffFromPhysicsRotDotRaw);
+
+    const _bool sceneTransformEdited = editedPosDeltaSq > 1e-8f || editedRotDotAbs < 0.9999999f;
+    const _bool sceneTransformDiffersFromPhysics = diffFromPhysicsPosSq > 1e-8f || diffFromPhysicsRotDotAbs < 0.9999999f;
+    const _bool transformChangedOutsidePhysics = sceneTransformEdited && sceneTransformDiffersFromPhysics;
 
     _bool forceTransformOverride = transformChangedOutsidePhysics;
 #ifndef _CLIENT_BUILD
