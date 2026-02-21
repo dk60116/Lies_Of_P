@@ -34,6 +34,7 @@ private:
     class CMeshBuffer* m_pCachedMeshBuffer;
     class CMaterial* m_pLineMaterial;
     _bool m_bShowGizmo;
+    vector3 m_vCachedWorldScale;
 };
 
 NS_END
