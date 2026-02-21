@@ -211,7 +211,7 @@ namespace Engine
 			for (TRAVERSAL_ITER(components, it))
 			{
 				CComponent* component = *it;
-				if (!component || component == _standaloneCollider || !component->Get_Enable())
+				if (!component || !component->Get_Enable())
 					continue;
 
 				component->OnCollisionEnter(_other);
@@ -227,7 +227,7 @@ namespace Engine
 			for (TRAVERSAL_ITER(components, it))
 			{
 				CComponent* component = *it;
-				if (!component || component == _standaloneCollider || !component->Get_Enable())
+				if (!component || !component->Get_Enable())
 					continue;
 
 				component->OnCollisionStay(_other);
@@ -243,7 +243,7 @@ namespace Engine
 			for (TRAVERSAL_ITER(components, it))
 			{
 				CComponent* component = *it;
-				if (!component || component == _standaloneCollider || !component->Get_Enable())
+				if (!component || !component->Get_Enable())
 					continue;
 
 				component->OnCollisionExit(_other);
@@ -259,7 +259,7 @@ namespace Engine
 			for (TRAVERSAL_ITER(components, it))
 			{
 				CComponent* component = *it;
-				if (!component || component == _standaloneCollider || !component->Get_Enable())
+				if (!component || !component->Get_Enable())
 					continue;
 
 				component->OnTriggerEnter(_other);
@@ -275,7 +275,7 @@ namespace Engine
 			for (TRAVERSAL_ITER(components, it))
 			{
 				CComponent* component = *it;
-				if (!component || component == _standaloneCollider || !component->Get_Enable())
+				if (!component || !component->Get_Enable())
 					continue;
 
 				component->OnTriggerStay(_other);
@@ -291,7 +291,7 @@ namespace Engine
 			for (TRAVERSAL_ITER(components, it))
 			{
 				CComponent* component = *it;
-				if (!component || component == _standaloneCollider || !component->Get_Enable())
+				if (!component || !component->Get_Enable())
 					continue;
 
 				component->OnTriggerExit(_other);
