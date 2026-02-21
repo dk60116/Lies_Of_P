@@ -85,7 +85,6 @@ void CMainProcess::Update_MainApp()
     CTime::GetInstance().Update();
     CInput::GetInstance().Update();
     CPhysics::GetInstance().SetFixedDeltaTime(CSceneManager::GetInstance().Get_TimeSetting().fixedTimeStep);
-    CPhysics::GetInstance().Tick(DELTA_TIME);
 
     CGraphicDevice& graphicDev = CGraphicDevice::GetInstance();
 
@@ -93,8 +92,10 @@ void CMainProcess::Update_MainApp()
 	{
 		scene->Update_Editor();
 
-		if (CSceneManager::GetInstance().IsPlaying())
+		const _bool runSimulationFrame = CSceneManager::GetInstance().IsPlaying() || CSceneManager::GetInstance().ConsumeStepFrameRequest();
+		if (runSimulationFrame)
 		{
+			CPhysics::GetInstance().Tick(DELTA_TIME);
 			scene->FixedUpdate();
 			scene->Update();
 			scene->LateUpdate();

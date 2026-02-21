@@ -9,6 +9,7 @@ CSceneManager::CSceneManager()
 	, m_bSceneAwakened(false)
 	, m_ePlayState(PlayState::Stopped)
 	, m_strPlayStartSceneName(L"")
+	, m_bStepFrameRequested(false)
 	, m_pEditorCamObj(nullptr)
 	, m_pEditorCamera(nullptr)
 	, m_sTimeSetting({})
@@ -40,6 +41,7 @@ void CSceneManager::Release()
 	m_bSceneAwakened = false;
 	m_ePlayState = PlayState::Stopped;
 	m_strPlayStartSceneName = L"";
+	m_bStepFrameRequested = false;
 
 	for (TRAVERSAL_ITER(m_mSceneList, it))
 	{
@@ -168,6 +170,7 @@ void CSceneManager::LoadComplete()
 	{
 		m_ePlayState = PlayState::Stopped;
 		m_strPlayStartSceneName = L"";
+		m_bStepFrameRequested = false;
 	}
 }
 
@@ -212,8 +215,28 @@ void CSceneManager::StopScene()
 	m_ePlayState = PlayState::Stopped;
 	m_bSceneAwakened = false;
 	m_strPlayStartSceneName = L"";
+	m_bStepFrameRequested = false;
 
 	LoadScene(stopTargetSceneName);
+}
+
+
+void CSceneManager::RequestStepFrame()
+{
+	if (!m_pCrtScene || m_bLoading)
+		return;
+
+	if (m_ePlayState != PlayState::Paused)
+		return;
+
+	m_bStepFrameRequested = true;
+}
+
+const _bool CSceneManager::ConsumeStepFrameRequest()
+{
+	const _bool requested = m_bStepFrameRequested;
+	m_bStepFrameRequested = false;
+	return requested;
 }
 
 const _bool CSceneManager::IsPlaying() const

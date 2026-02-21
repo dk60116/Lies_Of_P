@@ -52,6 +52,8 @@ public:
 	void PlayScene();
 	void PauseScene();
 	void StopScene();
+	void RequestStepFrame();
+	const _bool ConsumeStepFrameRequest();
 	const _bool IsPlaying() const;
 	const _bool IsPaused() const;
 	const _bool IsPlayMode() const;
@@ -73,6 +75,7 @@ private:
 	_bool m_bSceneAwakened;
 	PlayState m_ePlayState;
 	wstring m_strPlayStartSceneName;
+	_bool m_bStepFrameRequested;
 
 	class CGameObject* m_pEditorCamObj;
 	class CEditorCamera* m_pEditorCamera;

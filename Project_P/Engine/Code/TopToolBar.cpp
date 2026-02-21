@@ -109,11 +109,12 @@ void CTopToolBar::ShowPlayButtons()
 	const char* playLabel = "\xE2\x96\xB6";
 	const char* stopLabel = "\xE2\x96\xA0";
 	const char* pauseLabel = "||";
+	const char* stepLabel = "\xE2\x96\xB6\xEF\xBD\x9C";
 
 	const _float buttonWidth = 36.f;
 	const ImVec2 buttonSize(buttonWidth, 0.f);
 	const _float spacing = ImGui::GetStyle().ItemSpacing.x;
-	const _float totalWidth = buttonWidth * 2.f + spacing;
+	const _float totalWidth = buttonWidth * 3.f + spacing * 2.f;
 	_float startX = (ImGui::GetWindowWidth() - totalWidth) * 0.5f;
 	if (startX < 0.f)
 		startX = 0.f;
@@ -146,6 +147,20 @@ void CTopToolBar::ShowPlayButtons()
 	{
 		ImGui::BeginDisabled();
 		ImGui::Button(pauseLabel, buttonSize);
+		ImGui::EndDisabled();
+	}
+
+	ImGui::SameLine();
+
+	if (sceneManager.IsPaused())
+	{
+		if (ImGui::Button(stepLabel, buttonSize))
+			sceneManager.RequestStepFrame();
+	}
+	else
+	{
+		ImGui::BeginDisabled();
+		ImGui::Button(stepLabel, buttonSize);
 		ImGui::EndDisabled();
 	}
 }
