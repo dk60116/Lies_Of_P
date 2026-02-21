@@ -706,18 +706,38 @@ void CRigidBody::SyncDynamicFromJolt()
             false;
 #endif
 
+        const _float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
+        const Vec3 targetLinearVelocity(
+            static_cast<float>((targetPos.GetX() - joltPos.GetX()) / fixedDt),
+            static_cast<float>((targetPos.GetY() - joltPos.GetY()) / fixedDt),
+            static_cast<float>((targetPos.GetZ() - joltPos.GetZ()) / fixedDt));
+
         if (m_bHasBody)
         {
-            GetBI().SetPositionAndRotation(m_iBodyID, targetPos, targetRot, EActivation::Activate);
             if (isGizmoEditing)
+            {
+                GetBI().SetPositionAndRotation(m_iBodyID, targetPos, targetRot, EActivation::Activate);
                 GetBI().SetLinearAndAngularVelocity(m_iBodyID, Vec3::sZero(), Vec3::sZero());
+            }
+            else
+            {
+                GetBI().SetLinearAndAngularVelocity(m_iBodyID, targetLinearVelocity, Vec3::sZero());
+                GetBI().ActivateBody(m_iBodyID);
+            }
         }
 
         if (m_bHasSensorBody)
         {
-            GetBI().SetPositionAndRotation(m_iSensorBodyID, targetPos, targetRot, EActivation::Activate);
             if (isGizmoEditing)
+            {
+                GetBI().SetPositionAndRotation(m_iSensorBodyID, targetPos, targetRot, EActivation::Activate);
                 GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, Vec3::sZero(), Vec3::sZero());
+            }
+            else
+            {
+                GetBI().SetPositionAndRotation(m_iSensorBodyID, targetPos, targetRot, EActivation::Activate);
+                GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, targetLinearVelocity, Vec3::sZero());
+            }
         }
 
         return;
