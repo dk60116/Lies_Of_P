@@ -482,18 +482,45 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
 
     ApplyAxisConstraints(targetPos, targetRot);
 
-    Get_Transform()->Set_Position(targetPos);
-    Get_Transform()->Set_Quaternion(targetRot);
-
-    const RVec3 joltTargetPos(targetPos.x, targetPos.y, targetPos.z);
-    const Quat joltTargetRot(targetRot.x, targetRot.y, targetRot.z, targetRot.w);
-
     const vector3 appliedDelta = targetPos - vector3(static_cast<_float>(pos.GetX()), static_cast<_float>(pos.GetY()), static_cast<_float>(pos.GetZ()));
     const _float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
     const Vec3 deltaVelocity(
         static_cast<float>(appliedDelta.x / fixedDt),
         static_cast<float>(appliedDelta.y / fixedDt),
         static_cast<float>(appliedDelta.z / fixedDt));
+
+    if (!m_bKinematic)
+    {
+        if (m_bHasBody)
+        {
+            const Vec3 currentLinearVelocity = GetBI().GetLinearVelocity(m_iBodyID);
+            const Vec3 nextLinearVelocity(
+                fabsf(appliedDelta.x) > 1e-6f ? deltaVelocity.GetX() : currentLinearVelocity.GetX(),
+                fabsf(appliedDelta.y) > 1e-6f ? deltaVelocity.GetY() : currentLinearVelocity.GetY(),
+                fabsf(appliedDelta.z) > 1e-6f ? deltaVelocity.GetZ() : currentLinearVelocity.GetZ());
+
+            GetBI().SetLinearAndAngularVelocity(m_iBodyID, nextLinearVelocity, GetBI().GetAngularVelocity(m_iBodyID));
+        }
+
+        if (m_bHasSensorBody)
+        {
+            const Vec3 currentLinearVelocity = GetBI().GetLinearVelocity(m_iSensorBodyID);
+            const Vec3 nextLinearVelocity(
+                fabsf(appliedDelta.x) > 1e-6f ? deltaVelocity.GetX() : currentLinearVelocity.GetX(),
+                fabsf(appliedDelta.y) > 1e-6f ? deltaVelocity.GetY() : currentLinearVelocity.GetY(),
+                fabsf(appliedDelta.z) > 1e-6f ? deltaVelocity.GetZ() : currentLinearVelocity.GetZ());
+
+            GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, nextLinearVelocity, GetBI().GetAngularVelocity(m_iSensorBodyID));
+        }
+
+        return;
+    }
+
+    Get_Transform()->Set_Position(targetPos);
+    Get_Transform()->Set_Quaternion(targetRot);
+
+    const RVec3 joltTargetPos(targetPos.x, targetPos.y, targetPos.z);
+    const Quat joltTargetRot(targetRot.x, targetRot.y, targetRot.z, targetRot.w);
 
     if (m_bHasBody)
     {
