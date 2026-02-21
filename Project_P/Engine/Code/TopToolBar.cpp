@@ -62,6 +62,7 @@ void CTopToolBar::Render()
 	);
 
 	ShowSelectSceneButton();
+	ShowPlayButtons();
 	Show2DButton();
 	ShowFPS();
 
@@ -98,6 +99,44 @@ void CTopToolBar::ShowSelectSceneButton()
 	}
 }
 
+
+void CTopToolBar::ShowPlayButtons()
+{
+	CSceneManager& sceneManager = CSceneManager::GetInstance();
+
+	ImGui::SameLine();
+
+	if (!sceneManager.IsPlayMode())
+	{
+		if (ImGui::Button("Play"))
+			sceneManager.PlayScene();
+	}
+	else
+	{
+		if (ImGui::Button("Stop"))
+			sceneManager.StopScene();
+	}
+
+	ImGui::SameLine();
+
+	if (sceneManager.IsPlaying())
+	{
+		if (ImGui::Button("Pause"))
+			sceneManager.PauseScene();
+	}
+	else if (sceneManager.IsPaused())
+	{
+		if (ImGui::Button("Resume"))
+			sceneManager.PlayScene();
+	}
+	else
+	{
+		ImGui::BeginDisabled();
+		ImGui::Button("Pause");
+		ImGui::EndDisabled();
+	}
+}
+
 void CTopToolBar::Show2DButton()
 {
 	ImGui::SameLine();
@@ -126,13 +165,13 @@ void CTopToolBar::ShowFPS()
 		timeAccumulator = 0.0f;
 	}
 
-	// �ؽ�Ʈ ũ��
+	// ÅØ½ºÆ® Å©±â
 	ImVec2 textSize = ImGui::CalcTextSize(fpsText);
 
 	_float rightMargin = 8.0f;
 	ImGui::SetCursorPosX(ImGui::GetWindowWidth() - textSize.x - rightMargin);
 
-	// �ؽ�Ʈ ���
+	// ÅØ½ºÆ® Ãâ·Â
 	ImGui::SameLine();
 	_float textWidth = ImGui::CalcTextSize(fpsText).x;
 	_float availableWidth = ImGui::GetContentRegionAvail().x;

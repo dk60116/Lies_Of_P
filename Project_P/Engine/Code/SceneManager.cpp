@@ -6,6 +6,8 @@ CSceneManager::CSceneManager()
 	, m_pTempScene(nullptr)
 	, m_mSceneList({})
 	, m_bLoading(false)
+	, m_bSceneAwakened(false)
+	, m_ePlayState(PlayState::Stopped)
 	, m_pEditorCamObj(nullptr)
 	, m_pEditorCamera(nullptr)
 	, m_sTimeSetting({})
@@ -34,6 +36,8 @@ HRESULT CSceneManager::Initialize()
 void CSceneManager::Release()
 {
 	m_pCrtScene = nullptr;
+	m_bSceneAwakened = false;
+	m_ePlayState = PlayState::Stopped;
 
 	for (TRAVERSAL_ITER(m_mSceneList, it))
 	{
@@ -137,6 +141,8 @@ void CSceneManager::LoadComplete()
 		m_pCrtScene->Set_SaveRegistrationEnabled(false);
 		m_pCrtScene->Initialize();
 		m_bLoading = false;
+		m_bSceneAwakened = false;
+		m_ePlayState = PlayState::Stopped;
 		m_pCrtScene->Set_SaveRegistrationEnabled(true);
 	}
 
@@ -145,8 +151,58 @@ void CSceneManager::LoadComplete()
 
 	m_pCrtScene->Bind_ObjectsTransform(sceneTransformInfo);
 	m_pCrtScene->Set_SaveRegistrationEnabled(false);
-	m_pCrtScene->Awake();
 	m_pCrtScene->Set_SaveRegistrationEnabled(true);
+}
+
+void CSceneManager::PlayScene()
+{
+	if (!m_pCrtScene || m_bLoading)
+		return;
+
+	if (m_ePlayState == PlayState::Playing)
+		return;
+
+	if (!m_bSceneAwakened)
+	{
+		m_pCrtScene->Set_SaveRegistrationEnabled(false);
+		m_pCrtScene->Awake();
+		m_pCrtScene->Set_SaveRegistrationEnabled(true);
+		m_bSceneAwakened = true;
+	}
+
+	m_ePlayState = PlayState::Playing;
+}
+
+void CSceneManager::PauseScene()
+{
+	if (!m_pCrtScene || m_bLoading)
+		return;
+
+	if (m_ePlayState == PlayState::Playing)
+		m_ePlayState = PlayState::Paused;
+}
+
+void CSceneManager::StopScene()
+{
+	if (!m_pCrtScene || m_bLoading)
+		return;
+
+	m_ePlayState = PlayState::Stopped;
+}
+
+const _bool CSceneManager::IsPlaying() const
+{
+	return m_ePlayState == PlayState::Playing;
+}
+
+const _bool CSceneManager::IsPaused() const
+{
+	return m_ePlayState == PlayState::Paused;
+}
+
+const _bool CSceneManager::IsPlayMode() const
+{
+	return m_ePlayState != PlayState::Stopped;
 }
 
 CCamera* CSceneManager::Get_EditorCamera()

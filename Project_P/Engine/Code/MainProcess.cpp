@@ -89,15 +89,19 @@ void CMainProcess::Update_MainApp()
 
     CGraphicDevice& graphicDev = CGraphicDevice::GetInstance();
 
-    if (scene)
-    {
-        scene->Update_Editor();
-        scene->FixedUpdate();
-        scene->Update();
-        scene->LateUpdate();
+	if (scene)
+	{
+		scene->Update_Editor();
 
-        graphicDev.Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
-        scene->Render_Game();
+		if (CSceneManager::GetInstance().IsPlaying())
+		{
+			scene->FixedUpdate();
+			scene->Update();
+			scene->LateUpdate();
+		}
+
+		graphicDev.Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
+		scene->Render_Game();
         graphicDev.Present();
 
         scene->EndFrame();
