@@ -66,12 +66,15 @@ public:
 public:
 	const TimeSettings& Get_TimeSetting();
 	const LightSettings& Get_LightSetting();
+	void Set_FixedTimeStep(const _float value);
+	void Set_TimeScale(const _float value);
 	void Set_ShadowQuality(const shadowQualityOptions option);
 
 public:
 	void AddLayer(_uint _index, const wstring& _name);
 	const map<_uint, wstring>& Get_LayerList() const;
 	void SaveLayerSettings() const;
+	void SaveEngineSettings() const;
 	const _uint NameToLayer(const wstring& _name) const;
 	const wstring& LayerToName(const _uint _index);
 	const LayerMask MakeLayerMask(const vector<_uint> _layers) const;
