@@ -43,6 +43,7 @@ public:
 
 	ID3D11DepthStencilState* Get_DepthStencil_NoWrite() const;
 	ID3D11RasterizerState* Get_Rasterizer_CullFront() const;
+	ID3D11RasterizerState* Get_Rasterizer_Wireframe() const;
 
 	ID3D11RenderTargetView* Get_BackBuffer_RTV() const;
 	ID3D11DepthStencilView* Get_DepthStencil_DSV() const;
@@ -67,6 +68,7 @@ private:
 
 	ID3D11DepthStencilState* m_pDepthStencilNoWrite;
 	ID3D11RasterizerState* m_pRasterizerCullFront;
+	ID3D11RasterizerState* m_pRasterizerWireframe;
 };
 
 NS_END

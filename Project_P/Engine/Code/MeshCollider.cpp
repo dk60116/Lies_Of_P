@@ -6,6 +6,7 @@
 #include "Material.h"
 #include "SceneManager.h"
 #include "Camera.h"
+#include "GraphicDevice.h"
 #include <unordered_map>
 #include <cstdint>
 #include <cmath>
@@ -153,7 +154,7 @@ namespace
 CMeshCollider::CMeshCollider()
     : m_pCachedMeshBuffer(nullptr)
     , m_pLineMaterial(nullptr)
-    , m_bShowGizmo(false)
+    , m_bShowGizmo(true)
 {
     m_strName = L"Mesh Collider";
 }
@@ -174,6 +175,7 @@ CComponent* CMeshCollider::Clone() const
     clone->m_bIsTrigger = m_bIsTrigger;
     clone->m_vCenter = m_vCenter;
     clone->m_bShapeDirty = true;
+    clone->m_bShowGizmo = m_bShowGizmo;
 
     return clone;
 }
@@ -260,9 +262,16 @@ void CMeshCollider::Render_Gizmo()
     _matrix matView = cam->Get_ViewMatrix();
     _matrix matProj = cam->Get_ProjectionMatrix();
 
+    ID3D11RasterizerState* prevRasterizer = nullptr;
+    m_pContext->RSGetState(&prevRasterizer);
+    m_pContext->RSSetState(CGraphicDevice::GetInstance().Get_Rasterizer_Wireframe());
+
     m_pLineMaterial->Bind_Matrix(gizmoWorld);
     m_pLineMaterial->Bind_Camera(camPos, matView, matProj, 0);
     meshBuffer->Render();
+
+    m_pContext->RSSetState(prevRasterizer);
+    Safe_Release(prevRasterizer);
 #endif
 }
 

@@ -10,6 +10,7 @@ CGraphicDevice::CGraphicDevice()
 	, m_hCrtWndow(nullptr)
 	, m_pDepthStencilNoWrite(nullptr)
 	, m_pRasterizerCullFront(nullptr)
+	, m_pRasterizerWireframe(nullptr)
 {
 }
 
@@ -71,6 +72,18 @@ HRESULT CGraphicDevice::Initialize()
 			return E_FAIL;
 	}
 
+
+	{
+		D3D11_RASTERIZER_DESC rsDesc = {};
+		rsDesc.FillMode = D3D11_FILL_WIREFRAME;
+		rsDesc.CullMode = D3D11_CULL_NONE;
+		rsDesc.DepthClipEnable = TRUE;
+
+		HRESULT hr = m_pDevice->CreateRasterizerState(&rsDesc, &m_pRasterizerWireframe);
+		if (FAILED(hr))
+			return E_FAIL;
+	}
+
 	m_pSpriteBatch = new SpriteBatch(m_pContext);
 
 	return S_OK;
@@ -85,6 +98,7 @@ void CGraphicDevice::Destroy()
 	Safe_Release(m_pDevice);
 	Safe_Release(m_pDepthStencilNoWrite);
 	Safe_Release(m_pRasterizerCullFront);
+	Safe_Release(m_pRasterizerWireframe);
 
 	if (m_pSpriteBatch)
 	{
@@ -297,6 +311,11 @@ ID3D11DepthStencilState* CGraphicDevice::Get_DepthStencil_NoWrite() const
 ID3D11RasterizerState* CGraphicDevice::Get_Rasterizer_CullFront() const
 {
 	return m_pRasterizerCullFront;
+}
+
+ID3D11RasterizerState* CGraphicDevice::Get_Rasterizer_Wireframe() const
+{
+	return m_pRasterizerWireframe;
 }
 
 ID3D11RenderTargetView* CGraphicDevice::Get_BackBuffer_RTV() const
