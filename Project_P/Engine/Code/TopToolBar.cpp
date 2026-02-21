@@ -62,8 +62,8 @@ void CTopToolBar::Render()
 	);
 
 	ShowSelectSceneButton();
-	ShowPlayButtons();
 	Show2DButton();
+	ShowPlayButtons();
 	ShowFPS();
 
 	ImGui::End();
@@ -104,16 +104,27 @@ void CTopToolBar::ShowPlayButtons()
 {
 	CSceneManager& sceneManager = CSceneManager::GetInstance();
 
-	ImGui::SameLine();
+	const char* playLabel = "\xE2\x96\xB6";
+	const char* stopLabel = "\xE2\x96\xA0";
+	const char* pauseLabel = "\xE2\x9D\x9A\xE2\x9D\x9A";
+
+	const _float buttonWidth = 36.f;
+	const ImVec2 buttonSize(buttonWidth, 0.f);
+	const _float spacing = ImGui::GetStyle().ItemSpacing.x;
+	const _float totalWidth = buttonWidth * 2.f + spacing;
+	_float startX = (ImGui::GetWindowWidth() - totalWidth) * 0.5f;
+	if (startX < 0.f)
+		startX = 0.f;
+	ImGui::SetCursorPosX(startX);
 
 	if (!sceneManager.IsPlayMode())
 	{
-		if (ImGui::Button("Play"))
+		if (ImGui::Button(playLabel, buttonSize))
 			sceneManager.PlayScene();
 	}
 	else
 	{
-		if (ImGui::Button("Stop"))
+		if (ImGui::Button(stopLabel, buttonSize))
 			sceneManager.StopScene();
 	}
 
@@ -121,18 +132,18 @@ void CTopToolBar::ShowPlayButtons()
 
 	if (sceneManager.IsPlaying())
 	{
-		if (ImGui::Button("Pause"))
+		if (ImGui::Button(pauseLabel, buttonSize))
 			sceneManager.PauseScene();
 	}
 	else if (sceneManager.IsPaused())
 	{
-		if (ImGui::Button("Resume"))
+		if (ImGui::Button(playLabel, buttonSize))
 			sceneManager.PlayScene();
 	}
 	else
 	{
 		ImGui::BeginDisabled();
-		ImGui::Button("Pause");
+		ImGui::Button(pauseLabel, buttonSize);
 		ImGui::EndDisabled();
 	}
 }
