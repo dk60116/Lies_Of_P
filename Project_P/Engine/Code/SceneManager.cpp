@@ -122,9 +122,15 @@ void CSceneManager::LoadScene(wstring _scene)
 
 	m_pTempScene = iter->second;
 
+	const _bool sameSceneReload = (m_pCrtScene && m_pCrtScene->Get_SceneName() == _scene);
+
 	if (m_pTempScene)
 	{
-		m_pTempScene->PreLoadResources();
+		if (!sameSceneReload)
+			m_pTempScene->PreLoadResources();
+		else
+			CDebug::Log(L"Load scene skip PreLoadResources (same scene): " + _scene);
+
 		m_bLoading = true;
 	}
 }
