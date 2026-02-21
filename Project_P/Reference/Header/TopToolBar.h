@@ -20,9 +20,9 @@ public:
 
 private:
 	void ShowSelectSceneButton();
+	void ShowPlayButtons();
 	void Show2DButton();
 	void ShowFPS();
 };
 
 NS_END
-

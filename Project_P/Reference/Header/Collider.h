@@ -64,6 +64,7 @@ protected:
     _bool m_bStandaloneBodyDirty;
     vector3 m_vCachedWorldPosition;
     quaternion m_vCachedWorldRotation;
+    _bool m_bDestroying;
 };
 
 NS_END

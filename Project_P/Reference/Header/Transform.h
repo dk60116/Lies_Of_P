@@ -33,6 +33,7 @@ private:
 public:
 	HRESULT Initialize() override;
 	void Update() override;
+	void Update_Editor() override;
 	void LateUpdate() override;
 	void Render_Gizmo() override;
 	void OnDestroy() override;

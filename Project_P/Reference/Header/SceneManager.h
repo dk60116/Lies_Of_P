@@ -10,6 +10,13 @@ class ENGINE_DLL CSceneManager final
 	SINGLETONCLASS(CSceneManager);
 
 public:
+	enum class PlayState
+	{
+		Stopped,
+		Playing,
+		Paused
+	};
+
 	enum shadowQualityOptions { Low, Middle, High, SuperHigh, Ultra };
 
 	struct TimeSettings
@@ -42,6 +49,14 @@ public:
 	void LoadScene(wstring _scene);
 	void LoadScene(CScene* _scene);
 	void LoadComplete();
+	void PlayScene();
+	void PauseScene();
+	void StopScene();
+	void RequestStepFrame();
+	const _bool ConsumeStepFrameRequest();
+	const _bool IsPlaying() const;
+	const _bool IsPaused() const;
+	const _bool IsPlayMode() const;
 
 public:
 	class CCamera* Get_EditorCamera();
@@ -57,6 +72,10 @@ private:
 	map<wstring, CScene*> m_mSceneList;
 
 	_bool m_bLoading;
+	_bool m_bSceneAwakened;
+	PlayState m_ePlayState;
+	wstring m_strPlayStartSceneName;
+	_bool m_bStepFrameRequested;
 
 	class CGameObject* m_pEditorCamObj;
 	class CEditorCamera* m_pEditorCamera;
@@ -67,4 +86,3 @@ private:
 };
 
 NS_END
-

@@ -67,6 +67,8 @@ public:
 	PhysicsSystem& GetPhysicsSystem();
 	void RemoveContactPairs(const BodyID& _bodyID);
 
+	const _bool IsInitialized() const;
+
 	vector<RAYCASTHIT> Raycast(const Ray& _ray);
 
 private:
