@@ -42,6 +42,7 @@ CCollider::CCollider()
 	, m_bStandaloneBodyDirty(true)
 	, m_vCachedWorldPosition(vector3::zero())
 	, m_vCachedWorldRotation(quaternion::identity())
+	, m_bDestroying(false)
 {
 	m_strName = L"Collider";
 }
@@ -123,12 +124,17 @@ void CCollider::SetRigidBody(CRigidBody* rigidBody)
 		return;
 	}
 
+	if (m_bDestroying)
+		return;
+
 	m_bStandaloneBodyDirty = true;
 	RefreshStandaloneBody();
 }
 
 void CCollider::OnDestroy()
 {
+	m_bDestroying = true;
+
 	if (m_pRigidBody)
 		m_pRigidBody->RemvoeCollier(this);
 
@@ -213,6 +219,9 @@ void CCollider::RefreshStandaloneBody()
 
 void CCollider::CreateStandaloneBody()
 {
+	if (!CPhysics::GetInstance().IsInitialized())
+		return;
+
 	if (m_pRigidBody || m_bHasStandaloneBody)
 		return;
 
@@ -246,6 +255,14 @@ void CCollider::DestroyStandaloneBody()
 	if (!m_bHasStandaloneBody || m_pRigidBody)
 		return;
 
+	if (!CPhysics::GetInstance().IsInitialized())
+	{
+		m_iStandaloneBodyID = BodyID();
+		m_bHasStandaloneBody = false;
+		m_iContactCount = 0;
+		return;
+	}
+
 	BodyInterface& bodyInterface = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
 	CPhysics::GetInstance().RemoveContactPairs(m_iStandaloneBodyID);
 	bodyInterface.RemoveBody(m_iStandaloneBodyID);
@@ -259,6 +276,9 @@ void CCollider::DestroyStandaloneBody()
 void CCollider::SyncStandaloneBodyTransform()
 {
 	if (!m_bHasStandaloneBody || m_pRigidBody)
+		return;
+
+	if (!CPhysics::GetInstance().IsInitialized())
 		return;
 
 	Vec3 pos;

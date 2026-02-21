@@ -673,6 +673,11 @@ PhysicsSystem& CPhysics::GetPhysicsSystem()
 	return m_PhysicsSystem;
 }
 
+const _bool CPhysics::IsInitialized() const
+{
+	return m_bJoltInitialized;
+}
+
 void CPhysics::RemoveContactPairs(const BodyID& _bodyID)
 {
 	if (!m_pContactListener)
