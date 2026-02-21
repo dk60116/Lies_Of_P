@@ -20,9 +20,14 @@ public:
 
 private:
 	void ShowSelectSceneButton();
+	void ShowEditMenu();
+	void ShowProjectSettingsWindow();
 	void ShowPlayButtons();
 	void Show2DButton();
 	void ShowFPS();
+
+private:
+	_bool m_bProjectSettingsWindowOpen;
 };
 
 NS_END

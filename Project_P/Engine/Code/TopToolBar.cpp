@@ -2,6 +2,7 @@
 #include "TopToolBar.h"
 
 CTopToolBar::CTopToolBar()
+	: m_bProjectSettingsWindowOpen(false)
 {
 }
 
@@ -62,11 +63,14 @@ void CTopToolBar::Render()
 	);
 
 	ShowSelectSceneButton();
+	ShowEditMenu();
 	Show2DButton();
 	ShowPlayButtons();
 	ShowFPS();
 
 	ImGui::End();
+
+	ShowProjectSettingsWindow();
 
 	ImGui::PopStyleVar();
 }
@@ -99,6 +103,43 @@ void CTopToolBar::ShowSelectSceneButton()
 	}
 }
 
+
+void CTopToolBar::ShowEditMenu()
+{
+	ImGui::SameLine();
+
+	if (ImGui::Button("Setting"))
+	{
+		ImGui::OpenPopup("EditMenuPopup");
+	}
+
+	if (ImGui::BeginPopup("EditMenuPopup"))
+	{
+		if (ImGui::BeginMenu("Edit"))
+		{
+			if (ImGui::MenuItem("ProjectSettings"))
+				m_bProjectSettingsWindowOpen = true;
+
+			ImGui::EndMenu();
+		}
+
+		ImGui::EndPopup();
+	}
+}
+
+void CTopToolBar::ShowProjectSettingsWindow()
+{
+	if (!m_bProjectSettingsWindowOpen)
+		return;
+
+	ImGui::SetNextWindowSize(ImVec2(420.f, 240.f), ImGuiCond_FirstUseEver);
+
+	if (ImGui::Begin("Project Settings", &m_bProjectSettingsWindowOpen))
+	{
+	}
+
+	ImGui::End();
+}
 
 void CTopToolBar::ShowPlayButtons()
 {
