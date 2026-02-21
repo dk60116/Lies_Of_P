@@ -54,7 +54,7 @@ void CPlayerState_Move::Update()
 
     const vector3& dir = m_pCtx->GetMoveWorldDir();
     const _float speed = m_pCtx->IsSprint() ? m_pCtx->PlayerStatus().sprintSpeed : m_pCtx->PlayerStatus().runSpeed;
-    m_pCtx->AddPosition(dir * speed * DELTA_TIME);
+    m_pCtx->Translate(dir * speed * DELTA_TIME);
 
     m_pCtx->BeginTurnTo(m_pCtx->GetDesiredYawDeg());
 

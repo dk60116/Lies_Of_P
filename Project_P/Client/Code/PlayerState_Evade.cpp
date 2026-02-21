@@ -136,7 +136,7 @@ void CPlayerState_Evade::Update()
 	__super::Update();
 
 	if (m_bIsDash)
-		m_pCtx->AddPosition(m_pCtx->PlayerForward() * DELTA_TIME * 9.f * (m_bInputDir ? 1.f : -1.f));
+		m_pCtx->Translate(m_pCtx->PlayerForward() * DELTA_TIME * 9.f * (m_bInputDir ? 1.f : -1.f));
 
 	if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack))
 		m_bAttackBuffer = true;

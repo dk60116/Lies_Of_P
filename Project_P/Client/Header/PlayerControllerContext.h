@@ -51,7 +51,8 @@ public:
 
 	void SetPlayerYaw(const _float _y);
 
-	void AddPosition(const vector3& delta);
+	void Translate(const vector3& delta);
+	void FixedUpdate();
 
 	void BeginTurnTo(_float _targetYawDeg);
 	_float DeltaAngleDeg(float _current, _float _target);
@@ -136,6 +137,7 @@ private:
 private:
 	_bool m_bSprint, m_bBigTurn;
 	_bool m_bCanMove, m_bCanTurn, m_bCanAttack, m_bCanGuard, m_bCanEvade, m_bCanJump;
+	vector3 m_vPendingTranslation;
 
 private:
 	CV_MOVE m_Cv_Move;

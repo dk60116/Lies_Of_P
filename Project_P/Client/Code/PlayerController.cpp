@@ -159,6 +159,11 @@ void CPlayerController::Update()
 	m_fPrevSpeed = speed;
 }
 
+void CPlayerController::FixedUpdate()
+{
+	m_ctx.FixedUpdate();
+}
+
 void CPlayerController::LateUpdate()
 {
 }

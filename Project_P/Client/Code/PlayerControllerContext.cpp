@@ -15,6 +15,7 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_bCanGuard(true)
 	, m_bCanEvade(true)
 	, m_bCanJump(true)
+	, m_vPendingTranslation(vector3::zero())
 {
 	m_strName = L"PlayerControllerContext";
 
@@ -141,13 +142,30 @@ void CPlayerControllerContext::SetPlayerYaw(const _float _y)
 	m_pPlayer->Get_Transform()->Set_LocalEulerAngles(0.f, _y, 0.f);
 }
 
-void CPlayerControllerContext::AddPosition(const vector3& delta)
+void CPlayerControllerContext::Translate(const vector3& delta)
 {
 	if (!m_pPlayer) 
 		return;
-	m_pPlayer->Get_Transform()->Translate(delta);
+	m_vPendingTranslation += delta;
 }
 
+
+void CPlayerControllerContext::FixedUpdate()
+{
+	if (!m_pPlayer)
+		return;
+
+	const _float sqrLen =
+		m_vPendingTranslation.x * m_vPendingTranslation.x +
+		m_vPendingTranslation.y * m_vPendingTranslation.y +
+		m_vPendingTranslation.z * m_vPendingTranslation.z;
+
+	if (sqrLen <= 1e-12f)
+		return;
+
+	m_pPlayer->Get_Transform()->Translate(m_vPendingTranslation);
+	m_vPendingTranslation = vector3::zero();
+}
 void CPlayerControllerContext::BeginTurnTo(_float _targetYawDeg)
 {
 	m_Cv_Move.m_targetYaw = WrapDeg(_targetYawDeg);
@@ -223,7 +241,7 @@ void CPlayerControllerContext::TickMove()
 	}
 
 	const _float curSpeed = PlayerStatus().runSpeed * m_Cv_Move.m_fMove01;
-	AddPosition(dir * curSpeed * dt);
+	Translate(dir * curSpeed * dt);
 }
 
 void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float _stopEpsDeg)
