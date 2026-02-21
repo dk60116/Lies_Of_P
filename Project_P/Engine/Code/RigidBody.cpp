@@ -482,18 +482,23 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
 
     ApplyAxisConstraints(targetPos, targetRot);
 
-    Get_Transform()->Set_Position(targetPos);
-    Get_Transform()->Set_Quaternion(targetRot);
-
-    const RVec3 joltTargetPos(targetPos.x, targetPos.y, targetPos.z);
-    const Quat joltTargetRot(targetRot.x, targetRot.y, targetRot.z, targetRot.w);
-
     const vector3 appliedDelta = targetPos - vector3(static_cast<_float>(pos.GetX()), static_cast<_float>(pos.GetY()), static_cast<_float>(pos.GetZ()));
     const _float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
     const Vec3 deltaVelocity(
         static_cast<float>(appliedDelta.x / fixedDt),
         static_cast<float>(appliedDelta.y / fixedDt),
         static_cast<float>(appliedDelta.z / fixedDt));
+
+    const _bool hasDynamicBody = !m_bKinematic && (m_bHasBody || m_bHasSensorBody);
+
+    if (!hasDynamicBody)
+    {
+        Get_Transform()->Set_Position(targetPos);
+        Get_Transform()->Set_Quaternion(targetRot);
+    }
+
+    const RVec3 joltTargetPos(targetPos.x, targetPos.y, targetPos.z);
+    const Quat joltTargetRot(targetRot.x, targetRot.y, targetRot.z, targetRot.w);
 
     if (m_bHasBody)
     {
@@ -503,7 +508,8 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
             fabsf(appliedDelta.y) > 1e-6f ? deltaVelocity.GetY() : currentLinearVelocity.GetY(),
             fabsf(appliedDelta.z) > 1e-6f ? deltaVelocity.GetZ() : currentLinearVelocity.GetZ());
 
-        GetBI().SetPositionAndRotation(m_iBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
+        if (!hasDynamicBody)
+            GetBI().SetPositionAndRotation(m_iBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
         GetBI().SetLinearAndAngularVelocity(m_iBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iBodyID));
     }
 
@@ -515,11 +521,13 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
             fabsf(appliedDelta.y) > 1e-6f ? deltaVelocity.GetY() : currentLinearVelocity.GetY(),
             fabsf(appliedDelta.z) > 1e-6f ? deltaVelocity.GetZ() : currentLinearVelocity.GetZ());
 
-        GetBI().SetPositionAndRotation(m_iSensorBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
+        if (!hasDynamicBody)
+            GetBI().SetPositionAndRotation(m_iSensorBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
         GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iSensorBodyID));
     }
 
-    CacheLastSyncedTransform(targetPos, targetRot);
+    if (!hasDynamicBody)
+        CacheLastSyncedTransform(targetPos, targetRot);
 }
 
 void CRigidBody::ApplyAxisConstraints(vector3& _pos, quaternion& _rot)
