@@ -14,8 +14,6 @@
 
 namespace
 {
-    inline Vec3 ToJPHVec3(const vector3& v) { return Vec3(v.x, v.y, v.z); }
-
     inline void DecomposeWorldMatrix(const _matrix& m, Vec3& outPos, Quat& outRot)
     {
         XMVECTOR s, r, t;
@@ -260,7 +258,7 @@ void CRigidBody::BuildCompoundShapes(const list<CCollider*>& _colliders, RefCons
         if (!childShape)
             continue;
 
-        const Vec3 localCenter = ToJPHVec3(col->GetCenter());
+        const Vec3 localCenter = Vec3::sZero();
         const Quat localRot = Quat::sIdentity();
 
         if (col->IsTrigger())
