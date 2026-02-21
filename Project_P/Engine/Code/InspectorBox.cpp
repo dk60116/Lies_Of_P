@@ -913,6 +913,50 @@ void CInspectorBox::Render()
             ImGui::EndCombo();
         }
 
+        ImGui::SameLine();
+        const string addLayerPopupId = "AddLayerPopup##" + to_string(selectedObj->Get_UniqueID());
+        static _int selectedLayerIndexForEdit = 1;
+        static string editLayerName = "Layer_1";
+
+        if (ImGui::Button("AddLayer"))
+        {
+            _uint currentLayerMask = (_uint)1u << selectedLayerIndexForEdit;
+            auto it = layerList.find(currentLayerMask);
+            if (it != layerList.end())
+                editLayerName = CEngineString::WStringToString(it->second);
+            else
+                editLayerName = "Layer_" + to_string(selectedLayerIndexForEdit);
+
+            ImGui::OpenPopup(addLayerPopupId.c_str());
+        }
+
+        if (ImGui::BeginPopupModal(addLayerPopupId.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::SetNextItemWidth(220.f);
+            ImGui::SliderInt("Layer Index", &selectedLayerIndexForEdit, 1, 31);
+
+            const _uint editingMask = (_uint)1u << selectedLayerIndexForEdit;
+            const string currentLayerName = CEngineString::WStringToString(sceneManager.LayerToName(editingMask));
+            ImGui::Text("Current: %s", currentLayerName.c_str());
+
+            ImGui::SetNextItemWidth(220.f);
+            ImGui::InputText("Layer Name", &editLayerName, ImGuiInputTextFlags_AutoSelectAll);
+
+            if (ImGui::Button("Apply"))
+            {
+                const string trimmedName = CEngineString::Trim(editLayerName);
+                if (!trimmedName.empty())
+                    sceneManager.AddLayer((_uint)selectedLayerIndexForEdit, CEngineString::StringToWString(trimmedName));
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button("Close"))
+                ImGui::CloseCurrentPopup();
+
+            ImGui::EndPopup();
+        }
+
         if (!selectedObj)
             return;
 
