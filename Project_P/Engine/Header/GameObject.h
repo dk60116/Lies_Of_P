@@ -123,6 +123,12 @@ public:
 	const _bool IsStatic(STATIC_METHOD _method) const;
 	void SetStatic(STATIC_METHOD _method, const _bool _value, const _bool recursiveChild);
 
+public:
+	const _uint GetLayer() const;
+	const wstring& GetLayerName();
+	void SetLayer(const _uint _layer);
+	void SetLayer(const wstring& _layerName);
+
 private:
 	void Set_RecursiveActive(const _bool _active);
 
@@ -148,6 +154,9 @@ private:
 
 private:
 	_bool m_bTransformStatic;
+
+private:
+	_uint m_iLayer;
 };
 
 NS_END

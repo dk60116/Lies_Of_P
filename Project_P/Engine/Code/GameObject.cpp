@@ -36,6 +36,7 @@ CGameObject::CGameObject(const wstring _name, ID3D11Device* _pDevice, ID3D11Devi
 	, m_bSaveTarget(true)
 	, m_bKill(false)
 	, m_bTransformStatic(false)
+	, m_iLayer(1)
 {
 	m_strName = L"Game Object";
 	m_pDevice->AddRef();
@@ -59,6 +60,7 @@ CGameObject::CGameObject(const CGameObject& _rhs)
 	, m_bSaveTarget(_rhs.m_bSaveTarget)
 	, m_bKill(false)
 	, m_bTransformStatic(_rhs.m_bTransformStatic)
+	, m_iLayer(_rhs.m_iLayer)
 {
 	m_iUniqueID = CSceneManager::GetInstance().Get_CrtScene()->Get_UniqueObjectCount();
 }
@@ -665,6 +667,26 @@ void CGameObject::SetStatic(STATIC_METHOD _method, const _bool _value, const _bo
 		if (CGameObject* childObj = child->Get_GameObject())
 			childObj->SetStatic(_method, _value, true);
 	}
+}
+
+const _uint CGameObject::GetLayer() const
+{
+	return m_iLayer;
+}
+
+const wstring& CGameObject::GetLayerName()
+{
+	return CSceneManager::GetInstance().LayerToName(m_iLayer);
+}
+
+void CGameObject::SetLayer(const _uint _layer)
+{
+	m_iLayer = _layer;
+}
+
+void CGameObject::SetLayer(const wstring& _layerName)
+{
+	m_iLayer = CSceneManager::GetInstance().NameToLayer(_layerName);
 }
 
 void CGameObject::Set_RecursiveActive(const _bool _active)

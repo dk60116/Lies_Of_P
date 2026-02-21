@@ -35,6 +35,8 @@ public:
 		_uint shadowMapSize = 0;
 	};
 
+	typedef _uint LayerMask;
+
 public:
 	HRESULT Initialize();
 	void Release();
@@ -66,6 +68,13 @@ public:
 	const LightSettings& Get_LightSetting();
 	void Set_ShadowQuality(const shadowQualityOptions option);
 
+public:
+	void AddLayer(_uint _index, const wstring& _name);
+	const _uint NameToLayer(const wstring& _name) const;
+	const wstring& LayerToName(const _uint _index);
+	const LayerMask MakeLayerMask(const vector<_uint> _layers) const;
+	const _bool ContainLayerMask(const _uint _layer, const LayerMask _mask);
+
 private:
 	CScene* m_pCrtScene;
 	CScene* m_pTempScene;
@@ -83,6 +92,9 @@ private:
 private:
 	TimeSettings m_sTimeSetting;
 	LightSettings m_sLightSetting;
+
+private:
+	map<_uint, wstring> m_mLayerList;
 };
 
 NS_END

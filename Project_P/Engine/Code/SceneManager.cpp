@@ -14,6 +14,7 @@ CSceneManager::CSceneManager()
 	, m_pEditorCamera(nullptr)
 	, m_sTimeSetting({})
 	, m_sLightSetting({})
+	, m_mLayerList()
 {
 }
 
@@ -31,6 +32,12 @@ CSceneManager& CSceneManager::GetInstance()
 HRESULT CSceneManager::Initialize()
 {
 	Set_ShadowQuality(m_sLightSetting.shadowQuality);
+
+	m_mLayerList.insert({ 0u, L"No Layer" });
+	m_mLayerList.insert({ 1u, L"Default" });
+
+	for (_uint i = 1; i < 32; ++i)
+		m_mLayerList.insert({ 1u << (_uint)i, L"Layer_" +  to_wstring(i)});
 
 	return S_OK;
 }
@@ -291,4 +298,80 @@ void CSceneManager::Set_ShadowQuality(const shadowQualityOptions option)
 		m_sLightSetting.shadowMapSize = 16384;
 		break;
 	}
+}
+
+void CSceneManager::AddLayer(_uint _index, const wstring& _name)
+{
+	if (_index >= 32u)
+		return;
+	const _uint mask = (1u << _index);
+	m_mLayerList[mask] = _name;
+}
+
+const _uint CSceneManager::NameToLayer(const wstring& _name) const
+{
+	if (_name.empty())
+		return 0u;
+
+	for (const auto& kv : m_mLayerList)
+	{
+		const _uint   mask = kv.first;
+		const wstring& name = kv.second;
+
+		if (name == _name)
+			return mask;
+	}
+
+	constexpr wchar_t kPrefix[] = L"Layer_";
+	if (_name.rfind(kPrefix, 0u) == 0u)
+	{
+		const wstring idxStr = _name.substr(std::size(kPrefix) - 1);
+		if (!idxStr.empty())
+		{
+			try
+			{
+				const unsigned long idx = stoul(idxStr);
+				if (idx < 32u)
+					return (1u << idx);
+			}
+			catch (...) { }
+		}
+	}
+
+	return 0u;
+}
+
+const wstring& CSceneManager::LayerToName(_uint _index)
+{
+	static const wstring kEmpty = L"";
+
+	auto it = m_mLayerList.find(_index);
+	if (it != m_mLayerList.end())
+		return it->second;
+
+	if (_index < 32)
+	{
+		const _uint mask = (1u << _index);
+		it = m_mLayerList.find(mask);
+		if (it != m_mLayerList.end())
+			return it->second;
+	}
+
+	return kEmpty;
+}
+
+const CSceneManager::LayerMask CSceneManager::MakeLayerMask(const vector<_uint> _layers) const
+{
+	LayerMask mask = 0;
+	for (_uint idx : _layers)
+	{
+		if (idx < 32)
+			mask |= (LayerMask(1u) << idx);
+	}
+	return mask;
+}
+
+const _bool CSceneManager::ContainLayerMask(const _uint _layer, const LayerMask _mask)
+{
+	return (_layer & _mask) != 0;
 }
