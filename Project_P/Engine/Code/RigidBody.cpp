@@ -58,6 +58,7 @@ CRigidBody::CRigidBody()
     , m_bConstRotationZ(false)
     , m_vConstPosition(vector3::zero())
     , m_vConstRotation(vector3::zero())
+    , m_vPendingTranslation(vector3::zero())
     , m_bHasLastSyncedTransform(false)
     , m_vLastSyncedPosition(vector3::zero())
     , m_vLastSyncedRotation(quaternion::identity())
@@ -115,6 +116,7 @@ void CRigidBody::Awake()
 void CRigidBody::FixedUpdate()
 {
     RebuildBodiesIfDirty();
+    FlushPendingTranslation();
 
     if (m_bKinematic)
         SyncKinematicToJolt();
@@ -471,6 +473,42 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     if (_deltaWorld.lengthSq() <= 0.f)
         return;
 
+    if (!m_bHasBody && !m_bHasSensorBody)
+    {
+        TranslateImmediate(_deltaWorld);
+        return;
+    }
+
+    m_vPendingTranslation += _deltaWorld;
+}
+
+void CRigidBody::FlushPendingTranslation()
+{
+    if (m_vPendingTranslation.lengthSq() <= 0.f)
+        return;
+
+    vector3 remaining = m_vPendingTranslation;
+    m_vPendingTranslation = vector3::zero();
+
+    const _float maxStepSq = kMaxTranslateStep * kMaxTranslateStep;
+
+    while (remaining.lengthSq() > maxStepSq)
+    {
+        const _float len = sqrtf(remaining.lengthSq());
+        if (len <= 1e-6f)
+            return;
+
+        const vector3 step = remaining * (kMaxTranslateStep / len);
+        TranslateImmediate(step);
+        remaining -= step;
+    }
+
+    if (remaining.lengthSq() > 0.f)
+        TranslateImmediate(remaining);
+}
+
+void CRigidBody::TranslateImmediate(const vector3& _deltaWorld)
+{
     Get_Transform()->Update();
 
     Vec3 pos;

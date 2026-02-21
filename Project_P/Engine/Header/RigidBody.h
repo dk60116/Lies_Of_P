@@ -80,6 +80,14 @@ private:
 	void CacheLastSyncedTransform(const vector3& _pos, const quaternion& _rot);
 
 private:
+	void FlushPendingTranslation();
+
+	vector3 m_vPendingTranslation;
+
+	static constexpr _float kMaxTranslateStep = 0.2f;
+
+	void TranslateImmediate(const vector3& _deltaWorld);
+
 	list<CCollider*> m_lColliderList;
 
 	_bool m_bBodyDirty;
