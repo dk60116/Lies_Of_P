@@ -65,6 +65,12 @@ HRESULT CTransform::Initialize()
 
 void CTransform::Update()
 {
+    if (CSceneManager::GetInstance().IsPlaying())
+    {
+        if (m_pGameObject->IsStatic(CGameObject::STATIC_METHOD::TransformStatic))
+            return;
+    }
+
     Bind_Matrix();
     Bind_Direction();
 }

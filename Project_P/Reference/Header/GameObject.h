@@ -14,6 +14,9 @@ class ENGINE_DLL CGameObject final : public UObject
 	friend class CScene;
 	friend class CTransform;
 
+public:
+	enum class STATIC_METHOD { TransformStatic };
+
 private:
 	explicit CGameObject(const wstring _name, ID3D11Device* _pDevice, ID3D11DeviceContext* _pContext);
 	explicit CGameObject(const CGameObject& _rhs);
@@ -116,6 +119,10 @@ public:
 	const _bool IsRecursiveActive();
 	const _bool Is_SaveTarget() const;
 
+public:
+	const _bool IsStatic(STATIC_METHOD _method) const;
+	void SetStatic(STATIC_METHOD _method, const _bool _value);
+
 private:
 	void Set_RecursiveActive(const _bool _active);
 
@@ -138,6 +145,9 @@ private:
 	_bool m_bSaveTarget;
 
 	_bool m_bKill;
+
+private:
+	_bool m_bTransformStatic;
 };
 
 NS_END

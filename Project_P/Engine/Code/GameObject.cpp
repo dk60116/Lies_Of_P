@@ -35,6 +35,7 @@ CGameObject::CGameObject(const wstring _name, ID3D11Device* _pDevice, ID3D11Devi
 	, m_bIsBoneTransform(false)
 	, m_bSaveTarget(true)
 	, m_bKill(false)
+	, m_bTransformStatic(false)
 {
 	m_strName = L"Game Object";
 	m_pDevice->AddRef();
@@ -46,6 +47,7 @@ CGameObject::CGameObject(const CGameObject& _rhs)
 	, m_strGuid(GenerateGuidString())
 	, m_strGameObjectName(_rhs.m_strGameObjectName + L" (Clone)")
 	, m_bActive(_rhs.m_bActive)
+	, m_bActive_Origin(_rhs.m_bActive_Origin)
 	, m_bPrevActive(_rhs.m_bPrevActive)
 	, m_bRecursiveActive(_rhs.m_bRecursiveActive)
 	, m_lComponentList({})
@@ -55,6 +57,8 @@ CGameObject::CGameObject(const CGameObject& _rhs)
 	, m_pContext(_rhs.m_pContext)
 	, m_bIsBoneTransform(_rhs.m_bIsBoneTransform)
 	, m_bSaveTarget(_rhs.m_bSaveTarget)
+	, m_bKill(false)
+	, m_bTransformStatic(_rhs.m_bTransformStatic)
 {
 	m_iUniqueID = CSceneManager::GetInstance().Get_CrtScene()->Get_UniqueObjectCount();
 }
@@ -628,6 +632,26 @@ const _bool CGameObject::IsRecursiveActive()
 const _bool CGameObject::Is_SaveTarget() const
 {
 	return m_bSaveTarget;
+}
+
+const _bool CGameObject::IsStatic(STATIC_METHOD _method) const
+{
+	switch (_method)
+	{
+	case STATIC_METHOD::TransformStatic:
+		return m_bTransformStatic;
+	}
+
+	return false;
+}
+
+void CGameObject::SetStatic(STATIC_METHOD _method, const _bool _value)
+{
+	switch (_method)
+	{
+	case STATIC_METHOD::TransformStatic:
+		m_bTransformStatic = _value;
+	}
 }
 
 void CGameObject::Set_RecursiveActive(const _bool _active)
