@@ -69,6 +69,12 @@ void CTransform::Update()
     Bind_Direction();
 }
 
+void CTransform::Update_Editor()
+{
+    Bind_Matrix();
+    Bind_Direction();
+}
+
 void CTransform::LateUpdate()
 {
     m_vPrevPosition = m_vWorldPosition;
