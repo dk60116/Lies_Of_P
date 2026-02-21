@@ -655,25 +655,24 @@ void CRigidBody::SyncDynamicFromJolt()
     const RVec3 joltPos = GetBI().GetPosition(sourceBodyId);
     const Quat joltRot = GetBI().GetRotation(sourceBodyId);
 
-    _bool forceTransformOverride = false;
+    const vector3 prevPos = Get_Transform()->Get_PrevPosition();
+    const quaternion prevRot = Get_Transform()->Get_PrevQuaternion();
+
+    const _float dpx = prevPos.x - tfPos.GetX();
+    const _float dpy = prevPos.y - tfPos.GetY();
+    const _float dpz = prevPos.z - tfPos.GetZ();
+    const _float editedPosDeltaSq = dpx * dpx + dpy * dpy + dpz * dpz;
+
+    const _float prevRotDotRaw = prevRot.x * tfRot.GetX() + prevRot.y * tfRot.GetY() + prevRot.z * tfRot.GetZ() + prevRot.w * tfRot.GetW();
+    const _float prevRotDotAbs = fabsf(prevRotDotRaw);
+
+    const _bool transformChangedOutsidePhysics = editedPosDeltaSq > 0.0004f || prevRotDotAbs < 0.999f;
+
+    _bool forceTransformOverride = transformChangedOutsidePhysics;
 #ifndef _CLIENT_BUILD
     CGameObject* selected = CEditor::GetInstance().Get_SelectedGameObject();
     if (selected != nullptr && selected == m_pGameObject)
-    {
-        const vector3 prevPos = Get_Transform()->Get_PrevPosition();
-        const quaternion prevRot = Get_Transform()->Get_PrevQuaternion();
-
-        const _float dpx = prevPos.x - tfPos.GetX();
-        const _float dpy = prevPos.y - tfPos.GetY();
-        const _float dpz = prevPos.z - tfPos.GetZ();
-        const _float editedPosDeltaSq = dpx * dpx + dpy * dpy + dpz * dpz;
-
-        const _float prevRotDotRaw = prevRot.x * tfRot.GetX() + prevRot.y * tfRot.GetY() + prevRot.z * tfRot.GetZ() + prevRot.w * tfRot.GetW();
-        const _float prevRotDotAbs = fabsf(prevRotDotRaw);
-
-        const _bool inspectorTransformChanged = editedPosDeltaSq > 0.0004f || prevRotDotAbs < 0.999f;
-        forceTransformOverride = ImGuizmo::IsUsing() || inspectorTransformChanged;
-    }
+        forceTransformOverride = forceTransformOverride || ImGuizmo::IsUsing();
 #endif
 
     const _bool transformOverridden = forceTransformOverride;
