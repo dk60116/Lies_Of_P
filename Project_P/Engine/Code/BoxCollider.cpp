@@ -184,7 +184,7 @@ const vector3& CBoxCollider::GetSize() const
 void CBoxCollider::SetSize(const vector3& size)
 {
     m_vSize = size;
-    m_bShapeDirty = true;
+    NotifyShapeChanged();
 }
 
 void CBoxCollider::OnDestroy()

@@ -197,7 +197,7 @@ HRESULT CMeshCollider::Initialize()
     }
 #endif
 
-    m_bShapeDirty = true;
+    NotifyShapeChanged();
 
     return S_OK;
 }
@@ -212,10 +212,8 @@ void CMeshCollider::Update()
     if (m_pCachedMeshBuffer != currentMesh)
     {
         m_pCachedMeshBuffer = currentMesh;
-        m_bShapeDirty = true;
+        NotifyShapeChanged();
 
-        if (m_pRigidBody)
-            m_pRigidBody->MarkBodyDirty();
     }
 }
 

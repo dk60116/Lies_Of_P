@@ -236,13 +236,13 @@ const _float CCapsuleCollider::GetHeight() const
 void CCapsuleCollider::SetRadius(const _float radius)
 {
     m_fRadius = max(radius, 0.001f);
-    m_bShapeDirty = true;
+    NotifyShapeChanged();
 }
 
 void CCapsuleCollider::SetHeight(const _float height)
 {
     m_fHeight = max(height, 0.f);
-    m_bShapeDirty = true;
+    NotifyShapeChanged();
 }
 
 void CCapsuleCollider::OnDestroy()

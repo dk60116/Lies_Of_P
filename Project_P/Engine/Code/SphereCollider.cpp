@@ -194,7 +194,7 @@ const _float CSphereCollider::GetRadius() const
 void CSphereCollider::SetRadius(const _float radius)
 {
     m_fRadius = max(radius, 0.001f);
-    m_bShapeDirty = true;
+    NotifyShapeChanged();
 }
 
 void CSphereCollider::OnDestroy()

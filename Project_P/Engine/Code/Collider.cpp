@@ -152,9 +152,8 @@ const vector3& CCollider::GetCenter() const
 	return m_vCenter;
 }
 
-void CCollider::SetTrigger(const _bool isTrigger)
+void CCollider::NotifyShapeChanged()
 {
-	m_bIsTrigger = isTrigger;
 	m_bShapeDirty = true;
 	m_bStandaloneBodyDirty = true;
 
@@ -164,16 +163,16 @@ void CCollider::SetTrigger(const _bool isTrigger)
 		RefreshStandaloneBody();
 }
 
+void CCollider::SetTrigger(const _bool isTrigger)
+{
+	m_bIsTrigger = isTrigger;
+	NotifyShapeChanged();
+}
+
 void CCollider::SetCenter(const vector3& center)
 {
 	m_vCenter = center;
-	m_bShapeDirty = true;
-	m_bStandaloneBodyDirty = true;
-
-	if (m_pRigidBody)
-		m_pRigidBody->MarkBodyDirty();
-	else
-		RefreshStandaloneBody();
+	NotifyShapeChanged();
 }
 
 const Shape* CCollider::GetShape()
