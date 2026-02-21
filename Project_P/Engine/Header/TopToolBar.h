@@ -30,6 +30,8 @@ private:
 private:
 	_bool m_bProjectSettingsWindowOpen;
 	_int m_iProjectSettingsSelection;
+	_float m_fPendingFixedTimeStep;
+	_float m_fPendingTimeScale;
 };
 
 NS_END

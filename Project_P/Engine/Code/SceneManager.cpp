@@ -3,7 +3,27 @@
 
 namespace
 {
-	const char* kEngineSettingsPath = "../Engine/Default/EngineSettings.setting";
+	static fs::path ResolveEngineSettingsPath(const _bool forSave)
+	{
+		const fs::path candidates[] =
+		{
+			"../Engine/Default/EngineSettings.setting",
+			"Engine/Default/EngineSettings.setting",
+			"../Project_P/Engine/Default/EngineSettings.setting",
+			"Project_P/Engine/Default/EngineSettings.setting"
+		};
+
+		for (const fs::path& path : candidates)
+		{
+			if (fs::exists(path))
+				return path;
+		}
+
+		if (forSave)
+			return candidates[3];
+
+		return candidates[0];
+	}
 }
 
 CSceneManager::CSceneManager()
@@ -346,7 +366,9 @@ void CSceneManager::SaveLayerSettings() const
 
 void CSceneManager::SaveEngineSettings() const
 {
-	ofstream outFile(kEngineSettingsPath, ios::trunc);
+	const fs::path settingsPath = ResolveEngineSettingsPath(true);
+	fs::create_directories(settingsPath.parent_path());
+	ofstream outFile(settingsPath, ios::trunc);
 	if (!outFile.is_open())
 		return;
 
@@ -366,7 +388,8 @@ void CSceneManager::SaveEngineSettings() const
 
 void CSceneManager::LoadLayerSettings()
 {
-	ifstream inFile(kEngineSettingsPath);
+	const fs::path settingsPath = ResolveEngineSettingsPath(false);
+	ifstream inFile(settingsPath);
 	if (!inFile.is_open())
 		return;
 

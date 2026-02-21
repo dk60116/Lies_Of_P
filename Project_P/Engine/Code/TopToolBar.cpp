@@ -4,6 +4,8 @@
 CTopToolBar::CTopToolBar()
 	: m_bProjectSettingsWindowOpen(false)
 	, m_iProjectSettingsSelection(0)
+	, m_fPendingFixedTimeStep(0.02f)
+	, m_fPendingTimeScale(1.f)
 {
 }
 
@@ -109,19 +111,17 @@ void CTopToolBar::ShowEditMenu()
 {
 	ImGui::SameLine();
 
-	if (ImGui::Button("Setting"))
-	{
+	if (ImGui::Button("Edit"))
 		ImGui::OpenPopup("EditMenuPopup");
-	}
 
 	if (ImGui::BeginPopup("EditMenuPopup"))
 	{
-		if (ImGui::BeginMenu("Edit"))
+		if (ImGui::MenuItem("ProjectSetting"))
 		{
-			if (ImGui::MenuItem("ProjectSettings"))
-				m_bProjectSettingsWindowOpen = true;
-
-			ImGui::EndMenu();
+			auto timeSetting = CSceneManager::GetInstance().Get_TimeSetting();
+			m_fPendingFixedTimeStep = timeSetting.fixedTimeStep;
+			m_fPendingTimeScale = timeSetting.timeSclae;
+			m_bProjectSettingsWindowOpen = true;
 		}
 
 		ImGui::EndPopup();
@@ -152,8 +152,13 @@ void CTopToolBar::ShowProjectSettingsWindow()
 		ImGui::EndChild();
 		ImGui::EndChild();
 
-		if (ImGui::Button("Save Settings"))
-			CSceneManager::GetInstance().SaveEngineSettings();
+		if (ImGui::Button("Save"))
+		{
+			CSceneManager& sceneManager = CSceneManager::GetInstance();
+			sceneManager.Set_FixedTimeStep(m_fPendingFixedTimeStep);
+			sceneManager.Set_TimeScale(m_fPendingTimeScale);
+			sceneManager.SaveEngineSettings();
+		}
 	}
 
 	ImGui::End();
@@ -161,19 +166,20 @@ void CTopToolBar::ShowProjectSettingsWindow()
 
 void CTopToolBar::ShowProjectSettingsTime()
 {
-	CSceneManager& sceneManager = CSceneManager::GetInstance();
-	auto timeSetting = sceneManager.Get_TimeSetting();
-	_float fixedTimeStep = timeSetting.fixedTimeStep;
-	_float timeScale = timeSetting.timeSclae;
-
 	ImGui::Text("Time");
 	ImGui::Separator();
 
-	if (ImGui::DragFloat("Fixed Time Step", &fixedTimeStep, 0.0001f, 0.0001f, 1.f, "%.4f"))
-		sceneManager.Set_FixedTimeStep(fixedTimeStep);
+	if (ImGui::DragFloat("Fixed Time Step", &m_fPendingFixedTimeStep, 0.0001f, 0.0001f, 1.f, "%.4f"))
+	{
+		if (m_fPendingFixedTimeStep < 0.0001f)
+			m_fPendingFixedTimeStep = 0.0001f;
+	}
 
-	if (ImGui::DragFloat("Time Scale", &timeScale, 0.01f, 0.f, 10.f, "%.2f"))
-		sceneManager.Set_TimeScale(timeScale);
+	if (ImGui::DragFloat("Time Scale", &m_fPendingTimeScale, 0.01f, 0.f, 10.f, "%.2f"))
+	{
+		if (m_fPendingTimeScale < 0.f)
+			m_fPendingTimeScale = 0.f;
+	}
 }
 
 void CTopToolBar::ShowPlayButtons()
