@@ -8,6 +8,7 @@ CSceneManager::CSceneManager()
 	, m_bLoading(false)
 	, m_bSceneAwakened(false)
 	, m_ePlayState(PlayState::Stopped)
+	, m_strPlayStartSceneName(L"")
 	, m_pEditorCamObj(nullptr)
 	, m_pEditorCamera(nullptr)
 	, m_sTimeSetting({})
@@ -38,6 +39,7 @@ void CSceneManager::Release()
 	m_pCrtScene = nullptr;
 	m_bSceneAwakened = false;
 	m_ePlayState = PlayState::Stopped;
+	m_strPlayStartSceneName = L"";
 
 	for (TRAVERSAL_ITER(m_mSceneList, it))
 	{
@@ -165,6 +167,7 @@ void CSceneManager::LoadComplete()
 	else
 	{
 		m_ePlayState = PlayState::Stopped;
+		m_strPlayStartSceneName = L"";
 	}
 }
 
@@ -175,6 +178,9 @@ void CSceneManager::PlayScene()
 
 	if (m_ePlayState == PlayState::Playing)
 		return;
+
+	if (m_ePlayState == PlayState::Stopped)
+		m_strPlayStartSceneName = m_pCrtScene->Get_SceneName();
 
 	if (!m_bSceneAwakened)
 	{
@@ -201,12 +207,13 @@ void CSceneManager::StopScene()
 	if (!m_pCrtScene || m_bLoading)
 		return;
 
-	const wstring currentSceneName = m_pCrtScene->Get_SceneName();
+	const wstring stopTargetSceneName = m_strPlayStartSceneName.empty() ? m_pCrtScene->Get_SceneName() : m_strPlayStartSceneName;
 
 	m_ePlayState = PlayState::Stopped;
 	m_bSceneAwakened = false;
+	m_strPlayStartSceneName = L"";
 
-	LoadScene(currentSceneName);
+	LoadScene(stopTargetSceneName);
 }
 
 const _bool CSceneManager::IsPlaying() const

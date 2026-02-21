@@ -72,6 +72,7 @@ private:
 	_bool m_bLoading;
 	_bool m_bSceneAwakened;
 	PlayState m_ePlayState;
+	wstring m_strPlayStartSceneName;
 
 	class CGameObject* m_pEditorCamObj;
 	class CEditorCamera* m_pEditorCamera;
