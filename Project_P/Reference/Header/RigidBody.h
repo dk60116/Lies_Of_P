@@ -67,6 +67,7 @@ public:
 	void SetConstRotationY(_bool _value);
 	_bool IsConstRotationZ() const;
 	void SetConstRotationZ(_bool _value);
+	void Translate(const vector3& _deltaWorld);
 	CCollider* GetEventCollider(_bool _triggerEvent) const;
 
 private:
@@ -76,6 +77,7 @@ private:
 	void SyncKinematicToJolt();
 	void SyncDynamicFromJolt();
 	void ApplyAxisConstraints(vector3& _pos, quaternion& _rot);
+	void CacheLastSyncedTransform(const vector3& _pos, const quaternion& _rot);
 
 private:
 	list<CCollider*> m_lColliderList;
@@ -103,6 +105,10 @@ private:
 	_bool m_bConstRotationZ;
 	vector3 m_vConstPosition;
 	vector3 m_vConstRotation;
+
+	_bool m_bHasLastSyncedTransform;
+	vector3 m_vLastSyncedPosition;
+	quaternion m_vLastSyncedRotation;
 };
 
 NS_END

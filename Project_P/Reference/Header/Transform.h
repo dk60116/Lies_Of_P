@@ -83,6 +83,7 @@ public:
 
 	void Add_Position(const vector3& _value);
 	void Add_Position(const _float _x, const _float _y, const _float _z);
+	void Translate(const vector3& _value);
 	void Add_PositionX(const _float _value);
 	void Add_PositionY(const _float _value);
 	void Add_PositionZ(const _float _value);
