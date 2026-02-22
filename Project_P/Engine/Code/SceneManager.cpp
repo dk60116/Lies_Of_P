@@ -36,7 +36,7 @@ CSceneManager::CSceneManager()
 	, m_ePlayState(PlayState::Stopped)
 	, m_strPlayStartSceneName(L"")
 	, m_vPlayStartSceneTransforms()
-	, m_iPlayStartObjectCount(0u)
+	, m_iPlayStartSceneObjectCount(0u)
 	, m_bStepFrameRequested(false)
 	, m_pEditorCamObj(nullptr)
 	, m_pEditorCamera(nullptr)
@@ -78,7 +78,7 @@ void CSceneManager::Release()
 	m_ePlayState = PlayState::Stopped;
 	m_strPlayStartSceneName = L"";
 	m_vPlayStartSceneTransforms.clear();
-	m_iPlayStartObjectCount = 0u;
+	m_iPlayStartSceneObjectCount = 0u;
 	m_bStepFrameRequested = false;
 
 	for (TRAVERSAL_ITER(m_mSceneList, it))
@@ -224,7 +224,7 @@ void CSceneManager::PlayScene()
 	{
 		m_strPlayStartSceneName = m_pCrtScene->Get_SceneName();
 		m_vPlayStartSceneTransforms = m_pCrtScene->Convert_ObjectsTransformInfo();
-		m_iPlayStartObjectCount = m_vPlayStartSceneTransforms.size();
+		m_iPlayStartSceneObjectCount = m_vPlayStartSceneTransforms.size();
 	}
 
 	if (!m_bSceneAwakened)
@@ -256,18 +256,18 @@ void CSceneManager::StopScene()
 	m_bSceneAwakened = false;
 	m_bStepFrameRequested = false;
 
-	if (!m_vPlayStartSceneTransforms.empty() && m_iPlayStartObjectCount == m_pCrtScene->Get_UniqueObjectCount())
+	if (!m_vPlayStartSceneTransforms.empty() && m_iPlayStartSceneObjectCount == m_pCrtScene->Convert_ObjectsTransformInfo().size())
 	{
 		m_pCrtScene->Bind_ObjectsTransform(m_vPlayStartSceneTransforms);
 		m_vPlayStartSceneTransforms.clear();
-		m_iPlayStartObjectCount = 0u;
+		m_iPlayStartSceneObjectCount = 0u;
 		m_strPlayStartSceneName = L"";
 		return;
 	}
 
 	const wstring stopTargetSceneName = m_strPlayStartSceneName.empty() ? m_pCrtScene->Get_SceneName() : m_strPlayStartSceneName;
 	m_vPlayStartSceneTransforms.clear();
-	m_iPlayStartObjectCount = 0u;
+	m_iPlayStartSceneObjectCount = 0u;
 	m_strPlayStartSceneName = L"";
 	LoadScene(stopTargetSceneName);
 }

@@ -93,7 +93,7 @@ private:
 	PlayState m_ePlayState;
 	wstring m_strPlayStartSceneName;
 	vector<CScene::SCENETRANSFORMINFO> m_vPlayStartSceneTransforms;
-	size_t m_iPlayStartObjectCount;
+	size_t m_iPlayStartSceneObjectCount;
 	_bool m_bStepFrameRequested;
 
 	class CGameObject* m_pEditorCamObj;
