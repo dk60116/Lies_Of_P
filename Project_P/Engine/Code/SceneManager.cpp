@@ -259,23 +259,9 @@ void CSceneManager::StopScene()
 
 	if (!m_vPlayStartSceneTransforms.empty())
 	{
-		vector<CGameObject*> removeTargets;
-		for (CGameObject* obj : m_pCrtScene->Get_ObjectList())
-		{
-			if (!obj)
-				continue;
-
-			if (obj->Get_UniqueID() == 0)
-				continue;
-
-			if (!obj->Is_SaveTarget())
-				removeTargets.push_back(obj);
-		}
-
-		for (CGameObject* obj : removeTargets)
-			obj->Destroy();
-
-		m_pCrtScene->EndFrame();
+		m_pCrtScene->Set_SaveRegistrationEnabled(false);
+		m_pCrtScene->Initialize();
+		m_pCrtScene->Set_SaveRegistrationEnabled(true);
 		m_pCrtScene->Bind_ObjectsTransform(m_vPlayStartSceneTransforms);
 		m_vPlayStartSceneTransforms.clear();
 		m_iPlayStartSceneObjectCount = 0u;
