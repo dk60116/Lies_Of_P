@@ -1,7 +1,6 @@
 #include "epch.h"
 #include "SceneManager.h"
 #include "RenderTargetManager.h"
-#include "GameObject.h"
 
 namespace
 {
@@ -256,32 +255,6 @@ void CSceneManager::StopScene()
 	m_ePlayState = PlayState::Stopped;
 	m_bSceneAwakened = false;
 	m_bStepFrameRequested = false;
-
-	if (!m_vPlayStartSceneTransforms.empty())
-	{
-		vector<CGameObject*> removeTargets;
-		for (CGameObject* obj : m_pCrtScene->Get_ObjectList())
-		{
-			if (!obj)
-				continue;
-
-			if (obj->Get_UniqueID() == 0)
-				continue;
-
-			if (!obj->Is_SaveTarget())
-				removeTargets.push_back(obj);
-		}
-
-		for (CGameObject* obj : removeTargets)
-			obj->Destroy();
-
-		m_pCrtScene->EndFrame();
-		m_pCrtScene->Bind_ObjectsTransform(m_vPlayStartSceneTransforms);
-		m_vPlayStartSceneTransforms.clear();
-		m_iPlayStartSceneObjectCount = 0u;
-		m_strPlayStartSceneName = L"";
-		return;
-	}
 
 	const wstring stopTargetSceneName = m_strPlayStartSceneName.empty() ? m_pCrtScene->Get_SceneName() : m_strPlayStartSceneName;
 	m_vPlayStartSceneTransforms.clear();
