@@ -527,7 +527,8 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
         {
             const Vec3 currentLinearVelocity = GetBI().GetLinearVelocity(m_iBodyID);
             const float resolvedY = fabsf(appliedDelta.y) > 1e-6f ? targetVelocity.GetY() : currentLinearVelocity.GetY();
-            const Vec3 resolvedLinearVelocity(targetVelocity.GetX(), resolvedY, targetVelocity.GetZ());
+            const float horizontalSpeedScale = 1.8f;
+            const Vec3 resolvedLinearVelocity(targetVelocity.GetX() * horizontalSpeedScale, resolvedY, targetVelocity.GetZ() * horizontalSpeedScale);
 
             GetBI().SetLinearAndAngularVelocity(m_iBodyID, resolvedLinearVelocity, GetBI().GetAngularVelocity(m_iBodyID));
             GetBI().ActivateBody(m_iBodyID);
@@ -552,7 +553,8 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
         {
             const Vec3 currentLinearVelocity = GetBI().GetLinearVelocity(m_iSensorBodyID);
             const float resolvedY = fabsf(appliedDelta.y) > 1e-6f ? targetVelocity.GetY() : currentLinearVelocity.GetY();
-            const Vec3 resolvedLinearVelocity(targetVelocity.GetX(), resolvedY, targetVelocity.GetZ());
+            const float horizontalSpeedScale = 1.8f;
+            const Vec3 resolvedLinearVelocity(targetVelocity.GetX() * horizontalSpeedScale, resolvedY, targetVelocity.GetZ() * horizontalSpeedScale);
 
             GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, resolvedLinearVelocity, GetBI().GetAngularVelocity(m_iSensorBodyID));
             GetBI().ActivateBody(m_iSensorBodyID);
