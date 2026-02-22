@@ -193,7 +193,9 @@ void CPlayerCamera::Update()
     const vector3 playerPos = playerTf->Get_Position();
     const vector3 pivot = playerPos + vector3::up() * m_sOptions.lookHeightOffset;
 
-    const _float t = std::clamp(m_sOptions.trackingSpeed * DELTA_TIME, 0.f, 1.f);
+    const _float dt = std::clamp(DELTA_TIME, 0.f, 0.05f);
+    const _float speed = (m_sOptions.trackingSpeed > 0.f) ? m_sOptions.trackingSpeed : 10.f;
+    const _float t = 1.f - std::exp(-speed * dt);
 
     m_fCurYaw = LerpAngle(m_fCurYaw, m_fTargetYaw, t);
     m_fCurPitch = LerpAngle(m_fCurPitch, m_fTargetPitch, t);
