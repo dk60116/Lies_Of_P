@@ -1826,6 +1826,42 @@ void CScene::Add_TempSkinnedMeshBone(const wstring& _name, vector<CSkinnedMeshBu
 	m_mTempSkinnedBoneList.emplace(_name, _resource);
 }
 
+void CScene::Reset_TempSceneResourceEntry(const wstring& _name)
+{
+	auto resourceIter = m_mTempResourceList.find(_name);
+	if (resourceIter != m_mTempResourceList.end())
+	{
+		Safe_Release(resourceIter->second);
+		m_mTempResourceList.erase(resourceIter);
+	}
+
+	auto meshIter = m_mTempMeshBundleList.find(_name);
+	if (meshIter != m_mTempMeshBundleList.end())
+	{
+		for (auto& bundle : meshIter->second)
+		{
+			Safe_Release(bundle.meshBuffer);
+			Safe_Release(bundle.material);
+			Safe_Release(bundle.texture);
+		}
+		m_mTempMeshBundleList.erase(meshIter);
+	}
+
+	auto skinnedIter = m_mTempSkinnedBundleList.find(_name);
+	if (skinnedIter != m_mTempSkinnedBundleList.end())
+	{
+		for (auto& bundle : skinnedIter->second)
+		{
+			Safe_Release(bundle.meshBuffer);
+			Safe_Release(bundle.material);
+			Safe_Release(bundle.texture);
+		}
+		m_mTempSkinnedBundleList.erase(skinnedIter);
+	}
+
+	m_mTempSkinnedBoneList.erase(_name);
+}
+
 CEngineResource* CScene::Add_CloneResourece(CEngineResource* _resource)
 {
 	if (!_resource)

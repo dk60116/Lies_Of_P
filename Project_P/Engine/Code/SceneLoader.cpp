@@ -96,11 +96,23 @@ void CSceneLoader::ThreadLoadingLoop()
 			wstring wName = CEngineString::StringToWString(name);
 			wstring wFile = CEngineString::StringToWString(file);
 			wstring wFormat = CEngineString::StringToWString(format);
+			const _bool isEditorResource = CEngineString::Contains(wFormat, L"[Editor]");
+			auto resetTempSceneEntry = [&](const wstring& resourceName)
+			{
+				if (isEditorResource)
+					return;
+
+				if (CScene* tempScene = CSceneManager::GetInstance().Get_TempScene())
+					tempScene->Reset_TempSceneResourceEntry(resourceName);
+			};
 
 			if (CEngineString::Contains(wFile, L".png") || CEngineString::Contains(wFile, L".jpg") || CEngineString::Contains(wFile, L".tga"))
 			{
 				if (CEngineString::Contains(wFormat, L"[Texture]"))
+				{
+					resetTempSceneEntry(wName + L" (Texture)");
 					CResources::GetInstance().LoadResourceComplete_Scene<CTexture>(wName + L" (Texture)", wFile, nullptr, true);
+				}
 			}
 			else if (CEngineString::Contains(wFile, L".fbx"))
 			{
@@ -124,6 +136,7 @@ void CSceneLoader::ThreadLoadingLoop()
 
 					auto meshInfoList = CResources::GetInstance().ReadMeshBufferInfos(meshdataPath);
 
+					resetTempSceneEntry(wName + L" (MeshBuffer)");
 					CResources::GetInstance().CreateSceneMeshBundle(wName + L" (MeshBuffer)", meshInfoList, filter, nullptr, true);
 				}
 				if (CEngineString::Contains(wFormat, L"[Skinned Mesh]"))
@@ -153,6 +166,7 @@ void CSceneLoader::ThreadLoadingLoop()
 
 					auto skinnedInfoList = CResources::GetInstance().ReadSkinnedBufferInfos(skinnedDataPath);
 
+					resetTempSceneEntry(wName + L" (MeshBuffer)");
 					CResources::GetInstance().CreateSceneSkinnedBundle(wName + L" (MeshBuffer)", skinnedInfoList.initList, skinnedInfoList.skeletalList, filter, nullptr, true);
 				}
 				if (CEngineString::Contains(wFormat, L"[Animation Clip]"))
@@ -166,6 +180,7 @@ void CSceneLoader::ThreadLoadingLoop()
 
 					auto animaitonInfoList = CResources::GetInstance().ReadAnimationClipBufferInfos(animationdataPath);
 
+					resetTempSceneEntry(wName + L" (Animation Clip)");
 					CAnimationClip* newClip = CResources::GetInstance().LoadResourceComplete_Scene<CAnimationClip>(wName + L" (Animation Clip)", wFile, nullptr, true);
 
 					if (CEngineString::Contains(wFormat, L"[Loop]"))
@@ -190,6 +205,7 @@ void CSceneLoader::ThreadLoadingLoop()
 
 					auto acInfo = CResources::GetInstance().ReadAnimatorControllerBufferInfos(acDataPath);
 
+					resetTempSceneEntry(acDataName + L" (Animator Controller)");
 					auto acResource = CResources::GetInstance().CreateSceneResource<CAnimatorController>(acDataName, acDataPath, nullptr, true);
 
 					acResource->Initiailize_Custom(acInfo);
@@ -207,11 +223,13 @@ void CSceneLoader::ThreadLoadingLoop()
 			else if (wFile == L"SkyBox")
 			{
 				CMeshBuffer::TERRAINBUFFERDESC terranDesc = FormatToTerrainDesc(wName, wFormat);
+				resetTempSceneEntry(wName + L" (Terrain MeshBuffer)");
 				CResources::LoadResourceComplete_Scene<CMeshBuffer>(wName + L" (Terrain MeshBuffer)", wFile, &terranDesc, true);
 			}
 			else if (wFile == L"Terrain")
 			{
 				CMeshBuffer::TERRAINBUFFERDESC terranDesc = FormatToTerrainDesc(wName, wFormat);
+				resetTempSceneEntry(wName + L" (Terrain MeshBuffer)");
 				CResources::LoadResourceComplete_Scene<CMeshBuffer>(wName + L" (Terrain MeshBuffer)", wFile, &terranDesc, true);
 			}
 
