@@ -224,7 +224,7 @@ void CSceneManager::PlayScene()
 	if (m_ePlayState == PlayState::Stopped)
 	{
 		m_strPlayStartSceneName = m_pCrtScene->Get_SceneName();
-		m_vPlayStartSceneTransforms = m_pCrtScene->Convert_ObjectsTransformInfo();
+		m_vPlayStartSceneTransforms = m_pCrtScene->Convert_ObjectsTransformInfo(true);
 		m_iPlayStartSceneObjectCount = m_vPlayStartSceneTransforms.size();
 	}
 
@@ -259,9 +259,23 @@ void CSceneManager::StopScene()
 
 	if (!m_vPlayStartSceneTransforms.empty())
 	{
-		m_pCrtScene->Set_SaveRegistrationEnabled(false);
-		m_pCrtScene->Initialize();
-		m_pCrtScene->Set_SaveRegistrationEnabled(true);
+		vector<CGameObject*> removeTargets;
+		for (CGameObject* obj : m_pCrtScene->Get_ObjectList())
+		{
+			if (!obj)
+				continue;
+
+			if (obj->Get_UniqueID() == 0)
+				continue;
+
+			if (!obj->Is_SaveTarget())
+				removeTargets.push_back(obj);
+		}
+
+		for (CGameObject* obj : removeTargets)
+			obj->Destroy();
+
+		m_pCrtScene->EndFrame();
 		m_pCrtScene->Bind_ObjectsTransform(m_vPlayStartSceneTransforms);
 		m_vPlayStartSceneTransforms.clear();
 		m_iPlayStartSceneObjectCount = 0u;
