@@ -245,11 +245,20 @@ void CSceneManager::StopScene()
 		return;
 
 	const wstring stopTargetSceneName = m_strPlayStartSceneName.empty() ? m_pCrtScene->Get_SceneName() : m_strPlayStartSceneName;
+	const _bool isSameSceneReload = stopTargetSceneName == m_pCrtScene->Get_SceneName();
 
 	m_ePlayState = PlayState::Stopped;
 	m_bSceneAwakened = false;
 	m_strPlayStartSceneName = L"";
 	m_bStepFrameRequested = false;
+
+	if (isSameSceneReload)
+	{
+		wstring file = m_pCrtScene->Get_SceneName() + L".scenedata";
+		auto sceneTransformInfo = CResources::GetInstance().ReadSceneObjectTransformInfos(file);
+		m_pCrtScene->Bind_ObjectsTransform(sceneTransformInfo);
+		return;
+	}
 
 	LoadScene(stopTargetSceneName);
 }
