@@ -124,6 +124,15 @@ HRESULT CPlayer::Initialize()
 	m_pAnimator->Set_Controller(animCon);
 	m_pAnimator->SetApplyRootmotion(true, Get_Transform());
 
+	CTransform* headSlot = Get_Transform()->Find_ChildRecursive(L"Bip001-Head");
+	m_pHeadObj->Get_Transform()->SetParent(headSlot);
+	m_pHeadObj->Get_Transform()->Set_LocalPosition(vector3(0.012f, -151.302f, -11.860f));
+	m_pHeadObj->Get_Transform()->Set_LocalEulerAngles(vector3(-4.5f, 180.f, 0.f));
+	m_pHairObj->Get_Transform()->SetParent(m_pHeadObj->Get_Transform());
+	m_pHairObj->Get_Transform()->Set_LocalPosition(vector3::up() * 3.02f);
+	m_pHairObj->Get_Transform()->Set_LocalEulerAngles(vector3::zero());
+	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp;
+
 	CGameManager::GetInstance().Set_Player(this);
 
 	m_pWeaponHolder = Get_Transform()->Find_ChildRecursive(L"SC_WeaponConstraint");
@@ -137,7 +146,7 @@ HRESULT CPlayer::Initialize()
 	m_pWeaponObj->Get_Transform()->Set_LocalScale(0.5f);
 
 	m_pBodyCollider = m_pGameObject->AddComponent<CCapsuleCollider>();
-	m_pBodyCollider->SetCenter(vector3::up() * 1.65f);
+	m_pBodyCollider->SetCenter(vector3::up() * 1.7f);
 	m_pBodyCollider->SetHeight(2.5f);
 
 	m_pRigidBody = m_pGameObject->AddComponent<CRigidBody>();
@@ -151,16 +160,6 @@ HRESULT CPlayer::Initialize()
 
 void CPlayer::Awake()
 {
-	CTransform* headSlot = Get_Transform()->Find_ChildRecursive(L"Bip001-Head");
-	m_pHeadObj->Get_Transform()->SetParent(headSlot);
-	m_pHeadObj->Get_Transform()->Set_LocalPosition(vector3(0.012f, -151.302f, -11.860f));
-	m_pHeadObj->Get_Transform()->Set_LocalEulerAngles(vector3(-4.5f, 180.f, 0.f));
-	m_pHairObj->Get_Transform()->SetParent(m_pHeadObj->Get_Transform());
-	m_pHairObj->Get_Transform()->Set_LocalPosition(vector3::up() * 3.02f);
-	m_pHairObj->Get_Transform()->Set_LocalEulerAngles(vector3::zero());
-	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp;
-
-	//m_vBodySuits[4]->Get_GameObject()->SetActive(false);
 }
 
 void CPlayer::Start()
