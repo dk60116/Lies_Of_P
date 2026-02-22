@@ -516,16 +516,6 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
         static_cast<float>(appliedDelta.y / commandDt),
         static_cast<float>(appliedDelta.z / commandDt));
 
-    const _float velocitySmoothing = 0.35f;
-    const _float maxAcceleration = 120.f;
-    const _float maxVelocityStep = maxAcceleration * commandDt;
-    auto BlendVelocityAxis = [maxVelocityStep, velocitySmoothing](float _currentVelocity, float _targetVelocity)
-    {
-        const float velocityDelta = _targetVelocity - _currentVelocity;
-        const float clampedVelocityDelta = max(-maxVelocityStep, min(maxVelocityStep, velocityDelta));
-        return _currentVelocity + clampedVelocityDelta * velocitySmoothing;
-    };
-
     if (m_bHasBody)
     {
         if (m_bKinematic)
@@ -536,12 +526,10 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
         else
         {
             const Vec3 currentLinearVelocity = GetBI().GetLinearVelocity(m_iBodyID);
-            const Vec3 blendedLinearVelocity(
-                BlendVelocityAxis(currentLinearVelocity.GetX(), targetVelocity.GetX()),
-                BlendVelocityAxis(currentLinearVelocity.GetY(), targetVelocity.GetY()),
-                BlendVelocityAxis(currentLinearVelocity.GetZ(), targetVelocity.GetZ()));
+            const float resolvedY = fabsf(appliedDelta.y) > 1e-6f ? targetVelocity.GetY() : currentLinearVelocity.GetY();
+            const Vec3 resolvedLinearVelocity(targetVelocity.GetX(), resolvedY, targetVelocity.GetZ());
 
-            GetBI().SetLinearAndAngularVelocity(m_iBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iBodyID));
+            GetBI().SetLinearAndAngularVelocity(m_iBodyID, resolvedLinearVelocity, GetBI().GetAngularVelocity(m_iBodyID));
             GetBI().ActivateBody(m_iBodyID);
         }
     }
@@ -563,12 +551,10 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
         else
         {
             const Vec3 currentLinearVelocity = GetBI().GetLinearVelocity(m_iSensorBodyID);
-            const Vec3 blendedLinearVelocity(
-                BlendVelocityAxis(currentLinearVelocity.GetX(), targetVelocity.GetX()),
-                BlendVelocityAxis(currentLinearVelocity.GetY(), targetVelocity.GetY()),
-                BlendVelocityAxis(currentLinearVelocity.GetZ(), targetVelocity.GetZ()));
+            const float resolvedY = fabsf(appliedDelta.y) > 1e-6f ? targetVelocity.GetY() : currentLinearVelocity.GetY();
+            const Vec3 resolvedLinearVelocity(targetVelocity.GetX(), resolvedY, targetVelocity.GetZ());
 
-            GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iSensorBodyID));
+            GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, resolvedLinearVelocity, GetBI().GetAngularVelocity(m_iSensorBodyID));
             GetBI().ActivateBody(m_iSensorBodyID);
         }
     }
