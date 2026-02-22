@@ -2381,6 +2381,25 @@ HRESULT CScene::PreLoadResources()
 		return E_FAIL;
 	}
 
+	auto hasSceneResource = [this](const wstring& name, const string& format) -> _bool
+	{
+		if (name.empty())
+			return true;
+
+		const wstring wFormat = CEngineString::StringToWString(format);
+
+		if (CEngineString::Contains(wFormat, L"[Texture]"))
+			return Find_Resource(name + L" (Texture)") != nullptr;
+		if (CEngineString::Contains(wFormat, L"[Animation Clip]"))
+			return Find_Resource(name + L" (Animation Clip)") != nullptr;
+		if (CEngineString::Contains(wFormat, L"[Animator Controller]"))
+			return Find_Resource(name + L" (Animator Controller)") != nullptr;
+		if (CEngineString::Contains(wFormat, L"[Mesh]") || CEngineString::Contains(wFormat, L"[Skinned Mesh]"))
+			return !Find_MeshInfoResource(name + L" (MeshBuffer)").empty() || !Find_SkinnedMeshInfoResource(name + L" (MeshBuffer)").empty();
+
+		return Find_Resource(name) != nullptr;
+	};
+
 	string line;
 	vector<string> nameList;
 	vector<string> fileList;
@@ -2395,25 +2414,32 @@ HRESULT CScene::PreLoadResources()
 		{
 			auto split = CEngineString::Split(line, " : ");
 
-			string name = "";
-			string filepath = "";
-			string format = "";
+			if (split.size() < 2)
+			{
+				CDebug::LogError("Invalid line format: " + line);
+				continue;
+			}
 
-			name = split[0];
-			filepath = split[1];
+			string name = split[0];
+			string filepath = split[1];
+			string format = "";
 
 			if (split.size() >= 3)
 				format = split[2];
 
 			if (!CResources::FileExists(filepath))
 			{
-				nameList.push_back(name);
-				fileList.push_back(filepath);
-				formatList.push_back(format);
-				CDebug::Log("Add File: " + filepath + " (Name: " + name + ")");
-			}
-			else
 				CDebug::LogWarnning("Failed Add File: " + filepath);
+				continue;
+			}
+
+			if (hasSceneResource(CEngineString::StringToWString(name), format))
+				continue;
+
+			nameList.push_back(name);
+			fileList.push_back(filepath);
+			formatList.push_back(format);
+			CDebug::Log("Add File: " + filepath + " (Name: " + name + ")");
 		}
 		else
 			CDebug::LogError("Invalid line format: " + line);
