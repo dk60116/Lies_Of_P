@@ -299,6 +299,50 @@ CScene::~CScene()
 
 HRESULT CScene::Initialize()
 {
+	if (m_mTempResourceList.empty() && m_mTempMeshBundleList.empty() && m_mTempSkinnedBundleList.empty() && m_mTempSkinnedBoneList.empty())
+	{
+		for (const auto& [name, resource] : m_mResourceList)
+		{
+			if (!resource)
+				continue;
+			resource->AddRef();
+			m_mTempResourceList.emplace(name, resource);
+		}
+
+		for (const auto& [name, bundles] : m_mMeshBundleList)
+		{
+			vector<MeshBundle> copied = bundles;
+			for (auto& bundle : copied)
+			{
+				if (bundle.meshBuffer)
+					bundle.meshBuffer->AddRef();
+				if (bundle.material)
+					bundle.material->AddRef();
+				if (bundle.texture)
+					bundle.texture->AddRef();
+			}
+			m_mTempMeshBundleList.emplace(name, move(copied));
+		}
+
+		for (const auto& [name, bundles] : m_mSkinnedBundleList)
+		{
+			vector<SkinnedMeshBundle> copied = bundles;
+			for (auto& bundle : copied)
+			{
+				if (bundle.meshBuffer)
+					bundle.meshBuffer->AddRef();
+				if (bundle.material)
+					bundle.material->AddRef();
+				if (bundle.texture)
+					bundle.texture->AddRef();
+			}
+			m_mTempSkinnedBundleList.emplace(name, move(copied));
+		}
+
+		for (const auto& [name, bones] : m_mSkinnedBoneList)
+			m_mTempSkinnedBoneList.emplace(name, bones);
+	}
+
 	SceneRelease();
 
 	m_fPssedTime = 0.f;
