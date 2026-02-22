@@ -55,13 +55,29 @@ void CMeshRenderer::OnPreRender()
 
 void CMeshRenderer::Render_Editor()
 {
-	m_pContext->OMSetDepthStencilState(CSceneManager::GetInstance().Get_CrtScene()->Get_MeshStencillState(), 0);
-	CSceneManager::GetInstance().Get_CrtScene()->Get_EditorCamera()->Add_RenderTarget_Mesh(this);
+	auto* scene = CSceneManager::GetInstance().Get_CrtScene();
+	if (!scene)
+		return;
+
+	m_pContext->OMSetDepthStencilState(scene->Get_MeshStencillState(), 0);
+	auto* camera = scene->Get_EditorCamera();
+	if (!camera)
+		return;
+
+	camera->Add_RenderTarget_Mesh(this);
 }
 
 void CMeshRenderer::Render()
 {
-	CSceneManager::GetInstance().Get_CrtScene()->Get_Camera()->Add_RenderTarget_Mesh(this);
+	auto* scene = CSceneManager::GetInstance().Get_CrtScene();
+	if (!scene)
+		return;
+
+	auto* camera = scene->Get_Camera();
+	if (!camera)
+		return;
+
+	camera->Add_RenderTarget_Mesh(this);
 }
 
 void CMeshRenderer::OnPostRender()
