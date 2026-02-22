@@ -36,7 +36,7 @@ CSceneManager::CSceneManager()
 	, m_ePlayState(PlayState::Stopped)
 	, m_strPlayStartSceneName(L"")
 	, m_bStepFrameRequested(false)
-	, m_sPlayStartObjectIds({})
+	, m_vPlayStartUnsavedObjectInfos({})
 	, m_pEditorCamObj(nullptr)
 	, m_pEditorCamera(nullptr)
 	, m_sTimeSetting({})
@@ -77,7 +77,7 @@ void CSceneManager::Release()
 	m_ePlayState = PlayState::Stopped;
 	m_strPlayStartSceneName = L"";
 	m_bStepFrameRequested = false;
-	m_sPlayStartObjectIds.clear();
+	m_vPlayStartUnsavedObjectInfos.clear();
 
 	for (TRAVERSAL_ITER(m_mSceneList, it))
 	{
@@ -207,7 +207,7 @@ void CSceneManager::LoadComplete()
 		m_ePlayState = PlayState::Stopped;
 		m_strPlayStartSceneName = L"";
 		m_bStepFrameRequested = false;
-		m_sPlayStartObjectIds.clear();
+		m_vPlayStartUnsavedObjectInfos.clear();
 	}
 }
 
@@ -222,14 +222,7 @@ void CSceneManager::PlayScene()
 	if (m_ePlayState == PlayState::Stopped)
 	{
 		m_strPlayStartSceneName = m_pCrtScene->Get_SceneName();
-		m_sPlayStartObjectIds.clear();
-		for (const auto& [id, obj] : m_pCrtScene->m_mObjectOfId)
-		{
-			if (!obj)
-				continue;
-
-			m_sPlayStartObjectIds.insert(id);
-		}
+		m_vPlayStartUnsavedObjectInfos = m_pCrtScene->Convert_ObjectsTransformInfo(false, true);
 	}
 
 	if (!m_bSceneAwakened)
@@ -267,21 +260,19 @@ void CSceneManager::StopScene()
 
 	if (isSameSceneReload)
 	{
-		vector<CGameObject*> runtimeUnsavedObjects = {};
-		runtimeUnsavedObjects.reserve(m_pCrtScene->m_lObjectList.size());
+		vector<CGameObject*> unsavedObjects = {};
+		unsavedObjects.reserve(m_pCrtScene->m_lObjectList.size());
 
-		for (const auto& [id, obj] : m_pCrtScene->m_mObjectOfId)
+		for (const auto& pair : m_pCrtScene->m_mObjectOfId)
 		{
+			CGameObject* obj = pair.second;
 			if (!obj || obj->Is_SaveTarget())
 				continue;
 
-			if (m_sPlayStartObjectIds.find(id) != m_sPlayStartObjectIds.end())
-				continue;
-
-			runtimeUnsavedObjects.push_back(obj);
+			unsavedObjects.push_back(obj);
 		}
 
-		for (CGameObject* obj : runtimeUnsavedObjects)
+		for (CGameObject* obj : unsavedObjects)
 		{
 			if (obj)
 				obj->Destroy();
@@ -292,11 +283,19 @@ void CSceneManager::StopScene()
 		wstring file = m_pCrtScene->Get_SceneName() + L".scenedata";
 		auto sceneTransformInfo = CResources::GetInstance().ReadSceneObjectTransformInfos(file);
 		m_pCrtScene->Bind_ObjectsTransform(sceneTransformInfo);
-		m_sPlayStartObjectIds.clear();
+
+		if (!m_vPlayStartUnsavedObjectInfos.empty())
+		{
+			m_pCrtScene->Set_SaveRegistrationEnabled(false);
+			m_pCrtScene->Bind_ObjectsTransform(m_vPlayStartUnsavedObjectInfos);
+			m_pCrtScene->Set_SaveRegistrationEnabled(true);
+		}
+
+		m_vPlayStartUnsavedObjectInfos.clear();
 		return;
 	}
 
-	m_sPlayStartObjectIds.clear();
+	m_vPlayStartUnsavedObjectInfos.clear();
 	LoadScene(stopTargetSceneName);
 }
 

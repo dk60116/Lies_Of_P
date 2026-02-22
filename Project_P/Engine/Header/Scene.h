@@ -97,7 +97,7 @@ public:
     const wstring& Get_SceneName() const;
 
 public:
-    vector<SCENETRANSFORMINFO> Convert_ObjectsTransformInfo() const;
+    vector<SCENETRANSFORMINFO> Convert_ObjectsTransformInfo(const _bool _includeSaveTargets = true, const _bool _includeUnsavedTargets = false) const;
     void Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList);
 
 public:

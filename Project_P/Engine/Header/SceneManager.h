@@ -93,7 +93,7 @@ private:
 	PlayState m_ePlayState;
 	wstring m_strPlayStartSceneName;
 	_bool m_bStepFrameRequested;
-	unordered_set<_uint> m_sPlayStartObjectIds;
+	vector<CScene::SCENETRANSFORMINFO> m_vPlayStartUnsavedObjectInfos;
 
 	class CGameObject* m_pEditorCamObj;
 	class CEditorCamera* m_pEditorCamera;

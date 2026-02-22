@@ -881,7 +881,7 @@ const wstring& CScene::Get_SceneName() const
 	return m_strSceneName;
 }
 
-vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
+vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo(const _bool _includeSaveTargets, const _bool _includeUnsavedTargets) const
 {
 	vector<SCENETRANSFORMINFO> result = {};
 	unordered_map<const CMeshBuffer*, wstring> sharedMeshResourceNames;
@@ -951,10 +951,12 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
-		if (CEngineString::Contains((*it)->Get_ObjectName(), L"(Clone)"))
+		const _bool isSaveTarget = (*it)->Is_SaveTarget();
+		if (isSaveTarget && CEngineString::Contains((*it)->Get_ObjectName(), L"(Clone)"))
 			continue;
 
-		if (!(*it)->Is_SaveTarget())
+
+		if ((isSaveTarget && !_includeSaveTargets) || (!isSaveTarget && !_includeUnsavedTargets))
 			continue;
 
 		SCENETRANSFORMINFO info = {};
