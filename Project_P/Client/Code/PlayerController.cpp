@@ -223,34 +223,52 @@ void CPlayerController::Update_Key()
 
 	_uint mouse0 = 0;
 
-	m_mKeyHold[Forward] = CInput::GetInstance().GetKey(key_F);
-	m_mKeyHold[Back] = CInput::GetInstance().GetKey(key_B);
-	m_mKeyHold[Left] = CInput::GetInstance().GetKey(key_L);
-	m_mKeyHold[Right] = CInput::GetInstance().GetKey(key_R);
+	auto& input = CInput::GetInstance();
 
-	m_mKeyDown[Forward] = CInput::GetInstance().GetKeyDown(key_F);
-	m_mKeyDown[Back] = CInput::GetInstance().GetKeyDown(key_B);
-	m_mKeyDown[Left] = CInput::GetInstance().GetKeyDown(key_L);
-	m_mKeyDown[Right] = CInput::GetInstance().GetKeyDown(key_R);
+#ifdef _CLIENT_BUILD
+	auto getKey = [&](KEY_CODE key) { return input.GetKey(key); };
+	auto getKeyDown = [&](KEY_CODE key) { return input.GetKeyDown(key); };
+	auto getKeyUp = [&](KEY_CODE key) { return input.GetKeyUp(key); };
+	auto getMouse = [&](_uint button) { return input.GetMouseButton(button); };
+	auto getMouseDown = [&](_uint button) { return input.GetMouseButtonDown(button); };
+	auto getMouseUp = [&](_uint button) { return input.GetMouseButtonUp(button); };
+#else
+	auto getKey = [&](KEY_CODE key) { return input.GetKey_Editor(key); };
+	auto getKeyDown = [&](KEY_CODE key) { return input.GetKeyDown_Editor(key); };
+	auto getKeyUp = [&](KEY_CODE key) { return input.GetKeyUp_Editor(key); };
+	auto getMouse = [&](_uint button) { return input.GetMouseButton_Editor(button); };
+	auto getMouseDown = [&](_uint button) { return input.GetMouseButtonDown_Editor(button); };
+	auto getMouseUp = [&](_uint button) { return input.GetMouseButtonUp_Editor(button); };
+#endif
 
-	m_mKeyUp[Forward] = CInput::GetInstance().GetKeyUp(key_F);
-	m_mKeyUp[Back] = CInput::GetInstance().GetKeyUp(key_B);
-	m_mKeyUp[Left] = CInput::GetInstance().GetKeyUp(key_L);
-	m_mKeyUp[Right] = CInput::GetInstance().GetKeyUp(key_R);
+	m_mKeyHold[Forward] = getKey(key_F);
+	m_mKeyHold[Back] = getKey(key_B);
+	m_mKeyHold[Left] = getKey(key_L);
+	m_mKeyHold[Right] = getKey(key_R);
 
-	m_mKeyHold[Attack] = CInput::GetInstance().GetMouseButton(mouse0);
-	m_mKeyDown[Attack] = CInput::GetInstance().GetMouseButtonDown(mouse0);
-	m_mKeyUp[Attack] = CInput::GetInstance().GetMouseButtonUp(mouse0);
+	m_mKeyDown[Forward] = getKeyDown(key_F);
+	m_mKeyDown[Back] = getKeyDown(key_B);
+	m_mKeyDown[Left] = getKeyDown(key_L);
+	m_mKeyDown[Right] = getKeyDown(key_R);
 
-	m_mKeyHold[Guard] = CInput::GetInstance().GetKey(key_Guard);
-	m_mKeyDown[Guard] = CInput::GetInstance().GetKeyDown(key_Guard);
-	m_mKeyUp[Guard] = CInput::GetInstance().GetKeyUp(key_Guard);
+	m_mKeyUp[Forward] = getKeyUp(key_F);
+	m_mKeyUp[Back] = getKeyUp(key_B);
+	m_mKeyUp[Left] = getKeyUp(key_L);
+	m_mKeyUp[Right] = getKeyUp(key_R);
 
-	m_mKeyHold[Evade] = CInput::GetInstance().GetKey(key_Evade);
-	m_mKeyDown[Evade] = CInput::GetInstance().GetKeyDown(key_Evade);
-	m_mKeyUp[Evade] = CInput::GetInstance().GetKeyUp(key_Evade);
+	m_mKeyHold[Attack] = getMouse(mouse0);
+	m_mKeyDown[Attack] = getMouseDown(mouse0);
+	m_mKeyUp[Attack] = getMouseUp(mouse0);
 
-	m_mKeyHold[Jump] = CInput::GetInstance().GetKey(key_Jump);
-	m_mKeyDown[Jump] = CInput::GetInstance().GetKeyDown(key_Jump);
-	m_mKeyUp[Jump] = CInput::GetInstance().GetKeyUp(key_Jump);
+	m_mKeyHold[Guard] = getKey(key_Guard);
+	m_mKeyDown[Guard] = getKeyDown(key_Guard);
+	m_mKeyUp[Guard] = getKeyUp(key_Guard);
+
+	m_mKeyHold[Evade] = getKey(key_Evade);
+	m_mKeyDown[Evade] = getKeyDown(key_Evade);
+	m_mKeyUp[Evade] = getKeyUp(key_Evade);
+
+	m_mKeyHold[Jump] = getKey(key_Jump);
+	m_mKeyDown[Jump] = getKeyDown(key_Jump);
+	m_mKeyUp[Jump] = getKeyUp(key_Jump);
 }
