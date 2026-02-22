@@ -2355,7 +2355,10 @@ HRESULT CScene::PreLoadResources()
 			if (split.size() >= 3)
 				format = split[2];
 
-			if (!CResources::FileExists(filepath))
+			const _bool isEditorResource = CEngineString::Contains(format, "[Editor]");
+			const _bool shouldReload = !isEditorResource || !CResources::FileExists(filepath);
+
+			if (shouldReload)
 			{
 				nameList.push_back(name);
 				fileList.push_back(filepath);
@@ -2363,7 +2366,7 @@ HRESULT CScene::PreLoadResources()
 				CDebug::Log("Add File: " + filepath + " (Name: " + name + ")");
 			}
 			else
-				CDebug::LogWarnning("Failed Add File: " + filepath);
+				CDebug::LogWarnning("Skip Editor cached file: " + filepath);
 		}
 		else
 			CDebug::LogError("Invalid line format: " + line);
