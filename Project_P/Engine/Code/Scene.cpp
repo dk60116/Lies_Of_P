@@ -1862,6 +1862,75 @@ void CScene::Reset_TempSceneResourceEntry(const wstring& _name)
 	m_mTempSkinnedBoneList.erase(_name);
 }
 
+void CScene::Prepare_TempResourcesFromCurrentScene()
+{
+	for (auto& pair : m_mTempResourceList)
+		Safe_Release(pair.second);
+	for (auto& pair : m_mTempMeshBundleList)
+	{
+		for (auto& bundle : pair.second)
+		{
+			Safe_Release(bundle.meshBuffer);
+			Safe_Release(bundle.material);
+			Safe_Release(bundle.texture);
+		}
+	}
+	for (auto& pair : m_mTempSkinnedBundleList)
+	{
+		for (auto& bundle : pair.second)
+		{
+			Safe_Release(bundle.meshBuffer);
+			Safe_Release(bundle.material);
+			Safe_Release(bundle.texture);
+		}
+	}
+
+	m_mTempResourceList.clear();
+	m_mTempMeshBundleList.clear();
+	m_mTempSkinnedBundleList.clear();
+	m_mTempSkinnedBoneList.clear();
+
+	for (const auto& pair : m_mResourceList)
+	{
+		if (pair.second)
+			pair.second->AddRef();
+		m_mTempResourceList.emplace(pair.first, pair.second);
+	}
+
+	for (const auto& pair : m_mMeshBundleList)
+	{
+		auto bundles = pair.second;
+		for (auto& bundle : bundles)
+		{
+			if (bundle.meshBuffer)
+				bundle.meshBuffer->AddRef();
+			if (bundle.material)
+				bundle.material->AddRef();
+			if (bundle.texture)
+				bundle.texture->AddRef();
+		}
+		m_mTempMeshBundleList.emplace(pair.first, move(bundles));
+	}
+
+	for (const auto& pair : m_mSkinnedBundleList)
+	{
+		auto bundles = pair.second;
+		for (auto& bundle : bundles)
+		{
+			if (bundle.meshBuffer)
+				bundle.meshBuffer->AddRef();
+			if (bundle.material)
+				bundle.material->AddRef();
+			if (bundle.texture)
+				bundle.texture->AddRef();
+		}
+		m_mTempSkinnedBundleList.emplace(pair.first, move(bundles));
+	}
+
+	for (const auto& pair : m_mSkinnedBoneList)
+		m_mTempSkinnedBoneList.emplace(pair.first, pair.second);
+}
+
 CEngineResource* CScene::Add_CloneResourece(CEngineResource* _resource)
 {
 	if (!_resource)

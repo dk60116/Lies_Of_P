@@ -114,6 +114,7 @@ public:
     void Add_SkinnedMeshBone(const wstring& _name, vector<CSkinnedMeshBuffer::SKINNEDSKELETAL> _resource);
     void Add_TempSkinnedMeshBone(const wstring& _name, vector<CSkinnedMeshBuffer::SKINNEDSKELETAL> _resource);
     void Reset_TempSceneResourceEntry(const wstring& _name);
+    void Prepare_TempResourcesFromCurrentScene();
     class CEngineResource* Add_CloneResourece(CEngineResource* _resource);
     class CGameObject* Add_GameObject(wstring _name);
     list<CGameObject*>& Get_ObjectList();

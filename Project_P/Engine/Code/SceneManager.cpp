@@ -258,6 +258,7 @@ void CSceneManager::StopScene()
 
 	if (!m_vPlayStartSceneTransforms.empty() && m_iPlayStartSceneObjectCount == m_pCrtScene->Convert_ObjectsTransformInfo().size())
 	{
+		m_pCrtScene->Prepare_TempResourcesFromCurrentScene();
 		m_pCrtScene->Set_SaveRegistrationEnabled(false);
 		if (SUCCEEDED(m_pCrtScene->Initialize()))
 		{
