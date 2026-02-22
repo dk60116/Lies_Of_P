@@ -628,9 +628,6 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
 
     ApplyAxisConstraints(targetPos, targetRot);
 
-    Get_Transform()->Set_Position(targetPos);
-    Get_Transform()->Set_Quaternion(targetRot);
-
     const float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
 
     vector3 appliedDelta = targetPos - startPos;
@@ -647,28 +644,17 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
             desiredVel -= lastHitNormal * into;
     }
 
-    const RVec3 joltTargetPos(targetPos.x, targetPos.y, targetPos.z);
-    const Quat  joltTargetRot(targetRot.x, targetRot.y, targetRot.z, targetRot.w);
+    Get_Transform()->Set_Position(targetPos);
+    Get_Transform()->Set_Quaternion(targetRot);
 
     if (m_bHasBody)
     {
-        if (m_bKinematic)
-        {
-            GetBI().MoveKinematic(m_iBodyID, joltTargetPos, joltTargetRot, fixedDt);
-            GetBI().SetLinearAndAngularVelocity(m_iBodyID, Vec3::sZero(), Vec3::sZero());
-        }
-        else
-        {
-            GetBI().SetPositionAndRotation(m_iBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
-
-            const Vec3 ang = GetBI().GetAngularVelocity(m_iBodyID);
-            GetBI().SetLinearAndAngularVelocity(m_iBodyID, desiredVel, ang);
-        }
+        const Vec3 ang = m_bKinematic ? Vec3::sZero() : GetBI().GetAngularVelocity(m_iBodyID);
+        GetBI().SetLinearAndAngularVelocity(m_iBodyID, desiredVel, ang);
     }
 
     if (m_bHasSensorBody)
     {
-        GetBI().SetPositionAndRotation(m_iSensorBodyID, joltTargetPos, joltTargetRot, EActivation::DontActivate);
         GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, desiredVel, Vec3::sZero());
     }
 
