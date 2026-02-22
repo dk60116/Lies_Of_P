@@ -142,16 +142,36 @@ inline T* CResources::CreateGameResource(const wstring& _name, const wstring& _p
 template<typename T>
 inline T* CResources::CreateSceneResource(const wstring& _name, const wstring& _path, void* _desc, const _bool _tempScene)
 {
+    CScene* targetScene = _tempScene ? CSceneManager::GetInstance().Get_TempScene() :
+        CSceneManager::GetInstance().Get_CrtScene();
+
+    if (!targetScene)
+        return nullptr;
+
+    CEngineResource* cachedResource = targetScene->Find_Resource(_name);
+    if (cachedResource)
+    {
+        T* typedResource = dynamic_cast<T*>(cachedResource);
+
+        if (!typedResource)
+            return nullptr;
+
+        if (_tempScene)
+            targetScene->Add_TempResource(_name, typedResource);
+
+        return typedResource;
+    }
+
     T* newResource = T::Create();
+
+    if (!newResource)
+        return nullptr;
 
     if (FAILED(newResource->Initialize(_name, m_strDefaultAssetPath + _path, _desc)))
     {
         delete newResource;
         return nullptr;
     }
-
-    CScene* targetScene = _tempScene ? CSceneManager::GetInstance().Get_TempScene() :
-        CSceneManager::GetInstance().Get_CrtScene();
 
     if (!_tempScene)
         targetScene->Add_Resource(_name, newResource);

@@ -1750,10 +1750,12 @@ CEngineResource* CScene::Add_TempResource(const wstring& _name, CEngineResource*
 	if (!_resource)
 		return nullptr;
 
-	m_mTempResourceList.emplace(_name, _resource);
-	_resource->AddRef();
+	auto [it, inserted] = m_mTempResourceList.try_emplace(_name, _resource);
 
-	return _resource;
+	if (inserted)
+		_resource->AddRef();
+
+	return it->second;
 }
 
 void CScene::Add_MeshBundle(const wstring& _name, vector<MeshBundle> _resource)
