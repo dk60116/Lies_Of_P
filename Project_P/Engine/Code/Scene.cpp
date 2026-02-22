@@ -1014,7 +1014,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo(const _b
 			if (!component)
 				continue;
 
-			if (!component->Is_SaveTarget())
+			if (!includeNonSaveTarget && !component->Is_SaveTarget())
 				continue;
 
 			if (dynamic_cast<CTransform*>(component) || dynamic_cast<CRectTransform*>(component))
