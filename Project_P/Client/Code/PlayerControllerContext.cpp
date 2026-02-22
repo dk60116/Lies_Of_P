@@ -138,7 +138,13 @@ const vector3& CPlayerControllerContext::PlayerForward()
 
 void CPlayerControllerContext::SetPlayerYaw(const _float _y)
 {
-	m_pPlayer->Get_Transform()->Set_LocalEulerAngles(0.f, _y, 0.f);
+	if (!m_pPlayer)
+		return;
+
+	auto tr = m_pPlayer->Get_Transform();
+	const _float curYaw = tr->Get_EulerAngles().y;
+	const _float deltaYaw = DeltaAngleDeg(curYaw, WrapDeg(_y));
+	tr->Rotate(vector3(0.f, deltaYaw, 0.f));
 }
 
 void CPlayerControllerContext::AddPosition(const vector3& delta)
@@ -271,11 +277,13 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float _stopEpsDeg)
 	t = std::clamp(t, 0.f, 1.f);
 
 	_float newYaw = WrapDeg(curYaw + delta * t);
-	tr->Set_EulerAngles(e.x, newYaw, e.z);
+	const _float frameDeltaYaw = DeltaAngleDeg(curYaw, newYaw);
+	tr->Rotate(vector3(0.f, frameDeltaYaw, 0.f));
 
 	if (fabsf(DeltaAngleDeg(tr->Get_EulerAngles().y, m_Cv_Move.m_targetYaw)) < _stopEpsDeg)
 	{
-		tr->Set_EulerAngles(e.x, m_Cv_Move.m_targetYaw, e.z);
+		const _float remainYaw = DeltaAngleDeg(tr->Get_EulerAngles().y, m_Cv_Move.m_targetYaw);
+		tr->Rotate(vector3(0.f, remainYaw, 0.f));
 		m_Cv_Move.m_bTurning = false;
 		SetAnimTurn(0.f);
 
