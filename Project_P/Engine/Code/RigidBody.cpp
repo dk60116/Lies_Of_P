@@ -509,15 +509,16 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     ApplyAxisConstraints(targetPos, targetRot);
 
     const _float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
+    const _float commandDt = max(DELTA_TIME, 0.0001f);
     const vector3 appliedDelta = targetPos - currentPos;
     const Vec3 targetVelocity(
-        static_cast<float>(appliedDelta.x / fixedDt),
-        static_cast<float>(appliedDelta.y / fixedDt),
-        static_cast<float>(appliedDelta.z / fixedDt));
+        static_cast<float>(appliedDelta.x / commandDt),
+        static_cast<float>(appliedDelta.y / commandDt),
+        static_cast<float>(appliedDelta.z / commandDt));
 
     const _float velocitySmoothing = 0.35f;
     const _float maxAcceleration = 120.f;
-    const _float maxVelocityStep = maxAcceleration * fixedDt;
+    const _float maxVelocityStep = maxAcceleration * commandDt;
     auto BlendVelocityAxis = [maxVelocityStep, velocitySmoothing](float _currentVelocity, float _targetVelocity)
     {
         const float velocityDelta = _targetVelocity - _currentVelocity;
