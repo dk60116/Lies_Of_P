@@ -498,10 +498,11 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     ApplyAxisConstraints(targetPos, targetRot);
 
     const vector3 appliedDelta = targetPos - vector3(static_cast<_float>(pos.GetX()), static_cast<_float>(pos.GetY()), static_cast<_float>(pos.GetZ()));
+    const _float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
     const Vec3 desiredLinearVelocity(
-        static_cast<float>(appliedDelta.x),
-        static_cast<float>(appliedDelta.y),
-        static_cast<float>(appliedDelta.z));
+        static_cast<float>(appliedDelta.x / fixedDt),
+        static_cast<float>(appliedDelta.y / fixedDt),
+        static_cast<float>(appliedDelta.z / fixedDt));
 
     const RVec3 joltTargetPos(targetPos.x, targetPos.y, targetPos.z);
     const Quat joltTargetRot(targetRot.x, targetRot.y, targetRot.z, targetRot.w);
@@ -512,7 +513,7 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
         Get_Transform()->Set_Quaternion(targetRot);
 
         if (m_bHasBody)
-            GetBI().SetPositionAndRotation(m_iBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
+            GetBI().MoveKinematic(m_iBodyID, joltTargetPos, joltTargetRot, fixedDt);
 
         if (m_bHasSensorBody)
             GetBI().SetPositionAndRotation(m_iSensorBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
