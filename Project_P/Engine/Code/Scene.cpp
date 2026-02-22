@@ -855,6 +855,8 @@ void CScene::EndFrame()
 		if (obj && obj->m_bKill)
 		{
 			m_mObjectOfId.erase(obj->m_iUniqueID);
+			if (m_pEditorCamera && obj == m_pEditorCamera->Get_GameObject())
+				m_pEditorCamera = nullptr;
 			if (auto* parent = (*it)->Get_Transform()->Get_Parent())
 				parent->RemoveChild((*it)->Get_Transform());
 			Safe_Release(obj);
