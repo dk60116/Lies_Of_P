@@ -190,11 +190,16 @@ void CSceneLoader::ThreadLoadingLoop()
 
 					auto acInfo = CResources::GetInstance().ReadAnimatorControllerBufferInfos(acDataPath);
 
-					auto acResource = CResources::GetInstance().CreateSceneResource<CAnimatorController>(acDataName, acDataPath, nullptr, true);
+					const wstring controllerResourceName = wName + L" (Animator Controller)";
+					auto acResource = CResources::GetInstance().CreateSceneResource<CAnimatorController>(controllerResourceName, acDataPath, nullptr, true);
+
+					if (!acResource)
+					{
+						CDebug::LogError(L"Failed create AnimatorController resource: " + controllerResourceName);
+						continue;
+					}
 
 					acResource->Initiailize_Custom(acInfo);
-
-					CResources::AddSceneResource(acDataName + L" (Animator Controller)", acResource, true);
 				}
 			}
 			else if (CEngineString::Contains(wFile, L".mp3") || CEngineString::Contains(wFile, L".wav") || CEngineString::Contains(wFile, L".ogg"))
