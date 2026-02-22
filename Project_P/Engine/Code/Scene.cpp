@@ -796,48 +796,6 @@ void CScene::Render_Game()
 
 void CScene::CacheResourcesForInitialize()
 {
-	auto hasSharedResourceRef = [this](CEngineResource* resource) -> _bool
-	{
-		if (!resource)
-			return false;
-
-		for (TRAVERSAL_ITER(m_mResourceList, it))
-		{
-			if ((*it).second == resource)
-				return true;
-		}
-
-		return false;
-	};
-
-	auto hasSharedMeshBundleRef = [this](CMeshBuffer* mesh, CMaterial* material, CTexture* texture) -> _bool
-	{
-		for (TRAVERSAL_ITER(m_mMeshBundleList, it))
-		{
-			for (TRAVERSAL_ITER((*it).second, it1))
-			{
-				if ((*it1).meshBuffer == mesh && (*it1).material == material && (*it1).texture == texture)
-					return true;
-			}
-		}
-
-		return false;
-	};
-
-	auto hasSharedSkinnedBundleRef = [this](CSkinnedMeshBuffer* mesh, CMaterial* material, CTexture* texture) -> _bool
-	{
-		for (TRAVERSAL_ITER(m_mSkinnedBundleList, it))
-		{
-			for (TRAVERSAL_ITER((*it).second, it1))
-			{
-				if ((*it1).meshBuffer == mesh && (*it1).material == material && (*it1).texture == texture)
-					return true;
-			}
-		}
-
-		return false;
-	};
-
 	unordered_set<CEngineResource*> releasedSceneResources;
 	unordered_set<CMeshBuffer*> releasedMeshBuffers;
 	unordered_set<CSkinnedMeshBuffer*> releasedSkinnedBuffers;
@@ -846,19 +804,13 @@ void CScene::CacheResourcesForInitialize()
 
 	for (TRAVERSAL_ITER(m_mTempResourceList, it))
 	{
-		if (hasSharedResourceRef((*it).second))
-			continue;
-
-		if (releasedSceneResources.emplace((*it).second).second)
+		if ((*it).second && releasedSceneResources.emplace((*it).second).second)
 			Safe_Release((*it).second);
 	}
 	for (TRAVERSAL_ITER(m_mTempMeshBundleList, it))
 	{
 		for (TRAVERSAL_ITER((*it).second, it1))
 		{
-			if (hasSharedMeshBundleRef((*it1).meshBuffer, (*it1).material, (*it1).texture))
-				continue;
-
 			if ((*it1).meshBuffer && releasedMeshBuffers.emplace((*it1).meshBuffer).second)
 				Safe_Release((*it1).meshBuffer);
 			if ((*it1).material && releasedMaterials.emplace((*it1).material).second)
@@ -866,16 +818,11 @@ void CScene::CacheResourcesForInitialize()
 			if ((*it1).texture && releasedTextures.emplace((*it1).texture).second)
 				Safe_Release((*it1).texture);
 		}
-
-		(*it).second.clear();
 	}
 	for (TRAVERSAL_ITER(m_mTempSkinnedBundleList, it))
 	{
 		for (TRAVERSAL_ITER((*it).second, it1))
 		{
-			if (hasSharedSkinnedBundleRef((*it1).meshBuffer, (*it1).material, (*it1).texture))
-				continue;
-
 			if ((*it1).meshBuffer && releasedSkinnedBuffers.emplace((*it1).meshBuffer).second)
 				Safe_Release((*it1).meshBuffer);
 			if ((*it1).material && releasedMaterials.emplace((*it1).material).second)
@@ -883,51 +830,22 @@ void CScene::CacheResourcesForInitialize()
 			if ((*it1).texture && releasedTextures.emplace((*it1).texture).second)
 				Safe_Release((*it1).texture);
 		}
-
-		(*it).second.clear();
 	}
-	for (TRAVERSAL_ITER(m_mTempSkinnedBoneList, it))
-		(*it).second.clear();
 
 	m_mTempResourceList.clear();
 	m_mTempMeshBundleList.clear();
 	m_mTempSkinnedBundleList.clear();
 	m_mTempSkinnedBoneList.clear();
 
-	for (TRAVERSAL_ITER(m_mResourceList, it))
-	{
-		if ((*it).second)
-			(*it).second->AddRef();
-	}
-	for (TRAVERSAL_ITER(m_mMeshBundleList, it))
-	{
-		for (TRAVERSAL_ITER((*it).second, it1))
-		{
-			if ((*it1).meshBuffer)
-				(*it1).meshBuffer->AddRef();
-			if ((*it1).material)
-				(*it1).material->AddRef();
-			if ((*it1).texture)
-				(*it1).texture->AddRef();
-		}
-	}
-	for (TRAVERSAL_ITER(m_mSkinnedBundleList, it))
-	{
-		for (TRAVERSAL_ITER((*it).second, it1))
-		{
-			if ((*it1).meshBuffer)
-				(*it1).meshBuffer->AddRef();
-			if ((*it1).material)
-				(*it1).material->AddRef();
-			if ((*it1).texture)
-				(*it1).texture->AddRef();
-		}
-	}
+	m_mTempResourceList = move(m_mResourceList);
+	m_mTempMeshBundleList = move(m_mMeshBundleList);
+	m_mTempSkinnedBundleList = move(m_mSkinnedBundleList);
+	m_mTempSkinnedBoneList = move(m_mSkinnedBoneList);
 
-	m_mTempResourceList = m_mResourceList;
-	m_mTempMeshBundleList = m_mMeshBundleList;
-	m_mTempSkinnedBundleList = m_mSkinnedBundleList;
-	m_mTempSkinnedBoneList = m_mSkinnedBoneList;
+	m_mResourceList.clear();
+	m_mMeshBundleList.clear();
+	m_mSkinnedBundleList.clear();
+	m_mSkinnedBoneList.clear();
 }
 
 void CScene::SceneRelease()
