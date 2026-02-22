@@ -304,6 +304,11 @@ CAnimator* CPlayerControllerContext::Animator()
 	return m_pPlayer->Get_Animator();
 }
 
+CRigidBody* CPlayerControllerContext::RigidBody()
+{
+	return m_pPlayer->Get_RigidBody();
+}
+
 const CPlayer::PlayerStatus& CPlayerControllerContext::PlayerStatus()
 {
 	return m_pPlayer->Get_PlayerStatus();

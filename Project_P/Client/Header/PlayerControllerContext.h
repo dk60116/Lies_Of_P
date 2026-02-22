@@ -59,6 +59,7 @@ public:
 	void TickTurn(_float _yawSmooth, _float stopEpsDeg = 1.f);
 
 	CAnimator* Animator();
+	CRigidBody* RigidBody();
 	const CPlayer::PlayerStatus& PlayerStatus();
 
 	void SetAnimMoveSpeed(_float _v);

@@ -131,6 +131,8 @@ void CPlayerState_Jump::Enter()
 	m_pCtx->SetCanGuard(false);
 
 	m_bExitable = false;
+
+	m_pCtx->RigidBody()->AddForceY(500.f);
 }
 
 void CPlayerState_Jump::Update()

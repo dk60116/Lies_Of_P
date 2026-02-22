@@ -183,22 +183,7 @@ void CPlayerCamera::Update()
         m_fBackOffset -= wheel * m_fZoomSensor * DELTA_TIME;
         m_fBackOffset = std::clamp(m_fBackOffset, m_sOptions.zoomMin, m_sOptions.zoomMax);
     }
-}
 
-_float CPlayerCamera::LerpAngle(_float current, _float target, _float t)
-{
-    _float diff = target - current;
-
-    while (diff >= 180.f) 
-        diff -= 360.f;
-    while (diff < -180.f) 
-        diff += 360.f;
-
-    return current + diff * t;
-}
-
-void CPlayerCamera::LateUpdate()
-{
     if (!CGameManager::GetInstance().Get_Player())
         return;
 
@@ -216,10 +201,10 @@ void CPlayerCamera::LateUpdate()
     const _float yawRad = Deg2Rad(m_fCurYaw);
     const _float pitchRad = Deg2Rad(m_fCurPitch);
 
-    const _float cy = std::cos(yawRad);
-    const _float sy = std::sin(yawRad);
-    const _float cp = std::cos(pitchRad);
-    const _float sp = std::sin(pitchRad);
+    const _float cy = cos(yawRad);
+    const _float sy = sin(yawRad);
+    const _float cp = cos(pitchRad);
+    const _float sp = sin(pitchRad);
 
     vector3 camForward;
     camForward.x = cp * sy;
@@ -235,6 +220,18 @@ void CPlayerCamera::LateUpdate()
 void CPlayerCamera::OnDestroy()
 {
     ClipCursor(nullptr);
+}
+
+_float CPlayerCamera::LerpAngle(_float current, _float target, _float t)
+{
+    _float diff = target - current;
+
+    while (diff >= 180.f)
+        diff -= 360.f;
+    while (diff < -180.f)
+        diff += 360.f;
+
+    return current + diff * t;
 }
 
 const vector3 CPlayerCamera::Get_ForwardVector()
