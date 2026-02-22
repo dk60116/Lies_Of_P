@@ -2,6 +2,7 @@
 #include "Physics.h"
 #include "RigidBody.h"
 #include "Collider.h"
+#include <mutex>
 
 namespace Engine
 {
@@ -84,6 +85,7 @@ namespace Engine
 	public:
 		void RemovePairsForBody(const BodyID& _bodyID)
 		{
+			lock_guard<mutex> lock(m_ActivePairsMutex);
 			for (auto it = m_ActivePairs.begin(); it != m_ActivePairs.end();)
 			{
 				PairState state = it->second;
@@ -124,12 +126,16 @@ namespace Engine
 			const BodyID bodyId1 = inSubShapePair.GetBody1ID();
 			const BodyID bodyId2 = inSubShapePair.GetBody2ID();
 
-			auto itA = m_ActivePairs.find(MakePairKey(bodyId1, bodyId2));
-			if (itA == m_ActivePairs.end())
-				return;
+			PairState state;
+			{
+				lock_guard<mutex> lock(m_ActivePairsMutex);
+				auto itA = m_ActivePairs.find(MakePairKey(bodyId1, bodyId2));
+				if (itA == m_ActivePairs.end())
+					return;
 
-			PairState state = itA->second;
-			m_ActivePairs.erase(itA);
+				state = itA->second;
+				m_ActivePairs.erase(itA);
+			}
 
 			if (state.aCollider)
 				state.aCollider->EndContact();
@@ -392,10 +398,15 @@ namespace Engine
 			state.isTrigger = trigger;
 
 			const PairKey key = MakePairKey(body1.GetID(), body2.GetID());
-			auto [it, inserted] = m_ActivePairs.insert({ key, state });
-			if (!inserted)
-				it->second = state;
-			else
+			_bool inserted = false;
+			{
+				lock_guard<mutex> lock(m_ActivePairsMutex);
+				auto [it, didInsert] = m_ActivePairs.insert({ key, state });
+				inserted = didInsert;
+				if (!inserted)
+					it->second = state;
+			}
+			if (inserted)
 			{
 				if (col1)
 					col1->BeginContact();
@@ -432,6 +443,7 @@ namespace Engine
 		}
 
 		unordered_map<PairKey, PairState> m_ActivePairs;
+		mutex m_ActivePairsMutex;
 	};
 
 	static void JoltTraceImpl(const char* fmt, ...)
