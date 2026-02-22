@@ -522,6 +522,56 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     CacheLastSyncedTransform(targetPos, targetRot);
 }
 
+void CRigidBody::Rotate(const vector3& _deltaEuler)
+{
+    if (_deltaEuler.lengthSq() <= 0.f)
+        return;
+
+    Get_Transform()->Update();
+
+    Vec3 pos;
+    Quat rot;
+    DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
+
+    const quaternion currentRot(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
+    const quaternion deltaRot = _deltaEuler.to_quaternion();
+
+    XMVECTOR qCurrent = XMLoadFloat4(reinterpret_cast<const _float4*>(&currentRot));
+    XMVECTOR qDelta = XMLoadFloat4(reinterpret_cast<const _float4*>(&deltaRot));
+    XMVECTOR qTarget = XMQuaternionMultiply(qDelta, qCurrent);
+    qTarget = XMQuaternionNormalize(qTarget);
+
+    quaternion targetRot;
+    XMStoreFloat4(reinterpret_cast<_float4*>(&targetRot), qTarget);
+    vector3 targetPos(static_cast<_float>(pos.GetX()), static_cast<_float>(pos.GetY()), static_cast<_float>(pos.GetZ()));
+
+    ApplyAxisConstraints(targetPos, targetRot);
+
+    Get_Transform()->Set_Position(targetPos);
+    Get_Transform()->Set_Quaternion(targetRot);
+
+    const RVec3 joltTargetPos(targetPos.x, targetPos.y, targetPos.z);
+    const Quat joltTargetRot(targetRot.x, targetRot.y, targetRot.z, targetRot.w);
+
+    if (m_bHasBody)
+    {
+        const Vec3 linearVel = GetBI().GetLinearVelocity(m_iBodyID);
+        const Vec3 angularVel = GetBI().GetAngularVelocity(m_iBodyID);
+        GetBI().SetPositionAndRotation(m_iBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
+        GetBI().SetLinearAndAngularVelocity(m_iBodyID, linearVel, angularVel);
+    }
+
+    if (m_bHasSensorBody)
+    {
+        const Vec3 linearVel = GetBI().GetLinearVelocity(m_iSensorBodyID);
+        const Vec3 angularVel = GetBI().GetAngularVelocity(m_iSensorBodyID);
+        GetBI().SetPositionAndRotation(m_iSensorBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
+        GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, linearVel, angularVel);
+    }
+
+    CacheLastSyncedTransform(targetPos, targetRot);
+}
+
 void CRigidBody::ApplyAxisConstraints(vector3& _pos, quaternion& _rot)
 {
     vector3 euler = _rot.to_euler();

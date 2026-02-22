@@ -506,6 +506,15 @@ void CTransform::Translate(const vector3& _value)
 
 void CTransform::Rotate(const vector3& _value)
 {
+    if (CRigidBody* rigidBody = m_pGameObject->GetComponent<CRigidBody>())
+    {
+        if (rigidBody->Get_Enable())
+        {
+            rigidBody->Rotate(_value);
+            return;
+        }
+    }
+
     Add_EulerAngles(_value);
 }
 
