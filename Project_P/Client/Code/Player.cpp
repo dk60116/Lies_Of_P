@@ -200,6 +200,11 @@ CAnimator* CPlayer::Get_Animator()
 	return m_pAnimator;
 }
 
+CRigidBody* CPlayer::Get_RigidBody()
+{
+	return m_pRigidBody;
+}
+
 const CPlayer::PlayerStatus& CPlayer::Get_PlayerStatus()
 {
 	return m_sPlayerStatus;
