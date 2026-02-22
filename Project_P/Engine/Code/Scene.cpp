@@ -1760,19 +1760,25 @@ CEngineResource* CScene::Add_TempResource(const wstring& _name, CEngineResource*
 
 void CScene::Remove_Resource(const wstring& _name)
 {
-	auto iter = m_mTempResourceList.find(_name);
-	if (iter != m_mTempResourceList.end())
-	{
-		Safe_Release(iter->second);
-		m_mTempResourceList.erase(iter);
-	}
+	CEngineResource* tempResource = nullptr;
+	auto tempIter = m_mTempResourceList.find(_name);
+	if (tempIter != m_mTempResourceList.end())
+		tempResource = tempIter->second;
 
-	iter = m_mResourceList.find(_name);
-	if (iter != m_mResourceList.end())
-	{
-		Safe_Release(iter->second);
-		m_mResourceList.erase(iter);
-	}
+	CEngineResource* sceneResource = nullptr;
+	auto sceneIter = m_mResourceList.find(_name);
+	if (sceneIter != m_mResourceList.end())
+		sceneResource = sceneIter->second;
+
+	if (tempIter != m_mTempResourceList.end())
+		m_mTempResourceList.erase(tempIter);
+	if (sceneIter != m_mResourceList.end())
+		m_mResourceList.erase(sceneIter);
+
+	if (tempResource)
+		Safe_Release(tempResource);
+	if (sceneResource && sceneResource != tempResource)
+		Safe_Release(sceneResource);
 }
 
 void CScene::Add_MeshBundle(const wstring& _name, vector<MeshBundle> _resource)
