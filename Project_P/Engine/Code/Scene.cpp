@@ -796,6 +796,68 @@ void CScene::Render_Game()
 
 void CScene::CacheResourcesForInitialize()
 {
+	for (TRAVERSAL_ITER(m_mTempResourceList, it))
+		Safe_Release((*it).second);
+	for (TRAVERSAL_ITER(m_mTempMeshBundleList, it))
+	{
+		for (TRAVERSAL_ITER((*it).second, it1))
+		{
+			Safe_Release((*it1).meshBuffer);
+			Safe_Release((*it1).material);
+			Safe_Release((*it1).texture);
+		}
+
+		(*it).second.clear();
+	}
+	for (TRAVERSAL_ITER(m_mTempSkinnedBundleList, it))
+	{
+		for (TRAVERSAL_ITER((*it).second, it1))
+		{
+			Safe_Release((*it1).meshBuffer);
+			Safe_Release((*it1).material);
+			Safe_Release((*it1).texture);
+		}
+
+		(*it).second.clear();
+	}
+	for (TRAVERSAL_ITER(m_mTempSkinnedBoneList, it))
+		(*it).second.clear();
+
+	m_mTempResourceList.clear();
+	m_mTempMeshBundleList.clear();
+	m_mTempSkinnedBundleList.clear();
+	m_mTempSkinnedBoneList.clear();
+
+	for (TRAVERSAL_ITER(m_mResourceList, it))
+	{
+		if ((*it).second)
+			(*it).second->AddRef();
+	}
+	for (TRAVERSAL_ITER(m_mMeshBundleList, it))
+	{
+		for (TRAVERSAL_ITER((*it).second, it1))
+		{
+			if ((*it1).meshBuffer)
+				(*it1).meshBuffer->AddRef();
+			if ((*it1).material)
+				(*it1).material->AddRef();
+			if ((*it1).texture)
+				(*it1).texture->AddRef();
+		}
+	}
+	for (TRAVERSAL_ITER(m_mSkinnedBundleList, it))
+	{
+		for (TRAVERSAL_ITER((*it).second, it1))
+		{
+			if ((*it1).meshBuffer)
+				(*it1).meshBuffer->AddRef();
+			if ((*it1).material)
+				(*it1).material->AddRef();
+			if ((*it1).texture)
+				(*it1).texture->AddRef();
+		}
+	}
+
 	m_mTempResourceList = m_mResourceList;
 	m_mTempMeshBundleList = m_mMeshBundleList;
 	m_mTempSkinnedBundleList = m_mSkinnedBundleList;
@@ -814,55 +876,25 @@ void CScene::SceneRelease()
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		Safe_Release(*it);
 	for (TRAVERSAL_ITER(m_mResourceList, it))
-	{
-		auto tempIter = m_mTempResourceList.find((*it).first);
-		if (tempIter != m_mTempResourceList.end() && tempIter->second == (*it).second)
-			continue;
-
 		Safe_Release((*it).second);
-	}
 	for (TRAVERSAL_ITER(m_mMeshBundleList, it))
 	{
-		auto tempIter = m_mTempMeshBundleList.find((*it).first);
-		const _bool hasSharedBundle = tempIter != m_mTempMeshBundleList.end();
-
-		for (size_t i = 0; i < (*it).second.size(); ++i)
+		for (TRAVERSAL_ITER((*it).second, it1))
 		{
-			MeshBundle& bundle = (*it).second[i];
-			const _bool isSharedBundle = hasSharedBundle && i < tempIter->second.size() &&
-				tempIter->second[i].meshBuffer == bundle.meshBuffer &&
-				tempIter->second[i].material == bundle.material &&
-				tempIter->second[i].texture == bundle.texture;
-
-			if (!isSharedBundle)
-			{
-				Safe_Release(bundle.meshBuffer);
-				Safe_Release(bundle.material);
-				Safe_Release(bundle.texture);
-			}
+			Safe_Release((*it1).meshBuffer);
+			Safe_Release((*it1).material);
+			Safe_Release((*it1).texture);
 		}
 
 		(*it).second.clear();
 	}
 	for (TRAVERSAL_ITER(m_mSkinnedBundleList, it))
 	{
-		auto tempIter = m_mTempSkinnedBundleList.find((*it).first);
-		const _bool hasSharedBundle = tempIter != m_mTempSkinnedBundleList.end();
-
-		for (size_t i = 0; i < (*it).second.size(); ++i)
+		for (TRAVERSAL_ITER((*it).second, it1))
 		{
-			SkinnedMeshBundle& bundle = (*it).second[i];
-			const _bool isSharedBundle = hasSharedBundle && i < tempIter->second.size() &&
-				tempIter->second[i].meshBuffer == bundle.meshBuffer &&
-				tempIter->second[i].material == bundle.material &&
-				tempIter->second[i].texture == bundle.texture;
-
-			if (!isSharedBundle)
-			{
-				Safe_Release(bundle.meshBuffer);
-				Safe_Release(bundle.material);
-				Safe_Release(bundle.texture);
-			}
+			Safe_Release((*it1).meshBuffer);
+			Safe_Release((*it1).material);
+			Safe_Release((*it1).texture);
 		}
 
 		(*it).second.clear();

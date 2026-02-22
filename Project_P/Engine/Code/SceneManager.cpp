@@ -36,6 +36,7 @@ CSceneManager::CSceneManager()
 	, m_ePlayState(PlayState::Stopped)
 	, m_strPlayStartSceneName(L"")
 	, m_bStepFrameRequested(false)
+	, m_bSkipScenePreload(false)
 	, m_pEditorCamObj(nullptr)
 	, m_pEditorCamera(nullptr)
 	, m_sTimeSetting({})
@@ -76,6 +77,7 @@ void CSceneManager::Release()
 	m_ePlayState = PlayState::Stopped;
 	m_strPlayStartSceneName = L"";
 	m_bStepFrameRequested = false;
+	m_bSkipScenePreload = false;
 
 	for (TRAVERSAL_ITER(m_mSceneList, it))
 	{
@@ -158,8 +160,11 @@ void CSceneManager::LoadScene(wstring _scene)
 
 	if (m_pTempScene)
 	{
-		m_pTempScene->PreLoadResources();
+		if (!m_bSkipScenePreload)
+			m_pTempScene->PreLoadResources();
+
 		m_bLoading = true;
+		m_bSkipScenePreload = false;
 	}
 }
 
@@ -251,9 +256,13 @@ void CSceneManager::StopScene()
 	m_bSceneAwakened = false;
 	m_strPlayStartSceneName = L"";
 	m_bStepFrameRequested = false;
+	m_bSkipScenePreload = false;
 
 	if (isStopCurrentScene)
+	{
 		m_pCrtScene->CacheResourcesForInitialize();
+		m_bSkipScenePreload = true;
+	}
 
 	LoadScene(stopTargetSceneName);
 }
