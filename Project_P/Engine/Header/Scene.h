@@ -107,6 +107,7 @@ public:
     vector<SkinnedMeshBundle> Find_SkinnedMeshInfoResource(const wstring& _name);
     vector<CSkinnedMeshBuffer::SKINNEDSKELETAL> Find_SkinnedBonesResource(const wstring& _name);
     class CEngineResource* Add_TempResource(const wstring& _name, CEngineResource* _resource);
+    void Remove_Resource(const wstring& _name);
     void Add_MeshBundle(const wstring& _name, vector<MeshBundle> _resource);
     void Add_SkinnedBundle(const wstring& _name, vector<SkinnedMeshBundle> _resource);
     void Add_TempMeshBundle(const wstring& _name, vector<MeshBundle> _resource);

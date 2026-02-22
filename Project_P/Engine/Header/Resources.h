@@ -153,13 +153,15 @@ inline T* CResources::CreateSceneResource(const wstring& _name, const wstring& _
     {
         T* typedResource = dynamic_cast<T*>(cachedResource);
 
-        if (!typedResource)
-            return nullptr;
+        if (typedResource)
+        {
+            if (_tempScene)
+                targetScene->Add_TempResource(_name, typedResource);
 
-        if (_tempScene)
-            targetScene->Add_TempResource(_name, typedResource);
+            return typedResource;
+        }
 
-        return typedResource;
+        targetScene->Remove_Resource(_name);
     }
 
     T* newResource = T::Create();

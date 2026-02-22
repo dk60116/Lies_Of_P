@@ -1758,6 +1758,23 @@ CEngineResource* CScene::Add_TempResource(const wstring& _name, CEngineResource*
 	return it->second;
 }
 
+void CScene::Remove_Resource(const wstring& _name)
+{
+	auto iter = m_mTempResourceList.find(_name);
+	if (iter != m_mTempResourceList.end())
+	{
+		Safe_Release(iter->second);
+		m_mTempResourceList.erase(iter);
+	}
+
+	iter = m_mResourceList.find(_name);
+	if (iter != m_mResourceList.end())
+	{
+		Safe_Release(iter->second);
+		m_mResourceList.erase(iter);
+	}
+}
+
 void CScene::Add_MeshBundle(const wstring& _name, vector<MeshBundle> _resource)
 {
 	for (TRAVERSAL_ITER(_resource, it))
