@@ -473,12 +473,23 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
 
     Get_Transform()->Update();
 
-    Vec3 pos;
-    Quat rot;
-    DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
+    Vec3 tfPos;
+    Quat tfRot;
+    DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), tfPos, tfRot);
 
-    vector3 targetPos(static_cast<_float>(pos.GetX()) + _deltaWorld.x, static_cast<_float>(pos.GetY()) + _deltaWorld.y, static_cast<_float>(pos.GetZ()) + _deltaWorld.z);
-    quaternion targetRot(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
+    vector3 currentPos(static_cast<_float>(tfPos.GetX()), static_cast<_float>(tfPos.GetY()), static_cast<_float>(tfPos.GetZ()));
+    quaternion currentRot(tfRot.GetX(), tfRot.GetY(), tfRot.GetZ(), tfRot.GetW());
+
+    if (m_bHasBody)
+    {
+        const RVec3 bodyPos = GetBI().GetPosition(m_iBodyID);
+        const Quat bodyRot = GetBI().GetRotation(m_iBodyID);
+        currentPos = vector3(static_cast<_float>(bodyPos.GetX()), static_cast<_float>(bodyPos.GetY()), static_cast<_float>(bodyPos.GetZ()));
+        currentRot = quaternion(bodyRot.GetX(), bodyRot.GetY(), bodyRot.GetZ(), bodyRot.GetW());
+    }
+
+    vector3 targetPos = currentPos + _deltaWorld;
+    quaternion targetRot = currentRot;
 
     if (m_bConstPositionX)
         m_vConstPosition.x = targetPos.x;
@@ -497,14 +508,8 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
 
     ApplyAxisConstraints(targetPos, targetRot);
 
-    Get_Transform()->Set_Position(targetPos);
-    Get_Transform()->Set_Quaternion(targetRot);
-
-    const RVec3 joltTargetPos(targetPos.x, targetPos.y, targetPos.z);
-    const Quat joltTargetRot(targetRot.x, targetRot.y, targetRot.z, targetRot.w);
-
-    const vector3 appliedDelta = targetPos - vector3(static_cast<_float>(pos.GetX()), static_cast<_float>(pos.GetY()), static_cast<_float>(pos.GetZ()));
     const _float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
+    const vector3 appliedDelta = targetPos - currentPos;
     const Vec3 targetVelocity(
         static_cast<float>(appliedDelta.x / fixedDt),
         static_cast<float>(appliedDelta.y / fixedDt),
@@ -513,11 +518,8 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     const _float velocitySmoothing = 0.35f;
     const _float maxAcceleration = 120.f;
     const _float maxVelocityStep = maxAcceleration * fixedDt;
-    auto BlendVelocityAxis = [maxVelocityStep, velocitySmoothing](_float _appliedDelta, float _currentVelocity, float _targetVelocity)
+    auto BlendVelocityAxis = [maxVelocityStep, velocitySmoothing](float _currentVelocity, float _targetVelocity)
     {
-        if (fabsf(_appliedDelta) <= 1e-6f)
-            return _currentVelocity;
-
         const float velocityDelta = _targetVelocity - _currentVelocity;
         const float clampedVelocityDelta = max(-maxVelocityStep, min(maxVelocityStep, velocityDelta));
         return _currentVelocity + clampedVelocityDelta * velocitySmoothing;
@@ -525,29 +527,67 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
 
     if (m_bHasBody)
     {
-        const Vec3 currentLinearVelocity = GetBI().GetLinearVelocity(m_iBodyID);
-        const Vec3 blendedLinearVelocity(
-            BlendVelocityAxis(appliedDelta.x, currentLinearVelocity.GetX(), targetVelocity.GetX()),
-            BlendVelocityAxis(appliedDelta.y, currentLinearVelocity.GetY(), targetVelocity.GetY()),
-            BlendVelocityAxis(appliedDelta.z, currentLinearVelocity.GetZ(), targetVelocity.GetZ()));
+        if (m_bKinematic)
+        {
+            GetBI().MoveKinematic(m_iBodyID, RVec3(targetPos.x, targetPos.y, targetPos.z), Quat(targetRot.x, targetRot.y, targetRot.z, targetRot.w), fixedDt);
+            GetBI().ActivateBody(m_iBodyID);
+        }
+        else
+        {
+            const Vec3 currentLinearVelocity = GetBI().GetLinearVelocity(m_iBodyID);
+            const Vec3 blendedLinearVelocity(
+                BlendVelocityAxis(currentLinearVelocity.GetX(), targetVelocity.GetX()),
+                BlendVelocityAxis(currentLinearVelocity.GetY(), targetVelocity.GetY()),
+                BlendVelocityAxis(currentLinearVelocity.GetZ(), targetVelocity.GetZ()));
 
-        GetBI().SetPositionAndRotation(m_iBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
-        GetBI().SetLinearAndAngularVelocity(m_iBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iBodyID));
+            GetBI().SetLinearAndAngularVelocity(m_iBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iBodyID));
+            GetBI().ActivateBody(m_iBodyID);
+        }
     }
 
     if (m_bHasSensorBody)
     {
-        const Vec3 currentLinearVelocity = GetBI().GetLinearVelocity(m_iSensorBodyID);
-        const Vec3 blendedLinearVelocity(
-            BlendVelocityAxis(appliedDelta.x, currentLinearVelocity.GetX(), targetVelocity.GetX()),
-            BlendVelocityAxis(appliedDelta.y, currentLinearVelocity.GetY(), targetVelocity.GetY()),
-            BlendVelocityAxis(appliedDelta.z, currentLinearVelocity.GetZ(), targetVelocity.GetZ()));
+        if (m_bHasBody)
+        {
+            const RVec3 bodyPos = GetBI().GetPosition(m_iBodyID);
+            const Quat bodyRot = GetBI().GetRotation(m_iBodyID);
+            GetBI().SetPositionAndRotation(m_iSensorBodyID, bodyPos, bodyRot, EActivation::Activate);
+            GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, GetBI().GetLinearVelocity(m_iBodyID), GetBI().GetAngularVelocity(m_iBodyID));
+        }
+        else if (m_bKinematic)
+        {
+            GetBI().MoveKinematic(m_iSensorBodyID, RVec3(targetPos.x, targetPos.y, targetPos.z), Quat(targetRot.x, targetRot.y, targetRot.z, targetRot.w), fixedDt);
+            GetBI().ActivateBody(m_iSensorBodyID);
+        }
+        else
+        {
+            const Vec3 currentLinearVelocity = GetBI().GetLinearVelocity(m_iSensorBodyID);
+            const Vec3 blendedLinearVelocity(
+                BlendVelocityAxis(currentLinearVelocity.GetX(), targetVelocity.GetX()),
+                BlendVelocityAxis(currentLinearVelocity.GetY(), targetVelocity.GetY()),
+                BlendVelocityAxis(currentLinearVelocity.GetZ(), targetVelocity.GetZ()));
 
-        GetBI().SetPositionAndRotation(m_iSensorBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
-        GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iSensorBodyID));
+            GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iSensorBodyID));
+            GetBI().ActivateBody(m_iSensorBodyID);
+        }
     }
 
-    CacheLastSyncedTransform(targetPos, targetRot);
+    vector3 correctedPos = targetPos;
+    quaternion correctedRot = targetRot;
+
+    if (m_bHasBody)
+    {
+        const RVec3 bodyPos = GetBI().GetPosition(m_iBodyID);
+        const Quat bodyRot = GetBI().GetRotation(m_iBodyID);
+        correctedPos = vector3(static_cast<_float>(bodyPos.GetX()), static_cast<_float>(bodyPos.GetY()), static_cast<_float>(bodyPos.GetZ()));
+        correctedRot = quaternion(bodyRot.GetX(), bodyRot.GetY(), bodyRot.GetZ(), bodyRot.GetW());
+        ApplyAxisConstraints(correctedPos, correctedRot);
+    }
+
+    Get_Transform()->Set_Position(correctedPos);
+    Get_Transform()->Set_Quaternion(correctedRot);
+
+    CacheLastSyncedTransform(correctedPos, correctedRot);
 }
 
 void CRigidBody::AddForce(const vector3& _force)
