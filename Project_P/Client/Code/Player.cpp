@@ -146,7 +146,7 @@ HRESULT CPlayer::Initialize()
 	m_pWeaponObj->Get_Transform()->Set_LocalScale(0.5f);
 
 	m_pBodyCollider = m_pGameObject->AddComponent<CCapsuleCollider>();
-	m_pBodyCollider->SetCenter(vector3::up() * 1.7f);
+	m_pBodyCollider->SetCenter(vector3::up() * 1.75f);
 	m_pBodyCollider->SetHeight(2.5f);
 
 	m_pRigidBody = m_pGameObject->AddComponent<CRigidBody>();

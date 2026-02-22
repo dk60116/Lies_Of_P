@@ -132,7 +132,7 @@ void CPlayerState_Jump::Enter()
 
 	m_bExitable = false;
 
-	m_pCtx->RigidBody()->AddForceY(500.f);
+	m_pCtx->RigidBody()->AddForceY(m_pCtx->PlayerStatus().jumpPower);
 }
 
 void CPlayerState_Jump::Update()

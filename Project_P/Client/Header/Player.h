@@ -26,6 +26,7 @@ public:
 		_float bigTurnStopSec = 0.28f;
 		_float focusTurnRatio = 8.f;
 		_int attackPower = 1;
+		_float jumpPower = 300.f;
 	};
 
 protected:

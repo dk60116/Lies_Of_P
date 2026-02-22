@@ -430,7 +430,8 @@ void CTransform::Set_Position(const vector3& _pos)
     W = XMMatrixScalingFromVector(S) * XMMatrixRotationQuaternion(R) * XMMatrixTranslation(_pos.x, _pos.y, _pos.z);
     SetTransformForMatrix(W);
 
-    Update();
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Set_Position(const _float _x, const _float _y, const _float _z)
@@ -456,6 +457,9 @@ void CTransform::Set_PositionZ(const _float _value)
 void CTransform::Set_LocalPosition(const vector3& _pos)
 {
     m_vPosition = _pos;
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Set_LocalPosition(const _float _x, const _float _y, const _float _z)
@@ -466,28 +470,41 @@ void CTransform::Set_LocalPosition(const _float _x, const _float _y, const _floa
 void CTransform::Set_LocalPositionX(const _float _value)
 {
     m_vPosition.x = _value;
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Set_LocalPositionY(const _float _value)
 {
     m_vPosition.y = _value;
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Set_LocalPositionZ(const _float _value)
 {
     m_vPosition.z = _value;
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_Position(const vector3& _value)
 {
     m_vPosition += _value;
+
     Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_Position(const _float _x, const _float _y, const _float _z)
 {
     m_vPosition += vector3(_x, _y, _z);
+
     Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Translate(const vector3& _value)
@@ -502,6 +519,9 @@ void CTransform::Translate(const vector3& _value)
     }
 
     Add_Position(_value);
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Rotate(const vector3& _value)
@@ -516,54 +536,73 @@ void CTransform::Rotate(const vector3& _value)
     }
 
     Add_EulerAngles(_value);
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_PositionX(const _float _value)
 {
     m_vPosition.x += _value;
+
     Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_PositionY(const _float _value)
 {
     m_vPosition.y += _value;
+
     Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_PositionZ(const _float _value)
 {
     m_vPosition.z += _value;
+
     Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_LocalPosition(const vector3& _value)
 {
     m_vPosition += _value;
+
     Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_LocalPosition(const _float _x, const _float _y, const _float _z)
 {
     m_vPosition += vector3(_x, _y, _z);
+
     Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_LocalPositionX(const _float _value)
 {
     m_vPosition.x += _value;
+
     Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_LocalPositionY(const _float _value)
 {
     m_vPosition.y += _value;
+
     Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_LocalPositionZ(const _float _value)
 {
     m_vPosition.z += _value;
+
     Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Set_Quaternion(const quaternion& _value)
@@ -584,7 +623,8 @@ void CTransform::Set_Quaternion(const quaternion& _value)
 
     m_vEulerAngles = m_vQuaternion.to_euler();
 
-    Update();
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Set_LocalQuaternion(const quaternion& _value)
@@ -594,6 +634,7 @@ void CTransform::Set_LocalQuaternion(const quaternion& _value)
     m_vEulerAngles = m_vQuaternion.to_euler();
 
     Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_Quaternion(const quaternion& _delta)
@@ -605,6 +646,7 @@ void CTransform::Add_Quaternion(const quaternion& _delta)
     XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), XMQuaternionNormalize(result));
 
     Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Set_EulerAngles(const vector3& _rot)
@@ -626,6 +668,7 @@ void CTransform::Set_EulerAngles(const vector3& _rot)
     m_vEulerAngles = _rot;
 
     Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Set_EulerAngles(const _float _x, const _float _y, const _float _z)
@@ -664,7 +707,8 @@ void CTransform::Add_EulerAngles(const vector3& _rot)
     if (tempParent)
         SetParent(tempParent);
 
-    Update();
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_EulerAngles(const _float _x, const _float _y, const _float _z)
@@ -814,51 +858,81 @@ void CTransform::RecalcWorldUpChain(CTransform* _t)
 void CTransform::Set_LocalScale(const vector3& _scale)
 {
     m_vScale = _scale;
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Set_LocalScale(const _float _x, const _float _y, const _float _z)
 {
     m_vScale = vector3(_x, _y, _z);
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Set_LocalScale(const _float _value)
 {
     m_vScale = vector3::one() * _value;
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Set_LocalScaleX(const _float _value)
 {
     m_vScale.x = _value;
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Set_LocalScaleY(const _float _value)
 {
     m_vScale.y = _value;
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Set_LocalScaleZ(const _float _value)
 {
     m_vScale.z = _value;
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_LocalScale(const vector3& _scale)
 {
     m_vScale += _scale;
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_LocalScaleX(const _float _value)
 {
     m_vScale.x += _value;
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_LocalScaleY(const _float _value)
 {
     m_vScale.y += _value;
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 void CTransform::Add_LocalScaleZ(const _float _value)
 {
     m_vScale.z += _value;
+
+    Bind_Matrix();
+    Bind_Direction();
 }
 
 const vector3& CTransform::Get_PrevPosition()
@@ -965,6 +1039,8 @@ void CTransform::LookAt(const vector3& _target, const _uint _lockRotationFilter)
     XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), XMQuaternionNormalize(q));
 
     m_vEulerAngles = m_vQuaternion.to_euler();
+
+    Update();
 }
 
 const vector3 CTransform::LookRotation(const vector3& _target, const _uint _lockRotationFilter)

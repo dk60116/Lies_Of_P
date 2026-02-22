@@ -219,6 +219,15 @@ void CPlayerCamera::Update()
     tf->LookAt(pivot);
 }
 
+void CPlayerCamera::LateUpdate()
+{
+    CTransform* tf = Get_Transform();
+    CTransform* playerTf = CGameManager::GetInstance().Get_Player()->Get_Transform();
+
+    const vector3 playerPos = playerTf->Get_Position();
+    const vector3 pivot = playerPos + vector3::up() * m_sOptions.lookHeightOffset;
+}
+
 void CPlayerCamera::OnDestroy()
 {
     ClipCursor(nullptr);

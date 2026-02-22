@@ -31,6 +31,7 @@ public:
 
     void Awake() override;
     void Start() override;
+    void LateUpdate() override;
     void Update() override;
     void OnDestroy() override;
 
