@@ -98,6 +98,9 @@ void CCanvas::Render()
 
 void CCanvas::OnDestroy()
 {
+	if (auto scene = CSceneManager::GetInstance().Get_CrtScene())
+		scene->Remove_Canvas(this);
+
 	__super::OnDestroy();
 
 	for (TRAVERSAL_ITER(m_lUIObjectList, it))
