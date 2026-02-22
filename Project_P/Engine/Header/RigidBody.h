@@ -69,6 +69,10 @@ public:
 	void SetConstRotationZ(_bool _value);
 	void Translate(const vector3& _deltaWorld);
 	void Rotate(const vector3& _deltaEuler);
+	void AddForce(const vector3& _force);
+	void AddForceX(_float _force);
+	void AddForceY(_float _force);
+	void AddForceZ(_float _force);
 	CCollider* GetEventCollider(_bool _triggerEvent) const;
 
 private:

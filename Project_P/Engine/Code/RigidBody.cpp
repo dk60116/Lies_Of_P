@@ -550,6 +550,44 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     CacheLastSyncedTransform(targetPos, targetRot);
 }
 
+void CRigidBody::AddForce(const vector3& _force)
+{
+    if (_force.lengthSq() <= 0.f)
+        return;
+
+    vector3 appliedForce = _force;
+    if (m_bConstPositionX)
+        appliedForce.x = 0.f;
+    if (m_bConstPositionY)
+        appliedForce.y = 0.f;
+    if (m_bConstPositionZ)
+        appliedForce.z = 0.f;
+
+    if (appliedForce.lengthSq() <= 0.f)
+        return;
+
+    if (m_bHasBody)
+    {
+        GetBI().AddForce(m_iBodyID, Vec3(appliedForce.x, appliedForce.y, appliedForce.z));
+        GetBI().ActivateBody(m_iBodyID);
+    }
+}
+
+void CRigidBody::AddForceX(_float _force)
+{
+    AddForce(vector3(_force, 0.f, 0.f));
+}
+
+void CRigidBody::AddForceY(_float _force)
+{
+    AddForce(vector3(0.f, _force, 0.f));
+}
+
+void CRigidBody::AddForceZ(_float _force)
+{
+    AddForce(vector3(0.f, 0.f, _force));
+}
+
 void CRigidBody::Rotate(const vector3& _deltaEuler)
 {
     if (_deltaEuler.lengthSq() <= 0.f)
