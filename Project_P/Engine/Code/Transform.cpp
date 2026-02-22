@@ -504,6 +504,11 @@ void CTransform::Translate(const vector3& _value)
     Add_Position(_value);
 }
 
+void CTransform::Rotate(const vector3& _value)
+{
+    Add_EulerAngles(_value);
+}
+
 void CTransform::Add_PositionX(const _float _value)
 {
     m_vPosition.x += _value;
