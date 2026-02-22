@@ -36,6 +36,7 @@ CSceneManager::CSceneManager()
 	, m_ePlayState(PlayState::Stopped)
 	, m_strPlayStartSceneName(L"")
 	, m_bStepFrameRequested(false)
+	, m_sPlayStartObjectIds({})
 	, m_pEditorCamObj(nullptr)
 	, m_pEditorCamera(nullptr)
 	, m_sTimeSetting({})
@@ -76,6 +77,7 @@ void CSceneManager::Release()
 	m_ePlayState = PlayState::Stopped;
 	m_strPlayStartSceneName = L"";
 	m_bStepFrameRequested = false;
+	m_sPlayStartObjectIds.clear();
 
 	for (TRAVERSAL_ITER(m_mSceneList, it))
 	{
@@ -205,6 +207,7 @@ void CSceneManager::LoadComplete()
 		m_ePlayState = PlayState::Stopped;
 		m_strPlayStartSceneName = L"";
 		m_bStepFrameRequested = false;
+		m_sPlayStartObjectIds.clear();
 	}
 }
 
@@ -217,7 +220,17 @@ void CSceneManager::PlayScene()
 		return;
 
 	if (m_ePlayState == PlayState::Stopped)
+	{
 		m_strPlayStartSceneName = m_pCrtScene->Get_SceneName();
+		m_sPlayStartObjectIds.clear();
+		for (const auto& [id, obj] : m_pCrtScene->m_mObjectOfId)
+		{
+			if (!obj)
+				continue;
+
+			m_sPlayStartObjectIds.insert(id);
+		}
+	}
 
 	if (!m_bSceneAwakened)
 	{
@@ -254,12 +267,36 @@ void CSceneManager::StopScene()
 
 	if (isSameSceneReload)
 	{
+		vector<CGameObject*> runtimeUnsavedObjects = {};
+		runtimeUnsavedObjects.reserve(m_pCrtScene->m_lObjectList.size());
+
+		for (const auto& [id, obj] : m_pCrtScene->m_mObjectOfId)
+		{
+			if (!obj || obj->Is_SaveTarget())
+				continue;
+
+			if (m_sPlayStartObjectIds.find(id) != m_sPlayStartObjectIds.end())
+				continue;
+
+			runtimeUnsavedObjects.push_back(obj);
+		}
+
+		for (CGameObject* obj : runtimeUnsavedObjects)
+		{
+			if (obj)
+				obj->Destroy();
+		}
+
+		m_pCrtScene->EndFrame();
+
 		wstring file = m_pCrtScene->Get_SceneName() + L".scenedata";
 		auto sceneTransformInfo = CResources::GetInstance().ReadSceneObjectTransformInfos(file);
 		m_pCrtScene->Bind_ObjectsTransform(sceneTransformInfo);
+		m_sPlayStartObjectIds.clear();
 		return;
 	}
 
+	m_sPlayStartObjectIds.clear();
 	LoadScene(stopTargetSceneName);
 }
 
