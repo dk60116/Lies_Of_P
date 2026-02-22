@@ -838,12 +838,19 @@ void CScene::CacheResourcesForInitialize()
 		return false;
 	};
 
+	unordered_set<CEngineResource*> releasedSceneResources;
+	unordered_set<CMeshBuffer*> releasedMeshBuffers;
+	unordered_set<CSkinnedMeshBuffer*> releasedSkinnedBuffers;
+	unordered_set<CMaterial*> releasedMaterials;
+	unordered_set<CTexture*> releasedTextures;
+
 	for (TRAVERSAL_ITER(m_mTempResourceList, it))
 	{
 		if (hasSharedResourceRef((*it).second))
 			continue;
 
-		Safe_Release((*it).second);
+		if (releasedSceneResources.emplace((*it).second).second)
+			Safe_Release((*it).second);
 	}
 	for (TRAVERSAL_ITER(m_mTempMeshBundleList, it))
 	{
@@ -852,9 +859,12 @@ void CScene::CacheResourcesForInitialize()
 			if (hasSharedMeshBundleRef((*it1).meshBuffer, (*it1).material, (*it1).texture))
 				continue;
 
-			Safe_Release((*it1).meshBuffer);
-			Safe_Release((*it1).material);
-			Safe_Release((*it1).texture);
+			if ((*it1).meshBuffer && releasedMeshBuffers.emplace((*it1).meshBuffer).second)
+				Safe_Release((*it1).meshBuffer);
+			if ((*it1).material && releasedMaterials.emplace((*it1).material).second)
+				Safe_Release((*it1).material);
+			if ((*it1).texture && releasedTextures.emplace((*it1).texture).second)
+				Safe_Release((*it1).texture);
 		}
 
 		(*it).second.clear();
@@ -866,9 +876,12 @@ void CScene::CacheResourcesForInitialize()
 			if (hasSharedSkinnedBundleRef((*it1).meshBuffer, (*it1).material, (*it1).texture))
 				continue;
 
-			Safe_Release((*it1).meshBuffer);
-			Safe_Release((*it1).material);
-			Safe_Release((*it1).texture);
+			if ((*it1).meshBuffer && releasedSkinnedBuffers.emplace((*it1).meshBuffer).second)
+				Safe_Release((*it1).meshBuffer);
+			if ((*it1).material && releasedMaterials.emplace((*it1).material).second)
+				Safe_Release((*it1).material);
+			if ((*it1).texture && releasedTextures.emplace((*it1).texture).second)
+				Safe_Release((*it1).texture);
 		}
 
 		(*it).second.clear();
