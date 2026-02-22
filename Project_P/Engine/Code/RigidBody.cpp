@@ -475,7 +475,20 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
 
     Vec3 pos;
     Quat rot;
-    DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
+    if (m_bHasBody)
+    {
+        pos = GetBI().GetPosition(m_iBodyID);
+        rot = GetBI().GetRotation(m_iBodyID);
+    }
+    else if (m_bHasSensorBody)
+    {
+        pos = GetBI().GetPosition(m_iSensorBodyID);
+        rot = GetBI().GetRotation(m_iSensorBodyID);
+    }
+    else
+    {
+        DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
+    }
 
     vector3 targetPos(static_cast<_float>(pos.GetX()) + _deltaWorld.x, static_cast<_float>(pos.GetY()) + _deltaWorld.y, static_cast<_float>(pos.GetZ()) + _deltaWorld.z);
     quaternion targetRot(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
@@ -497,12 +510,6 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
 
     ApplyAxisConstraints(targetPos, targetRot);
 
-    Get_Transform()->Set_Position(targetPos);
-    Get_Transform()->Set_Quaternion(targetRot);
-
-    const RVec3 joltTargetPos(targetPos.x, targetPos.y, targetPos.z);
-    const Quat joltTargetRot(targetRot.x, targetRot.y, targetRot.z, targetRot.w);
-
     const vector3 appliedDelta = targetPos - vector3(static_cast<_float>(pos.GetX()), static_cast<_float>(pos.GetY()), static_cast<_float>(pos.GetZ()));
     const _float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
     const Vec3 deltaVelocity(
@@ -518,7 +525,7 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
             fabsf(appliedDelta.y) > 1e-6f ? deltaVelocity.GetY() : currentLinearVelocity.GetY(),
             fabsf(appliedDelta.z) > 1e-6f ? deltaVelocity.GetZ() : currentLinearVelocity.GetZ());
 
-        GetBI().SetPositionAndRotation(m_iBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
+        GetBI().ActivateBody(m_iBodyID);
         GetBI().SetLinearAndAngularVelocity(m_iBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iBodyID));
     }
 
@@ -530,8 +537,14 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
             fabsf(appliedDelta.y) > 1e-6f ? deltaVelocity.GetY() : currentLinearVelocity.GetY(),
             fabsf(appliedDelta.z) > 1e-6f ? deltaVelocity.GetZ() : currentLinearVelocity.GetZ());
 
-        GetBI().SetPositionAndRotation(m_iSensorBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
+        GetBI().ActivateBody(m_iSensorBodyID);
         GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iSensorBodyID));
+    }
+
+    if (!m_bHasBody && !m_bHasSensorBody)
+    {
+        Get_Transform()->Set_Position(targetPos);
+        Get_Transform()->Set_Quaternion(targetRot);
     }
 
     CacheLastSyncedTransform(targetPos, targetRot);
