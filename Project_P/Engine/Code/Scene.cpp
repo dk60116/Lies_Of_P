@@ -796,12 +796,62 @@ void CScene::Render_Game()
 
 void CScene::CacheResourcesForInitialize()
 {
+	auto hasSharedResourceRef = [this](CEngineResource* resource) -> _bool
+	{
+		if (!resource)
+			return false;
+
+		for (TRAVERSAL_ITER(m_mResourceList, it))
+		{
+			if ((*it).second == resource)
+				return true;
+		}
+
+		return false;
+	};
+
+	auto hasSharedMeshBundleRef = [this](CMeshBuffer* mesh, CMaterial* material, CTexture* texture) -> _bool
+	{
+		for (TRAVERSAL_ITER(m_mMeshBundleList, it))
+		{
+			for (TRAVERSAL_ITER((*it).second, it1))
+			{
+				if ((*it1).meshBuffer == mesh && (*it1).material == material && (*it1).texture == texture)
+					return true;
+			}
+		}
+
+		return false;
+	};
+
+	auto hasSharedSkinnedBundleRef = [this](CSkinnedMeshBuffer* mesh, CMaterial* material, CTexture* texture) -> _bool
+	{
+		for (TRAVERSAL_ITER(m_mSkinnedBundleList, it))
+		{
+			for (TRAVERSAL_ITER((*it).second, it1))
+			{
+				if ((*it1).meshBuffer == mesh && (*it1).material == material && (*it1).texture == texture)
+					return true;
+			}
+		}
+
+		return false;
+	};
+
 	for (TRAVERSAL_ITER(m_mTempResourceList, it))
+	{
+		if (hasSharedResourceRef((*it).second))
+			continue;
+
 		Safe_Release((*it).second);
+	}
 	for (TRAVERSAL_ITER(m_mTempMeshBundleList, it))
 	{
 		for (TRAVERSAL_ITER((*it).second, it1))
 		{
+			if (hasSharedMeshBundleRef((*it1).meshBuffer, (*it1).material, (*it1).texture))
+				continue;
+
 			Safe_Release((*it1).meshBuffer);
 			Safe_Release((*it1).material);
 			Safe_Release((*it1).texture);
@@ -813,6 +863,9 @@ void CScene::CacheResourcesForInitialize()
 	{
 		for (TRAVERSAL_ITER((*it).second, it1))
 		{
+			if (hasSharedSkinnedBundleRef((*it1).meshBuffer, (*it1).material, (*it1).texture))
+				continue;
+
 			Safe_Release((*it1).meshBuffer);
 			Safe_Release((*it1).material);
 			Safe_Release((*it1).texture);
