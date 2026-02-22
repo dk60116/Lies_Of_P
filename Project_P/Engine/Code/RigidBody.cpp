@@ -541,11 +541,8 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
         GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iSensorBodyID));
     }
 
-    if (!m_bHasBody && !m_bHasSensorBody)
-    {
-        Get_Transform()->Set_Position(targetPos);
-        Get_Transform()->Set_Quaternion(targetRot);
-    }
+    Get_Transform()->Set_Position(targetPos);
+    Get_Transform()->Set_Quaternion(targetRot);
 
     CacheLastSyncedTransform(targetPos, targetRot);
 }
