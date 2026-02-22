@@ -39,7 +39,6 @@ public:
         _bool isActive = true;
         _uint objLayer = 0u;
         _bool isTransformStatic = false;
-        _bool isSaveTarget = true;
         _bool rigidBodyKinematic = false;
         _bool rigidBodyUseGravity = true;
         _float rigidBodyMass = 1.f;
@@ -98,7 +97,7 @@ public:
     const wstring& Get_SceneName() const;
 
 public:
-    vector<SCENETRANSFORMINFO> Convert_ObjectsTransformInfo(const _bool includeNonSaveTarget = false) const;
+    vector<SCENETRANSFORMINFO> Convert_ObjectsTransformInfo() const;
     void Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList);
 
 public:

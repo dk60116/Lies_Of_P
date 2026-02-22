@@ -885,7 +885,7 @@ const wstring& CScene::Get_SceneName() const
 	return m_strSceneName;
 }
 
-vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo(const _bool includeNonSaveTarget) const
+vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 {
 	vector<SCENETRANSFORMINFO> result = {};
 	unordered_map<const CMeshBuffer*, wstring> sharedMeshResourceNames;
@@ -958,7 +958,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo(const _b
 		if (CEngineString::Contains((*it)->Get_ObjectName(), L"(Clone)"))
 			continue;
 
-		if (!includeNonSaveTarget && !(*it)->Is_SaveTarget())
+		if (!(*it)->Is_SaveTarget())
 			continue;
 
 		SCENETRANSFORMINFO info = {};
@@ -977,7 +977,6 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo(const _b
 		info.isActive = (*it)->IsActive_Origin();
 		info.objLayer = (*it)->GetLayer();
 		info.isTransformStatic = (*it)->IsStatic(CGameObject::STATIC_METHOD::TransformStatic);
-		info.isSaveTarget = (*it)->Is_SaveTarget();
 
 		if (CRigidBody* rigidBody = (*it)->GetComponent<CRigidBody>())
 		{
@@ -1014,7 +1013,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo(const _b
 			if (!component)
 				continue;
 
-			if (!includeNonSaveTarget && !component->Is_SaveTarget())
+			if (!component->Is_SaveTarget())
 				continue;
 
 			if (dynamic_cast<CTransform*>(component) || dynamic_cast<CRectTransform*>(component))
@@ -1211,7 +1210,6 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		obj->SetActive(info.isActive);
 		obj->SetLayer(info.objLayer);
 		obj->SetStatic(CGameObject::STATIC_METHOD::TransformStatic, info.isTransformStatic, false);
-		obj->m_bSaveTarget = info.isSaveTarget;
 
 		if (!info.isRect)
 			tf->Set_LocalScale(info.localScale);
