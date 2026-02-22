@@ -466,18 +466,15 @@ void CRigidBody::SetConstRotationZ(_bool _value)
         m_vConstRotation.z = Get_Transform()->Get_EulerAngles().z;
 }
 
-void CRigidBody::Translate(const vector3& _deltaWorld)
+void CRigidBody::MovePosition(const vector3& _targetWorldPosition)
 {
-    if (_deltaWorld.lengthSq() <= 0.f)
-        return;
-
     Get_Transform()->Update();
 
     Vec3 pos;
     Quat rot;
     DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
 
-    vector3 targetPos(static_cast<_float>(pos.GetX()) + _deltaWorld.x, static_cast<_float>(pos.GetY()) + _deltaWorld.y, static_cast<_float>(pos.GetZ()) + _deltaWorld.z);
+    vector3 targetPos = _targetWorldPosition;
     quaternion targetRot(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
 
     ApplyAxisConstraints(targetPos, targetRot);
@@ -520,6 +517,14 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     }
 
     CacheLastSyncedTransform(targetPos, targetRot);
+}
+
+void CRigidBody::Translate(const vector3& _deltaWorld)
+{
+    if (_deltaWorld.lengthSq() <= 0.f)
+        return;
+
+    MovePosition(Get_Transform()->Get_Position() + _deltaWorld);
 }
 
 void CRigidBody::ApplyAxisConstraints(vector3& _pos, quaternion& _rot)
