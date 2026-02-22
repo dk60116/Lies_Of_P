@@ -1182,6 +1182,25 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	_float3 camPos = {};
 
 	CMaterial* combineMat = Find_RectMaterial(CRenderTarget::RTType::Combine);
+	if (!combineMat || !m_pRectBuffer)
+	{
+		rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
+
+		ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
+		if (prevVPCount > 0)
+			ctx->RSSetViewports(1, &prevVP);
+
+		ctx->OMSetDepthStencilState(prevDS, prevStencilRef);
+		ctx->RSSetState(prevRS);
+		ctx->OMSetBlendState(prevBS, prevBlendFactor, prevSampleMask);
+
+		Safe_Release(prevRTV);
+		Safe_Release(prevDSV);
+		Safe_Release(prevDS);
+		Safe_Release(prevRS);
+		Safe_Release(prevBS);
+		return;
+	}
 
 	combineMat->Bind_Matrix(w);
 	combineMat->Bind_Camera(camPos, v, p, 0);
