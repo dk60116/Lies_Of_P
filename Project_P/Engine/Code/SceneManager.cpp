@@ -256,15 +256,6 @@ void CSceneManager::StopScene()
 	m_bSceneAwakened = false;
 	m_bStepFrameRequested = false;
 
-	if (!m_vPlayStartSceneTransforms.empty() && m_iPlayStartSceneObjectCount == m_pCrtScene->Convert_ObjectsTransformInfo().size())
-	{
-		m_pCrtScene->Bind_ObjectsTransform(m_vPlayStartSceneTransforms);
-		m_vPlayStartSceneTransforms.clear();
-		m_iPlayStartSceneObjectCount = 0u;
-		m_strPlayStartSceneName = L"";
-		return;
-	}
-
 	const wstring stopTargetSceneName = m_strPlayStartSceneName.empty() ? m_pCrtScene->Get_SceneName() : m_strPlayStartSceneName;
 	m_vPlayStartSceneTransforms.clear();
 	m_iPlayStartSceneObjectCount = 0u;
