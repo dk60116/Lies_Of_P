@@ -11,6 +11,10 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyInterface.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Collision/NarrowPhaseQuery.h>
+#include <Jolt/Physics/Collision/ShapeCast.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Body/BodyFilter.h> /
 
 namespace
 {
@@ -468,70 +472,204 @@ void CRigidBody::SetConstRotationZ(_bool _value)
 
 void CRigidBody::Translate(const vector3& _deltaWorld)
 {
-    if (_deltaWorld.lengthSq() <= 0.f)
+    if (_deltaWorld.lengthSq() <= 1e-12f)
         return;
 
+    // 바디가 없으면 Transform만 이동
+    if (!m_bHasBody && !m_bHasSensorBody)
+    {
+        Get_Transform()->Add_Position(_deltaWorld);
+        CacheLastSyncedTransform(Get_Transform()->Get_Position(), Get_Transform()->Get_LocalQuaternion());
+        return;
+    }
+
+    // 최신 Transform 확보 (주의: TransformStatic이면 Update가 스킵될 수 있음)
     Get_Transform()->Update();
 
+    // 시작 포즈(Transform 기준)
     Vec3 pos;
     Quat rot;
     DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
 
-    vector3 targetPos(static_cast<_float>(pos.GetX()) + _deltaWorld.x, static_cast<_float>(pos.GetY()) + _deltaWorld.y, static_cast<_float>(pos.GetZ()) + _deltaWorld.z);
-    quaternion targetRot(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
+    vector3 startPos(static_cast<_float>(pos.GetX()), static_cast<_float>(pos.GetY()), static_cast<_float>(pos.GetZ()));
+    quaternion startRot(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
 
-    if (m_bConstPositionX)
-        m_vConstPosition.x = targetPos.x;
-    if (m_bConstPositionY)
-        m_vConstPosition.y = targetPos.y;
-    if (m_bConstPositionZ)
-        m_vConstPosition.z = targetPos.z;
+    // ---------------------------------------------
+    // 1) ShapeCast로 이동 델타를 "충돌 전까지" 클램프(+슬라이드)
+    // ---------------------------------------------
+    vector3 desiredDelta = _deltaWorld;
+    vector3 clampedDelta = desiredDelta;
+
+    // 캐스팅에 사용할 shape / self body 선택
+    const BodyID selfBodyId = m_bHasBody ? m_iBodyID : m_iSensorBodyID;
+    const Shape* castShape = m_bHasBody ? m_pCompoundShape : m_pSensorCompoundShape;
+
+    // physics 초기화/shape 유효할 때만 시도
+    const bool canCast =
+        CPhysics::GetInstance().IsInitialized() &&
+        castShape != nullptr &&
+        desiredDelta.lengthSq() > 1e-12f;
+
+    // 스윕 실패 시를 대비한 플래그
+    bool castSucceeded = false;
+
+    // 마지막 히트 노멀(슬라이드/속도 처리에 활용)
+    Vec3 lastHitNormal = Vec3::sZero();
+    bool hadHit = false;
+
+    if (canCast)
+    {
+        // 튜닝 파라미터
+        const float skin = 0.01f;   // 벽에 살짝 띄워두는 여유 (단위/스케일 맞춰 조절)
+        const int   iters = 3;      // 슬라이드 반복 횟수 (2~4 권장)
+
+        auto& ps = GetPS();
+        const auto& npq = ps.GetNarrowPhaseQuery();
+
+        RVec3 curPos(pos.GetX(), pos.GetY(), pos.GetZ());
+        Quat  curRot = rot;
+
+        Vec3 remaining(desiredDelta.x, desiredDelta.y, desiredDelta.z);
+        Vec3 moved = Vec3::sZero();
+
+        for (int i = 0; i < iters && remaining.LengthSq() > 1e-12f; ++i)
+        {
+            // base offset은 start 근처로 두는 게 정밀도에 유리
+            const RVec3 baseOffset = curPos;
+
+            // 시작 변환
+            const RMat44 startTM = RMat44::sRotationTranslation(curRot, curPos);
+
+            // ShapeCast 구성 (MeshShape는 캐스트 불가일 수 있음)
+            // 스케일은 1로 두되, 엔진에서 shape에 스케일을 baked 했다면 유지 가능
+            const RShapeCast shapeCast = RShapeCast::sFromWorldTransform(
+                castShape,
+                Vec3::sReplicate(1.0f),
+                startTM,
+                remaining
+            );
+
+            ShapeCastSettings scs;
+
+            ClosestHitCollisionCollector<CastShapeCollector> collector;
+            IgnoreSingleBodyFilter bodyFilter(selfBodyId);
+
+            npq.CastShape(shapeCast, scs, baseOffset, collector, {}, {}, bodyFilter);
+
+            if (!collector.HadHit())
+            {
+                moved += remaining;
+                curPos += remaining;
+                castSucceeded = true;
+                break;
+            }
+
+            // 히트 발생
+            castSucceeded = true;
+            hadHit = true;
+
+            const auto& hit = collector.mHit;
+
+            // fraction (0..1)
+            float f = hit.mFraction;
+
+            // skin을 반영해서 너무 딱 붙지 않게
+            const float len = max(remaining.Length(), 1e-6f);
+            const float skinFrac = skin / len;
+            f = JPH::Clamp(f - skinFrac, 0.0f, 1.0f);
+
+            Vec3 step = remaining * f;
+            moved += step;
+            curPos += step;
+
+            lastHitNormal = -hit.mPenetrationAxis.Normalized();
+
+            Vec3 rest = remaining - step;
+            const float into = rest.Dot(lastHitNormal);
+            if (into < 0.0f)
+                rest -= lastHitNormal * into;
+
+            remaining = rest;
+        }
+
+        clampedDelta = vector3(moved.GetX(), moved.GetY(), moved.GetZ());
+    }
+
+    if (!castSucceeded)
+        clampedDelta = desiredDelta;
+
+    if (clampedDelta.lengthSq() <= 1e-12f)
+    {
+        if (!m_bKinematic && m_bHasBody)
+        {
+            Vec3 v = GetBI().GetLinearVelocity(m_iBodyID);
+
+            if (hadHit && lastHitNormal.LengthSq() > 1e-12f)
+            {
+                float into = v.Dot(lastHitNormal);
+                if (into < 0.0f) v -= lastHitNormal * into;
+            }
+            GetBI().SetLinearAndAngularVelocity(m_iBodyID, v, GetBI().GetAngularVelocity(m_iBodyID));
+        }
+        return;
+    }
+
+    vector3 targetPos = startPos + clampedDelta;
+    quaternion targetRot = startRot;
+
+    if (m_bConstPositionX) m_vConstPosition.x = targetPos.x;
+    if (m_bConstPositionY) m_vConstPosition.y = targetPos.y;
+    if (m_bConstPositionZ) m_vConstPosition.z = targetPos.z;
 
     vector3 targetEuler = targetRot.to_euler();
-    if (m_bConstRotationX)
-        m_vConstRotation.x = targetEuler.x;
-    if (m_bConstRotationY)
-        m_vConstRotation.y = targetEuler.y;
-    if (m_bConstRotationZ)
-        m_vConstRotation.z = targetEuler.z;
+    if (m_bConstRotationX) m_vConstRotation.x = targetEuler.x;
+    if (m_bConstRotationY) m_vConstRotation.y = targetEuler.y;
+    if (m_bConstRotationZ) m_vConstRotation.z = targetEuler.z;
 
     ApplyAxisConstraints(targetPos, targetRot);
 
     Get_Transform()->Set_Position(targetPos);
     Get_Transform()->Set_Quaternion(targetRot);
 
-    const RVec3 joltTargetPos(targetPos.x, targetPos.y, targetPos.z);
-    const Quat joltTargetRot(targetRot.x, targetRot.y, targetRot.z, targetRot.w);
+    const float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
 
-    const vector3 appliedDelta = targetPos - vector3(static_cast<_float>(pos.GetX()), static_cast<_float>(pos.GetY()), static_cast<_float>(pos.GetZ()));
-    const _float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
-    const Vec3 deltaVelocity(
+    vector3 appliedDelta = targetPos - startPos;
+    Vec3 desiredVel(
         static_cast<float>(appliedDelta.x / fixedDt),
         static_cast<float>(appliedDelta.y / fixedDt),
-        static_cast<float>(appliedDelta.z / fixedDt));
+        static_cast<float>(appliedDelta.z / fixedDt)
+    );
+
+    if (hadHit && lastHitNormal.LengthSq() > 1e-12f)
+    {
+        const float into = desiredVel.Dot(lastHitNormal);
+        if (into < 0.0f)
+            desiredVel -= lastHitNormal * into;
+    }
+
+    const RVec3 joltTargetPos(targetPos.x, targetPos.y, targetPos.z);
+    const Quat  joltTargetRot(targetRot.x, targetRot.y, targetRot.z, targetRot.w);
 
     if (m_bHasBody)
     {
-        const Vec3 currentLinearVelocity = GetBI().GetLinearVelocity(m_iBodyID);
-        const Vec3 blendedLinearVelocity(
-            fabsf(appliedDelta.x) > 1e-6f ? deltaVelocity.GetX() : currentLinearVelocity.GetX(),
-            fabsf(appliedDelta.y) > 1e-6f ? deltaVelocity.GetY() : currentLinearVelocity.GetY(),
-            fabsf(appliedDelta.z) > 1e-6f ? deltaVelocity.GetZ() : currentLinearVelocity.GetZ());
+        if (m_bKinematic)
+        {
+            GetBI().MoveKinematic(m_iBodyID, joltTargetPos, joltTargetRot, fixedDt);
+            GetBI().SetLinearAndAngularVelocity(m_iBodyID, Vec3::sZero(), Vec3::sZero());
+        }
+        else
+        {
+            GetBI().SetPositionAndRotation(m_iBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
 
-        GetBI().SetPositionAndRotation(m_iBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
-        GetBI().SetLinearAndAngularVelocity(m_iBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iBodyID));
+            const Vec3 ang = GetBI().GetAngularVelocity(m_iBodyID);
+            GetBI().SetLinearAndAngularVelocity(m_iBodyID, desiredVel, ang);
+        }
     }
 
     if (m_bHasSensorBody)
     {
-        const Vec3 currentLinearVelocity = GetBI().GetLinearVelocity(m_iSensorBodyID);
-        const Vec3 blendedLinearVelocity(
-            fabsf(appliedDelta.x) > 1e-6f ? deltaVelocity.GetX() : currentLinearVelocity.GetX(),
-            fabsf(appliedDelta.y) > 1e-6f ? deltaVelocity.GetY() : currentLinearVelocity.GetY(),
-            fabsf(appliedDelta.z) > 1e-6f ? deltaVelocity.GetZ() : currentLinearVelocity.GetZ());
-
-        GetBI().SetPositionAndRotation(m_iSensorBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
-        GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iSensorBodyID));
+        GetBI().SetPositionAndRotation(m_iSensorBodyID, joltTargetPos, joltTargetRot, EActivation::DontActivate);
+        GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, desiredVel, Vec3::sZero());
     }
 
     CacheLastSyncedTransform(targetPos, targetRot);
@@ -681,10 +819,8 @@ void CRigidBody::RebuildBodiesIfDirty()
     DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
     CacheLastSyncedTransform(vector3(pos.GetX(), pos.GetY(), pos.GetZ()), quaternion(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW()));
 
-    // --- ÀÏ¹Ý ¹Ùµð »ý¼º ---
     if (bodyCompound != nullptr)
     {
-        // º¸°ü¿ë raw ptr(refcount)
         m_pCompoundShape = bodyCompound.GetPtr();
         m_pCompoundShape->AddRef();
 
@@ -969,4 +1105,66 @@ void CRigidBody::CacheLastSyncedTransform(const vector3& _pos, const quaternion&
     m_vLastSyncedPosition = _pos;
     m_vLastSyncedRotation = _rot;
     m_bHasLastSyncedTransform = true;
+}
+
+vector3 CRigidBody::ComputeClampedDelta_ByShapeCast(const vector3& _desiredDeltaWorld)
+{
+    if (!m_pCompoundShape || _desiredDeltaWorld.lengthSq() < 1e-8f)
+        return _desiredDeltaWorld;
+
+    const BodyID selfId = m_bHasBody ? m_iBodyID : m_iSensorBodyID;
+    const _float skin = 0.01f; 
+    const _int maxIter = 3;    
+
+    auto& ps = GetPS();
+    const auto& npq = ps.GetNarrowPhaseQuery(); // 엔진 구조에 맞춰 접근
+
+    RVec3 curPos = GetBI().GetPosition(selfId);
+    Quat  curRot = GetBI().GetRotation(selfId);
+
+    Vec3 remaining(_desiredDeltaWorld.x, _desiredDeltaWorld.y, _desiredDeltaWorld.z);
+    Vec3 moved = Vec3::sZero();
+
+    for (_int i = 0; i < maxIter && remaining.LengthSq() > 1e-8f; ++i)
+    {
+        RVec3 baseOffset = curPos;
+
+        RMat44 start = RMat44::sRotationTranslation(curRot, curPos);
+
+        RShapeCast shape_cast = RShapeCast::sFromWorldTransform(m_pCompoundShape, Vec3::sReplicate(1.0f), start, remaining);
+
+        ShapeCastSettings scs;
+
+        ClosestHitCollisionCollector<CastShapeCollector> collector;
+        IgnoreSingleBodyFilter body_filter(selfId);
+
+        npq.CastShape(shape_cast, scs, baseOffset, collector, {}, {}, body_filter);
+
+        if (!collector.HadHit())
+        {
+            moved += remaining;
+            curPos += remaining;
+            break;
+        }
+
+        const auto& hit = collector.mHit;
+        float f = hit.mFraction;
+
+        f = JPH::Clamp(f - (skin / max(remaining.Length(), 1e-6f)), 0.0f, 1.0f);
+
+        Vec3 step = remaining * f;
+        moved += step;
+        curPos += step;
+
+        Vec3 n = -hit.mPenetrationAxis.Normalized();
+
+        Vec3 rest = remaining - step;
+        float into = rest.Dot(n);
+        if (into < 0.0f)
+            rest -= n * into;
+
+        remaining = rest;
+    }
+
+    return vector3(moved.GetX(), moved.GetY(), moved.GetZ());
 }

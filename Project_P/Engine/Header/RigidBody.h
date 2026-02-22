@@ -80,6 +80,8 @@ private:
 	void ApplyAxisConstraints(vector3& _pos, quaternion& _rot);
 	void CacheLastSyncedTransform(const vector3& _pos, const quaternion& _rot);
 
+	vector3 ComputeClampedDelta_ByShapeCast(const vector3& _desiredDeltaWorld);
+
 private:
 	list<CCollider*> m_lColliderList;
 
