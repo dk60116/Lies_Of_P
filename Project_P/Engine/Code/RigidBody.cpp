@@ -480,6 +480,21 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     vector3 targetPos(static_cast<_float>(pos.GetX()) + _deltaWorld.x, static_cast<_float>(pos.GetY()) + _deltaWorld.y, static_cast<_float>(pos.GetZ()) + _deltaWorld.z);
     quaternion targetRot(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
 
+    if (m_bConstPositionX)
+        m_vConstPosition.x = targetPos.x;
+    if (m_bConstPositionY)
+        m_vConstPosition.y = targetPos.y;
+    if (m_bConstPositionZ)
+        m_vConstPosition.z = targetPos.z;
+
+    vector3 targetEuler = targetRot.to_euler();
+    if (m_bConstRotationX)
+        m_vConstRotation.x = targetEuler.x;
+    if (m_bConstRotationY)
+        m_vConstRotation.y = targetEuler.y;
+    if (m_bConstRotationZ)
+        m_vConstRotation.z = targetEuler.z;
+
     ApplyAxisConstraints(targetPos, targetRot);
 
     Get_Transform()->Set_Position(targetPos);
@@ -544,6 +559,21 @@ void CRigidBody::Rotate(const vector3& _deltaEuler)
     quaternion targetRot;
     XMStoreFloat4(reinterpret_cast<_float4*>(&targetRot), qTarget);
     vector3 targetPos(static_cast<_float>(pos.GetX()), static_cast<_float>(pos.GetY()), static_cast<_float>(pos.GetZ()));
+
+    if (m_bConstPositionX)
+        m_vConstPosition.x = targetPos.x;
+    if (m_bConstPositionY)
+        m_vConstPosition.y = targetPos.y;
+    if (m_bConstPositionZ)
+        m_vConstPosition.z = targetPos.z;
+
+    vector3 targetEuler = targetRot.to_euler();
+    if (m_bConstRotationX)
+        m_vConstRotation.x = targetEuler.x;
+    if (m_bConstRotationY)
+        m_vConstRotation.y = targetEuler.y;
+    if (m_bConstRotationZ)
+        m_vConstRotation.z = targetEuler.z;
 
     ApplyAxisConstraints(targetPos, targetRot);
 
