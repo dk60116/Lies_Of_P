@@ -251,49 +251,11 @@ void CSceneManager::StopScene()
 		return;
 
 	const wstring stopTargetSceneName = m_strPlayStartSceneName.empty() ? m_pCrtScene->Get_SceneName() : m_strPlayStartSceneName;
-	const _bool isSameSceneReload = stopTargetSceneName == m_pCrtScene->Get_SceneName();
 
 	m_ePlayState = PlayState::Stopped;
 	m_bSceneAwakened = false;
 	m_strPlayStartSceneName = L"";
 	m_bStepFrameRequested = false;
-
-	if (isSameSceneReload)
-	{
-		vector<CGameObject*> unsavedObjects = {};
-		unsavedObjects.reserve(m_pCrtScene->m_lObjectList.size());
-
-		for (const auto& pair : m_pCrtScene->m_mObjectOfId)
-		{
-			CGameObject* obj = pair.second;
-			if (!obj || obj->Is_SaveTarget())
-				continue;
-
-			unsavedObjects.push_back(obj);
-		}
-
-		for (CGameObject* obj : unsavedObjects)
-		{
-			if (obj)
-				obj->Destroy();
-		}
-
-		m_pCrtScene->EndFrame();
-
-		wstring file = m_pCrtScene->Get_SceneName() + L".scenedata";
-		auto sceneTransformInfo = CResources::GetInstance().ReadSceneObjectTransformInfos(file);
-		m_pCrtScene->Bind_ObjectsTransform(sceneTransformInfo);
-
-		if (!m_vPlayStartUnsavedObjectInfos.empty())
-		{
-			m_pCrtScene->Set_SaveRegistrationEnabled(false);
-			m_pCrtScene->Bind_ObjectsTransform(m_vPlayStartUnsavedObjectInfos);
-			m_pCrtScene->Set_SaveRegistrationEnabled(true);
-		}
-
-		m_vPlayStartUnsavedObjectInfos.clear();
-		return;
-	}
 
 	m_vPlayStartUnsavedObjectInfos.clear();
 	LoadScene(stopTargetSceneName);
