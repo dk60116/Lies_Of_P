@@ -524,7 +524,15 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     if (_deltaWorld.lengthSq() <= 0.f)
         return;
 
-    MovePosition(Get_Transform()->Get_Position() + _deltaWorld);
+    Get_Transform()->Update();
+
+    Vec3 pos;
+    Quat rot;
+    DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
+
+    MovePosition(vector3(static_cast<_float>(pos.GetX()) + _deltaWorld.x,
+        static_cast<_float>(pos.GetY()) + _deltaWorld.y,
+        static_cast<_float>(pos.GetZ()) + _deltaWorld.z));
 }
 
 void CRigidBody::ApplyAxisConstraints(vector3& _pos, quaternion& _rot)
