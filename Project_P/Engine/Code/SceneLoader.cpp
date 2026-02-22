@@ -190,7 +190,7 @@ void CSceneLoader::ThreadLoadingLoop()
 
 					auto acInfo = CResources::GetInstance().ReadAnimatorControllerBufferInfos(acDataPath);
 
-					const wstring controllerResourceName = wName + L" (Animator Controller)";
+					const wstring controllerResourceName = CEngineString::Contains(wName, L"(Animator Controller)") ? wName : (wName + L" (Animator Controller)");
 					auto acResource = CResources::GetInstance().CreateSceneResource<CAnimatorController>(controllerResourceName, acDataPath, nullptr, true);
 
 					if (!acResource)
