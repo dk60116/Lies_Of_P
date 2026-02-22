@@ -102,7 +102,11 @@ namespace
 			return;
 
 		CGameObject* selected = CEditor::GetInstance().Get_SelectedGameObject();
+
 		if (!selected)
+			return;
+
+		if (selected->Get_RefCnt() <= 0)
 			return;
 
 		CMeshBuffer* meshBuffer = nullptr;
