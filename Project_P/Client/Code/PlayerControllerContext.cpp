@@ -1,6 +1,7 @@
 #include "cpch.h"
 #include "PlayerControllerContext.h"
 #include "PlayerController.h"
+#include "Physics.h"
 
 CPlayerControllerContext::CPlayerControllerContext()
 	: m_pPlayer(nullptr)
@@ -229,7 +230,99 @@ void CPlayerControllerContext::TickMove()
 	}
 
 	const _float curSpeed = PlayerStatus().runSpeed * m_Cv_Move.m_fMove01;
-	AddPosition(dir * curSpeed * dt);
+	const vector3 desiredDelta = dir * curSpeed * dt;
+	const _float desiredDist = desiredDelta.length();
+
+	if (desiredDist <= 1e-6f)
+		return;
+
+	const vector3 playerPos = m_pPlayer->Get_Transform()->Get_Position();
+	const vector3 castOrigin = playerPos + vector3(0.f, 0.9f, 0.f);
+	const vector3 castDir = desiredDelta / desiredDist;
+	const _float skin = 0.05f;
+
+	CPhysics::Ray ray;
+	ray.origin = castOrigin;
+	ray.dir = castDir;
+	ray.maxDist = desiredDist + skin;
+
+	const auto hits = CPhysics::GetInstance().Raycast(ray);
+	CPhysics::RAYCASTHIT nearestHit;
+	_bool hasBlockingHit = false;
+
+	for (const auto& hit : hits)
+	{
+		if (!hit.isHit || !hit.object)
+			continue;
+
+		if (hit.object == m_pPlayer->Get_GameObject())
+			continue;
+
+		if (hit.distance <= 1e-4f)
+			continue;
+
+		nearestHit = hit;
+		hasBlockingHit = true;
+		break;
+	}
+
+	if (!hasBlockingHit)
+	{
+		AddPosition(desiredDelta);
+		return;
+	}
+
+	const _float approachDist = max(0.f, nearestHit.distance - skin);
+	const _float firstMoveDist = min(desiredDist, approachDist);
+	const vector3 firstMove = castDir * firstMoveDist;
+	vector3 finalDelta = firstMove;
+
+	vector3 remainDelta = desiredDelta - firstMove;
+	remainDelta.y = 0.f;
+
+	vector3 wallNormal = nearestHit.hitNormal;
+	const _float normalLen = wallNormal.length();
+	if (normalLen > 1e-6f)
+		wallNormal /= normalLen;
+
+	if (remainDelta.lengthSq() > 1e-6f && fabsf(wallNormal.y) < 0.85f)
+	{
+		vector3 slideDelta = remainDelta - wallNormal * remainDelta.dot(wallNormal);
+		slideDelta.y = 0.f;
+		const _float slideDist = slideDelta.length();
+
+		if (slideDist > 1e-5f)
+		{
+			const vector3 slideDir = slideDelta / slideDist;
+
+			CPhysics::Ray slideRay;
+			slideRay.origin = castOrigin + firstMove;
+			slideRay.dir = slideDir;
+			slideRay.maxDist = slideDist + skin;
+
+			const auto slideHits = CPhysics::GetInstance().Raycast(slideRay);
+			_float allowedSlideDist = slideDist;
+
+			for (const auto& slideHit : slideHits)
+			{
+				if (!slideHit.isHit || !slideHit.object)
+					continue;
+
+				if (slideHit.object == m_pPlayer->Get_GameObject())
+					continue;
+
+				if (slideHit.distance <= 1e-4f)
+					continue;
+
+				allowedSlideDist = max(0.f, min(allowedSlideDist, slideHit.distance - skin));
+				break;
+			}
+
+			finalDelta += slideDir * allowedSlideDist;
+		}
+	}
+
+	AddPosition(finalDelta);
 }
 
 void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float _stopEpsDeg)
