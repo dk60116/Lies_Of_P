@@ -471,6 +471,42 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     if (_deltaWorld.lengthSq() <= 0.f)
         return;
 
+    const _float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
+
+    if (!m_bKinematic)
+    {
+        const Vec3 deltaVelocity(
+            static_cast<float>(_deltaWorld.x / fixedDt),
+            static_cast<float>(_deltaWorld.y / fixedDt),
+            static_cast<float>(_deltaWorld.z / fixedDt));
+
+        if (m_bHasBody)
+        {
+            const Vec3 currentLinearVelocity = GetBI().GetLinearVelocity(m_iBodyID);
+            const Vec3 blendedLinearVelocity(
+                fabsf(_deltaWorld.x) > 1e-6f ? deltaVelocity.GetX() : currentLinearVelocity.GetX(),
+                fabsf(_deltaWorld.y) > 1e-6f ? deltaVelocity.GetY() : currentLinearVelocity.GetY(),
+                fabsf(_deltaWorld.z) > 1e-6f ? deltaVelocity.GetZ() : currentLinearVelocity.GetZ());
+
+            GetBI().SetLinearAndAngularVelocity(m_iBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iBodyID));
+            GetBI().ActivateBody(m_iBodyID);
+        }
+
+        if (m_bHasSensorBody)
+        {
+            const Vec3 currentLinearVelocity = GetBI().GetLinearVelocity(m_iSensorBodyID);
+            const Vec3 blendedLinearVelocity(
+                fabsf(_deltaWorld.x) > 1e-6f ? deltaVelocity.GetX() : currentLinearVelocity.GetX(),
+                fabsf(_deltaWorld.y) > 1e-6f ? deltaVelocity.GetY() : currentLinearVelocity.GetY(),
+                fabsf(_deltaWorld.z) > 1e-6f ? deltaVelocity.GetZ() : currentLinearVelocity.GetZ());
+
+            GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iSensorBodyID));
+            GetBI().ActivateBody(m_iSensorBodyID);
+        }
+
+        return;
+    }
+
     Get_Transform()->Update();
 
     Vec3 pos;
@@ -504,7 +540,6 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     const Quat joltTargetRot(targetRot.x, targetRot.y, targetRot.z, targetRot.w);
 
     const vector3 appliedDelta = targetPos - vector3(static_cast<_float>(pos.GetX()), static_cast<_float>(pos.GetY()), static_cast<_float>(pos.GetZ()));
-    const _float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
     const Vec3 deltaVelocity(
         static_cast<float>(appliedDelta.x / fixedDt),
         static_cast<float>(appliedDelta.y / fixedDt),
@@ -518,7 +553,7 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
             fabsf(appliedDelta.y) > 1e-6f ? deltaVelocity.GetY() : currentLinearVelocity.GetY(),
             fabsf(appliedDelta.z) > 1e-6f ? deltaVelocity.GetZ() : currentLinearVelocity.GetZ());
 
-        GetBI().SetPositionAndRotation(m_iBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
+        GetBI().MoveKinematic(m_iBodyID, joltTargetPos, joltTargetRot, fixedDt);
         GetBI().SetLinearAndAngularVelocity(m_iBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iBodyID));
     }
 
@@ -530,7 +565,7 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
             fabsf(appliedDelta.y) > 1e-6f ? deltaVelocity.GetY() : currentLinearVelocity.GetY(),
             fabsf(appliedDelta.z) > 1e-6f ? deltaVelocity.GetZ() : currentLinearVelocity.GetZ());
 
-        GetBI().SetPositionAndRotation(m_iSensorBodyID, joltTargetPos, joltTargetRot, EActivation::Activate);
+        GetBI().MoveKinematic(m_iSensorBodyID, joltTargetPos, joltTargetRot, fixedDt);
         GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, blendedLinearVelocity, GetBI().GetAngularVelocity(m_iSensorBodyID));
     }
 
