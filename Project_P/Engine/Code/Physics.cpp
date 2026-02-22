@@ -610,18 +610,8 @@ void CPhysics::Tick(_float _deltaSeconds)
 	if (_deltaSeconds > m_fMaxFrameDelta)
 		_deltaSeconds = m_fMaxFrameDelta;
 
-	m_fAccumulator += _deltaSeconds;
-
-	_uint steps = 0;
-	while (m_fAccumulator >= m_fFixedDeltaTime && steps < m_iMaxSubSteps)
-	{
-		Step(m_fFixedDeltaTime);
-		m_fAccumulator -= m_fFixedDeltaTime;
-		++steps;
-	}
-
-	if (steps == m_iMaxSubSteps)
-		m_fAccumulator = 0.0f;
+	m_fAccumulator = 0.0f;
+	Step(_deltaSeconds);
 }
 
 void CPhysics::Step(const _float _fixedDeltaSeconds)
