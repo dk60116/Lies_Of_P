@@ -245,11 +245,15 @@ void CSceneManager::StopScene()
 		return;
 
 	const wstring stopTargetSceneName = m_strPlayStartSceneName.empty() ? m_pCrtScene->Get_SceneName() : m_strPlayStartSceneName;
+	const _bool isStopCurrentScene = stopTargetSceneName == m_pCrtScene->Get_SceneName();
 
 	m_ePlayState = PlayState::Stopped;
 	m_bSceneAwakened = false;
 	m_strPlayStartSceneName = L"";
 	m_bStepFrameRequested = false;
+
+	if (isStopCurrentScene)
+		m_pCrtScene->CacheResourcesForInitialize();
 
 	LoadScene(stopTargetSceneName);
 }

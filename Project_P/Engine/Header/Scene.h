@@ -99,6 +99,7 @@ public:
 public:
     vector<SCENETRANSFORMINFO> Convert_ObjectsTransformInfo() const;
     void Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList);
+    void CacheResourcesForInitialize();
 
 public:
     class CEngineResource* Add_Resource(const wstring& _name, CEngineResource* _resource);
