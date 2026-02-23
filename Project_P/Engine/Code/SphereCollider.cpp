@@ -117,6 +117,9 @@ void CSphereCollider::Render_Editor()
 void CSphereCollider::Render_Gizmo()
 {
 #ifndef _CLIENT_BUILD
+    if (!CEditor::GetInstance().IsColliderGizmoVisible())
+        return;
+
     if (!m_pLineMesh || !m_pLineMaterial)
         return;
 

@@ -256,6 +256,9 @@ void CMeshCollider::Render_Editor()
 void CMeshCollider::Render_Gizmo()
 {
 #ifndef _CLIENT_BUILD
+    if (!CEditor::GetInstance().IsColliderGizmoVisible())
+        return;
+
     if (!m_bShowGizmo)
         return;
 

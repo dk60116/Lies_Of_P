@@ -15,6 +15,7 @@ CEditor::CEditor()
 	, m_pSelectedGameObject(nullptr)
 	, m_pMoveTargetGameObject(nullptr)
 	, m_bOpenSelectedInHierarchyRequested(false)
+	, m_bShowColliderGizmo(true)
 	, m_vCameraPos({})
 	, m_vCameraQuat({})
 	, m_bDoubleClicked(false)
@@ -247,6 +248,16 @@ void CEditor::ChangeControleTool()
 CEditor::EDITORWINOPTION CEditor::Get_Options() const
 {
 	return m_sOptions;
+}
+
+const _bool CEditor::IsColliderGizmoVisible() const
+{
+	return m_bShowColliderGizmo;
+}
+
+void CEditor::SetColliderGizmoVisible(const _bool visible)
+{
+	m_bShowColliderGizmo = visible;
 }
 
 const vector2Int CEditor::Get_WindowResolution() const

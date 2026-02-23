@@ -68,6 +68,7 @@ void CTopToolBar::Render()
 
 	ShowSelectSceneButton();
 	ShowEditMenu();
+	ShowViewMenu();
 	Show2DButton();
 	ShowPlayButtons();
 	ShowFPS();
@@ -127,6 +128,23 @@ void CTopToolBar::ShowEditMenu()
 			m_iPendingShadowQuality = static_cast<_int>(lightSetting.shadowQuality);
 			m_bProjectSettingsWindowOpen = true;
 		}
+
+		ImGui::EndPopup();
+	}
+}
+
+void CTopToolBar::ShowViewMenu()
+{
+	ImGui::SameLine();
+
+	if (ImGui::Button("View"))
+		ImGui::OpenPopup("ViewMenuPopup");
+
+	if (ImGui::BeginPopup("ViewMenuPopup"))
+	{
+		_bool showCollider = CEditor::GetInstance().IsColliderGizmoVisible();
+		if (ImGui::MenuItem("Collider", nullptr, showCollider))
+			CEditor::GetInstance().SetColliderGizmoVisible(!showCollider);
 
 		ImGui::EndPopup();
 	}

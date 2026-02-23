@@ -119,6 +119,9 @@ void CCapsuleCollider::Render_Editor()
 void CCapsuleCollider::Render_Gizmo()
 {
 #ifndef _CLIENT_BUILD
+    if (!CEditor::GetInstance().IsColliderGizmoVisible())
+        return;
+
     if (!m_pLineMesh || !m_pLineMaterial)
         return;
 

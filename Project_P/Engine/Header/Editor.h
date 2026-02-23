@@ -57,6 +57,8 @@ public:
 	void OpenAssetExternal(const fs::path& path);
 	void Set_SelectedAssetPath(const fs::path& path);
 	const fs::path& Get_SelectedAssetPath() const { return m_selectedAssetPath; }
+	const _bool IsColliderGizmoVisible() const;
+	void SetColliderGizmoVisible(const _bool visible);
 
 	static string ToLowerCopy(string s)
 	{
@@ -99,6 +101,7 @@ private:
 	CGameObject* m_pSelectedGameObject;
 	CGameObject* m_pMoveTargetGameObject;
 	_bool m_bOpenSelectedInHierarchyRequested;
+	_bool m_bShowColliderGizmo;
 	fs::path m_selectedAssetPath;
 
 private:
