@@ -377,13 +377,25 @@ void CAnimator::Update()
 	}
 }
 
+
+void CAnimator::ResetControllerRuntimeState()
+{
+	m_pBlendTree = nullptr;
+	m_pNextBlendTree = nullptr;
+	m_bBlendTreeActive = false;
+	m_bNextBlendTreeActive = false;
+	m_directBlendCurrent = DirectBlendState{};
+	m_directBlendNext = DirectBlendState{};
+	m_ControllerInst.OnDestroy();
+}
+
 void CAnimator::OnDestroy()
 {
 	for (TRAVERSAL_ITER(m_mAnimationList, it))
 		Safe_Release((*it).second);
 	m_mAnimationList.clear();
 
-	m_ControllerInst.OnDestroy();
+	ResetControllerRuntimeState();
 
 	Safe_Release(m_pController);
 	Safe_Release(m_pSkinnedRenderer);
@@ -697,7 +709,7 @@ void CAnimator::Set_Controller(CAnimatorController* _controller, const _bool _pl
 	if (m_pController == _controller)
 		return;
 
-	m_ControllerInst.OnDestroy();
+	ResetControllerRuntimeState();
 	Safe_Release(m_pController);
 
 	m_pController = _controller;

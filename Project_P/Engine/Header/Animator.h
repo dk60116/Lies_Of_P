@@ -74,6 +74,7 @@ public:
     const _float GetNormalizedTime() const;
 
 private:
+    void ResetControllerRuntimeState();
     struct DirectBlendState;
     _bool IsRootBone(const wstring& _name);
     void ApplyRootMotionDelta(const vector3& rootPos);
