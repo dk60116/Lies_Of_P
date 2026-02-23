@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "Texture.h"
+#include "DDSTextureLoader.h"
 
 CTexture::CTexture()
 	: m_pTexture(nullptr)
@@ -38,7 +39,16 @@ HRESULT CTexture::Initialize(const wstring& _name, const wstring& _filePath, voi
 	if (!device)
 		return E_FAIL;
 
-	if (FAILED(CreateWICTextureFromFile(device, m_strFilePath.c_str(), nullptr, &m_pSRV)))
+	wstring extension = filesystem::path(m_strFilePath).extension().wstring();
+	transform(extension.begin(), extension.end(), extension.begin(), towlower);
+
+	HRESULT hr = E_FAIL;
+	if (extension == L".dds")
+		hr = DirectX::CreateDDSTextureFromFile(device, m_strFilePath.c_str(), nullptr, &m_pSRV);
+	else
+		hr = CreateWICTextureFromFile(device, m_strFilePath.c_str(), nullptr, &m_pSRV);
+
+	if (FAILED(hr))
 	{
 		CDebug::LogError(L"Texture load failed - Can not create SRV: " + m_strFilePath);
 		return E_FAIL;
