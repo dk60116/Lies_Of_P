@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "GraphicDevice.h"
+#include <d3d11_4.h>
 
 CGraphicDevice::CGraphicDevice()
 	: m_pDevice(nullptr)
@@ -32,9 +33,12 @@ HRESULT CGraphicDevice::Initialize()
 	if (FAILED(Ready_GraphicDevice(CDisplay::GetInstance().Get_GameWindow(), CDisplay::GetInstance().Get_ScreenResolution())))
 		return E_FAIL;
 
-	Microsoft::WRL::ComPtr<ID3D11Multithread> multithread;
-	if (SUCCEEDED(m_pContext->QueryInterface(__uuidof(ID3D11Multithread), reinterpret_cast<void**>(multithread.GetAddressOf()))))
+	ID3D11Multithread* multithread = nullptr;
+	if (SUCCEEDED(m_pContext->QueryInterface(IID_PPV_ARGS(&multithread))))
+	{
 		multithread->SetMultithreadProtected(TRUE);
+		multithread->Release();
+	}
 
 	vector2Int res = CDisplay::GetInstance().Get_ScreenResolution();
 	if (FAILED(Ready_BackBufferRenderTargetView()))  
