@@ -2319,6 +2319,102 @@ CGameObject* CScene::FindGameObjectOfId(const _uint id)
 
 HRESULT CScene::PreLoadResources()
 {
+	auto containsToken = [](const string& value, const string& token)
+	{
+		return value.find(token) != string::npos;
+	};
+
+	auto trimCopy = [](string value)
+	{
+		auto notSpace = [](unsigned char ch)
+		{
+			return !isspace(ch);
+		};
+
+		auto begin = find_if(value.begin(), value.end(), notSpace);
+		auto end = find_if(value.rbegin(), value.rend(), notSpace).base();
+
+		if (begin >= end)
+			return string();
+
+		return string(begin, end);
+	};
+
+	auto reuseEditorTaggedResource = [&](const string& name, const string& format)
+	{
+		if (!containsToken(format, "[Editor]"))
+			return false;
+
+		if (name.empty())
+			return true;
+
+		const wstring wName = CEngineString::StringToWString(name);
+
+		auto tryAddTempResource = [&](const wstring& resourceKey)
+		{
+			auto tempIter = m_mTempResourceList.find(resourceKey);
+			if (tempIter != m_mTempResourceList.end())
+				return true;
+
+			auto currentIter = m_mResourceList.find(resourceKey);
+			if (currentIter == m_mResourceList.end() || !currentIter->second)
+				return false;
+
+			Add_TempResource(resourceKey, currentIter->second);
+			return true;
+		};
+
+		if (containsToken(format, "[Skinned Mesh]"))
+		{
+			const wstring key = wName + L" (MeshBuffer)";
+
+			auto tempIter = m_mTempSkinnedBundleList.find(key);
+			if (tempIter == m_mTempSkinnedBundleList.end())
+			{
+				auto bundleIter = m_mSkinnedBundleList.find(key);
+				if (bundleIter != m_mSkinnedBundleList.end())
+					Add_TempSkinnedBundle(key, bundleIter->second);
+			}
+
+			auto tempBoneIter = m_mTempSkinnedBoneList.find(key);
+			if (tempBoneIter == m_mTempSkinnedBoneList.end())
+			{
+				auto boneIter = m_mSkinnedBoneList.find(key);
+				if (boneIter != m_mSkinnedBoneList.end())
+					Add_TempSkinnedMeshBone(key, boneIter->second);
+			}
+
+			return true;
+		}
+
+		if (containsToken(format, "[Mesh]"))
+		{
+			const wstring key = wName + L" (MeshBuffer)";
+
+			auto tempIter = m_mTempMeshBundleList.find(key);
+			if (tempIter != m_mTempMeshBundleList.end())
+				return true;
+
+			auto bundleIter = m_mMeshBundleList.find(key);
+			if (bundleIter == m_mMeshBundleList.end())
+				return false;
+
+			Add_TempMeshBundle(key, bundleIter->second);
+			return true;
+		}
+
+		if (containsToken(format, "[Texture]"))
+			return tryAddTempResource(wName + L" (Texture)");
+
+		if (containsToken(format, "[Animation Clip]"))
+			return tryAddTempResource(wName + L" (Animation Clip)");
+
+		if (containsToken(format, "[Animator Controller]"))
+			return tryAddTempResource(wName + L" (Animator Controller)");
+
+		return true;
+	};
+
 	string path = "../Assets/Scenes/" + CEngineString::WStringToString(m_strSceneName) + ".scene";
 	ifstream file(path);
 	if (!file)
@@ -2334,12 +2430,20 @@ HRESULT CScene::PreLoadResources()
 
 	while (getline(file, line))
 	{
-		if (CEngineString::Contains(line, "//"))
+		line = trimCopy(line);
+
+		if (line.empty())
+			continue;
+
+		if (line.rfind("//", 0) == 0)
 			continue;
 
 		if (CEngineString::Contains(line, ':'))
 		{
 			auto split = CEngineString::Split(line, " : ");
+
+			if (split.size() < 2)
+				continue;
 
 			string name = "";
 			string filepath = "";
@@ -2350,6 +2454,9 @@ HRESULT CScene::PreLoadResources()
 
 			if (split.size() >= 3)
 				format = split[2];
+
+			if (reuseEditorTaggedResource(name, format))
+				continue;
 
 			if (!CResources::FileExists(filepath))
 			{
