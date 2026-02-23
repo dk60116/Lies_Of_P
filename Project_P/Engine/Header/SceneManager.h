@@ -77,7 +77,7 @@ public:
 	void SaveEngineSettings() const;
 	const _uint NameToLayer(const wstring& _name) const;
 	const wstring& LayerToName(const _uint _index);
-	const LayerMask MakeLayerMask(const vector<_uint> _layers) const;
+	const LayerMask MakeLayerMask(const _bool _all, const vector<_uint> _layers) const;
 	const _bool ContainLayerMask(const _uint _layer, const LayerMask _mask);
 
 private:

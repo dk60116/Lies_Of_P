@@ -44,6 +44,7 @@ public:
 	void Awake() override;
 	void Start() override;
 	void Update() override;
+	void FixedUpdate() override;
 	void OnDestroy() override;
 
 public:
@@ -55,6 +56,13 @@ public:
 	const PlayerStatus& Get_PlayerStatus();
 	void RecoverHp(const _uint _value);
 	void GetDamage(const _uint _damage);
+
+public:
+	const _uint GetLightAttackComboCount() const;
+	void SetLightAttakComboCount(const _uint _count);
+
+private:
+	void Ground();
 
 private:
 	class CPlayerController* m_pController;
@@ -74,9 +82,8 @@ private:
 	CCapsuleCollider* m_pBodyCollider;
 	CRigidBody* m_pRigidBody;
 
-public:
-	const _uint GetLightAttackComboCount() const;
-	void SetLightAttakComboCount(const _uint _count);
+	_bool m_iIsGround;
+	CSceneManager::LayerMask m_iGroundMask;
 
 public:
 	_uint m_iLightAttackComboCount;

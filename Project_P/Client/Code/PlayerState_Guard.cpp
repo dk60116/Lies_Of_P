@@ -121,6 +121,8 @@ void CPlayerState_Guard::Enter()
 {
 	__super::Enter();
 
+	m_pCtx->SetGuard(true);
+
 	m_pCtx->SetCanMove(false);
 	m_pCtx->SetCanTurn(true);
 
@@ -173,4 +175,6 @@ void CPlayerState_Guard::Exit()
 	m_pCtx->SetCanMove(true);
 	m_pCtx->SetAnimMoveSpeed(0.f);
 	m_pCtx->SetCanAttack(true);
+
+	m_pCtx->SetGuard(false);
 }

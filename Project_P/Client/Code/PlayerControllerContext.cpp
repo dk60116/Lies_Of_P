@@ -9,6 +9,7 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_Cv_Move({})
 	, m_bSprint(false)
 	, m_bBigTurn(false)
+	, m_bIsGuard(false)
 	, m_bCanMove(true)
 	, m_bCanTurn(true)
 	, m_bCanAttack(true)
@@ -228,14 +229,14 @@ void CPlayerControllerContext::TickMove()
 	const _float len = sqrtf(dir.x * dir.x + dir.z * dir.z);
 	if (len > 1e-6f) 
 	{ 
-		dir.x /= len; dir.z /= len; 
+		dir.x /= len; dir.z /= len;
 	}
 	else 
 	{
 		dir = vector3(0.f, 0.f, 0.f); 
 	}
 
-	const _float curSpeed = PlayerStatus().runSpeed * m_Cv_Move.m_fMove01;
+	const _float curSpeed = (m_bSprint ? PlayerStatus().sprintSpeed : PlayerStatus().runSpeed) * m_Cv_Move.m_fMove01 * (m_bIsGuard ? 0.5f : 1.f);
 	AddPosition(dir * curSpeed * dt);
 }
 
@@ -462,6 +463,11 @@ void CPlayerControllerContext::TickActionBuffer(PlayerState state)
 	}
 }
 
+CPlayerController* CPlayerControllerContext::Get_Controller()
+{
+	return m_pController;
+}
+
 const _bool CPlayerControllerContext::IsSprint() const
 {
 	return m_bSprint;
@@ -470,6 +476,16 @@ const _bool CPlayerControllerContext::IsSprint() const
 const _bool CPlayerControllerContext::IsBigTurn() const
 {
 	return m_bBigTurn;
+}
+
+const _bool CPlayerControllerContext::IsGuard() const
+{
+	return m_bIsGuard;
+}
+
+void CPlayerControllerContext::SetGuard(const _bool _value)
+{
+	m_bIsGuard = _value;
 }
 
 void CPlayerControllerContext::SetSprint(const _bool _value)

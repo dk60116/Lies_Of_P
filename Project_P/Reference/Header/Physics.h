@@ -69,7 +69,7 @@ public:
 
 	const _bool IsInitialized() const;
 
-	vector<RAYCASTHIT> Raycast(const Ray& _ray);
+	vector<RAYCASTHIT> Raycast(const Ray& _ray, const CSceneManager::LayerMask _mask = 0);
 
 private:
 	class BroadPhaseLayerInterfaceImpl;

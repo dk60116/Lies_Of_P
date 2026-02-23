@@ -18,6 +18,8 @@ CPlayer::CPlayer()
 	, m_pWeaponHolder(nullptr)
 	, m_pBodyCollider(nullptr)
 	, m_pRigidBody(nullptr)
+	, m_iIsGround(false)
+	, m_iGroundMask(0)
 {
 	m_strName = L"Player";
 }
@@ -42,6 +44,8 @@ HRESULT CPlayer::Initialize()
 {
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
+
+	m_pGameObject->SetLayer(L"Player");
 
 	m_pController = m_pGameObject->AddComponent<CPlayerController>();
 	m_pController->Set_Player(this);
@@ -155,6 +159,11 @@ HRESULT CPlayer::Initialize()
 	m_pRigidBody->SetConstRotationZ(true);
 	m_pRigidBody->SetUseGravity(true);
 
+	vector<_uint> ignore = { CSceneManager::GetInstance().NameToLayer(L"Player") };
+
+	m_iGroundMask = CSceneManager::GetInstance().MakeLayerMask(true, ignore);
+
+
 	return S_OK;
 }
 
@@ -183,6 +192,22 @@ void CPlayer::Update()
 	{
 		GetDamage(1);
 	}
+}
+
+void CPlayer::FixedUpdate()
+{
+	Ground();
+
+	CPhysics::RAYCASTHIT hit = {};
+	CPhysics::Ray ray = {};
+	ray.origin = Get_Transform()->Get_Position() + vector3::up() * 1.f;
+	ray.dir = vector3::down();
+	ray.maxDist = 1.05f;
+
+	auto hits = CPhysics::GetInstance().Raycast(ray, m_iGroundMask);
+
+	if (hits.size() > 0)
+		CDebug::LogError(hits[0].object->Get_ObjectName());
 }
 
 void CPlayer::OnDestroy()
@@ -232,4 +257,9 @@ const _uint CPlayer::GetLightAttackComboCount() const
 void CPlayer::SetLightAttakComboCount(const _uint _count)
 {
 	m_iLightAttackComboCount = _count;
+}
+
+void CPlayer::Ground()
+{
+	
 }

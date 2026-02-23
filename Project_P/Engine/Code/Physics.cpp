@@ -714,7 +714,7 @@ void CPhysics::RemoveContactPairs(const BodyID& _bodyID)
 	m_pContactListener->RemovePairsForBody(_bodyID);
 }
 
-vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray)
+vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray, const CSceneManager::LayerMask _mask)
 {
 	vector<RAYCASTHIT> hits;
 
@@ -737,6 +737,7 @@ vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray)
 		return hits;
 
 	const BodyLockInterfaceLocking& lockInterface = m_PhysicsSystem.GetBodyLockInterface();
+
 	for (const RayCastResult& result : collector.mHits)
 	{
 		BodyLockRead bodyLock(lockInterface, result.mBodyID);
@@ -752,29 +753,48 @@ vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray)
 		hit.hitPos = _ray.origin + _ray.dir * distance;
 
 		const SubShapeID subShapeID = result.mSubShapeID2;
-		const Vec3 worldNormal = body.GetWorldSpaceSurfaceNormal(subShapeID, RVec3(hit.hitPos.x, hit.hitPos.y, hit.hitPos.z));
+		const Vec3 worldNormal = body.GetWorldSpaceSurfaceNormal(
+			subShapeID,
+			RVec3(hit.hitPos.x, hit.hitPos.y, hit.hitPos.z)
+		);
 		hit.hitNormal = vector3(worldNormal.GetX(), worldNormal.GetY(), worldNormal.GetZ()).normalized();
+
+		CGameObject* obj = nullptr;
 
 		const uint64 userData = body.GetUserData();
 		if (userData != 0)
 		{
 			constexpr uint64 colliderUserDataFlag = 1ull;
+
 			if ((userData & colliderUserDataFlag) != 0)
 			{
 				const uint64 ptrValue = userData & ~colliderUserDataFlag;
 				CCollider* collider = reinterpret_cast<CCollider*>(static_cast<uintptr_t>(ptrValue));
-				hit.object = collider ? collider->Get_GameObject() : nullptr;
+				obj = collider ? collider->Get_GameObject() : nullptr;
 			}
 			else
 			{
 				CRigidBody* rigidBody = reinterpret_cast<CRigidBody*>(static_cast<uintptr_t>(userData));
-				hit.object = rigidBody ? rigidBody->Get_GameObject() : nullptr;
+				obj = rigidBody ? rigidBody->Get_GameObject() : nullptr;
 			}
 		}
 
+		if (_mask != 0)
+		{
+			if (!obj)
+				continue;
+
+			const _uint objLayer = obj->GetLayer();
+			if (!CSceneManager::GetInstance().ContainLayerMask(objLayer, _mask))
+				continue;
+		}
+
+		hit.object = obj;
 		hits.push_back(hit);
 	}
 
-	sort(hits.begin(), hits.end(), [](const RAYCASTHIT& a, const RAYCASTHIT& b) { return a.distance < b.distance; });
+	sort(hits.begin(), hits.end(),
+		[](const RAYCASTHIT& a, const RAYCASTHIT& b) { return a.distance < b.distance; });
+
 	return hits;
 }

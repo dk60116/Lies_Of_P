@@ -535,7 +535,7 @@ const wstring& CSceneManager::LayerToName(_uint _index)
 	if (it != m_mLayerList.end())
 		return it->second;
 
-	if (_index < 32)
+	if (_index < 32u)
 	{
 		const _uint mask = (1u << _index);
 		it = m_mLayerList.find(mask);
@@ -546,18 +546,32 @@ const wstring& CSceneManager::LayerToName(_uint _index)
 	return kEmpty;
 }
 
-const CSceneManager::LayerMask CSceneManager::MakeLayerMask(const vector<_uint> _layers) const
+const CSceneManager::LayerMask CSceneManager::MakeLayerMask(const _bool _all, const vector<_uint> _layers) const
 {
-	LayerMask mask = 0;
+	LayerMask mask = 0u;
+
+	if (!_all)
+	{
+		for (_uint idx : _layers)
+		{
+			if (idx < 32u)
+				mask |= (LayerMask(1u) << idx);
+		}
+		return mask;
+	}
+
+	mask = ~LayerMask(0u);
+
 	for (_uint idx : _layers)
 	{
-		if (idx < 32)
-			mask |= (LayerMask(1u) << idx);
+		if (idx < 32u)
+			mask &= ~(LayerMask(1u) << idx);
 	}
+
 	return mask;
 }
 
 const _bool CSceneManager::ContainLayerMask(const _uint _layer, const LayerMask _mask)
 {
-	return (_layer & _mask) != 0;
+	return (_layer & _mask) != 0u;
 }

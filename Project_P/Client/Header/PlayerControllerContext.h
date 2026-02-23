@@ -87,9 +87,13 @@ public:
 	void TickActionBuffer(PlayerState state);
 
 public:
+	CPlayerController* Get_Controller();
+
 	const _bool IsSprint() const;
 	const _bool IsBigTurn() const;
+	const _bool IsGuard() const;
 	void SetSprint(const _bool _value);
+	void SetGuard(const _bool _value);
 
 	const _bool IsCanMove() const;
 	void SetCanMove(const _bool _value);
@@ -135,7 +139,7 @@ private:
 	CPlayerController* m_pController;
 
 private:
-	_bool m_bSprint, m_bBigTurn;
+	_bool m_bSprint, m_bBigTurn, m_bIsGuard;
 	_bool m_bCanMove, m_bCanTurn, m_bCanAttack, m_bCanGuard, m_bCanEvade, m_bCanJump;
 
 private:
