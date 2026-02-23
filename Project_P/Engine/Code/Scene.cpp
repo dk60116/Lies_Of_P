@@ -313,7 +313,10 @@ HRESULT CScene::Initialize()
 		}
 
 		if (it->second == resource)
+		{
+			resource->AddRef();
 			continue;
+		}
 
 		Safe_Release(it->second);
 		it->second = resource;
