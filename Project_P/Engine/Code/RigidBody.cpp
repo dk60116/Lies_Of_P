@@ -679,6 +679,27 @@ void CRigidBody::Rotate(const vector3& _deltaEuler)
     CacheLastSyncedTransform(targetPos, targetRot);
 }
 
+void CRigidBody::SetVelocity(const vector3& _value)
+{
+    GetBI().SetLinearVelocity(m_iSensorBodyID, Vec3(_value.x, _value.y, _value.z));
+}
+
+void CRigidBody::SetVelocityX(const _float _value)
+{
+}
+
+void CRigidBody::SetVelocityY(const _float _value)
+{
+}
+
+void CRigidBody::SetVelocityZ(const _float _value)
+{
+}
+
+void CRigidBody::ResetVelocity()
+{
+}
+
 void CRigidBody::ApplyAxisConstraints(vector3& _pos, quaternion& _rot)
 {
     vector3 euler = _rot.to_euler();

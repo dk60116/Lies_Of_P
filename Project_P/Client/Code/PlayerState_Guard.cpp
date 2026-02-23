@@ -130,6 +130,7 @@ void CPlayerState_Guard::Enter()
 	m_pCtx->Animator()->SetTrigger(L"guard");
 	m_pCtx->Animator()->SetBool(L"isGuard", true);
 	m_pCtx->SetCanAttack(false);
+	m_pCtx->StopMoveImmediate();
 
 	m_bExitableTime = false;
 	m_bExit = false;

@@ -69,6 +69,11 @@ public:
 	void SetConstRotationZ(_bool _value);
 	void Translate(const vector3& _deltaWorld);
 	void Rotate(const vector3& _deltaEuler);
+	void SetVelocity(const vector3& _value);
+	void SetVelocityX(const _float _value);
+	void SetVelocityY(const _float _value);
+	void SetVelocityZ(const _float _value);
+	void ResetVelocity();
 	void AddForce(const vector3& _force);
 	void AddForceX(_float _force);
 	void AddForceY(_float _force);

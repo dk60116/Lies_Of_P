@@ -21,6 +21,7 @@ public:
 private:
 	void ShowSelectSceneButton();
 	void ShowEditMenu();
+	void ShowViewMenu();
 	void ShowProjectSettingsWindow();
 	void ShowProjectSettingsTime();
 	void ShowProjectSettingsLight();
