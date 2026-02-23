@@ -2,6 +2,8 @@
 *.pch
 *.ipch
 
+*.dds
+
 # User-specific files
 *.user
 *.suo
