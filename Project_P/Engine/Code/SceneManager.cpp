@@ -548,24 +548,38 @@ const wstring& CSceneManager::LayerToName(_uint _index)
 
 const CSceneManager::LayerMask CSceneManager::MakeLayerMask(const _bool _all, const vector<_uint> _layers) const
 {
+	auto toLayerMask = [](const _uint layer) -> LayerMask
+	{
+		if (layer == 0u)
+			return 0u;
+
+		if ((layer & (layer - 1u)) == 0u)
+			return static_cast<LayerMask>(layer);
+
+		if (layer < 32u)
+			return (LayerMask(1u) << layer);
+
+		return 0u;
+	};
+
 	LayerMask mask = 0u;
 
 	if (!_all)
 	{
-		for (_uint idx : _layers)
+		for (const _uint layer : _layers)
 		{
-			if (idx < 32u)
-				mask |= (LayerMask(1u) << idx);
+			mask |= toLayerMask(layer);
 		}
 		return mask;
 	}
 
 	mask = ~LayerMask(0u);
 
-	for (_uint idx : _layers)
+	for (const _uint layer : _layers)
 	{
-		if (idx < 32u)
-			mask &= ~(LayerMask(1u) << idx);
+		const LayerMask layerMask = toLayerMask(layer);
+		if (layerMask != 0u)
+			mask &= ~layerMask;
 	}
 
 	return mask;
