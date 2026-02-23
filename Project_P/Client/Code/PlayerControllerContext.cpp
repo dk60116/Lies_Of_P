@@ -558,6 +558,7 @@ void CPlayerControllerContext::StopMoveImmediate()
 	m_Cv_Move.m_fMove01 = 0.f;
 	m_Cv_Move.m_vMoveWorldDir = vector3::zero();
 	m_Cv_Move.m_fMoveLockTimer = 0.f;
+	RigidBody()->ResetVelocity();
 
 	SetAnimMoveSpeed(0.f);
 }

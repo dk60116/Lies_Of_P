@@ -71,7 +71,6 @@ public:
 
 	vector<RAYCASTHIT> Raycast(const Ray& _ray);
 
-
 private:
 	class BroadPhaseLayerInterfaceImpl;
 	class ObjectVsBroadPhaseLayerFilterImpl;

@@ -21,9 +21,9 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 		const wstring clipName = startClip->Get_ResourceName();
 		const _uint frameCount = startClip->Get_FrameCount();
 
-		CAnimationClip::ActionTrigger at = { 10, L"ExitAbleTime" };
+		CAnimationClip::ActionTrigger at = { 10, L"Guard_ExitAbleTime" };
 		startClip->Add_ActionTrigger(at);
-		m_pCtx->Animator()->RegisterActionHandler(L"ExitAbleTime", [this]()
+		m_pCtx->Animator()->RegisterActionHandler(L"Guard_ExitAbleTime", [this]()
 			{
 				m_bExitableTime = true;
 				m_pCtx->SetCanTurn(false);
@@ -36,9 +36,9 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 		const wstring clipName = startClip->Get_ResourceName();
 		const _uint frameCount = startClip->Get_FrameCount();
 
-		CAnimationClip::ActionTrigger at = { 5, L"Start" };
+		CAnimationClip::ActionTrigger at = { 5, L"Guard_Start" };
 		startClip->Add_ActionTrigger(at);
-		m_pCtx->Animator()->RegisterActionHandler(L"Start", [this]()
+		m_pCtx->Animator()->RegisterActionHandler(L"Guard_Start", [this]()
 			{
 				m_pCtx-> SetCanMove(true);
 				m_pCtx->SetCanTurn(true);
@@ -49,9 +49,9 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 		CAnimationClip* idleClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_Idle (Animation Clip)");
 
 		{
-			CAnimationClip::ActionTrigger at = { 5, L"CanMoveTime" };
+			CAnimationClip::ActionTrigger at = { 5, L"Guard_CanMoveTime" };
 			idleClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"CanMoveTime", [this]()
+			m_pCtx->Animator()->RegisterActionHandler(L"Guard_CanMoveTime", [this]()
 				{
 					m_pCtx->SetCanMove(true);
 				});
@@ -64,9 +64,9 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 		const wstring clipName = startClip->Get_ResourceName();
 		const _uint frameCount = startClip->Get_FrameCount();
 
-		CAnimationClip::ActionTrigger at = { 1, L"During" };
+		CAnimationClip::ActionTrigger at = { 1, L"Guard_During" };
 		startClip->Add_ActionTrigger(at);
-		m_pCtx->Animator()->RegisterActionHandler(L"During", [this]()
+		m_pCtx->Animator()->RegisterActionHandler(L"Guard_During", [this]()
 			{
 			});
 	}
@@ -78,9 +78,9 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 		const _uint frameCount = startClip->Get_FrameCount();
 
 		{
-			CAnimationClip::ActionTrigger at = { 1, L"WalkEndStart" };
+			CAnimationClip::ActionTrigger at = { 1, L"Guard_WalkEndStart" };
 			startClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"WalkEndStart", [this]()
+			m_pCtx->Animator()->RegisterActionHandler(L"Guard_WalkEndStart", [this]()
 				{
 				});
 		}
