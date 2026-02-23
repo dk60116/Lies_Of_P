@@ -103,6 +103,9 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 
 	// World / View / Projection  
 
+	if (m_pMaterial)
+		m_pMaterial->Set_IntValue(L"gObjectID", m_pGameObject->Get_UniqueID());
+
 	vector3 cPos = _cam->Get_Transform()->Get_Position();
 	_float3 camPos = cPos.toFloat3();
 	_matrix matWorld = Get_Transform()->Get_WorldMatrix();

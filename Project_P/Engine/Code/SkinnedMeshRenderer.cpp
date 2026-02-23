@@ -261,6 +261,8 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 		return;
 	}
 
+	m_pMaterial->Set_IntValue(L"gObjectID", m_pGameObject->Get_UniqueID());
+
 	vector3 cPos = _cam->Get_Transform()->Get_Position();
 	_float3 camPos = cPos.toFloat3();
 
