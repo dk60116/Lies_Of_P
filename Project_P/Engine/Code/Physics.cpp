@@ -730,7 +730,8 @@ vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray)
 
 	const RRayCast ray(RVec3(_ray.origin.x, _ray.origin.y, _ray.origin.z), direction * _ray.maxDist);
 	AllHitCollisionCollector<CastRayCollector> collector;
-	m_PhysicsSystem.GetNarrowPhaseQuery().CastRay(ray, collector);
+	const RayCastSettings rayCastSettings;
+	m_PhysicsSystem.GetNarrowPhaseQuery().CastRay(ray, rayCastSettings, collector);
 
 	if (!collector.HadHit())
 		return hits;
