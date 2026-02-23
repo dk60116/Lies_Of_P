@@ -299,49 +299,52 @@ CScene::~CScene()
 
 HRESULT CScene::Initialize()
 {
-	if (m_mTempResourceList.empty() && m_mTempMeshBundleList.empty() && m_mTempSkinnedBundleList.empty() && m_mTempSkinnedBoneList.empty())
+	for (const auto& [name, resource] : m_mResourceList)
 	{
-		for (const auto& [name, resource] : m_mResourceList)
-		{
-			if (!resource)
-				continue;
+		if (!resource)
+			continue;
+
+		auto [it, inserted] = m_mTempResourceList.emplace(name, resource);
+		if (inserted)
 			resource->AddRef();
-			m_mTempResourceList.emplace(name, resource);
-		}
-
-		for (const auto& [name, bundles] : m_mMeshBundleList)
-		{
-			vector<MeshBundle> copied = bundles;
-			for (auto& bundle : copied)
-			{
-				if (bundle.meshBuffer)
-					bundle.meshBuffer->AddRef();
-				if (bundle.material)
-					bundle.material->AddRef();
-				if (bundle.texture)
-					bundle.texture->AddRef();
-			}
-			m_mTempMeshBundleList.emplace(name, move(copied));
-		}
-
-		for (const auto& [name, bundles] : m_mSkinnedBundleList)
-		{
-			vector<SkinnedMeshBundle> copied = bundles;
-			for (auto& bundle : copied)
-			{
-				if (bundle.meshBuffer)
-					bundle.meshBuffer->AddRef();
-				if (bundle.material)
-					bundle.material->AddRef();
-				if (bundle.texture)
-					bundle.texture->AddRef();
-			}
-			m_mTempSkinnedBundleList.emplace(name, move(copied));
-		}
-
-		for (const auto& [name, bones] : m_mSkinnedBoneList)
-			m_mTempSkinnedBoneList.emplace(name, bones);
 	}
+
+	for (const auto& [name, bundles] : m_mMeshBundleList)
+	{
+		auto [it, inserted] = m_mTempMeshBundleList.emplace(name, bundles);
+		if (!inserted)
+			continue;
+
+		for (auto& bundle : it->second)
+		{
+			if (bundle.meshBuffer)
+				bundle.meshBuffer->AddRef();
+			if (bundle.material)
+				bundle.material->AddRef();
+			if (bundle.texture)
+				bundle.texture->AddRef();
+		}
+	}
+
+	for (const auto& [name, bundles] : m_mSkinnedBundleList)
+	{
+		auto [it, inserted] = m_mTempSkinnedBundleList.emplace(name, bundles);
+		if (!inserted)
+			continue;
+
+		for (auto& bundle : it->second)
+		{
+			if (bundle.meshBuffer)
+				bundle.meshBuffer->AddRef();
+			if (bundle.material)
+				bundle.material->AddRef();
+			if (bundle.texture)
+				bundle.texture->AddRef();
+		}
+	}
+
+	for (const auto& [name, bones] : m_mSkinnedBoneList)
+		m_mTempSkinnedBoneList.emplace(name, bones);
 
 	SceneRelease();
 
