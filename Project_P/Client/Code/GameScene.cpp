@@ -11,7 +11,6 @@ CGameScene::CGameScene()
 	, m_pDirLight(nullptr)
 	, m_pPlayer(nullptr)
 	, m_pHUD(nullptr)
-	, m_vMonsters({})
 	, m_pMap(nullptr)
 {
 }
@@ -69,6 +68,4 @@ void CGameScene::Update()
 void CGameScene::SceneRelease()
 {
 	__super::SceneRelease();
-
-	m_vMonsters.clear(); 
 }

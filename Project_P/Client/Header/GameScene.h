@@ -21,8 +21,6 @@ private:
 
 	class CPlayerHUD* m_pHUD;
 
-	vector <class CMonster*> m_vMonsters;
-
 	class CSceneMap* m_pMap;
 };
 
