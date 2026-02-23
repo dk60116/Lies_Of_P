@@ -1740,11 +1740,12 @@ CEngineResource* CScene::Add_Resource(const wstring& _name, CEngineResource* _re
 		_resource->AddRef();
 		return _resource;
 	}
-	else
-	{
-		Safe_Release(_resource);
+
+	if (it->second == _resource)
 		return it->second;
-	}
+
+	Safe_Release(_resource);
+	return it->second;
 }
 
 CEngineResource* CScene::Find_Resource(const wstring& _name)
@@ -1812,10 +1813,19 @@ CEngineResource* CScene::Add_TempResource(const wstring& _name, CEngineResource*
 	if (!_resource)
 		return nullptr;
 
-	m_mTempResourceList.emplace(_name, _resource);
-	_resource->AddRef();
+	auto [it, inserted] = m_mTempResourceList.try_emplace(_name, _resource);
 
-	return _resource;
+	if (inserted)
+	{
+		_resource->AddRef();
+		return _resource;
+	}
+
+	if (it->second == _resource)
+		return it->second;
+
+	Safe_Release(_resource);
+	return it->second;
 }
 
 void CScene::Add_MeshBundle(const wstring& _name, vector<MeshBundle> _resource)
