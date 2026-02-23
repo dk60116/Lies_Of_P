@@ -217,7 +217,7 @@ HRESULT CResources::ConvertFBXToMeshBufferData(const wstring _filePath)
 	return S_OK;
 }
 
-HRESULT CResources::ConvertImageToMeshBufferData(const wstring _filePath)
+HRESULT CResources::ConvertImageToDDS(const wstring _filePath)
 {
 	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();

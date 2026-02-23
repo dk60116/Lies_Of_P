@@ -357,7 +357,7 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                     {
                         wstring pathW = entry.path().wstring();
                         if (ImGui::Selectable("Create Texture Data"))
-                            CResources::GetInstance().ConvertImageToMeshBufferData(pathW);
+                            CResources::GetInstance().ConvertImageToDDS(pathW);
                     }
 
                     if (ImGui::Selectable("Delete"))
