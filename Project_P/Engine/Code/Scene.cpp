@@ -1824,16 +1824,10 @@ CEngineResource* CScene::Add_TempResource(const wstring& _name, CEngineResource*
 	}
 
 	if (it->second == _resource)
-	{
-		_resource->AddRef();
 		return _resource;
-	}
 
-	Safe_Release(it->second);
-	it->second = _resource;
-	_resource->AddRef();
-
-	return _resource;
+	Safe_Release(_resource);
+	return it->second;
 }
 
 void CScene::Add_MeshBundle(const wstring& _name, vector<MeshBundle> _resource)
