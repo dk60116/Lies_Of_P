@@ -2,6 +2,11 @@
 #include "Physics.h"
 #include "RigidBody.h"
 #include "Collider.h"
+#include <Jolt/Physics/Body/BodyLock.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
+#include <Jolt/Physics/Collision/NarrowPhaseQuery.h>
+#include <Jolt/Physics/Collision/RayCast.h>
 #include <mutex>
 #include <vector>
 
@@ -710,85 +715,64 @@ void CPhysics::RemoveContactPairs(const BodyID& _bodyID)
 
 vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray)
 {
-    vector<RAYCASTHIT> hits;
+	vector<RAYCASTHIT> hits;
 
-    vector<CRenderer*> renders = CSceneManager::GetInstance().Get_CrtScene()->Get_MeshObjects();
+	if (!m_bJoltInitialized)
+		return hits;
 
-	for (auto ren : renders)
+	if (_ray.maxDist <= 0.0f)
+		return hits;
+
+	const Vec3 direction(_ray.dir.x, _ray.dir.y, _ray.dir.z);
+	if (direction.LengthSq() <= 0.0f)
+		return hits;
+
+	const RRayCast ray(RVec3(_ray.origin.x, _ray.origin.y, _ray.origin.z), direction * _ray.maxDist);
+	AllHitCollisionCollector<CastRayCollector> collector;
+	m_PhysicsSystem.GetNarrowPhaseQuery().CastRay(ray, collector);
+
+	if (!collector.HadHit())
+		return hits;
+
+	const BodyLockInterfaceLocking& lockInterface = m_PhysicsSystem.GetBodyLockInterface();
+	for (const RayCastResult& result : collector.mHits)
 	{
-		CMeshBuffer* buffer = ren->Get_MeshBuffer();
-
-		if (!buffer)
+		BodyLockRead bodyLock(lockInterface, result.mBodyID);
+		if (!bodyLock.Succeeded())
 			continue;
 
-		vector<VertexTexNormalTangentBuffer> vb = buffer->Get_VertexBuffer();
-		vector<_uint> ib = buffer->Get_IndexBuffer();
+		const Body& body = bodyLock.GetBody();
+		const _float distance = static_cast<_float>(result.mFraction * _ray.maxDist);
 
-		if (vb.size() <= 0 || ib.size() <= 0)
-			continue;
+		RAYCASTHIT hit;
+		hit.isHit = true;
+		hit.distance = distance;
+		hit.hitPos = _ray.origin + _ray.dir * distance;
 
-		CGameObject* obj = ren->Get_GameObject();
-		_matrix worldMatrix = obj->Get_Transform()->Get_WorldMatrix();
+		const SubShapeID subShapeID = result.mSubShapeID2;
+		const Vec3 worldNormal = body.GetWorldSpaceSurfaceNormal(subShapeID, RVec3(hit.hitPos.x, hit.hitPos.y, hit.hitPos.z));
+		hit.hitNormal = vector3(worldNormal.GetX(), worldNormal.GetY(), worldNormal.GetZ()).normalized();
 
-		for (_uint i = 0; i < ib.size(); i += 3)
+		const uint64 userData = body.GetUserData();
+		if (userData != 0)
 		{
-			vector3 p0 = XMVector3TransformCoord(XMLoadFloat3(&vb[ib[i]].position), worldMatrix);
-			vector3 p1 = XMVector3TransformCoord(XMLoadFloat3(&vb[ib[i + 1]].position), worldMatrix);
-			vector3 p2 = XMVector3TransformCoord(XMLoadFloat3(&vb[ib[i + 2]].position), worldMatrix);
-
-			_float t = 0.f;
-			vector3 normal;
-
-			if (IntersectRayTriangle(_ray.origin, _ray.dir, p0, p1, p2, t, normal))
+			constexpr uint64 colliderUserDataFlag = 1ull;
+			if ((userData & colliderUserDataFlag) != 0)
 			{
-				if (t < 0 || t > _ray.maxDist)
-					continue;
-
-				RAYCASTHIT hit;
-				hit.isHit = true;
-				hit.distance = t;
-				hit.hitNormal = normal;
-				hit.hitPos = _ray.origin + _ray.dir * t;
-				hit.object = obj;
-
-				hits.push_back(hit);
+				const uint64 ptrValue = userData & ~colliderUserDataFlag;
+				CCollider* collider = reinterpret_cast<CCollider*>(static_cast<uintptr_t>(ptrValue));
+				hit.object = collider ? collider->Get_GameObject() : nullptr;
+			}
+			else
+			{
+				CRigidBody* rigidBody = reinterpret_cast<CRigidBody*>(static_cast<uintptr_t>(userData));
+				hit.object = rigidBody ? rigidBody->Get_GameObject() : nullptr;
 			}
 		}
+
+		hits.push_back(hit);
 	}
 
-	sort(hits.begin(), hits.end(), [](const RAYCASTHIT& a, const RAYCASTHIT& b) {return a.distance < b.distance; });
-     
-    return hits;
-}
-
-_bool CPhysics::IntersectRayTriangle(const vector3& rayOrigin, const vector3& rayDir, const vector3& v0, const vector3& v1, const vector3& v2, _float& t, vector3& hitNormal)
-{
-	const _float EPSILON = 0.000001f;
-
-	vector3 edge1 = v1 - v0;
-	vector3 edge2 = v2 - v0;
-
-	vector3 h = rayDir.cross(edge2);
-	_float a = edge1.dot(h);
-	if (fabs(a) < EPSILON)
-		return false;
-
-	_float f = 1.0f / a;
-	vector3 s = rayOrigin - v0;
-	_float u = f * s.dot(h);
-	if (u < 0.0f || u > 1.0f)
-		return false;
-
-	vector3 q = s.cross(edge1);
-	_float v = f * rayDir.dot(q);
-	if (v < 0.0f || u + v > 1.0f)
-		return false;
-
-	t = f * edge2.dot(q);
-	if (t > EPSILON) {
-		hitNormal = edge1.cross(edge2).normalized();
-		return true;
-	}
-	
-	return false;
+	sort(hits.begin(), hits.end(), [](const RAYCASTHIT& a, const RAYCASTHIT& b) { return a.distance < b.distance; });
+	return hits;
 }

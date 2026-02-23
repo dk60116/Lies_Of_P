@@ -71,13 +71,6 @@ public:
 
 	vector<RAYCASTHIT> Raycast(const Ray& _ray);
 
-private:
-	_bool IntersectRayTriangle
-	(
-		const vector3& rayOrigin, const vector3& rayDir,
-		const vector3& v0, const vector3& v1, const vector3& v2,
-		_float& t, vector3& hitNormal
-	);
 
 private:
 	class BroadPhaseLayerInterfaceImpl;
