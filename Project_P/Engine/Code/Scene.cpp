@@ -304,9 +304,20 @@ HRESULT CScene::Initialize()
 		if (!resource)
 			continue;
 
-		auto [it, inserted] = m_mTempResourceList.emplace(name, resource);
-		if (inserted)
+		auto it = m_mTempResourceList.find(name);
+		if (it == m_mTempResourceList.end())
+		{
+			m_mTempResourceList.emplace(name, resource);
 			resource->AddRef();
+			continue;
+		}
+
+		if (it->second == resource)
+			continue;
+
+		Safe_Release(it->second);
+		it->second = resource;
+		resource->AddRef();
 	}
 
 	for (const auto& [name, bundles] : m_mMeshBundleList)
