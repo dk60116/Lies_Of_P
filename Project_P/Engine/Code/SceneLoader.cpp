@@ -97,10 +97,19 @@ void CSceneLoader::ThreadLoadingLoop()
 			wstring wFile = CEngineString::StringToWString(file);
 			wstring wFormat = CEngineString::StringToWString(format);
 
-			if (CEngineString::Contains(wFile, L".png") || CEngineString::Contains(wFile, L".jpg") || CEngineString::Contains(wFile, L".tga"))
+			if (CEngineString::Contains(wFile, L".png") || CEngineString::Contains(wFile, L".jpg") || CEngineString::Contains(wFile, L".jpeg") || CEngineString::Contains(wFile, L".bmp") || CEngineString::Contains(wFile, L".tga") || CEngineString::Contains(wFile, L".tif") || CEngineString::Contains(wFile, L".tiff"))
 			{
 				if (CEngineString::Contains(wFormat, L"[Texture]"))
-					CResources::GetInstance().LoadResourceComplete_Scene<CTexture>(wName + L" (Texture)", wFile, nullptr, true);
+				{
+					auto textureSplit = CEngineString::Split(CEngineString::Replace(wFile, L"\\", L"/"), L"/");
+					if (textureSplit.size() >= 2)
+					{
+						const wstring textureFolder = textureSplit[textureSplit.size() - 2];
+						const wstring textureNoExt = CEngineString::Split(textureSplit.back(), L".")[0];
+						const wstring ddsPath = L"../BinaryAssets/TextureData/" + textureFolder + L"_" + textureNoExt + L".dds";
+						CResources::GetInstance().LoadResourceComplete_Scene<CTexture>(wName + L" (Texture)", ddsPath, nullptr, true);
+					}
+				}
 			}
 			else if (CEngineString::Contains(wFile, L".fbx"))
 			{

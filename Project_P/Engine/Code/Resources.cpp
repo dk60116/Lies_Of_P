@@ -241,8 +241,16 @@ HRESULT CResources::ConvertImageToDDS(const wstring _filePath)
 		return E_FAIL;
 	}
 
-	const wstring fileNoExt = CEngineString::Split(fs::path(_filePath).filename().wstring(), L".")[0];
-	const wstring savePath = L"BinaryAssets/TextureData/" + fileNoExt + L".dds";
+	auto pathSplit = CEngineString::Split(CEngineString::Replace(_filePath, L"\\", L"/"), L"/");
+	if (pathSplit.size() < 2)
+	{
+		CDebug::LogError(L"Failed create texture Data - Invalid path: " + _filePath);
+		return E_FAIL;
+	}
+
+	const wstring folder = pathSplit[pathSplit.size() - 2];
+	const wstring fileNoExt = CEngineString::Split(pathSplit.back(), L".")[0];
+	const wstring savePath = L"BinaryAssets/TextureData/" + folder + L"_" + fileNoExt + L".dds";
 
 	if (FAILED(DirectX::SaveDDSTextureToFile(context, sourceResource.Get(), savePath.c_str())))
 	{
