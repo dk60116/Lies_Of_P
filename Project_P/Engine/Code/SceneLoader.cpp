@@ -194,7 +194,6 @@ void CSceneLoader::ThreadLoadingLoop()
 
 					acResource->Initiailize_Custom(acInfo);
 
-					CResources::AddSceneResource(acDataName + L" (Animator Controller)", acResource, true);
 				}
 			}
 			else if (CEngineString::Contains(wFile, L".mp3") || CEngineString::Contains(wFile, L".wav") || CEngineString::Contains(wFile, L".ogg"))

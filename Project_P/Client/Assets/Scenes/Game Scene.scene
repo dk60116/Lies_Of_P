@@ -83,7 +83,8 @@ Eve_Sword_TM : Player/Weapon/Textures/CH_W_Sword_02_M.png : [Texture]
 // Eve Animator Controller
 Eve_AnimatorController : Player/Eve/AnimatorController/Eve_AnimatorController.animatorcontroller : [Animator Controller]
 // UI
-HeartBar : UI/HUDUI/HeartBar.png : [Texture]Building_0_Stage01_Building_00_Auto_1770860177475 : Map/Map01/Building_0/Stage01_Building_00.fbx : [Mesh]
+HeartBar : UI/HUDUI/HeartBar.png : [Texture]
+Building_0_Stage01_Building_00_Auto_1770860177475 : Map/Map01/Building_0/Stage01_Building_00.fbx : [Mesh]
 Building_0_Stage01_Building_00_Auto_1770865212651 : Map/Map01/Building_0/Stage01_Building_00.fbx : [Mesh]
 Building_1_Stage01_Building_01_Auto_1770868093590 : Map/Map01/Building_1/Stage01_Building_01.fbx : [Mesh]
 Building_2_Stage01_Building_02_Auto_1770868471760 : Map/Map01/Building_2/Stage01_Building_02.fbx : [Mesh]
