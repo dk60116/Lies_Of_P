@@ -353,6 +353,13 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                             CResources::GetInstance().ConvertOTFTTFToSpriteFont(pathW);
                     }
 
+                    if (extension == "png" || extension == "jpg" || extension == "jpeg" || extension == "bmp" || extension == "tga" || extension == "tif" || extension == "tiff")
+                    {
+                        wstring pathW = entry.path().wstring();
+                        if (ImGui::Selectable("Create Texture Data"))
+                            CResources::GetInstance().ConvertImageToMeshBufferData(pathW);
+                    }
+
                     if (ImGui::Selectable("Delete"))
                     {
                         m_strPendingDeletePath = entry.path().string();

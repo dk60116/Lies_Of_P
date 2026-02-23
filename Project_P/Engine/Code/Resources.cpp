@@ -1,5 +1,7 @@
 #include "epch.h"
 #include "Resources.h"
+#include "ScreenGrab.h"
+#include "WICTextureLoader.h"
 
 #include <shlobj.h> 
 #include <shlwapi.h> 
@@ -40,6 +42,8 @@ HRESULT CResources::Initialize()
 		fs::create_directories("BinaryAssets/AnimationClipData");
 	if (!fs::exists("BinaryAssets/FontData"))
 		fs::create_directories("BinaryAssets/FontData");
+	if (!fs::exists("BinaryAssets/TextureData"))
+		fs::create_directories("BinaryAssets/TextureData");
 
 	Ready_GameResources();
 
@@ -210,6 +214,43 @@ HRESULT CResources::ConvertFBXToMeshBufferData(const wstring _filePath)
 
 	CDebug::Log(L"Complete create mesh Data: " + _filePath);
 
+	return S_OK;
+}
+
+HRESULT CResources::ConvertImageToMeshBufferData(const wstring _filePath)
+{
+	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
+	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
+
+	if (!device || !context)
+	{
+		CDebug::LogError(L"Failed create texture Data - Invalid device or context: " + _filePath);
+		return E_FAIL;
+	}
+
+	ComPtr<ID3D11Resource> sourceResource;
+	if (FAILED(CreateWICTextureFromFile(device, _filePath.c_str(), sourceResource.GetAddressOf(), nullptr)))
+	{
+		CDebug::LogError(L"Failed create texture Data - Can not load image: " + _filePath);
+		return E_FAIL;
+	}
+
+	if (!sourceResource)
+	{
+		CDebug::LogError(L"Failed create texture Data - Invalid source resource: " + _filePath);
+		return E_FAIL;
+	}
+
+	const wstring fileNoExt = CEngineString::Split(fs::path(_filePath).filename().wstring(), L".")[0];
+	const wstring savePath = L"BinaryAssets/TextureData/" + fileNoExt + L".dds";
+
+	if (FAILED(DirectX::SaveDDSTextureToFile(context, sourceResource.Get(), savePath.c_str())))
+	{
+		CDebug::LogError(L"Failed create texture Data - Can not save DDS: " + _filePath);
+		return E_FAIL;
+	}
+
+	CDebug::Log(L"Complete create texture Data: " + _filePath);
 	return S_OK;
 }
 
