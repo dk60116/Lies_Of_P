@@ -144,6 +144,9 @@ inline T* CResources::CreateSceneResource(const wstring& _name, const wstring& _
 {
     T* newResource = T::Create();
 
+    if (!newResource)
+        return nullptr;
+
     if (FAILED(newResource->Initialize(_name, m_strDefaultAssetPath + _path, _desc)))
     {
         delete newResource;
@@ -153,12 +156,16 @@ inline T* CResources::CreateSceneResource(const wstring& _name, const wstring& _
     CScene* targetScene = _tempScene ? CSceneManager::GetInstance().Get_TempScene() :
         CSceneManager::GetInstance().Get_CrtScene();
 
-    if (!_tempScene)
-        targetScene->Add_Resource(_name, newResource);
-    else
-        targetScene->Add_TempResource(_name, newResource);
+    if (!targetScene)
+    {
+        Safe_Release(newResource);
+        return nullptr;
+    }
 
-    return newResource;
+    CEngineResource* sceneResource = !_tempScene ? targetScene->Add_Resource(_name, newResource)
+        : targetScene->Add_TempResource(_name, newResource);
+
+    return dynamic_cast<T*>(sceneResource);
 }
 
 template<typename T>
