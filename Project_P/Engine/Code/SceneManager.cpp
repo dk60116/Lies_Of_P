@@ -551,7 +551,7 @@ const CSceneManager::LayerMask CSceneManager::MakeLayerMask(const _bool _all, co
 	auto toLayerMask = [](const _uint layer) -> LayerMask
 	{
 		if (layer == 0u)
-			return 0u;
+			return LayerMask(1u);
 
 		if ((layer & (layer - 1u)) == 0u)
 			return static_cast<LayerMask>(layer);
@@ -587,5 +587,8 @@ const CSceneManager::LayerMask CSceneManager::MakeLayerMask(const _bool _all, co
 
 const _bool CSceneManager::ContainLayerMask(const _uint _layer, const LayerMask _mask)
 {
+	if (_layer == 0u)
+		return (_mask & LayerMask(1u)) != 0u;
+
 	return (_layer & _mask) != 0u;
 }
