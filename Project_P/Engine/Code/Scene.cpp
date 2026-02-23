@@ -1448,6 +1448,35 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 						const size_t pathHash = std::hash<std::string>{}(normalized);
 						return CEngineString::StringToWString("SceneTexture/" + fileName + "_" + std::to_string(pathHash));
 					};
+					auto resolveDDSPath = [&](const wstring& sourcePath)
+					{
+						std::filesystem::path fsPath = std::filesystem::path(sourcePath);
+						wstring extension = fsPath.extension().wstring();
+						std::transform(extension.begin(), extension.end(), extension.begin(), ::towlower);
+
+						if (extension == L".dds")
+							return sourcePath;
+						if (extension != L".png" && extension != L".jpg" && extension != L".jpeg" && extension != L".bmp" && extension != L".tga" && extension != L".tif" && extension != L".tiff")
+							return sourcePath;
+
+						const wstring textureFolder = fsPath.parent_path().filename().wstring();
+						const wstring textureNoExt = fsPath.stem().wstring();
+						if (textureFolder.empty() || textureNoExt.empty())
+							return sourcePath;
+
+						const wstring ddsPath = L"BinaryAssets/TextureData/" + textureFolder + L"_" + textureNoExt + L".dds";
+						if (!CResources::FileExists(ddsPath))
+						{
+							wstring textureSourcePath = sourcePath;
+							if (textureSourcePath.rfind(L"../Assets/", 0) != 0)
+								textureSourcePath = L"../Assets/" + textureSourcePath;
+
+							if (FAILED(resources.ConvertImageToDDS(textureSourcePath)))
+								return sourcePath;
+						}
+
+						return ddsPath;
+					};
 
 					if (!info.materialTextures.empty())
 					{
@@ -1464,6 +1493,8 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 							wstring path = textureInfo.path;
 							if (path.rfind(L"../Assets/", 0) == 0)
 								path = path.substr(10);
+
+							path = resolveDDSPath(path);
 
 							const wstring textureName = makeTextureResourceNameFromPath(path);
 							if (CScene* crtScene = CSceneManager::GetInstance().Get_CrtScene())
