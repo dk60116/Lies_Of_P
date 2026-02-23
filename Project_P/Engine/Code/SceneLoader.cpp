@@ -106,7 +106,7 @@ void CSceneLoader::ThreadLoadingLoop()
 					{
 						const wstring textureFolder = textureSplit[textureSplit.size() - 2];
 						const wstring textureNoExt = CEngineString::Split(textureSplit.back(), L".")[0];
-						const wstring ddsPath = L"../BinaryAssets/TextureData/" + textureFolder + L"_" + textureNoExt + L".dds";
+						const wstring ddsPath = L"BinaryAssets/TextureData/" + textureFolder + L"_" + textureNoExt + L".dds";
 
 						if (!CResources::FileExists(ddsPath))
 						{

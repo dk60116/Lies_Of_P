@@ -250,10 +250,10 @@ HRESULT CResources::ConvertImageToDDS(const wstring _filePath)
 
 	const wstring folder = pathSplit[pathSplit.size() - 2];
 	const wstring fileNoExt = CEngineString::Split(pathSplit.back(), L".")[0];
-	const wstring savePath = L"../BinaryAssets/TextureData/" + folder + L"_" + fileNoExt + L".dds";
+	const wstring savePath = L"BinaryAssets/TextureData/" + folder + L"_" + fileNoExt + L".dds";
 
-	if (!fs::exists("../BinaryAssets/TextureData"))
-		fs::create_directories("../BinaryAssets/TextureData");
+	if (!fs::exists("BinaryAssets/TextureData"))
+		fs::create_directories("BinaryAssets/TextureData");
 
 	if (FAILED(DirectX::SaveDDSTextureToFile(context, sourceResource.Get(), savePath.c_str())))
 	{

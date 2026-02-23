@@ -128,7 +128,11 @@ inline T* CResources::CreateGameResource(const wstring& _name, const wstring& _p
     if (!newResource)
         return nullptr;
 
-    if (FAILED(newResource->Initialize(_name, m_strDefaultAssetPath + _path, _desc)))
+    wstring fullPath = _path;
+    if (_path.rfind(L"BinaryAssets/", 0) != 0 && _path.rfind(L"../BinaryAssets/", 0) != 0)
+        fullPath = m_strDefaultAssetPath + _path;
+
+    if (FAILED(newResource->Initialize(_name, fullPath, _desc)))
     {
         delete newResource;
         return nullptr;
@@ -145,7 +149,11 @@ inline T* CResources::CreateSceneResource(const wstring& _name, const wstring& _
 {
     T* newResource = T::Create();
 
-    if (FAILED(newResource->Initialize(_name, m_strDefaultAssetPath + _path, _desc)))
+    wstring fullPath = _path;
+    if (_path.rfind(L"BinaryAssets/", 0) != 0 && _path.rfind(L"../BinaryAssets/", 0) != 0)
+        fullPath = m_strDefaultAssetPath + _path;
+
+    if (FAILED(newResource->Initialize(_name, fullPath, _desc)))
     {
         delete newResource;
         return nullptr;
