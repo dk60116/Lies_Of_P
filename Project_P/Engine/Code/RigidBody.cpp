@@ -681,23 +681,102 @@ void CRigidBody::Rotate(const vector3& _deltaEuler)
 
 void CRigidBody::SetVelocity(const vector3& _value)
 {
-    GetBI().SetLinearVelocity(m_iSensorBodyID, Vec3(_value.x, _value.y, _value.z));
+    vector3 targetVelocity = _value;
+
+    if (m_bConstPositionX)
+        targetVelocity.x = 0.f;
+    if (m_bConstPositionY)
+        targetVelocity.y = 0.f;
+    if (m_bConstPositionZ)
+        targetVelocity.z = 0.f;
+
+    const Vec3 joltVelocity(targetVelocity.x, targetVelocity.y, targetVelocity.z);
+
+    if (m_bHasBody)
+    {
+        GetBI().SetLinearVelocity(m_iBodyID, joltVelocity);
+        GetBI().ActivateBody(m_iBodyID);
+    }
+
+    if (m_bHasSensorBody)
+    {
+        GetBI().SetLinearVelocity(m_iSensorBodyID, joltVelocity);
+        GetBI().ActivateBody(m_iSensorBodyID);
+    }
 }
 
 void CRigidBody::SetVelocityX(const _float _value)
 {
+    vector3 currentVelocity = vector3::zero();
+
+    if (m_bHasBody)
+    {
+        const Vec3 linearVelocity = GetBI().GetLinearVelocity(m_iBodyID);
+        currentVelocity = vector3(linearVelocity.GetX(), linearVelocity.GetY(), linearVelocity.GetZ());
+    }
+    else if (m_bHasSensorBody)
+    {
+        const Vec3 linearVelocity = GetBI().GetLinearVelocity(m_iSensorBodyID);
+        currentVelocity = vector3(linearVelocity.GetX(), linearVelocity.GetY(), linearVelocity.GetZ());
+    }
+
+    currentVelocity.x = _value;
+    SetVelocity(currentVelocity);
 }
 
 void CRigidBody::SetVelocityY(const _float _value)
 {
+    vector3 currentVelocity = vector3::zero();
+
+    if (m_bHasBody)
+    {
+        const Vec3 linearVelocity = GetBI().GetLinearVelocity(m_iBodyID);
+        currentVelocity = vector3(linearVelocity.GetX(), linearVelocity.GetY(), linearVelocity.GetZ());
+    }
+    else if (m_bHasSensorBody)
+    {
+        const Vec3 linearVelocity = GetBI().GetLinearVelocity(m_iSensorBodyID);
+        currentVelocity = vector3(linearVelocity.GetX(), linearVelocity.GetY(), linearVelocity.GetZ());
+    }
+
+    currentVelocity.y = _value;
+    SetVelocity(currentVelocity);
 }
 
 void CRigidBody::SetVelocityZ(const _float _value)
 {
+    vector3 currentVelocity = vector3::zero();
+
+    if (m_bHasBody)
+    {
+        const Vec3 linearVelocity = GetBI().GetLinearVelocity(m_iBodyID);
+        currentVelocity = vector3(linearVelocity.GetX(), linearVelocity.GetY(), linearVelocity.GetZ());
+    }
+    else if (m_bHasSensorBody)
+    {
+        const Vec3 linearVelocity = GetBI().GetLinearVelocity(m_iSensorBodyID);
+        currentVelocity = vector3(linearVelocity.GetX(), linearVelocity.GetY(), linearVelocity.GetZ());
+    }
+
+    currentVelocity.z = _value;
+    SetVelocity(currentVelocity);
 }
 
 void CRigidBody::ResetVelocity()
 {
+    const Vec3 zeroVelocity = Vec3::sZero();
+
+    if (m_bHasBody)
+    {
+        GetBI().SetLinearAndAngularVelocity(m_iBodyID, zeroVelocity, zeroVelocity);
+        GetBI().ActivateBody(m_iBodyID);
+    }
+
+    if (m_bHasSensorBody)
+    {
+        GetBI().SetLinearAndAngularVelocity(m_iSensorBodyID, zeroVelocity, zeroVelocity);
+        GetBI().ActivateBody(m_iSensorBodyID);
+    }
 }
 
 void CRigidBody::ApplyAxisConstraints(vector3& _pos, quaternion& _rot)
