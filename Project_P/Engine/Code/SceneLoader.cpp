@@ -107,6 +107,18 @@ void CSceneLoader::ThreadLoadingLoop()
 						const wstring textureFolder = textureSplit[textureSplit.size() - 2];
 						const wstring textureNoExt = CEngineString::Split(textureSplit.back(), L".")[0];
 						const wstring ddsPath = L"../BinaryAssets/TextureData/" + textureFolder + L"_" + textureNoExt + L".dds";
+
+						if (!CResources::FileExists(ddsPath))
+						{
+							wstring textureSourcePath = wFile;
+							if (textureSourcePath.rfind(L"../Assets/", 0) != 0)
+								textureSourcePath = L"../Assets/" + textureSourcePath;
+
+							const HRESULT convertResult = CResources::GetInstance().ConvertImageToDDS(textureSourcePath);
+							if (FAILED(convertResult))
+								CDebug::LogError(L"Failed create DDS while scene loading: " + textureSourcePath);
+						}
+
 						CResources::GetInstance().LoadResourceComplete_Scene<CTexture>(wName + L" (Texture)", ddsPath, nullptr, true);
 					}
 				}
