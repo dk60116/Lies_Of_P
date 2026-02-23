@@ -313,7 +313,10 @@ HRESULT CScene::Initialize()
 		}
 
 		if (it->second == resource)
+		{
+			resource->AddRef();
 			continue;
+		}
 
 		Safe_Release(it->second);
 		it->second = resource;
@@ -324,7 +327,15 @@ HRESULT CScene::Initialize()
 	{
 		auto [it, inserted] = m_mTempMeshBundleList.emplace(name, bundles);
 		if (!inserted)
-			continue;
+		{
+			for (auto& bundle : it->second)
+			{
+				Safe_Release(bundle.meshBuffer);
+				Safe_Release(bundle.material);
+				Safe_Release(bundle.texture);
+			}
+			it->second = bundles;
+		}
 
 		for (auto& bundle : it->second)
 		{
@@ -341,7 +352,15 @@ HRESULT CScene::Initialize()
 	{
 		auto [it, inserted] = m_mTempSkinnedBundleList.emplace(name, bundles);
 		if (!inserted)
-			continue;
+		{
+			for (auto& bundle : it->second)
+			{
+				Safe_Release(bundle.meshBuffer);
+				Safe_Release(bundle.material);
+				Safe_Release(bundle.texture);
+			}
+			it->second = bundles;
+		}
 
 		for (auto& bundle : it->second)
 		{
@@ -355,7 +374,7 @@ HRESULT CScene::Initialize()
 	}
 
 	for (const auto& [name, bones] : m_mSkinnedBoneList)
-		m_mTempSkinnedBoneList.emplace(name, bones);
+		m_mTempSkinnedBoneList[name] = bones;
 
 	SceneRelease();
 
