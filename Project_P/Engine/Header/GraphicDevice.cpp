@@ -32,6 +32,10 @@ HRESULT CGraphicDevice::Initialize()
 	if (FAILED(Ready_GraphicDevice(CDisplay::GetInstance().Get_GameWindow(), CDisplay::GetInstance().Get_ScreenResolution())))
 		return E_FAIL;
 
+	Microsoft::WRL::ComPtr<ID3D11Multithread> multithread;
+	if (SUCCEEDED(m_pContext->QueryInterface(__uuidof(ID3D11Multithread), reinterpret_cast<void**>(multithread.GetAddressOf()))))
+		multithread->SetMultithreadProtected(TRUE);
+
 	vector2Int res = CDisplay::GetInstance().Get_ScreenResolution();
 	if (FAILED(Ready_BackBufferRenderTargetView()))  
 		return E_FAIL;
