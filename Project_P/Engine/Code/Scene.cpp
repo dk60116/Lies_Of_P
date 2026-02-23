@@ -1815,7 +1815,22 @@ CEngineResource* CScene::Add_TempResource(const wstring& _name, CEngineResource*
 	if (!_resource)
 		return nullptr;
 
-	m_mTempResourceList.emplace(_name, _resource);
+	auto [it, inserted] = m_mTempResourceList.try_emplace(_name, _resource);
+
+	if (inserted)
+	{
+		_resource->AddRef();
+		return _resource;
+	}
+
+	if (it->second == _resource)
+	{
+		_resource->AddRef();
+		return _resource;
+	}
+
+	Safe_Release(it->second);
+	it->second = _resource;
 	_resource->AddRef();
 
 	return _resource;
