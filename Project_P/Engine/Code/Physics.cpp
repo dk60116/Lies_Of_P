@@ -2,6 +2,11 @@
 #include "Physics.h"
 #include "RigidBody.h"
 #include "Collider.h"
+#ifndef _CLIENT_BUILD
+#include "Camera.h"
+#include "GraphicDevice.h"
+#include "imgui.h"
+#endif
 #include <Jolt/Physics/Body/BodyLock.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
@@ -51,6 +56,28 @@ namespace Engine
 
 			return CSceneManager::GetInstance().ContainLayerMask(_obj->GetLayer(), _mask);
 		}
+
+#ifndef _CLIENT_BUILD
+		inline _bool WorldToEditorScreen(const vector3& _world, const _matrix& _viewProj, const D3D11_VIEWPORT& _vp, ImVec2& _outScreen)
+		{
+			const _vector p = XMVectorSet(_world.x, _world.y, _world.z, 1.0f);
+			const _vector clip = XMVector4Transform(p, _viewProj);
+			const float w = XMVectorGetW(clip);
+			if (fabsf(w) <= FLT_EPSILON)
+				return false;
+
+			const float invW = 1.0f / w;
+			const float ndcX = XMVectorGetX(clip) * invW;
+			const float ndcY = XMVectorGetY(clip) * invW;
+			const float ndcZ = XMVectorGetZ(clip) * invW;
+			if (ndcZ < 0.0f || ndcZ > 1.0f)
+				return false;
+
+			_outScreen.x = _vp.TopLeftX + (ndcX + 1.0f) * 0.5f * _vp.Width;
+			_outScreen.y = _vp.TopLeftY + (1.0f - ndcY) * 0.5f * _vp.Height;
+			return true;
+		}
+#endif
 	}
 	class CPhysics::BroadPhaseLayerInterfaceImpl final : public BroadPhaseLayerInterface
 	{
@@ -689,7 +716,61 @@ void CPhysics::Tick(_float _deltaSeconds)
 
 	if (steps == m_iMaxSubSteps)
 		m_fAccumulator = 0.0f;
+
+#ifndef _CLIENT_BUILD
+	for (auto it = m_vDebugRaycasts.begin(); it != m_vDebugRaycasts.end();)
+	{
+		it->remainTime -= _deltaSeconds;
+		if (it->remainTime <= 0.0f)
+			it = m_vDebugRaycasts.erase(it);
+		else
+			++it;
+	}
+#endif
 }
+
+void CPhysics::RenderRaycastDebugDisplay()
+{
+#ifndef _CLIENT_BUILD
+	if (m_vDebugRaycasts.empty())
+		return;
+
+	CCamera* editorCamera = CSceneManager::GetInstance().Get_EditorCamera();
+	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_EditorViewport();
+	if (!editorCamera || !vp)
+		return;
+
+	const _matrix viewProj = editorCamera->Get_ViewMatrix() * editorCamera->Get_ProjectionMatrix();
+	ImDrawList* drawList = ImGui::GetForegroundDrawList();
+	if (!drawList)
+		return;
+
+	for (const DebugRaycastDisplay& debugRay : m_vDebugRaycasts)
+	{
+		ImVec2 p0;
+		ImVec2 p1;
+		if (!WorldToEditorScreen(debugRay.start, viewProj, *vp, p0))
+			continue;
+		if (!WorldToEditorScreen(debugRay.end, viewProj, *vp, p1))
+			continue;
+
+		const ImU32 color = debugRay.hit ? IM_COL32(80, 255, 120, 255) : IM_COL32(255, 80, 80, 255);
+		drawList->AddLine(p0, p1, color, 2.0f);
+	}
+#endif
+}
+
+#ifndef _CLIENT_BUILD
+void CPhysics::AddDebugRaycastDisplay(const vector3& _start, const vector3& _end, const _bool _hit)
+{
+	DebugRaycastDisplay debugRay;
+	debugRay.start = _start;
+	debugRay.end = _end;
+	debugRay.hit = _hit;
+	debugRay.remainTime = 1.0f;
+	m_vDebugRaycasts.push_back(debugRay);
+}
+#endif
 
 void CPhysics::Step(const _float _fixedDeltaSeconds)
 {
@@ -809,6 +890,10 @@ vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray, const CSceneMana
 	sort(hits.begin(), hits.end(),
 		[](const RAYCASTHIT& a, const RAYCASTHIT& b) { return a.distance < b.distance; });
 
+	#ifndef _CLIENT_BUILD
+	AddDebugRaycastDisplay(_ray.origin, _ray.origin + _ray.dir * _ray.maxDist, !hits.empty());
+#endif
+
 	return hits;
 }
 
@@ -884,6 +969,10 @@ vector<CPhysics::RAYCASTHIT> CPhysics::BoxRaycast(const BoxRay& _boxRay, const C
 	}
 
 	sort(hits.begin(), hits.end(), [](const RAYCASTHIT& a, const RAYCASTHIT& b) { return a.distance < b.distance; });
+	#ifndef _CLIENT_BUILD
+	AddDebugRaycastDisplay(_boxRay.center, _boxRay.center + _boxRay.dir * _boxRay.maxDist, !hits.empty());
+#endif
+
 	return hits;
 }
 
@@ -954,6 +1043,10 @@ vector<CPhysics::RAYCASTHIT> CPhysics::SphereRaycast(const SphereRay& _sphereRay
 	}
 
 	sort(hits.begin(), hits.end(), [](const RAYCASTHIT& a, const RAYCASTHIT& b) { return a.distance < b.distance; });
+	#ifndef _CLIENT_BUILD
+	AddDebugRaycastDisplay(_sphereRay.center, _sphereRay.center + _sphereRay.dir * _sphereRay.maxDist, !hits.empty());
+#endif
+
 	return hits;
 }
 }

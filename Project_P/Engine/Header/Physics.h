@@ -72,6 +72,7 @@ public:
 public:
 	void Tick(_float _deltaSeconds);
 	void Step(const _float _fixedDeltaSeconds);
+	void RenderRaycastDebugDisplay();
 
 public:
 	void  SetFixedDeltaTime(const _float _fixedDt);  
@@ -112,6 +113,19 @@ private:
 	_float m_fMaxFrameDelta;    
 	_uint m_iMaxSubSteps;
 	_int m_iCollisionSteps;
+
+#ifndef _CLIENT_BUILD
+	struct DebugRaycastDisplay
+	{
+		vector3 start;
+		vector3 end;
+		_bool hit = false;
+		_float remainTime = 0.f;
+	};
+
+	vector<DebugRaycastDisplay> m_vDebugRaycasts;
+	void AddDebugRaycastDisplay(const vector3& _start, const vector3& _end, const _bool _hit);
+#endif
 };
 
 NS_END

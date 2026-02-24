@@ -4,6 +4,7 @@
 #include "HierachyBox.h"
 #include "InspectorBox.h"
 #include "AnimatorControllerEditorBox.h"
+#include "Physics.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -123,6 +124,7 @@ void CEditor::Editor_Update_Begin()
 void CEditor::Editor_Update_During()
 {
 	ChangeControleTool();
+	CPhysics::GetInstance().RenderRaycastDebugDisplay();
 
 	if (m_bIsMovingCamera)
 	{
