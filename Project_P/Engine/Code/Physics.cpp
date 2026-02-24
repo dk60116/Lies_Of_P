@@ -871,8 +871,8 @@ vector<CPhysics::RAYCASTHIT> CPhysics::BoxRaycast(const BoxRay& _boxRay, const C
 		hit.hitPos = _boxRay.center + _boxRay.dir * distance;
 
 		vector3 normal(result.mPenetrationAxis.GetX(), result.mPenetrationAxis.GetY(), result.mPenetrationAxis.GetZ());
-		if (normal.length_squared() > 0.0f)
-			normal.normalize();
+		if (normal.lengthSq() > 0.0f)
+			normal = normal.normalized();
 		hit.hitNormal = -normal;
 
 		CGameObject* obj = ResolveHitObject(body);
@@ -941,8 +941,8 @@ vector<CPhysics::RAYCASTHIT> CPhysics::SphereRaycast(const SphereRay& _sphereRay
 		hit.hitPos = _sphereRay.center + _sphereRay.dir * distance;
 
 		vector3 normal(result.mPenetrationAxis.GetX(), result.mPenetrationAxis.GetY(), result.mPenetrationAxis.GetZ());
-		if (normal.length_squared() > 0.0f)
-			normal.normalize();
+		if (normal.lengthSq() > 0.0f)
+			normal = normal.normalized();
 		hit.hitNormal = -normal;
 
 		CGameObject* obj = ResolveHitObject(body);
