@@ -10,6 +10,7 @@ private:
 	typedef struct ContextValue_Move 
 	{
 		_float m_fMove01 = 0.f;
+		vector3 m_vMoveLocalDir = {};
 		vector3 m_vMoveWorldDir = {};
 		_bool m_bBigTurnLatched = false;
 		_float m_fBigTurnDeg = 120.f;
@@ -65,8 +66,10 @@ public:
 	void SetAnimMoveSpeed(_float _v);
 
 	_bool IsTurning() const;
+	void SetMoveLocalDir(const vector3& _dir);
 	void SetMoveWorldDir(const vector3& _dir);
 	void SetAnimTurn(const _float _value);
+	const vector3& GetMoveLocalDir() const;
 	const vector3& GetMoveWorldDir() const;
 	const _float GetCameraYaw() const;
 	_float WrapDeg(_float _deg) const;

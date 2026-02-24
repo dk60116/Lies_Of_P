@@ -150,11 +150,13 @@ void CPlayerController::Update()
 			moveDir = m_pCtx->NormalizeXZ(-f);
 			desiredYaw = m_pCtx->WrapDeg(camYaw + 180.f);
 		}
-
+		
 		m_pCtx->SetMoveWorldDir(moveDir);
 		m_pCtx->SetDesiredYawDeg(desiredYaw);
 		m_pCtx->BeginTurnTo(desiredYaw);
 	}
+
+	m_pCtx->SetMoveLocalDir(vector3(x, 0.f, y));
 
 	m_bRunning = hasInput;
 

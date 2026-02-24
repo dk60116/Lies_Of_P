@@ -233,7 +233,7 @@ void CPlayerControllerContext::TickMove()
 	}
 	else 
 	{
-		dir = vector3(0.f, 0.f, 0.f); 
+		dir = vector3(0.f, 0.f, 0.f);
 	}
 
 	const _float curSpeed = (m_bSprint ? PlayerStatus().sprintSpeed : PlayerStatus().runSpeed) * m_Cv_Move.m_fMove01 * (m_eCurrentState == CPlayerController::PlayerState::Guard ? 0.5f : 1.f);
@@ -331,6 +331,11 @@ bool CPlayerControllerContext::IsTurning() const
 	return m_Cv_Move.m_bTurning;
 }
 
+void CPlayerControllerContext::SetMoveLocalDir(const vector3& _dir)
+{
+	m_Cv_Move.m_vMoveLocalDir = _dir;
+}
+
 void CPlayerControllerContext::SetMoveWorldDir(const vector3& _dir)
 {
 	m_Cv_Move.m_vMoveWorldDir = _dir;
@@ -345,6 +350,11 @@ void CPlayerControllerContext::SetAnimTurn(const _float _value)
 		return;
 
 	anim->SetFloat(L"turnDir", _value);
+}
+
+const vector3& CPlayerControllerContext::GetMoveLocalDir() const
+{
+	return m_Cv_Move.m_vMoveLocalDir;
 }
 
 const vector3& CPlayerControllerContext::GetMoveWorldDir() const

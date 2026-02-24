@@ -27,7 +27,7 @@ public:
 		_float focusTurnRatio = 8.f;
 		_int attackPower = 1;
 		_float evadeLength = 3.5f;
-		_float jumpPower = 300.f;
+		_float jumpPower = 340.f;
 	};
 
 protected:

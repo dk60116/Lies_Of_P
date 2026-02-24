@@ -261,8 +261,6 @@ void CPlayer::Ground()
 
 	m_bIsGround = hits.size() > 0;
 
-	CDebug::LogError(m_bIsGround);
-
 	m_pAnimator->SetBool(L"isGround", m_bIsGround);
 
 	if (CInput::GetInstance().GetKeyDown(KEY_CODE::V))

@@ -15,5 +15,7 @@ public:
 
 private:
     _bool m_bExitable;
+    _bool m_bForward;
+    vector3 m_vForwardDir;
 };
 

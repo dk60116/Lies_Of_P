@@ -3,6 +3,8 @@
 
 CPlayerState_Jump::CPlayerState_Jump()
 	: m_bExitable(false)
+	, m_bForward(false)
+	, m_vForwardDir({})
 {
 }
 
@@ -122,9 +124,6 @@ void CPlayerState_Jump::Enter()
 {
 	__super::Enter();
 
-	m_pCtx->Animator()->SetTrigger(L"jump");
-	m_pCtx->Animator()->SetBool(L"isJump", true);
-
 	m_pCtx->SetCanMove(false);
 	m_pCtx->SetCanTurn(false);
 	m_pCtx->SetCanAttack(false);
@@ -132,7 +131,21 @@ void CPlayerState_Jump::Enter()
 
 	m_bExitable = false;
 
-	m_pCtx->RigidBody()->AddForceY(m_pCtx->PlayerStatus().jumpPower);
+	m_vForwardDir = m_pCtx->GetMoveWorldDir();
+	
+	CDebug::LogError(m_vForwardDir);
+
+	m_pCtx->StopMoveImmediate();
+
+	vector3 jumpVector = vector3::up() * m_pCtx->PlayerStatus().jumpPower;
+
+	m_pCtx->RigidBody()->AddForce(jumpVector);
+
+	m_bForward = m_pCtx->GetMoveLocalDir().z > 0.1f;
+
+	m_pCtx->Animator()->SetTrigger(L"jump");
+	m_pCtx->Animator()->SetBool(L"isJump", true);
+	m_pCtx->Animator()->SetFloat(L"speed", (_float)m_bForward);
 }
 
 void CPlayerState_Jump::Update()
@@ -146,6 +159,9 @@ void CPlayerState_Jump::Update()
 		if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Jump))
 			Enter();
 	}
+
+	if (m_bForward)
+		m_pCtx->AddPosition(m_vForwardDir * 2.5f * DELTA_TIME);
 }
 
 void CPlayerState_Jump::Exit()
