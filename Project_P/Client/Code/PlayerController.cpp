@@ -11,7 +11,8 @@
 #include "PlayerState_Jump.h"
 
 CPlayerController::CPlayerController()
-	: m_pPlayer(nullptr)
+	: m_pCtx(nullptr)
+	, m_pPlayer(nullptr)
 	, m_pPlayerCam(nullptr)
 	, m_bFSMStarted(false)
 	, m_mStateList({})
@@ -39,6 +40,8 @@ CComponent* CPlayerController::Clone() const
 
 HRESULT CPlayerController::Initialize()
 {
+	m_pCtx = new CPlayerControllerContext();
+
 	m_mStateList.insert({ PlayerState::Locomotion, new CPlayerState_Locomotion() });
 	m_mStateList.insert({ PlayerState::Idle, new CPlayerState_Idle() });
 	m_mStateList.insert({ PlayerState::Move, new CPlayerState_Move() });
@@ -67,10 +70,10 @@ void CPlayerController::Awake()
 void CPlayerController::Start()
 {
 	if (m_pPlayer && m_pPlayerCam && m_pRoot)
-		m_ctx.Bind(m_pPlayer, m_pPlayerCam, this);
+		m_pCtx->Bind(m_pPlayer, m_pPlayerCam, this);
 
 	for (TRAVERSAL_ITER(m_mStateList, it))
-		(*it).second->Initialize(&m_ctx, (*it).first);
+		(*it).second->Initialize(m_pCtx, (*it).first);
 
 	if (m_pPlayer && m_pPlayerCam && m_pRoot)
 	{
@@ -87,7 +90,7 @@ void CPlayerController::Update()
     {
         if (m_pPlayer && m_pPlayerCam && m_pRoot)
         {
-            m_ctx.Bind(m_pPlayer, m_pPlayerCam, this);
+            m_pCtx->Bind(m_pPlayer, m_pPlayerCam, this);
             m_pRoot->Enter();
             m_bFSMStarted = true;
         }
@@ -95,21 +98,21 @@ void CPlayerController::Update()
             return;
     }
 
-	m_ctx.SetSprint(m_mKeyHold[Evade]);
+	m_pCtx->SetSprint(m_mKeyHold[Evade]);
 
-	if (m_mKeyDown[Jump] && m_ctx.IsCanJump())
-		m_ctx.BufferAction(PlayerState::Jump);
-    if (m_mKeyDown[Attack] && m_ctx.IsCanAttack())
-        m_ctx.BufferAction(PlayerState::Attack);
-	if (m_mKeyHold[Guard] && m_ctx.IsCanGuard() && !m_ctx.IsActionActive(PlayerState::Guard))
-		m_ctx.BufferAction(PlayerState::Guard);
-	if (m_mKeyDown[Evade] && m_ctx.IsCanEvade())
-		m_ctx.BufferAction(PlayerState::Evade);
+	if (m_mKeyDown[Jump] && m_pCtx->IsCanJump())
+		m_pCtx->BufferAction(PlayerState::Jump);
+    if (m_mKeyDown[Attack] && m_pCtx->IsCanAttack())
+        m_pCtx->BufferAction(PlayerState::Attack);
+	if (m_mKeyHold[Guard] && m_pCtx->IsCanGuard() && !m_pCtx->IsActionActive(PlayerState::Guard))
+		m_pCtx->BufferAction(PlayerState::Guard);
+	if (m_mKeyDown[Evade] && m_pCtx->IsCanEvade())
+		m_pCtx->BufferAction(PlayerState::Evade);
 
 	_float speed = 0.f;
 
-	if (m_ctx.Animator()->GetFloat(L"speed", speed))
-		m_ctx.Animator()->SetBool(L"sprintEnd", m_fPrevSpeed == 2);
+	if (m_pCtx->Animator()->GetFloat(L"speed", speed))
+		m_pCtx->Animator()->SetBool(L"sprintEnd", m_fPrevSpeed == 2);
 
     const _int x =
         (m_mKeyHold[Right] ? 1 : 0) +
@@ -119,37 +122,38 @@ void CPlayerController::Update()
         (m_mKeyHold[Forward] ? 1 : 0) +
         (m_mKeyHold[Back] ? -1 : 0);
 
-	m_ctx.Animator()->SetFloat(L"dirX", static_cast<_float>(x));
-	m_ctx.Animator()->SetFloat(L"dirZ", static_cast<_float>(y));
+	m_pCtx->Animator()->SetFloat(L"dirX", static_cast<_float>(x));
+	m_pCtx->Animator()->SetFloat(L"dirZ", static_cast<_float>(y));
 
     const _bool hasInput = (x != 0) || (y != 0);
 
-	m_ctx.Animator()->SetBool(L"isInputDir", x + y != 0);
+	if (m_pCtx->CurrentState() != PlayerState::Evade)
+		m_pCtx->Animator()->SetBool(L"isInputDir", x + y != 0);
 
-    const _bool attackLock = m_ctx.IsActionActive(PlayerState::Attack);
+    const _bool attackLock = m_pCtx->IsActionActive(PlayerState::Attack);
 
 	if (hasInput)
 	{
-		vector3 f = m_ctx.NormalizeXZ(m_pPlayerCam->Get_ForwardVector());
-		vector3 r = m_ctx.NormalizeXZ(vector3(f.z, 0.f, -f.x));
+		vector3 f = m_pCtx->NormalizeXZ(m_pPlayerCam->Get_ForwardVector());
+		vector3 r = m_pCtx->NormalizeXZ(vector3(f.z, 0.f, -f.x));
 
-		vector3 moveDir = m_ctx.NormalizeXZ(f * (_float)y + r * (_float)x);
+		vector3 moveDir = m_pCtx->NormalizeXZ(f * (_float)y + r * (_float)x);
 
-		_float camYaw = m_ctx.WrapDeg(m_pPlayerCam->Get_ForwardAngle());
+		_float camYaw = m_pCtx->WrapDeg(m_pPlayerCam->Get_ForwardAngle());
 		_float offsetDeg = atan2f((_float)x, (_float)y) * (180.f / 3.141592f);
-		_float desiredYaw = m_ctx.WrapDeg(camYaw + offsetDeg);
+		_float desiredYaw = m_pCtx->WrapDeg(camYaw + offsetDeg);
 
 		const _bool onlyBack = (y < 0) && (x == 0) && !m_mKeyHold[Forward];
 
 		if (onlyBack)
 		{
-			moveDir = m_ctx.NormalizeXZ(-f);
-			desiredYaw = m_ctx.WrapDeg(camYaw + 180.f);
+			moveDir = m_pCtx->NormalizeXZ(-f);
+			desiredYaw = m_pCtx->WrapDeg(camYaw + 180.f);
 		}
 
-		m_ctx.SetMoveWorldDir(moveDir);
-		m_ctx.SetDesiredYawDeg(desiredYaw);
-		m_ctx.BeginTurnTo(desiredYaw);
+		m_pCtx->SetMoveWorldDir(moveDir);
+		m_pCtx->SetDesiredYawDeg(desiredYaw);
+		m_pCtx->BeginTurnTo(desiredYaw);
 	}
 
 	m_bRunning = hasInput;
@@ -165,6 +169,8 @@ void CPlayerController::LateUpdate()
 
 void CPlayerController::OnDestroy()
 {
+	delete m_pContext;
+
 	for (TRAVERSAL_ITER(m_mStateList, it))
 		Safe_Release((*it).second);
 }
@@ -184,7 +190,7 @@ void CPlayerController::Set_Player(CPlayer* _player)
 	m_pPlayer = _player;
 
 	if (m_pPlayerCam) 
-		m_ctx.Bind(m_pPlayer, m_pPlayerCam, this);
+		m_pCtx->Bind(m_pPlayer, m_pPlayerCam, this);
 }
 
 void CPlayerController::Set_Camera(CPlayerCamera* _cam)
@@ -192,7 +198,7 @@ void CPlayerController::Set_Camera(CPlayerCamera* _cam)
 	m_pPlayerCam = _cam;
 
 	if (m_pPlayer)
-		m_ctx.Bind(m_pPlayer, m_pPlayerCam, this);
+		m_pCtx->Bind(m_pPlayer, m_pPlayerCam, this);
 }
 
 const _bool CPlayerController::IsRunning() const

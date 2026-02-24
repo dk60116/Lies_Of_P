@@ -95,6 +95,7 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Backward_End", [this]()
 				{
+					m_pCtx->StopMoveImmediate();
 					Exit();
 				});
 		}

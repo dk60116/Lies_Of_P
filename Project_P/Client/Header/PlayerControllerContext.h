@@ -1,8 +1,8 @@
 #pragma once
 
 #include "cpch.h"
+#include "PlayerController.h"
 #include "PlayerControllerTypes.h"
-#include <map>
 
 class CPlayerControllerContext final : public UObject
 {
@@ -75,6 +75,8 @@ public:
 	_float GetDesiredYawDeg() const;
 
 public:
+	const CPlayerController::PlayerState CurrentState() const;
+	void SetCurrentState(CPlayerController::PlayerState _state);
 	const _bool IsBattle() const;
 	void SetBattle(const _bool _value);
 
@@ -91,9 +93,7 @@ public:
 
 	const _bool IsSprint() const;
 	const _bool IsBigTurn() const;
-	const _bool IsGuard() const;
 	void SetSprint(const _bool _value);
-	void SetGuard(const _bool _value);
 
 	const _bool IsCanMove() const;
 	void SetCanMove(const _bool _value);
@@ -139,7 +139,7 @@ private:
 	CPlayerController* m_pController;
 
 private:
-	_bool m_bSprint, m_bBigTurn, m_bIsGuard;
+	_bool m_bSprint, m_bBigTurn;
 	_bool m_bCanMove, m_bCanTurn, m_bCanAttack, m_bCanGuard, m_bCanEvade, m_bCanJump;
 
 private:
@@ -147,6 +147,7 @@ private:
 	map<PlayerState, CONTEXT_VALUE> m_mBattleContext;
 
 private:
+	CPlayerController::PlayerState m_eCurrentState;
 	CONTEXT_VALUE* GetBattleContext(PlayerState state);
 	const CONTEXT_VALUE* GetBattleContext(PlayerState state) const;
 };

@@ -82,7 +82,7 @@ private:
 	CCapsuleCollider* m_pBodyCollider;
 	CRigidBody* m_pRigidBody;
 
-	_bool m_iIsGround;
+	_bool m_bIsGround;
 	CSceneManager::LayerMask m_iGroundMask;
 
 public:

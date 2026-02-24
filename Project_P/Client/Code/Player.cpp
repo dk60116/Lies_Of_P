@@ -18,7 +18,7 @@ CPlayer::CPlayer()
 	, m_pWeaponHolder(nullptr)
 	, m_pBodyCollider(nullptr)
 	, m_pRigidBody(nullptr)
-	, m_iIsGround(false)
+	, m_bIsGround(false)
 	, m_iGroundMask(0)
 {
 	m_strName = L"Player";
@@ -197,17 +197,6 @@ void CPlayer::Update()
 void CPlayer::FixedUpdate()
 {
 	Ground();
-
-	CPhysics::RAYCASTHIT hit = {};
-	CPhysics::Ray ray = {};
-	ray.origin = Get_Transform()->Get_Position() + vector3::up() * 1.f;
-	ray.dir = vector3::down();
-	ray.maxDist = 1.05f;
-
-	auto hits = CPhysics::GetInstance().Raycast(ray, m_iGroundMask);
-
-	if (hits.size() > 0)
-		CDebug::LogError(hits[0].object->Get_ObjectName());
 }
 
 void CPlayer::OnDestroy()
@@ -261,5 +250,17 @@ void CPlayer::SetLightAttakComboCount(const _uint _count)
 
 void CPlayer::Ground()
 {
-	
+	CPhysics::RAYCASTHIT hit = {};
+	CPhysics::Ray ray = {};
+	ray.origin = Get_Transform()->Get_Position() + vector3::up() * 1.f;
+	ray.dir = vector3::down();
+	ray.maxDist = 1.05f;
+
+	auto hits = CPhysics::GetInstance().Raycast(ray, m_iGroundMask);
+
+	m_bIsGround = hits.size() > 0;
+
+	CDebug::LogError(m_bIsGround);
+
+	m_pAnimator->SetBool(L"isGround", m_bIsGround);
 }

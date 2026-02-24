@@ -7,9 +7,9 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_pController(nullptr)
 	, m_pCam(nullptr)
 	, m_Cv_Move({})
+	, m_eCurrentState(CPlayerController::PlayerState::Idle)
 	, m_bSprint(false)
 	, m_bBigTurn(false)
-	, m_bIsGuard(false)
 	, m_bCanMove(true)
 	, m_bCanTurn(true)
 	, m_bCanAttack(true)
@@ -236,7 +236,7 @@ void CPlayerControllerContext::TickMove()
 		dir = vector3(0.f, 0.f, 0.f); 
 	}
 
-	const _float curSpeed = (m_bSprint ? PlayerStatus().sprintSpeed : PlayerStatus().runSpeed) * m_Cv_Move.m_fMove01 * (m_bIsGuard ? 0.5f : 1.f);
+	const _float curSpeed = (m_bSprint ? PlayerStatus().sprintSpeed : PlayerStatus().runSpeed) * m_Cv_Move.m_fMove01 * (m_eCurrentState == CPlayerController::PlayerState::Guard ? 0.5f : 1.f);
 	AddPosition(dir * curSpeed * dt);
 }
 
@@ -386,6 +386,16 @@ _float CPlayerControllerContext::GetDesiredYawDeg() const
 	return m_Cv_Move.m_fDesiredYaw;
 }
 
+const CPlayerController::PlayerState CPlayerControllerContext::CurrentState() const
+{
+	return m_eCurrentState;
+}
+
+void CPlayerControllerContext::SetCurrentState(CPlayerController::PlayerState _state)
+{
+	m_eCurrentState = _state;
+}
+
 const _bool CPlayerControllerContext::IsBattle() const
 {
 	return m_pController->IsBattle();
@@ -478,16 +488,6 @@ const _bool CPlayerControllerContext::IsBigTurn() const
 	return m_bBigTurn;
 }
 
-const _bool CPlayerControllerContext::IsGuard() const
-{
-	return m_bIsGuard;
-}
-
-void CPlayerControllerContext::SetGuard(const _bool _value)
-{
-	m_bIsGuard = _value;
-}
-
 void CPlayerControllerContext::SetSprint(const _bool _value)
 {
 	m_bSprint = _value;
@@ -574,7 +574,8 @@ void CPlayerControllerContext::StopMoveImmediate()
 	m_Cv_Move.m_fMove01 = 0.f;
 	m_Cv_Move.m_vMoveWorldDir = vector3::zero();
 	m_Cv_Move.m_fMoveLockTimer = 0.f;
-	RigidBody()->ResetVelocity();
+	RigidBody()->SetVelocityX(0.f);
+	RigidBody()->SetVelocityZ(0.f);
 
 	SetAnimMoveSpeed(0.f);
 }

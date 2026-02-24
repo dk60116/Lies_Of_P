@@ -2,7 +2,6 @@
 #include "epch.h"
 
 #include "PlayerControllerTypes.h"
-#include "PlayerControllerContext.h"
 
 class CPlayerState;
 
@@ -54,7 +53,7 @@ private:
 private:
     _bool m_bFSMStarted;
 
-    CPlayerControllerContext m_ctx;
+    CPlayerControllerContext* m_pCtx;
     CPlayerState* m_pRoot;
 
     unordered_map<PlayerState, CPlayerState*> m_mStateList;

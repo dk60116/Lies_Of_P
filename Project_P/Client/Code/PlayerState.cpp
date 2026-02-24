@@ -21,6 +21,7 @@ void CPlayerState::Initialize(CPlayerControllerContext* _ctx, const CPlayerContr
 void CPlayerState::Enter()
 {
 	m_pCtx->SetActionActive(m_eStateType, true);
+	m_pCtx->SetCurrentState(m_eStateType);
 
 	m_fPassedTime = 0.f;
 }
