@@ -86,16 +86,58 @@ namespace Engine
 			return vector3(XMVectorGetX(r), XMVectorGetY(r), XMVectorGetZ(r));
 		}
 
-		inline void DrawAxisCross(ImDrawList* _drawList, const _matrix& _viewProj, const D3D11_VIEWPORT& _vp, const vector3& _center, const vector3& _axisX, const vector3& _axisY, const vector3& _axisZ, const ImU32 _color)
+		inline void DrawWireBox(ImDrawList* _drawList, const _matrix& _viewProj, const D3D11_VIEWPORT& _vp, const vector3& _center, const vector3& _halfExtent, const quaternion& _rotation, const ImU32 _color)
 		{
-			ImVec2 p0;
-			ImVec2 p1;
-			if (WorldToEditorScreen(_center - _axisX, _viewProj, _vp, p0) && WorldToEditorScreen(_center + _axisX, _viewProj, _vp, p1))
+			vector3 corners[8] =
+			{
+				vector3(-_halfExtent.x, -_halfExtent.y, -_halfExtent.z),
+				vector3(_halfExtent.x, -_halfExtent.y, -_halfExtent.z),
+				vector3(_halfExtent.x, _halfExtent.y, -_halfExtent.z),
+				vector3(-_halfExtent.x, _halfExtent.y, -_halfExtent.z),
+				vector3(-_halfExtent.x, -_halfExtent.y, _halfExtent.z),
+				vector3(_halfExtent.x, -_halfExtent.y, _halfExtent.z),
+				vector3(_halfExtent.x, _halfExtent.y, _halfExtent.z),
+				vector3(-_halfExtent.x, _halfExtent.y, _halfExtent.z)
+			};
+
+			for (_uint i = 0; i < 8; ++i)
+				corners[i] = _center + RotatePoint(corners[i], _rotation);
+
+			constexpr _int edge[12][2] =
+			{
+				{0, 1}, {1, 2}, {2, 3}, {3, 0},
+				{4, 5}, {5, 6}, {6, 7}, {7, 4},
+				{0, 4}, {1, 5}, {2, 6}, {3, 7}
+			};
+
+			for (_int i = 0; i < 12; ++i)
+			{
+				ImVec2 p0;
+				ImVec2 p1;
+				if (!WorldToEditorScreen(corners[edge[i][0]], _viewProj, _vp, p0))
+					continue;
+				if (!WorldToEditorScreen(corners[edge[i][1]], _viewProj, _vp, p1))
+					continue;
 				_drawList->AddLine(p0, p1, _color, 1.5f);
-			if (WorldToEditorScreen(_center - _axisY, _viewProj, _vp, p0) && WorldToEditorScreen(_center + _axisY, _viewProj, _vp, p1))
-				_drawList->AddLine(p0, p1, _color, 1.5f);
-			if (WorldToEditorScreen(_center - _axisZ, _viewProj, _vp, p0) && WorldToEditorScreen(_center + _axisZ, _viewProj, _vp, p1))
-				_drawList->AddLine(p0, p1, _color, 1.5f);
+			}
+		}
+
+		inline void DrawScreenSpaceCircle(ImDrawList* _drawList, const _matrix& _viewProj, const D3D11_VIEWPORT& _vp, const vector3& _center, const vector3& _cameraRight, const _float _radius, const ImU32 _color)
+		{
+			ImVec2 center;
+			ImVec2 radiusPoint;
+			if (!WorldToEditorScreen(_center, _viewProj, _vp, center))
+				return;
+			if (!WorldToEditorScreen(_center + _cameraRight * _radius, _viewProj, _vp, radiusPoint))
+				return;
+
+			const float dx = radiusPoint.x - center.x;
+			const float dy = radiusPoint.y - center.y;
+			const float pixelRadius = sqrtf(dx * dx + dy * dy);
+			if (pixelRadius <= 0.0f)
+				return;
+
+			_drawList->AddCircle(center, pixelRadius, _color, 48, 1.8f);
 		}
 #endif
 	}
@@ -789,17 +831,14 @@ void CPhysics::RenderRaycastDebugDisplay()
 
 		if (debugRay.shape == DebugRaycastShape::Box)
 		{
-			const vector3 axisX = RotatePoint(vector3(debugRay.halfExtent.x, 0.f, 0.f), debugRay.rotation);
-			const vector3 axisY = RotatePoint(vector3(0.f, debugRay.halfExtent.y, 0.f), debugRay.rotation);
-			const vector3 axisZ = RotatePoint(vector3(0.f, 0.f, debugRay.halfExtent.z), debugRay.rotation);
-			DrawAxisCross(drawList, viewProj, *vp, debugRay.start, axisX, axisY, axisZ, color);
-			DrawAxisCross(drawList, viewProj, *vp, debugRay.end, axisX, axisY, axisZ, color);
+			DrawWireBox(drawList, viewProj, *vp, debugRay.start, debugRay.halfExtent, debugRay.rotation, color);
+			DrawWireBox(drawList, viewProj, *vp, debugRay.end, debugRay.halfExtent, debugRay.rotation, color);
 		}
 		else if (debugRay.shape == DebugRaycastShape::Sphere)
 		{
-			const vector3 axis(debugRay.radius, debugRay.radius, debugRay.radius);
-			DrawAxisCross(drawList, viewProj, *vp, debugRay.start, vector3(axis.x, 0.f, 0.f), vector3(0.f, axis.y, 0.f), vector3(0.f, 0.f, axis.z), color);
-			DrawAxisCross(drawList, viewProj, *vp, debugRay.end, vector3(axis.x, 0.f, 0.f), vector3(0.f, axis.y, 0.f), vector3(0.f, 0.f, axis.z), color);
+			const vector3 cameraRight = camera->Get_Transform()->Get_Directions().right;
+			DrawScreenSpaceCircle(drawList, viewProj, *vp, debugRay.start, cameraRight, debugRay.radius, color);
+			DrawScreenSpaceCircle(drawList, viewProj, *vp, debugRay.end, cameraRight, debugRay.radius, color);
 		}
 	}
 #endif
