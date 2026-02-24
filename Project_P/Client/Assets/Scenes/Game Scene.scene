@@ -109,6 +109,8 @@ Floor_4_Stage01_Floor_04_Auto_1771333592565 : Map/Map01/Floor_4/Stage01_Floor_04
 Building_9_Stage01_Building_09_00_Auto_1771855266391 : Map/Map01/Building_9/Stage01_Building_09_00.fbx : [Mesh]
 Building_9_Stage01_Building_09_01_Auto_1771859942631 : Map/Map01/Building_9/Stage01_Building_09_01.fbx : [Mesh]
 Floor_5_Stage01_Floor_05_Auto_1771864596980 : Map/Map01/Floor_5/Stage01_Floor_05.fbx : [Mesh]
+InspectorTexture/Stage01_Floor_00_TD_0.png_13799870731789633530 : Map/Map01/Floor_0/Stage01_Floor_00_TD_0.png : [Texture] [Editor]
+InspectorTexture/Stage01_Floor_00_TN_0.png_2795487065962251976 : Map/Map01/Floor_0/Stage01_Floor_00_TN_0.png : [Texture] [Editor]
 SceneTexture/Building_0_Stage01_Building_00_TD_0.dds_18281719154232444330 : BinaryAssets/TextureData/Building_0_Stage01_Building_00_TD_0.dds : [Texture] [Editor]
 SceneTexture/Building_0_Stage01_Building_00_TD_1.dds_892922895400749697 : BinaryAssets/TextureData/Building_0_Stage01_Building_00_TD_1.dds : [Texture] [Editor]
 SceneTexture/Building_0_Stage01_Building_00_TD_2.dds_10217609621784755652 : BinaryAssets/TextureData/Building_0_Stage01_Building_00_TD_2.dds : [Texture] [Editor]

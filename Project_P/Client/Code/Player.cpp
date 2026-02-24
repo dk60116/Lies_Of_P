@@ -251,16 +251,28 @@ void CPlayer::SetLightAttakComboCount(const _uint _count)
 void CPlayer::Ground()
 {
 	CPhysics::RAYCASTHIT hit = {};
-	CPhysics::Ray ray = {};
-	ray.origin = Get_Transform()->Get_Position() + vector3::up() * 1.f;
+	CPhysics::SphereRay ray = {};
+	ray.center = Get_Transform()->Get_Position() + vector3::up() * 1.f;
+	ray.radius = 0.5f;
 	ray.dir = vector3::down();
-	ray.maxDist = 1.05f;
+	ray.maxDist = 0.75f;
 
-	auto hits = CPhysics::GetInstance().Raycast(ray, m_iGroundMask);
+	auto hits = CPhysics::GetInstance().SphereRaycast(ray, m_iGroundMask);
 
 	m_bIsGround = hits.size() > 0;
 
 	CDebug::LogError(m_bIsGround);
 
 	m_pAnimator->SetBool(L"isGround", m_bIsGround);
+
+	if (CInput::GetInstance().GetKeyDown(KEY_CODE::V))
+	{
+		CPhysics::RAYCASTHIT ehit = {};
+		CPhysics::Ray eray = {};
+		eray.origin = Get_Transform()->Get_Position() + vector3::up() * 0.5f;
+		eray.dir = vector3::up();
+		eray.maxDist = 1.f;
+
+		auto hits = CPhysics::GetInstance().Raycast(eray, m_iGroundMask);
+	}
 }
