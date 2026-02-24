@@ -77,6 +77,26 @@ namespace Engine
 			_outScreen.y = _vp.TopLeftY + (1.0f - ndcY) * 0.5f * _vp.Height;
 			return true;
 		}
+
+		inline vector3 RotatePoint(const vector3& _p, const quaternion& _q)
+		{
+			const _vector v = XMVectorSet(_p.x, _p.y, _p.z, 0.0f);
+			const _vector q = XMVectorSet(_q.x, _q.y, _q.z, _q.w);
+			const _vector r = XMVector3Rotate(v, q);
+			return vector3(XMVectorGetX(r), XMVectorGetY(r), XMVectorGetZ(r));
+		}
+
+		inline void DrawAxisCross(ImDrawList* _drawList, const _matrix& _viewProj, const D3D11_VIEWPORT& _vp, const vector3& _center, const vector3& _axisX, const vector3& _axisY, const vector3& _axisZ, const ImU32 _color)
+		{
+			ImVec2 p0;
+			ImVec2 p1;
+			if (WorldToEditorScreen(_center - _axisX, _viewProj, _vp, p0) && WorldToEditorScreen(_center + _axisX, _viewProj, _vp, p1))
+				_drawList->AddLine(p0, p1, _color, 1.5f);
+			if (WorldToEditorScreen(_center - _axisY, _viewProj, _vp, p0) && WorldToEditorScreen(_center + _axisY, _viewProj, _vp, p1))
+				_drawList->AddLine(p0, p1, _color, 1.5f);
+			if (WorldToEditorScreen(_center - _axisZ, _viewProj, _vp, p0) && WorldToEditorScreen(_center + _axisZ, _viewProj, _vp, p1))
+				_drawList->AddLine(p0, p1, _color, 1.5f);
+		}
 #endif
 	}
 	class CPhysics::BroadPhaseLayerInterfaceImpl final : public BroadPhaseLayerInterface
@@ -735,12 +755,22 @@ void CPhysics::RenderRaycastDebugDisplay()
 	if (m_vDebugRaycasts.empty())
 		return;
 
-	CCamera* editorCamera = CSceneManager::GetInstance().Get_EditorCamera();
+	CCamera* camera = CSceneManager::GetInstance().Get_EditorCamera();
 	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_EditorViewport();
-	if (!editorCamera || !vp)
+
+	if (!camera)
+	{
+		CScene* scene = CSceneManager::GetInstance().Get_CrtScene();
+		camera = scene ? scene->Get_Camera() : nullptr;
+	}
+
+	if (!vp)
+		vp = CGraphicDevice::GetInstance().Get_CurrentViewport();
+
+	if (!camera || !vp)
 		return;
 
-	const _matrix viewProj = editorCamera->Get_ViewMatrix() * editorCamera->Get_ProjectionMatrix();
+	const _matrix viewProj = camera->Get_ViewMatrix() * camera->Get_ProjectionMatrix();
 	ImDrawList* drawList = ImGui::GetForegroundDrawList();
 	if (!drawList)
 		return;
@@ -756,6 +786,21 @@ void CPhysics::RenderRaycastDebugDisplay()
 
 		const ImU32 color = debugRay.hit ? IM_COL32(80, 255, 120, 255) : IM_COL32(255, 80, 80, 255);
 		drawList->AddLine(p0, p1, color, 2.0f);
+
+		if (debugRay.shape == DebugRaycastShape::Box)
+		{
+			const vector3 axisX = RotatePoint(vector3(debugRay.halfExtent.x, 0.f, 0.f), debugRay.rotation);
+			const vector3 axisY = RotatePoint(vector3(0.f, debugRay.halfExtent.y, 0.f), debugRay.rotation);
+			const vector3 axisZ = RotatePoint(vector3(0.f, 0.f, debugRay.halfExtent.z), debugRay.rotation);
+			DrawAxisCross(drawList, viewProj, *vp, debugRay.start, axisX, axisY, axisZ, color);
+			DrawAxisCross(drawList, viewProj, *vp, debugRay.end, axisX, axisY, axisZ, color);
+		}
+		else if (debugRay.shape == DebugRaycastShape::Sphere)
+		{
+			const vector3 axis(debugRay.radius, debugRay.radius, debugRay.radius);
+			DrawAxisCross(drawList, viewProj, *vp, debugRay.start, vector3(axis.x, 0.f, 0.f), vector3(0.f, axis.y, 0.f), vector3(0.f, 0.f, axis.z), color);
+			DrawAxisCross(drawList, viewProj, *vp, debugRay.end, vector3(axis.x, 0.f, 0.f), vector3(0.f, axis.y, 0.f), vector3(0.f, 0.f, axis.z), color);
+		}
 	}
 #endif
 }
@@ -766,6 +811,32 @@ void CPhysics::AddDebugRaycastDisplay(const vector3& _start, const vector3& _end
 	DebugRaycastDisplay debugRay;
 	debugRay.start = _start;
 	debugRay.end = _end;
+	debugRay.shape = DebugRaycastShape::Line;
+	debugRay.hit = _hit;
+	debugRay.remainTime = 1.0f;
+	m_vDebugRaycasts.push_back(debugRay);
+}
+
+void CPhysics::AddDebugRaycastDisplay(const BoxRay& _boxRay, const _bool _hit)
+{
+	DebugRaycastDisplay debugRay;
+	debugRay.start = _boxRay.center;
+	debugRay.end = _boxRay.center + _boxRay.dir * _boxRay.maxDist;
+	debugRay.halfExtent = _boxRay.halfExtent;
+	debugRay.rotation = _boxRay.rotation;
+	debugRay.shape = DebugRaycastShape::Box;
+	debugRay.hit = _hit;
+	debugRay.remainTime = 1.0f;
+	m_vDebugRaycasts.push_back(debugRay);
+}
+
+void CPhysics::AddDebugRaycastDisplay(const SphereRay& _sphereRay, const _bool _hit)
+{
+	DebugRaycastDisplay debugRay;
+	debugRay.start = _sphereRay.center;
+	debugRay.end = _sphereRay.center + _sphereRay.dir * _sphereRay.maxDist;
+	debugRay.radius = _sphereRay.radius;
+	debugRay.shape = DebugRaycastShape::Sphere;
 	debugRay.hit = _hit;
 	debugRay.remainTime = 1.0f;
 	m_vDebugRaycasts.push_back(debugRay);
@@ -944,7 +1015,7 @@ vector<CPhysics::RAYCASTHIT> CPhysics::BoxRaycast(const BoxRay& _boxRay, const C
 	if (!collector.HadHit())
 	{
 #ifndef _CLIENT_BUILD
-		AddDebugRaycastDisplay(_boxRay.center, _boxRay.center + _boxRay.dir * _boxRay.maxDist, false);
+		AddDebugRaycastDisplay(_boxRay, false);
 #endif
 		return hits;
 	}
@@ -980,7 +1051,7 @@ vector<CPhysics::RAYCASTHIT> CPhysics::BoxRaycast(const BoxRay& _boxRay, const C
 
 	sort(hits.begin(), hits.end(), [](const RAYCASTHIT& a, const RAYCASTHIT& b) { return a.distance < b.distance; });
 	#ifndef _CLIENT_BUILD
-	AddDebugRaycastDisplay(_boxRay.center, _boxRay.center + _boxRay.dir * _boxRay.maxDist, !hits.empty());
+	AddDebugRaycastDisplay(_boxRay, !hits.empty());
 #endif
 
 	return hits;
@@ -1023,7 +1094,7 @@ vector<CPhysics::RAYCASTHIT> CPhysics::SphereRaycast(const SphereRay& _sphereRay
 	if (!collector.HadHit())
 	{
 #ifndef _CLIENT_BUILD
-		AddDebugRaycastDisplay(_sphereRay.center, _sphereRay.center + _sphereRay.dir * _sphereRay.maxDist, false);
+		AddDebugRaycastDisplay(_sphereRay, false);
 #endif
 		return hits;
 	}
@@ -1059,7 +1130,7 @@ vector<CPhysics::RAYCASTHIT> CPhysics::SphereRaycast(const SphereRay& _sphereRay
 
 	sort(hits.begin(), hits.end(), [](const RAYCASTHIT& a, const RAYCASTHIT& b) { return a.distance < b.distance; });
 	#ifndef _CLIENT_BUILD
-	AddDebugRaycastDisplay(_sphereRay.center, _sphereRay.center + _sphereRay.dir * _sphereRay.maxDist, !hits.empty());
+	AddDebugRaycastDisplay(_sphereRay, !hits.empty());
 #endif
 
 	return hits;
