@@ -735,20 +735,22 @@ void CPhysics::RenderRaycastDebugDisplay()
 	if (m_vDebugRaycasts.empty())
 		return;
 
-	CCamera* editorCamera = CSceneManager::GetInstance().Get_EditorCamera();
+	CCamera* camera = CSceneManager::GetInstance().Get_EditorCamera();
 	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_EditorViewport();
 
-	if (!editorCamera || !vp)
+	if (!camera)
 	{
 		CScene* scene = CSceneManager::GetInstance().Get_CrtScene();
-		editorCamera = scene ? scene->Get_Camera() : nullptr;
-		vp = CGraphicDevice::GetInstance().Get_GameViewport();
+		camera = scene ? scene->Get_Camera() : nullptr;
 	}
 
-	if (!editorCamera || !vp)
+	if (!vp)
+		vp = CGraphicDevice::GetInstance().Get_CurrentViewport();
+
+	if (!camera || !vp)
 		return;
 
-	const _matrix viewProj = editorCamera->Get_ViewMatrix() * editorCamera->Get_ProjectionMatrix();
+	const _matrix viewProj = camera->Get_ViewMatrix() * camera->Get_ProjectionMatrix();
 	ImDrawList* drawList = ImGui::GetForegroundDrawList();
 	if (!drawList)
 		return;
