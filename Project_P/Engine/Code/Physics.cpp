@@ -780,14 +780,7 @@ void CPhysics::Tick(_float _deltaSeconds)
 		m_fAccumulator = 0.0f;
 
 #ifndef _CLIENT_BUILD
-	for (auto it = m_vDebugRaycasts.begin(); it != m_vDebugRaycasts.end();)
-	{
-		it->remainTime -= _deltaSeconds;
-		if (it->remainTime <= 0.0f)
-			it = m_vDebugRaycasts.erase(it);
-		else
-			++it;
-	}
+	m_vDebugRaycasts.clear();
 #endif
 }
 
@@ -847,6 +840,18 @@ void CPhysics::RenderRaycastDebugDisplay()
 #ifndef _CLIENT_BUILD
 void CPhysics::AddDebugRaycastDisplay(const vector3& _start, const vector3& _end, const _bool _hit)
 {
+	for (DebugRaycastDisplay& debugRay : m_vDebugRaycasts)
+	{
+		if (debugRay.shape != DebugRaycastShape::Line)
+			continue;
+		if (debugRay.start.x != _start.x || debugRay.start.y != _start.y || debugRay.start.z != _start.z)
+			continue;
+		if (debugRay.end.x != _end.x || debugRay.end.y != _end.y || debugRay.end.z != _end.z)
+			continue;
+		debugRay.hit = debugRay.hit || _hit;
+		return;
+	}
+
 	DebugRaycastDisplay debugRay;
 	debugRay.start = _start;
 	debugRay.end = _end;
@@ -858,9 +863,26 @@ void CPhysics::AddDebugRaycastDisplay(const vector3& _start, const vector3& _end
 
 void CPhysics::AddDebugRaycastDisplay(const BoxRay& _boxRay, const _bool _hit)
 {
+	const vector3 end = _boxRay.center + _boxRay.dir * _boxRay.maxDist;
+	for (DebugRaycastDisplay& debugRay : m_vDebugRaycasts)
+	{
+		if (debugRay.shape != DebugRaycastShape::Box)
+			continue;
+		if (debugRay.start.x != _boxRay.center.x || debugRay.start.y != _boxRay.center.y || debugRay.start.z != _boxRay.center.z)
+			continue;
+		if (debugRay.end.x != end.x || debugRay.end.y != end.y || debugRay.end.z != end.z)
+			continue;
+		if (debugRay.halfExtent.x != _boxRay.halfExtent.x || debugRay.halfExtent.y != _boxRay.halfExtent.y || debugRay.halfExtent.z != _boxRay.halfExtent.z)
+			continue;
+		if (debugRay.rotation.x != _boxRay.rotation.x || debugRay.rotation.y != _boxRay.rotation.y || debugRay.rotation.z != _boxRay.rotation.z || debugRay.rotation.w != _boxRay.rotation.w)
+			continue;
+		debugRay.hit = debugRay.hit || _hit;
+		return;
+	}
+
 	DebugRaycastDisplay debugRay;
 	debugRay.start = _boxRay.center;
-	debugRay.end = _boxRay.center + _boxRay.dir * _boxRay.maxDist;
+	debugRay.end = end;
 	debugRay.halfExtent = _boxRay.halfExtent;
 	debugRay.rotation = _boxRay.rotation;
 	debugRay.shape = DebugRaycastShape::Box;
@@ -871,9 +893,24 @@ void CPhysics::AddDebugRaycastDisplay(const BoxRay& _boxRay, const _bool _hit)
 
 void CPhysics::AddDebugRaycastDisplay(const SphereRay& _sphereRay, const _bool _hit)
 {
+	const vector3 end = _sphereRay.center + _sphereRay.dir * _sphereRay.maxDist;
+	for (DebugRaycastDisplay& debugRay : m_vDebugRaycasts)
+	{
+		if (debugRay.shape != DebugRaycastShape::Sphere)
+			continue;
+		if (debugRay.start.x != _sphereRay.center.x || debugRay.start.y != _sphereRay.center.y || debugRay.start.z != _sphereRay.center.z)
+			continue;
+		if (debugRay.end.x != end.x || debugRay.end.y != end.y || debugRay.end.z != end.z)
+			continue;
+		if (debugRay.radius != _sphereRay.radius)
+			continue;
+		debugRay.hit = debugRay.hit || _hit;
+		return;
+	}
+
 	DebugRaycastDisplay debugRay;
 	debugRay.start = _sphereRay.center;
-	debugRay.end = _sphereRay.center + _sphereRay.dir * _sphereRay.maxDist;
+	debugRay.end = end;
 	debugRay.radius = _sphereRay.radius;
 	debugRay.shape = DebugRaycastShape::Sphere;
 	debugRay.hit = _hit;
