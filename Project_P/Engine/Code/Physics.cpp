@@ -70,7 +70,7 @@ namespace Engine
 			const float ndcX = XMVectorGetX(clip) * invW;
 			const float ndcY = XMVectorGetY(clip) * invW;
 			const float ndcZ = XMVectorGetZ(clip) * invW;
-			if (ndcZ < 0.0f || ndcZ > 1.0f)
+			if (ndcZ < -1.0f || ndcZ > 1.0f)
 				return false;
 
 			_outScreen.x = _vp.TopLeftX + (ndcX + 1.0f) * 0.5f * _vp.Width;
@@ -854,7 +854,12 @@ vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray, const CSceneMana
 	m_PhysicsSystem.GetNarrowPhaseQuery().CastRay(ray, rayCastSettings, collector);
 
 	if (!collector.HadHit())
+	{
+#ifndef _CLIENT_BUILD
+		AddDebugRaycastDisplay(_ray.origin, _ray.origin + _ray.dir * _ray.maxDist, false);
+#endif
 		return hits;
+	}
 
 	const BodyLockInterfaceLocking& lockInterface = m_PhysicsSystem.GetBodyLockInterface();
 
@@ -937,7 +942,12 @@ vector<CPhysics::RAYCASTHIT> CPhysics::BoxRaycast(const BoxRay& _boxRay, const C
 	m_PhysicsSystem.GetNarrowPhaseQuery().CastShape(shapeCast, settings, RVec3::sZero(), collector);
 
 	if (!collector.HadHit())
+	{
+#ifndef _CLIENT_BUILD
+		AddDebugRaycastDisplay(_boxRay.center, _boxRay.center + _boxRay.dir * _boxRay.maxDist, false);
+#endif
 		return hits;
+	}
 
 	const BodyLockInterfaceLocking& lockInterface = m_PhysicsSystem.GetBodyLockInterface();
 
@@ -1011,7 +1021,12 @@ vector<CPhysics::RAYCASTHIT> CPhysics::SphereRaycast(const SphereRay& _sphereRay
 	m_PhysicsSystem.GetNarrowPhaseQuery().CastShape(shapeCast, settings, RVec3::sZero(), collector);
 
 	if (!collector.HadHit())
+	{
+#ifndef _CLIENT_BUILD
+		AddDebugRaycastDisplay(_sphereRay.center, _sphereRay.center + _sphereRay.dir * _sphereRay.maxDist, false);
+#endif
 		return hits;
+	}
 
 	const BodyLockInterfaceLocking& lockInterface = m_PhysicsSystem.GetBodyLockInterface();
 
@@ -1048,5 +1063,4 @@ vector<CPhysics::RAYCASTHIT> CPhysics::SphereRaycast(const SphereRay& _sphereRay
 #endif
 
 	return hits;
-}
 }
