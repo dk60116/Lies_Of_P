@@ -37,6 +37,23 @@ public:
 		_float maxDist = 999999.f;
 	};
 
+	struct BoxRay
+	{
+		vector3 center;
+		vector3 halfExtent;
+		quaternion rotation = quaternion::identity();
+		vector3 dir;
+		_float maxDist = 999999.f;
+	};
+
+	struct SphereRay
+	{
+		vector3 center;
+		_float radius = 0.5f;
+		vector3 dir;
+		_float maxDist = 999999.f;
+	};
+
 	typedef struct RaycastHitInformation
 	{
 		_bool isHit = false;
@@ -70,6 +87,8 @@ public:
 	const _bool IsInitialized() const;
 
 	vector<RAYCASTHIT> Raycast(const Ray& _ray, const CSceneManager::LayerMask _mask = 0);
+	vector<RAYCASTHIT> BoxRaycast(const BoxRay& _boxRay, const CSceneManager::LayerMask _mask = 0);
+	vector<RAYCASTHIT> SphereRaycast(const SphereRay& _sphereRay, const CSceneManager::LayerMask _mask = 0);
 
 private:
 	class BroadPhaseLayerInterfaceImpl;

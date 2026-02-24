@@ -8,11 +8,50 @@
 #include <Jolt/Physics/Collision/CollideShape.h>
 #include <Jolt/Physics/Collision/NarrowPhaseQuery.h>
 #include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/ShapeCast.h>
 #include <mutex>
 #include <vector>
 
 namespace Engine
 {
+	namespace
+	{
+		constexpr uint64 colliderUserDataFlag = 1ull;
+
+		inline CGameObject* ResolveHitObject(const Body& _body)
+		{
+			CGameObject* obj = nullptr;
+			const uint64 userData = _body.GetUserData();
+			if (userData == 0)
+				return obj;
+
+			if ((userData & colliderUserDataFlag) != 0)
+			{
+				const uint64 ptrValue = userData & ~colliderUserDataFlag;
+				CCollider* collider = reinterpret_cast<CCollider*>(static_cast<uintptr_t>(ptrValue));
+				obj = collider ? collider->Get_GameObject() : nullptr;
+			}
+			else
+			{
+				CRigidBody* rigidBody = reinterpret_cast<CRigidBody*>(static_cast<uintptr_t>(userData));
+				obj = rigidBody ? rigidBody->Get_GameObject() : nullptr;
+			}
+
+			return obj;
+		}
+
+		inline _bool PassLayerMask(CGameObject* _obj, const CSceneManager::LayerMask _mask)
+		{
+			if (_mask == 0)
+				return true;
+			if (!_obj)
+				return false;
+
+			return CSceneManager::GetInstance().ContainLayerMask(_obj->GetLayer(), _mask);
+		}
+	}
 	class CPhysics::BroadPhaseLayerInterfaceImpl final : public BroadPhaseLayerInterface
 	{
 	public:
@@ -759,35 +798,9 @@ vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray, const CSceneMana
 		);
 		hit.hitNormal = vector3(worldNormal.GetX(), worldNormal.GetY(), worldNormal.GetZ()).normalized();
 
-		CGameObject* obj = nullptr;
-
-		const uint64 userData = body.GetUserData();
-		if (userData != 0)
-		{
-			constexpr uint64 colliderUserDataFlag = 1ull;
-
-			if ((userData & colliderUserDataFlag) != 0)
-			{
-				const uint64 ptrValue = userData & ~colliderUserDataFlag;
-				CCollider* collider = reinterpret_cast<CCollider*>(static_cast<uintptr_t>(ptrValue));
-				obj = collider ? collider->Get_GameObject() : nullptr;
-			}
-			else
-			{
-				CRigidBody* rigidBody = reinterpret_cast<CRigidBody*>(static_cast<uintptr_t>(userData));
-				obj = rigidBody ? rigidBody->Get_GameObject() : nullptr;
-			}
-		}
-
-		if (_mask != 0)
-		{
-			if (!obj)
-				continue;
-
-			const _uint objLayer = obj->GetLayer();
-			if (!CSceneManager::GetInstance().ContainLayerMask(objLayer, _mask))
-				continue;
-		}
+		CGameObject* obj = ResolveHitObject(body);
+		if (!PassLayerMask(obj, _mask))
+			continue;
 
 		hit.object = obj;
 		hits.push_back(hit);
@@ -797,4 +810,150 @@ vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray, const CSceneMana
 		[](const RAYCASTHIT& a, const RAYCASTHIT& b) { return a.distance < b.distance; });
 
 	return hits;
+}
+
+
+vector<CPhysics::RAYCASTHIT> CPhysics::BoxRaycast(const BoxRay& _boxRay, const CSceneManager::LayerMask _mask)
+{
+	vector<RAYCASTHIT> hits;
+
+	if (!m_bJoltInitialized)
+		return hits;
+
+	if (_boxRay.maxDist <= 0.0f)
+		return hits;
+
+	const Vec3 direction(_boxRay.dir.x, _boxRay.dir.y, _boxRay.dir.z);
+	if (direction.LengthSq() <= 0.0f)
+		return hits;
+
+	const _float hx = max(fabsf(_boxRay.halfExtent.x), 0.001f);
+	const _float hy = max(fabsf(_boxRay.halfExtent.y), 0.001f);
+	const _float hz = max(fabsf(_boxRay.halfExtent.z), 0.001f);
+
+	BoxShapeSettings boxSettings(Vec3(hx, hy, hz));
+	ShapeSettings::ShapeResult boxResult = boxSettings.Create();
+	if (boxResult.HasError())
+		return hits;
+
+	Ref<Shape> boxRef = boxResult.Get();
+	const Shape* boxShape = boxRef.GetPtr();
+
+	RShapeCast shapeCast(
+		boxShape,
+		Vec3::sReplicate(1.0f),
+		RMat44::sRotationTranslation(
+			Quat(_boxRay.rotation.x, _boxRay.rotation.y, _boxRay.rotation.z, _boxRay.rotation.w),
+			RVec3(_boxRay.center.x, _boxRay.center.y, _boxRay.center.z)),
+		direction * _boxRay.maxDist);
+
+	AllHitCollisionCollector<CastShapeCollector> collector;
+	ShapeCastSettings settings;
+	m_PhysicsSystem.GetNarrowPhaseQuery().CastShape(shapeCast, settings, RVec3::sZero(), collector);
+
+	if (!collector.HadHit())
+		return hits;
+
+	const BodyLockInterfaceLocking& lockInterface = m_PhysicsSystem.GetBodyLockInterface();
+
+	for (const ShapeCastResult& result : collector.mHits)
+	{
+		BodyLockRead bodyLock(lockInterface, result.mBodyID2);
+		if (!bodyLock.Succeeded())
+			continue;
+
+		const Body& body = bodyLock.GetBody();
+		const _float distance = static_cast<_float>(result.mFraction * _boxRay.maxDist);
+
+		RAYCASTHIT hit;
+		hit.isHit = true;
+		hit.distance = distance;
+		hit.hitPos = _boxRay.center + _boxRay.dir * distance;
+
+		vector3 normal(result.mPenetrationAxis.GetX(), result.mPenetrationAxis.GetY(), result.mPenetrationAxis.GetZ());
+		if (normal.length_squared() > 0.0f)
+			normal.normalize();
+		hit.hitNormal = -normal;
+
+		CGameObject* obj = ResolveHitObject(body);
+		if (!PassLayerMask(obj, _mask))
+			continue;
+
+		hit.object = obj;
+		hits.push_back(hit);
+	}
+
+	sort(hits.begin(), hits.end(), [](const RAYCASTHIT& a, const RAYCASTHIT& b) { return a.distance < b.distance; });
+	return hits;
+}
+
+vector<CPhysics::RAYCASTHIT> CPhysics::SphereRaycast(const SphereRay& _sphereRay, const CSceneManager::LayerMask _mask)
+{
+	vector<RAYCASTHIT> hits;
+
+	if (!m_bJoltInitialized)
+		return hits;
+
+	if (_sphereRay.maxDist <= 0.0f)
+		return hits;
+
+	const Vec3 direction(_sphereRay.dir.x, _sphereRay.dir.y, _sphereRay.dir.z);
+	if (direction.LengthSq() <= 0.0f)
+		return hits;
+
+	const _float radius = max(fabsf(_sphereRay.radius), 0.001f);
+
+	SphereShapeSettings sphereSettings(radius);
+	ShapeSettings::ShapeResult sphereResult = sphereSettings.Create();
+	if (sphereResult.HasError())
+		return hits;
+
+	Ref<Shape> sphereRef = sphereResult.Get();
+	const Shape* sphereShape = sphereRef.GetPtr();
+
+	RShapeCast shapeCast(
+		sphereShape,
+		Vec3::sReplicate(1.0f),
+		RMat44::sTranslation(RVec3(_sphereRay.center.x, _sphereRay.center.y, _sphereRay.center.z)),
+		direction * _sphereRay.maxDist);
+
+	AllHitCollisionCollector<CastShapeCollector> collector;
+	ShapeCastSettings settings;
+	m_PhysicsSystem.GetNarrowPhaseQuery().CastShape(shapeCast, settings, RVec3::sZero(), collector);
+
+	if (!collector.HadHit())
+		return hits;
+
+	const BodyLockInterfaceLocking& lockInterface = m_PhysicsSystem.GetBodyLockInterface();
+
+	for (const ShapeCastResult& result : collector.mHits)
+	{
+		BodyLockRead bodyLock(lockInterface, result.mBodyID2);
+		if (!bodyLock.Succeeded())
+			continue;
+
+		const Body& body = bodyLock.GetBody();
+		const _float distance = static_cast<_float>(result.mFraction * _sphereRay.maxDist);
+
+		RAYCASTHIT hit;
+		hit.isHit = true;
+		hit.distance = distance;
+		hit.hitPos = _sphereRay.center + _sphereRay.dir * distance;
+
+		vector3 normal(result.mPenetrationAxis.GetX(), result.mPenetrationAxis.GetY(), result.mPenetrationAxis.GetZ());
+		if (normal.length_squared() > 0.0f)
+			normal.normalize();
+		hit.hitNormal = -normal;
+
+		CGameObject* obj = ResolveHitObject(body);
+		if (!PassLayerMask(obj, _mask))
+			continue;
+
+		hit.object = obj;
+		hits.push_back(hit);
+	}
+
+	sort(hits.begin(), hits.end(), [](const RAYCASTHIT& a, const RAYCASTHIT& b) { return a.distance < b.distance; });
+	return hits;
+}
 }
