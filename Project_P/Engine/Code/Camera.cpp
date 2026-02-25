@@ -1247,6 +1247,11 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF);
 
 	CMaterial* shadowDepthMat = Find_RectMaterial(CRenderTarget::RTType::ShadowDepth);
+	if (!shadowDepthMat)
+		return;
+
+	if (m_vVisibleStaticMeshList.empty() && m_vVisibleDynamicMeshList.empty())
+		Collect_VisibleRenderers();
 
 	auto isRenderableShadowTarget = [](CRenderer* r)
 	{
@@ -1263,93 +1268,129 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 		return true;
 	};
 
-	struct ShadowBatchKey
-	{
-		CMeshBuffer* meshBuffer;
-		CMaterial* material;
-		_bool castShadow;
+	vector<VertexSkinnedBuffer> mergedStaticVertices;
+	vector<_uint> mergedStaticIndices;
+	mergedStaticVertices.reserve(m_vVisibleStaticMeshList.size() * 64);
+	mergedStaticIndices.reserve(m_vVisibleStaticMeshList.size() * 96);
 
-		_bool operator==(const ShadowBatchKey& rhs) const
-		{
-			return meshBuffer == rhs.meshBuffer && material == rhs.material && castShadow == rhs.castShadow;
-		}
-	};
-
-	struct ShadowBatchKeyHash
-	{
-		size_t operator()(const ShadowBatchKey& key) const
-		{
-			size_t h1 = hash<void*>()(static_cast<void*>(key.meshBuffer));
-			size_t h2 = hash<void*>()(static_cast<void*>(key.material));
-			size_t h3 = hash<int>()(static_cast<int>(key.castShadow));
-			return h1 ^ (h2 << 1) ^ (h3 << 2);
-		}
-	};
-
-	unordered_map<ShadowBatchKey, vector<CRenderer*>, ShadowBatchKeyHash> staticBatches;
-	staticBatches.reserve(m_vStaticMeshList.size());
-
-	for (auto* r : m_vStaticMeshList)
+	for (auto* r : m_vVisibleStaticMeshList)
 	{
 		if (!isRenderableShadowTarget(r))
 			continue;
-
-		ShadowBatchKey key = { r->Get_MeshBuffer(), r->Get_Material(), r->IsCastShadow() };
-		staticBatches[key].push_back(r);
-	}
-
-	for (auto& kv : staticBatches)
-	{
-		auto& batch = kv.second;
-		if (batch.empty())
+		if (!r->Get_Transform())
 			continue;
 
-		CRenderer* leader = batch[0];
-		if (!leader || !leader->Get_GameObject() || !leader->Get_Transform())
+		CMeshBuffer* meshBuffer = r->Get_MeshBuffer();
+		if (!meshBuffer)
 			continue;
 
-		const _uint maxInstanceCount = 128u;
-		const vector3 leaderPos = leader->Get_Transform()->Get_Position();
-		const vector3 leaderRot = leader->Get_Transform()->Get_EulerAngles();
-		const vector3 leaderScale = leader->Get_Transform()->Get_LocalScale();
+		vector<VertexTexNormalTangentBuffer> srcVertices = meshBuffer->Get_VertexBuffer();
+		if (srcVertices.empty())
+			continue;
 
-		for (size_t offset = 0; offset < batch.size(); offset += maxInstanceCount)
+		vector<_uint> srcIndices = meshBuffer->Get_IndexBuffer();
+		const _uint baseVertex = static_cast<_uint>(mergedStaticVertices.size());
+		_matrix world = r->Get_Transform()->Get_WorldMatrix();
+
+		for (const auto& src : srcVertices)
 		{
-			const size_t remain = batch.size() - offset;
-			const _uint chunkCount = static_cast<_uint>(min<size_t>(remain, maxInstanceCount));
+			VertexSkinnedBuffer dst = {};
+			_vector posL = XMVectorSet(src.position.x, src.position.y, src.position.z, 1.f);
+			_vector posW = XMVector3TransformCoord(posL, world);
+			XMStoreFloat3(reinterpret_cast<XMFLOAT3*>(&dst.position), posW);
+			dst.normal = src.normal;
+			dst.uv = src.uv;
+			dst.tangent = src.tangent;
+			mergedStaticVertices.push_back(dst);
+		}
 
-			leader->CreateMeshInstancing(chunkCount);
-
-			for (_uint i = 0; i < chunkCount; ++i)
+		if (!srcIndices.empty())
+		{
+			for (_uint idx : srcIndices)
+				mergedStaticIndices.push_back(baseVertex + idx);
+		}
+		else
+		{
+			for (_uint i = 0; i + 2 < static_cast<_uint>(srcVertices.size()); i += 3)
 			{
-				CRenderer* r = batch[offset + i];
-				if (!r || !r->Get_Transform())
-					continue;
-
-				const vector3 pos = r->Get_Transform()->Get_Position();
-				const vector3 rot = r->Get_Transform()->Get_EulerAngles();
-				const vector3 scale = r->Get_Transform()->Get_LocalScale();
-
-				const vector3 relPos = pos - leaderPos;
-				const vector3 relRot = rot - leaderRot;
-				const vector3 relScale = vector3
-				(
-					leaderScale.x != 0.f ? scale.x / leaderScale.x : 1.f,
-					leaderScale.y != 0.f ? scale.y / leaderScale.y : 1.f,
-					leaderScale.z != 0.f ? scale.z / leaderScale.z : 1.f
-				);
-
-				leader->SetInstancingPosition(i, relPos);
-				leader->SetInstancingRotation(i, relRot);
-				leader->SetInstancingSize(i, relScale);
+				mergedStaticIndices.push_back(baseVertex + i);
+				mergedStaticIndices.push_back(baseVertex + i + 1);
+				mergedStaticIndices.push_back(baseVertex + i + 2);
 			}
-
-			leader->Render_ShadowDepth(shadowDepthMat, m_sMainLightMatrix);
-			leader->CreateMeshInstancing(0);
 		}
 	}
 
-	for (auto* r : m_vDynamicMeshList)
+	if (!mergedStaticVertices.empty() && !mergedStaticIndices.empty())
+	{
+		ID3D11Buffer* mergedVB = nullptr;
+		ID3D11Buffer* mergedIB = nullptr;
+		ID3D11Buffer* instanceCB = nullptr;
+
+		D3D11_BUFFER_DESC vbDesc = {};
+		vbDesc.ByteWidth = static_cast<_uint>(sizeof(VertexSkinnedBuffer) * mergedStaticVertices.size());
+		vbDesc.Usage = D3D11_USAGE_DEFAULT;
+		vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+
+		D3D11_SUBRESOURCE_DATA vbData = {};
+		vbData.pSysMem = mergedStaticVertices.data();
+
+		if (SUCCEEDED(device->CreateBuffer(&vbDesc, &vbData, &mergedVB)))
+		{
+			D3D11_BUFFER_DESC ibDesc = {};
+			ibDesc.ByteWidth = static_cast<_uint>(sizeof(_uint) * mergedStaticIndices.size());
+			ibDesc.Usage = D3D11_USAGE_DEFAULT;
+			ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+
+			D3D11_SUBRESOURCE_DATA ibData = {};
+			ibData.pSysMem = mergedStaticIndices.data();
+
+			if (SUCCEEDED(device->CreateBuffer(&ibDesc, &ibData, &mergedIB)))
+			{
+				struct ShadowInstanceCB
+				{
+					_float4x4 worlds[128];
+					_uint instanceCount;
+					_float3 padding;
+				};
+
+				ShadowInstanceCB cbData = {};
+				XMStoreFloat4x4(reinterpret_cast<XMFLOAT4X4*>(&cbData.worlds[0]), XMMatrixIdentity());
+				cbData.instanceCount = 0;
+
+				D3D11_BUFFER_DESC cbDesc = {};
+				cbDesc.ByteWidth = sizeof(ShadowInstanceCB);
+				cbDesc.Usage = D3D11_USAGE_DEFAULT;
+				cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+				D3D11_SUBRESOURCE_DATA cbInit = {};
+				cbInit.pSysMem = &cbData;
+
+				if (SUCCEEDED(device->CreateBuffer(&cbDesc, &cbInit, &instanceCB)))
+					ctx->VSSetConstantBuffers(4, 1, &instanceCB);
+
+				_matrix identity = XMMatrixIdentity();
+				_matrix matView = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(&m_sMainLightMatrix.view));
+				_matrix matProj = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(&m_sMainLightMatrix.proj));
+				_float3 dummyPos = { 0.f, 0.f, 0.f };
+
+				shadowDepthMat->Bind_Matrix(identity);
+				shadowDepthMat->Bind_Camera(dummyPos, matView, matProj, 0);
+
+				_uint stride = sizeof(VertexSkinnedBuffer);
+				_uint offset = 0;
+				ctx->IASetVertexBuffers(0, 1, &mergedVB, &stride, &offset);
+				ctx->IASetIndexBuffer(mergedIB, DXGI_FORMAT_R32_UINT, 0);
+				ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+				ctx->DrawIndexed(static_cast<_uint>(mergedStaticIndices.size()), 0, 0);
+			}
+		}
+
+		Safe_Release(instanceCB);
+		Safe_Release(mergedVB);
+		Safe_Release(mergedIB);
+	}
+
+	for (auto* r : m_vVisibleDynamicMeshList)
 	{
 		if (!isRenderableShadowTarget(r))
 			continue;
