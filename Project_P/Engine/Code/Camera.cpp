@@ -1249,11 +1249,10 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	CMaterial* shadowDepthMat = Find_RectMaterial(CRenderTarget::RTType::ShadowDepth);
 
 	_matrix lightView = XMLoadFloat4x4(&m_sMainLightMatrix.view);
-	_matrix lightProj = XMLoadFloat4x4(&m_sMainLightMatrix.proj);
-	BoundingFrustum shadowFrustum = {};
-	BoundingFrustum::CreateFromMatrix(shadowFrustum, lightProj);
-	_matrix invLightView = XMMatrixInverse(nullptr, lightView);
-	shadowFrustum.Transform(shadowFrustum, invLightView);
+	const _float shadowDistance = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().directionalLightShadowDist;
+	const _float lightHalfExtent = shadowDistance * 0.5f;
+	const _float lightNear = 0.0f;
+	const _float lightFar = shadowDistance * 2.0f;
 
 	auto isRenderableShadowTarget = [](CRenderer* r)
 	{
@@ -1270,14 +1269,38 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 		return true;
 	};
 
-	auto isShadowVisible = [this, &shadowFrustum](CRenderer* r)
+	auto isShadowVisible = [this, &lightView, lightHalfExtent, lightNear, lightFar](CRenderer* r)
 	{
 		BoundingBox worldAABB = {};
 		if (!TryBuildRendererWorldAABB(r, worldAABB))
 			return false;
 
-		ContainmentType contain = shadowFrustum.Contains(worldAABB);
-		return contain != ContainmentType::DISJOINT;
+		XMFLOAT3 corners[8] = {};
+		worldAABB.GetCorners(corners);
+
+		_vector minV = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 0.f);
+		_vector maxV = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 0.f);
+		for (_int i = 0; i < 8; ++i)
+		{
+			_vector p = XMLoadFloat3(&corners[i]);
+			_vector pLS = XMVector3TransformCoord(p, lightView);
+			minV = XMVectorMin(minV, pLS);
+			maxV = XMVectorMax(maxV, pLS);
+		}
+
+		_float3 aabbMin = {};
+		_float3 aabbMax = {};
+		XMStoreFloat3(&aabbMin, minV);
+		XMStoreFloat3(&aabbMax, maxV);
+
+		if (aabbMax.x < -lightHalfExtent || aabbMin.x > lightHalfExtent)
+			return false;
+		if (aabbMax.y < -lightHalfExtent || aabbMin.y > lightHalfExtent)
+			return false;
+		if (aabbMax.z < lightNear || aabbMin.z > lightFar)
+			return false;
+
+		return true;
 	};
 
 	struct ShadowBatchKey
