@@ -171,7 +171,8 @@ void CPlayerController::LateUpdate()
 
 void CPlayerController::OnDestroy()
 {
-	delete m_pContext;
+	delete m_pCtx;
+	m_pCtx = nullptr;
 
 	for (TRAVERSAL_ITER(m_mStateList, it))
 		Safe_Release((*it).second);

@@ -221,6 +221,9 @@ void CPlayerCamera::Update()
 
 void CPlayerCamera::LateUpdate()
 {
+    if (CGameManager::GetInstance().Get_Player())
+        return;
+
     CTransform* tf = Get_Transform();
     CTransform* playerTf = CGameManager::GetInstance().Get_Player()->Get_Transform();
 
