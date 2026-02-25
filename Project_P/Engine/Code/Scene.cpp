@@ -559,7 +559,7 @@ void CScene::FixedUpdate()
 {
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
-		if ((*it)->IsActive())
+		if ((*it)->IsRecursiveActive())
 			(*it)->FixedUpdate();
 	}
 }
@@ -577,7 +577,7 @@ void CScene::LateUpdate()
 {
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
-		if ((*it)->IsActive())
+		if ((*it)->IsRecursiveActive())
 			(*it)->LateUpdate();
 	}
 }

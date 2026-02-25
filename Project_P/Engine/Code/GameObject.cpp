@@ -365,6 +365,8 @@ const _bool CGameObject::IsActive_Origin() const
 
 void CGameObject::SetActive(const _bool _active)
 {
+	const _bool prevRecursiveActive = m_bRecursiveActive;
+
 	m_bActive = _active;
 	m_bActive_Origin = _active;
 	m_bPrevActive = _active;
@@ -379,7 +381,17 @@ void CGameObject::SetActive(const _bool _active)
 		}
 	}
 
-	Set_RecursiveActive(parentActive && m_bActive);
+	const _bool nextRecursiveActive = parentActive && m_bActive;
+
+	if (prevRecursiveActive != nextRecursiveActive)
+	{
+		if (nextRecursiveActive)
+			OnEnable();
+		else
+			OnDisable();
+	}
+
+	Set_RecursiveActive(nextRecursiveActive);
 }
 
 list<CComponent*>& CGameObject::Get_ComponentList()
