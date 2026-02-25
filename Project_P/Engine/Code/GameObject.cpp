@@ -269,6 +269,9 @@ void CGameObject::OnPostRender()
 
 void CGameObject::Render_Gizmo()
 {
+	if (!IsRecursiveActive())
+		return;
+
 	for (TRAVERSAL_ITER(m_lComponentList, it))
 		(*it)->Render_Gizmo();
 }
