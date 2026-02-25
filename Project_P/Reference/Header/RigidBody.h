@@ -27,6 +27,8 @@ private:
 public:
 	HRESULT Initialize() override;
 	void Awake() override;
+	void OnEnable() override;
+	void OnDisable() override;
 	void FixedUpdate() override;
 	void OnCollisionEnter(CCollider* _other) override;
 	void OnCollisionStay(CCollider* _other) override;

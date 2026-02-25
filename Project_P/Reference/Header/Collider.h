@@ -23,6 +23,8 @@ protected:
 public:
     HRESULT Initialize() override;
     void Awake() override;
+    void OnEnable() override;
+    void OnDisable() override;
     void Update() override;
     void OnDestroy() override;
 

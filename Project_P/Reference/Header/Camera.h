@@ -107,7 +107,8 @@ protected:
 	_float m_fFieldOfView;
 	_float m_fSize;
 
-	vector<CRenderer*> m_vMeshList;
+	vector<CRenderer*> m_vStaticMeshList;
+	vector<CRenderer*> m_vDynamicMeshList;
 	vector<CUI*> m_vUIList;
 
 private:
