@@ -702,7 +702,18 @@ void CGameObject::Set_RecursiveActive(const _bool _active)
 			if (child && child->Get_GameObject())
 			{
 				CGameObject* childObj = child->Get_GameObject();
-				childObj->Set_RecursiveActive(_active && childObj->m_bActive);
+				const _bool childRecursiveActive = _active && childObj->m_bActive;
+				const _bool childPrevRecursiveActive = childObj->m_bRecursiveActive;
+
+				if (childRecursiveActive != childPrevRecursiveActive)
+				{
+					if (childRecursiveActive)
+						childObj->OnEnable();
+					else
+						childObj->OnDisable();
+				}
+
+				childObj->Set_RecursiveActive(childRecursiveActive);
 			}
 		}
 	}

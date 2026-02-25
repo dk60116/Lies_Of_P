@@ -112,6 +112,17 @@ void CRigidBody::Awake()
     RebuildBodiesIfDirty();
 }
 
+void CRigidBody::OnEnable()
+{
+    MarkBodyDirty();
+    RebuildBodiesIfDirty();
+}
+
+void CRigidBody::OnDisable()
+{
+    DestroyBodies();
+}
+
 void CRigidBody::FixedUpdate()
 {
     RebuildBodiesIfDirty();
