@@ -68,6 +68,17 @@ void CCollider::Awake()
 	RefreshStandaloneBody();
 }
 
+void CCollider::OnEnable()
+{
+	m_bStandaloneBodyDirty = true;
+	RefreshStandaloneBody();
+}
+
+void CCollider::OnDisable()
+{
+	DestroyStandaloneBody();
+}
+
 void CCollider::Update()
 {
 	const vector3 scale = m_pGameObject->Get_Transform()->Get_LocalScale();
