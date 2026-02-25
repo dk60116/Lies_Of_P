@@ -127,8 +127,11 @@ void CPlayerController::Update()
 
     const _bool hasInput = (x != 0) || (y != 0);
 
-	if (m_pCtx->CurrentState() != PlayerState::Evade)
-		m_pCtx->Animator()->SetBool(L"isInputDir", x + y != 0);
+	if (!m_pCtx->IsEvadeExit())
+	{
+		if (m_pCtx->CurrentState() != PlayerState::Evade)
+			m_pCtx->Animator()->SetBool(L"isInputDir", x + y != 0);
+	}
 
     const _bool attackLock = m_pCtx->IsActionActive(PlayerState::Attack);
 
@@ -156,7 +159,7 @@ void CPlayerController::Update()
 		m_pCtx->BeginTurnTo(desiredYaw);
 	}
 
-	m_pCtx->SetMoveLocalDir(vector3(x, 0.f, y));
+	m_pCtx->SetMoveLocalDir(vector3((_float)x, 0.f, (_float)y));
 
 	m_bRunning = hasInput;
 

@@ -20,6 +20,9 @@ private:
 		_bool  m_bTurning = false;
 		_float m_targetYaw = 0.f;
 		_float m_turnDir = 0.f;
+
+		_bool m_bEvadeExit = 0.f;
+		_float m_fEvadeExitTime = 0.f;
 	}CV_MOVE;
 
 	typedef struct ContextValue
@@ -110,6 +113,9 @@ public:
 	void SetCanEvade(const _bool _value);
 	const _bool IsCanJump() const;
 	void SetCanJump(const _bool _value);
+
+	const _bool IsEvadeExit() const;
+	void SetEvadeExit();
 
 public:
 	void StopMoveImmediate();

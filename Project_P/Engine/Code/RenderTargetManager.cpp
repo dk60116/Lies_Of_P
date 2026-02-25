@@ -107,7 +107,7 @@ void CRenderTargetManager::Bind_RenderTarget(const CRenderTarget::RTType type, I
     if (it == rtMap.end())
         return;
 
-    Unbind_AllSRVs_PS(context); // SRV/RTV ÇØÀúµå ¹æÁö (ÇÊ¼ö)
+    Unbind_AllSRVs_PS(context);
 
     CRenderTarget& rt = it->second;
 

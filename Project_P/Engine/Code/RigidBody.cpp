@@ -869,10 +869,8 @@ void CRigidBody::RebuildBodiesIfDirty()
     DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
     CacheLastSyncedTransform(vector3(pos.GetX(), pos.GetY(), pos.GetZ()), quaternion(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW()));
 
-    // --- ÀÏ¹Ý ¹Ùµð »ý¼º ---
     if (bodyCompound != nullptr)
     {
-        // º¸°ü¿ë raw ptr(refcount)
         m_pCompoundShape = bodyCompound.GetPtr();
         m_pCompoundShape->AddRef();
 

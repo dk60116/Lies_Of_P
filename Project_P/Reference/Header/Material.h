@@ -49,12 +49,12 @@ public:
 	class CTexture* Get_Texture(_int _index) const;
 
 public:
-	const _float Get_FloatValue(const wstring& _key) const;
-	const _int Get_IntValue(const wstring& _key) const;
-	const _float2 Get_Vector2Value(const wstring& _key) const;
-	const _float3& Get_Vector3Value(const wstring& _key);
-	const _float4& Get_Vector4Value(const wstring& _key);
-	const _float4x4& Get_MatrixValue(const wstring& _key);
+	const _bool Get_FloatValue(const wstring& _key, _float& _out);
+	const _bool Get_IntValue(const wstring& _key, _int& _out);
+	const _bool Get_Vector2Value(const wstring& _key, _float2& _out);
+	const _bool Get_Vector3Value(const wstring& _key, _float3& _out);
+	const _bool Get_Vector4Value(const wstring& _key, _float4& _out);
+	const _bool Get_MatrixValue(const wstring& _key, _float4x4 _out);
 	const unordered_map<wstring, _float>& Get_FloatValues() const;
 	const unordered_map<wstring, _int>& Get_IntValues() const;
 	const unordered_map<wstring, _float2>& Get_Vector2Values() const;

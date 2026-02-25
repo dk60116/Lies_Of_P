@@ -227,13 +227,23 @@ void CPlayerControllerContext::TickMove()
 	dir.y = 0.f;
 
 	const _float len = sqrtf(dir.x * dir.x + dir.z * dir.z);
+
 	if (len > 1e-6f) 
 	{ 
 		dir.x /= len; dir.z /= len;
 	}
 	else 
-	{
 		dir = vector3(0.f, 0.f, 0.f);
+
+	if (m_Cv_Move.m_bEvadeExit)
+	{
+		m_Cv_Move.m_fEvadeExitTime += dt;
+
+		if (m_Cv_Move.m_fEvadeExitTime >= 1.f)
+		{
+			m_Cv_Move.m_fEvadeExitTime = 0.f;
+			m_Cv_Move.m_bEvadeExit = false;
+		}
 	}
 
 	const _float curSpeed = (m_bSprint ? PlayerStatus().sprintSpeed : PlayerStatus().runSpeed) * m_Cv_Move.m_fMove01 * (m_eCurrentState == CPlayerController::PlayerState::Guard ? 0.5f : 1.f);
@@ -577,6 +587,16 @@ const _bool CPlayerControllerContext::IsCanJump() const
 void CPlayerControllerContext::SetCanJump(const _bool _value)
 {
 	m_bCanJump = _value;
+}
+
+const _bool CPlayerControllerContext::IsEvadeExit() const
+{
+	return m_Cv_Move.m_bEvadeExit;
+}
+
+void CPlayerControllerContext::SetEvadeExit()
+{
+	m_Cv_Move.m_bEvadeExit = true;
 }
 
 void CPlayerControllerContext::StopMoveImmediate()

@@ -176,7 +176,6 @@ void CMaterial::Bind_Matrix(const _fmatrix _world)
 {
 	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
 
-	// b0: PerObject
 	MatrixCB matrixCB = {};
 	matrixCB.world = XMMatrixTranspose(_world);
 	context->UpdateSubresource(m_pMatrixBuffer, 0, nullptr, &matrixCB, 0, 0);
@@ -192,7 +191,6 @@ void CMaterial::Bind_Camera(const _float3 _camPos, const _fmatrix _view, const _
 
 	Bind_Texture();
 
-	// b1: PerCamera
 	CameraCB camCB = {};
 	camCB.camPos = _camPos;
 	camCB.view = XMMatrixTranspose(_view);
@@ -201,7 +199,6 @@ void CMaterial::Bind_Camera(const _float3 _camPos, const _fmatrix _view, const _
 	context->VSSetConstantBuffers(1, 1, &m_pCameraBuffer);
 	context->PSSetConstantBuffers(1, 1, &m_pCameraBuffer);
 
-	// b2: PerMaterial
 	MaterialCB mat = {};
 
 	if (m_vTextureList.size() >= 3)
@@ -244,7 +241,6 @@ void CMaterial::Bind_CustomValues()
 {
 	m_vCustomBufferByteList.clear();
 
-	// 순서 중요: HLSL과 일치해야 함
 	for (const auto& [key, value] : m_mFloatValues)
 	{
 		const BYTE* p = reinterpret_cast<const BYTE*>(&value);
@@ -359,76 +355,94 @@ CTexture* CMaterial::Get_Texture(_int _index) const
 	return m_vTextureList[_index];
 }
 
-const _float CMaterial::Get_FloatValue(const wstring& _key) const
+const _bool CMaterial::Get_FloatValue(const wstring& _key, _float& _out)
 {
 	auto it = m_mFloatValues.find(_key);
 
 	if (it != m_mFloatValues.end())
-		return (*it).second;
+	{
+		_out = (*it).second;
+		return true;
+	}
 	else
 		CDebug::LogError(L"Material - Get_FloatValue Failed - Key not found: " + _key + L" - " + m_strResourceName);
 
-	return 0.f;
+	return false;
 }
 
-const _int CMaterial::Get_IntValue(const wstring& _key) const
+const _bool CMaterial::Get_IntValue(const wstring& _key, _int& _out)
 {
 	auto it = m_mIntValues.find(_key);
 
 	if (it != m_mIntValues.end())
-		return (*it).second;
+	{
+		_out = (*it).second;
+		return true;
+	}
 	else
 		CDebug::LogError(L"Material - Get_IntValue Failed - Key not found: " + _key + L" - " + m_strResourceName);
 
-	return 0;
+	return false;
 }
 
-const _float2 CMaterial::Get_Vector2Value(const wstring& _key) const
+const _bool CMaterial::Get_Vector2Value(const wstring& _key, _float2& _out)
 {
 	auto it = m_mVector2Values.find(_key);
 
 	if (it != m_mVector2Values.end())
-		return (*it).second;
+	{
+		_out = (*it).second;
+		return true;
+	}
 	else
 		CDebug::LogError(L"Material - Get_Vector2Value Failed - Key not found: " + _key + L" - " + m_strResourceName);
 
-	return {};
+	return false;
 }
 
-const _float3& CMaterial::Get_Vector3Value(const wstring& _key)
+const _bool CMaterial::Get_Vector3Value(const wstring& _key, _float3& _out)
 {
 	auto it = m_mVector3Values.find(_key);
 
 	if (it != m_mVector3Values.end())
-		return (*it).second;
+	{
+		_out = (*it).second;
+		return true;
+	}
 	else
 		CDebug::LogError(L"Material - Get_Vector3Value Failed - Key not found: " + _key + L" - " + m_strResourceName);
 
-	return {};
+	return false;
 }
 
-const _float4& CMaterial::Get_Vector4Value(const wstring& _key)
+const _bool CMaterial::Get_Vector4Value(const wstring& _key, _float4& _out)
 {
 	auto it = m_mVector4Values.find(_key);
 
 	if (it != m_mVector4Values.end())
-		return (*it).second;
+	{
+		_out = (*it).second;
+		return true;
+	}
 	else
 		CDebug::LogError(L"Material - Get_Vector4Value Failed - Key not found: " + _key + L" - " + m_strResourceName);
 
-	return {};
+	return false;
 }
 
-const _float4x4& CMaterial::Get_MatrixValue(const wstring& _key)
+const _bool CMaterial::Get_MatrixValue(const wstring& _key, _float4x4 _out)
 {
 	auto it = m_mMatrixValues.find(_key);
 
 	if (it != m_mMatrixValues.end())
-		return (*it).second;
+	{
+		_out = (*it).second;
+		return true;
+	}
 	else
 		CDebug::LogError(L"Material - Get_MatrixValue Failed - Key not found: " + _key + L" - " + m_strResourceName);
 
-	return {};
+	return false;
 }
 
 const unordered_map<wstring, _float>& CMaterial::Get_FloatValues() const
@@ -575,22 +589,18 @@ HRESULT CMaterial::Create_ConstantBuffer()
 	desc.Usage = D3D11_USAGE_DEFAULT;
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
-	// b0 : MatrixCB (VS)
 	desc.ByteWidth = sizeof(MatrixCB);
 	if (FAILED(device->CreateBuffer(&desc, nullptr, &m_pMatrixBuffer)))
 		return E_FAIL;
 
-	// b1 : View/Proj Matrix (VS)
 	desc.ByteWidth = sizeof(CameraCB);
 	if (FAILED(device->CreateBuffer(&desc, nullptr, &m_pCameraBuffer)))
 		return E_FAIL;
 
-	// b2 : MaterialCB (PS)
 	desc.ByteWidth = sizeof(MaterialCB);
 	if (FAILED(device->CreateBuffer(&desc, nullptr, &m_pMaterialBuffer)))
 		return E_FAIL;
 
-	// b4: Light (PS)
 	if (m_bUseLight)
 	{
 		desc.ByteWidth = sizeof(LightCB);
@@ -599,7 +609,6 @@ HRESULT CMaterial::Create_ConstantBuffer()
 			return E_FAIL;
 	}
 
-	// b10: Custom
 	if (m_vCustomBufferByteList.size() > 0)
 	{
 		_uint byteWidth = static_cast<_uint>(m_vCustomBufferByteList.size());

@@ -594,12 +594,10 @@ HRESULT CResources::ConvertFBXToAnimationClipData(const wstring _filePath)
 
 HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 {
-	// 1. 실행파일 위치 얻기
 	wchar_t exeDir[MAX_PATH] = {};
 	GetModuleFileNameW(NULL, exeDir, MAX_PATH);
 	PathRemoveFileSpecW(exeDir);
 
-	// 2. 상대경로를 절대경로로 변환
 	wchar_t fullFontPath[MAX_PATH] = {};
 	wcscpy_s(fullFontPath, exeDir);
 	PathAppendW(fullFontPath, _filePath.c_str());
@@ -611,7 +609,6 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 		return E_FAIL;
 	}
 
-	// 3. %WINDIR%\Fonts 폴더로 복사
 	wchar_t fontsDir[MAX_PATH] = {};
 	GetWindowsDirectoryW(fontsDir, MAX_PATH);
 	PathAppendW(fontsDir, L"Fonts");
@@ -626,7 +623,6 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 		return E_FAIL;
 	}
 
-	// 4. 폰트 등록
 	if (AddFontResourceExW(installedFontPath, FR_NOT_ENUM, 0) == 0)
 	{
 		CDebug::LogError("AddFontResourceExW failed");
@@ -643,7 +639,6 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 
 	CDebug::Log(L"OutFilePath: " + outfilePath);
 
-	// 5. 출력 파일 경로 (예시로 동일 위치에 저장)
 	wchar_t spriteOutput[MAX_PATH] = {};
 	wcscpy_s(spriteOutput, exeDir);
 	PathAppendW(spriteOutput, outfilePath.c_str());
@@ -651,11 +646,10 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 	wchar_t outputFullPath[MAX_PATH] = {};
 	GetFullPathNameW(spriteOutput, MAX_PATH, outputFullPath, nullptr);
 
-	// 6. MakeSpriteFont.exe 실행 (폰트 이름으로 호출해야 함)
 	wstring cmdLine = L"\"";
 	cmdLine += exeDir;
 	cmdLine += L"\\..\\..\\Engine\\Tools\\MakeSpriteFont.exe\" /FontSize:32 /FontStyle:Regular ";
-	cmdLine += L"\"Liberation Sans\" ";  // 실제 폰트 패밀리 이름
+	cmdLine += L"\"Liberation Sans\" ";
 	cmdLine += L"\"" + wstring(outputFullPath) + L"\"";
 
 	CDebug::Log(L"[RUNNING]: " + cmdLine);
@@ -679,7 +673,6 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
 
-	// 7. 폰트 제거 및 파일 삭제
 	RemoveFontResourceExW(installedFontPath, FR_NOT_ENUM, 0);
 	SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
 	DeleteFileW(installedFontPath);
@@ -1229,13 +1222,11 @@ HRESULT CResources::SaveSkinnedBufferInfos(const wstring _filePath, vector<CSkin
 		_uint numMeshes = bone.numMeshes;
 		out.write(reinterpret_cast<const char*>(&numMeshes), sizeof(_uint));
 
-		// child info
 		_uint childLen = static_cast<_uint>(bone.childsId.size());
 		out.write(reinterpret_cast<const char*>(&childLen), sizeof(_uint));
 		if (childLen > 0)
 			out.write(reinterpret_cast<const char*>(bone.childsId.data()), sizeof(_int) * childLen);
 
-		// mesh info
 		_uint meshLen = static_cast<_uint>(bone.meshsId.size());
 		out.write(reinterpret_cast<const char*>(&meshLen), sizeof(_uint));
 		if (meshLen > 0)
@@ -2049,7 +2040,6 @@ void CResources::TraverseSkeleton(aiNode* _node, _int _parentId, vector<CSkinned
 	nodeInfo.parentId = _parentId;
 	nodeInfo.name = CEngineString::StringToWString(_node->mName.C_Str());
 
-	// Transform
 	aiMatrix4x4 mat = _node->mTransformation;
 	nodeInfo.transformation = _float4x4
 	(
@@ -2059,19 +2049,15 @@ void CResources::TraverseSkeleton(aiNode* _node, _int _parentId, vector<CSkinned
 		mat.a4, mat.b4, mat.c4, mat.d4
 	);
 
-	// Mesh indices
 	nodeInfo.numMeshes = _node->mNumMeshes;
 	for (_uint i = 0; i < _node->mNumMeshes; ++i)
 		nodeInfo.meshsId.push_back(_node->mMeshes[i]);
 
-	// 미리 push 해서 자식이 parentId 참고 가능
 	_outList.push_back(nodeInfo);
 	_int currentId = nodeInfo.nodeId;
 
-	// 자식 노드들 순회
 	for (_uint i = 0; i < _node->mNumChildren; ++i)
 	{
-		// 재귀 이전에 outList size를 얻어 자식 ID 추정
 		_int childId = static_cast<_int>(_outList.size());
 		_outList[currentId].childsId.push_back(childId);
 		_outList[currentId].numChild++;

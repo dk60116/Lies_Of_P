@@ -448,13 +448,13 @@ void CAnimatorControllerEditorBox::RenderInspector()
                 return out;
             };
 
-        static int lastTransitionIndex = -1;
-        static int selectedCondIndex = -1;
-        static int paramIndex = 0;
-        static int opIndex = 0;
-        static int boolValue = 0;
-        static int intValue = 0;
-        static float floatValue = 0.f;
+        static _int lastTransitionIndex = -1;
+        static _int selectedCondIndex = -1;
+        static _int paramIndex = 0;
+        static _int opIndex = 0;
+        static _int boolValue = 0;
+        static _int intValue = 0;
+        static _float floatValue = 0.f;
 
         if (lastTransitionIndex != m_iSelectedTransitionIndex)
         {
@@ -2424,7 +2424,6 @@ bool CAnimatorControllerEditorBox::RenameState(const string& oldNameIn, const st
         return false;
     }
 
-    // 1) key 변경
     State st = it->second;
     m_states.erase(it);
     st.name = newName;
@@ -2863,7 +2862,6 @@ string CAnimatorControllerEditorBox::SerializeText() const
         t += "pos=" + to_string((int)st.pos.x) + "," + to_string((int)st.pos.y) + "\n\n";
     }
 
-    // transitions (any 먼저)
     if (!m_entryTransitions.empty())
     {
         for (const auto& tr : m_entryTransitions)

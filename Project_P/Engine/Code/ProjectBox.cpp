@@ -320,7 +320,6 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 
                         if (ImGui::Selectable("Build Binary"))
                         {
-                            // Assets 상대경로로 변환해서 Convert 호출 (다른 Convert와 동일 패턴)
                             wstring rel = entry.path().wstring();
                             rel = CEngineString::Erase(rel, L"../Assets\\");
                             rel = CEngineString::Replace(rel, L"\\", L"/");
@@ -329,7 +328,6 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                         }
                     }
 
-                    // 기존 fbx/ttf 변환 메뉴...
                     if (extension == "fbx")
                     {
                         wstring rel = entry.path().wstring();
@@ -475,7 +473,6 @@ void CProjectBox::CreateAnimatorControllerFile(const fs::path& dir, const string
         return;
     }
 
-    // 폴더 보장
     fs::create_directories(outPath.parent_path());
 
     string text = MakeAnimatorControllerTemplateText(safeName);

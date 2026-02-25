@@ -157,4 +157,6 @@ void CPlayerState_Evade::Exit()
 	m_pCtx->SetCanAttack(true);
 	m_pCtx->SetCanGuard(true);
 	m_pCtx->SetCanJump(true);
+
+	m_pCtx->SetEvadeExit();
 }

@@ -170,23 +170,18 @@ void CTransform::Render_Gizmo()
 
         if (m_pParent)
         {
-            // 부모의 월드 행렬의 역행렬
             _matrix parentInv = XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_pParent->m_vMatWorld));
-            // 로컬 행렬 구하기
             _matrix localMatrix = newWorldMatrix * parentInv;
 
-            // 로컬 위치/회전/스케일 추출
             _vector S, R, T;
             XMMatrixDecompose(&S, &R, &T, localMatrix);
 
-            // 저장
             XMStoreFloat3(reinterpret_cast<_float3*>(&m_vScale), S);
             XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), R);
             XMStoreFloat3(reinterpret_cast<_float3*>(&m_vPosition), T);
         }
         else
         {
-            // 부모 없으면 그냥 월드 == 로컬
             _vector S, R, T;
             XMMatrixDecompose(&S, &R, &T, newWorldMatrix);
 
@@ -215,16 +210,13 @@ void CTransform::SetParent(CTransform* _parent)
     if (_parent == m_pParent)
         return;
 
-    // 1) 기존 월드 행렬/월드 위치 저장
     _matrix W_old = XMLoadFloat4x4(&m_vMatWorld);
 
-    // 2) 기존 부모 링크만 정리
     if (m_pParent) {
         m_pParent->m_lChildList.remove(this);
         Safe_Release(m_pParent);
     }
 
-    // 3) 새 부모 연결
     m_pParent = _parent;
     if (m_pParent) {
         m_pGameObject->Set_RecursiveActive(m_pParent->m_pGameObject->m_bRecursiveActive);
@@ -232,24 +224,20 @@ void CTransform::SetParent(CTransform* _parent)
         m_pParent->AddRef();
     }
 
-    // 4) 부모 월드 최신화(루트까지) 후 부모 월드/역행렬 확보
     RecalcWorldUpChain(m_pParent);
 
     _matrix P = XMMatrixIdentity();
     if (m_pParent) P = XMLoadFloat4x4(&m_pParent->m_vMatWorld);
     _matrix invP = XMMatrixInverse(nullptr, P);
 
-    // 5) 부모/자신 월드에서 S/R/T 분해
     _vector sW, rW, tW;
     _vector sP, rP, tP;
-    bool okW = XMMatrixDecompose(&sW, &rW, &tW, W_old);
-    bool okP = XMMatrixDecompose(&sP, &rP, &tP, P);
+    _bool okW = XMMatrixDecompose(&sW, &rW, &tW, W_old);
+    _bool okP = XMMatrixDecompose(&sP, &rP, &tP, P);
 
-    // 6) 로컬 S/R/T 계산 (관계식)
-    //    S_local = S_world / S_parent  (성분별)
     auto safeDiv = [](float a, float b) { return (fabsf(b) < 1e-8f) ? 0.f : (a / b); };
 
-    XMFLOAT3 SW, SP;
+    _float3 SW, SP;
     XMStoreFloat3(&SW, sW);
     XMStoreFloat3(&SP, sP);
 
@@ -257,26 +245,21 @@ void CTransform::SetParent(CTransform* _parent)
         safeDiv(SW.y, SP.y),
         safeDiv(SW.z, SP.z));
 
-    //    R_local = inverse(R_parent) * R_world
-    XMVECTOR rLocal = XMQuaternionMultiply(XMQuaternionInverse(rP), rW);
+    _vector rLocal = XMQuaternionMultiply(XMQuaternionInverse(rP), rW);
     rLocal = XMQuaternionNormalize(rLocal);
 
-    //    T_local = TransformCoord(worldPos, invParent)
     vector3 T_local;
     {
-        // worldPos를 invP로 좌표변환
         vector3 worldPos = vector3(m_vMatWorld._41, m_vMatWorld._42, m_vMatWorld._43);
-        XMVECTOR wp = XMVectorSet(worldPos.x, worldPos.y, worldPos.z, 1.0f);
-        XMVECTOR lp = XMVector3TransformCoord(wp, invP);
+        _vector wp = XMVectorSet(worldPos.x, worldPos.y, worldPos.z, 1.0f);
+        _vector lp = XMVector3TransformCoord(wp, invP);
         T_local = vector3(XMVectorGetX(lp), XMVectorGetY(lp), XMVectorGetZ(lp));
     }
 
-    // 7) 로컬에 반영
     m_vScale = S_local;
-    XMStoreFloat4(reinterpret_cast<XMFLOAT4*>(&m_vQuaternion), rLocal);
+    XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), rLocal);
     m_vPosition = T_local;
 
-    // 8) 월드/방향 갱신
     Bind_Matrix();
     Bind_Direction();
 
@@ -976,21 +959,17 @@ void CTransform::SetTransformForMatrix(_matrix _matWorld)
 
     if (m_pParent)
     {
-        // 부모가 있다면 부모 월드 행렬의 역행렬로 로컬 행렬을 구함
         _matrix parentInv = XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_pParent->m_vMatWorld));
         localMatrix = _matWorld * parentInv;
     }
 
-    // 로컬 행렬에서 스케일, 회전 쿼터니언, 위치 분해
     _vector S, R, T;
     XMMatrixDecompose(&S, &R, &T, localMatrix);
 
-    // 로컬에 저장
     XMStoreFloat3(reinterpret_cast<_float3*>(&m_vScale), S);
     XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), R);
     XMStoreFloat3(reinterpret_cast<_float3*>(&m_vPosition), T);
 
-    // 변경사항을 반영하기 위해 행렬 갱신
     Bind_Matrix();
     Bind_Direction();
 }
@@ -1017,7 +996,6 @@ void CTransform::LookAt(const vector3& _target, const _uint _lockRotationFilter)
     _vector q = XMQuaternionRotationMatrix(rot);
     q = XMQuaternionNormalize(q);
 
-    // 부모 공간으로 변환
     if (m_pParent)
     {
         _vector parentQ = m_pParent->m_vQuaternion.toXMVector();
@@ -1025,11 +1003,10 @@ void CTransform::LookAt(const vector3& _target, const _uint _lockRotationFilter)
         q = XMQuaternionMultiply(invParentQ, q);
     }
 
-    // 회전 필터 적용
     if (_lockRotationFilter)
     {
-        quaternion qNew(q);                       // 목표 회전
-        quaternion qCur = m_vQuaternion;          // 현재 회전
+        quaternion qNew(q);                    
+        quaternion qCur = m_vQuaternion;        
 
         vector3 eulerNew = qNew.to_euler();
         vector3 eulerCur = qCur.to_euler();

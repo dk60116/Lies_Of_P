@@ -218,7 +218,6 @@ HRESULT CGraphicDevice::Add_SwapChain(HWND _hWnd, WINMODE _isWindowed, _uint _wi
 	SwapChainSet sc{};
 	sc.hwnd = _hWnd;
 
-	// DXGI Factory 생성
 	ComPtr<IDXGIDevice> dxgiDevice;
 	m_pDevice->QueryInterface(IID_PPV_ARGS(&dxgiDevice));
 
@@ -228,7 +227,6 @@ HRESULT CGraphicDevice::Add_SwapChain(HWND _hWnd, WINMODE _isWindowed, _uint _wi
 	ComPtr<IDXGIFactory> factory;
 	adapter->GetParent(IID_PPV_ARGS(&factory));
 
-	// 스왑체인 생성
 	DXGI_SWAP_CHAIN_DESC sd = {};
 	sd.BufferCount = 1;
 	sd.BufferDesc.Width = _winWidth;
@@ -247,13 +245,11 @@ HRESULT CGraphicDevice::Add_SwapChain(HWND _hWnd, WINMODE _isWindowed, _uint _wi
 
 	sc.swapChain = swapChain;
 
-	// RTV 생성
 	ComPtr<ID3D11Texture2D> backBuffer;
 	swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
 
 	m_pDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, &sc.rtv);
 
-	// DSV 생성
 	D3D11_TEXTURE2D_DESC depthDesc = {};
 	depthDesc.Width = _winWidth;
 	depthDesc.Height = _winHeight;
@@ -268,7 +264,6 @@ HRESULT CGraphicDevice::Add_SwapChain(HWND _hWnd, WINMODE _isWindowed, _uint _wi
 	m_pDevice->CreateTexture2D(&depthDesc, nullptr, &depthTex);
 	m_pDevice->CreateDepthStencilView(depthTex.Get(), nullptr, &sc.dsv);
 
-	// 뷰포트 설정
 	sc.viewport.TopLeftX = static_cast<FLOAT>(_offsetMin.x);
 	sc.viewport.TopLeftY = static_cast<FLOAT>(_offsetMin.y);
 	sc.viewport.Width = static_cast<FLOAT>(_winWidth - _offsetMin.x - _offsetMax.x);

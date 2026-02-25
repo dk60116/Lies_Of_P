@@ -370,14 +370,12 @@ void CEditor::OpenAsset(const fs::path& path)
 		return;
 	}
 
-	//  Ž    ϰ ʹٸ ⼭ ó
 	if (fs::is_directory(path, ec) && !ec)
 	{
 		OpenAssetExternal(path);
 		return;
 	}
 
-	// Ȯ
 	string ext = path.extension().string();
 	ext = ToLowerCopy(ext);
 
@@ -387,21 +385,6 @@ void CEditor::OpenAsset(const fs::path& path)
 		return;
 	}
 
-	// : ؽƮ/  ⺻ ؽƮ  ڽ  ʹٸ
-	// if (ext == ".txt" || ext == ".ini" || ext == ".json" || ext == ".hlsl")
-	// {
-	//     OpenTextAsset(path); // TODO
-	//     return;
-	// }
-
-	// : ̹(ؽó)  ڽ
-	// if (ext == ".png" || ext == ".jpg" || ext == ".tga" || ext == ".dds")
-	// {
-	//     OpenTextureViewer(path); // TODO
-	//     return;
-	// }
-
-	// 𸣴 Ȯڴ ܺ α׷
 	OpenAssetExternal(path);
 }
 
@@ -436,7 +419,6 @@ void CEditor::OpenAnimatorController(const fs::path& path)
 		return;
 	}
 
-	// 3)  ؼ Ʈ 
 	box = CAnimatorControllerEditorBox::Create();
 	if (!box)
 	{
@@ -453,7 +435,6 @@ void CEditor::OpenAnimatorController(const fs::path& path)
 void CEditor::OpenAssetExternal(const fs::path& path)
 {
 #ifdef _WIN32
-	// /  ShellExecuteW 
 	HINSTANCE r = ShellExecuteW(
 		nullptr,
 		L"open",

@@ -1659,7 +1659,6 @@ const _int CCamera::GetColorPickingID(const vector2Int& _mouseVPPos)
 	ID3D11Texture2D* srcTex = rtm.GetTexture(CRenderTarget::RTType::Object, m_bIsEditor);
 	if (!srcTex) return 0;
 
-	// 1x1 영역만 복사
 	D3D11_BOX box;
 	box.left = _mouseVPPos.x;
 	box.right = _mouseVPPos.x + 1;

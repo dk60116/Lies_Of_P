@@ -37,7 +37,7 @@ class ENGINE_DLL CCamera : public CComponent
 public:
 	enum ViewMode { PERSPECTIVE, ORTHOGRAPHIC };
 
-private:
+protected:
 	struct OctreeEntry;
 	struct OctreeNode;
 
