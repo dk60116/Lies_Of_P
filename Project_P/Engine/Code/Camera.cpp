@@ -417,7 +417,20 @@ _bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, BoundingBox& _out
 	_matrix world = _renderer->Get_Transform()->Get_WorldMatrix();
 	BoundingOrientedBox worldObb = {};
 	localObb.Transform(worldObb, world);
-	BoundingBox::CreateFromBoundingOrientedBox(_outAABB, worldObb);
+
+	XMFLOAT3 corners[8] = {};
+	worldObb.GetCorners(corners);
+
+	_vector minV = XMLoadFloat3(&corners[0]);
+	_vector maxV = minV;
+	for (_int i = 1; i < 8; ++i)
+	{
+		_vector p = XMLoadFloat3(&corners[i]);
+		minV = XMVectorMin(minV, p);
+		maxV = XMVectorMax(maxV, p);
+	}
+
+	BoundingBox::CreateFromPoints(_outAABB, minV, maxV);
 	return true;
 }
 
