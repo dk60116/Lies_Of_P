@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "Camera.h"
+#include "SkinnedMeshRenderer.h"
 
 const ColorValue CCamera::s_vDefaultCameraColor = ColorValue(49, 77, 121, 255);
 
@@ -16,7 +17,10 @@ CCamera::CCamera()
 	, m_fSize(5.f)
 	, m_vStaticMeshList({})
 	, m_vDynamicMeshList({})
+	, m_vVisibleStaticMeshList({})
+	, m_vVisibleDynamicMeshList({})
 	, m_vUIList({})
+	, m_sWorldFrustum()
 	, m_mRTDebugDisplays({})
 	, m_pRectBuffer(nullptr)
 	, m_mRectMats({})
@@ -30,6 +34,9 @@ CCamera::CCamera()
 	, m_pMainLight(nullptr)
 	, m_sMainLightMatrix()
 	, m_pPickStaging(nullptr)
+	, m_pStaticOctreeRoot(nullptr)
+	, m_iOctreeMaxDepth(4)
+	, m_iOctreeMaxEntriesPerNode(16)
 	, m_bIsEditor(false)
 {
 	m_strName = L"Camera";
@@ -214,6 +221,8 @@ void CCamera::Update()
 
 	Bind_ViewMatrix();
 	Bind_ProjectionMatrix();
+	Update_WorldFrustum();
+	Collect_VisibleRenderers();
 }
 
 void CCamera::Render()
@@ -224,6 +233,8 @@ void CCamera::OnPostRender()
 {
 	m_vStaticMeshList.clear();
 	m_vDynamicMeshList.clear();
+	m_vVisibleStaticMeshList.clear();
+	m_vVisibleDynamicMeshList.clear();
 }
 
 void CCamera::OnDestroy()
@@ -355,16 +366,262 @@ void CCamera::Bind_ProjectionMatrix()
 
 void CCamera::RenderMesh()
 {
-	for (TRAVERSAL_ITER(m_vStaticMeshList, it))
+	for (TRAVERSAL_ITER(m_vVisibleStaticMeshList, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->Render_WithCamera(this);
 	}
 
-	for (TRAVERSAL_ITER(m_vDynamicMeshList, it))
+	for (TRAVERSAL_ITER(m_vVisibleDynamicMeshList, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->Render_WithCamera(this);
+	}
+}
+
+
+void CCamera::Update_WorldFrustum()
+{
+	BoundingFrustum localFrustum = {};
+	BoundingFrustum::CreateFromMatrix(localFrustum, Get_ProjectionMatrix());
+
+	_matrix invView = XMMatrixInverse(nullptr, Get_ViewMatrix());
+	m_sWorldFrustum = localFrustum;
+	m_sWorldFrustum.Transform(m_sWorldFrustum, invView);
+}
+
+_bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, BoundingBox& _outAABB) const
+{
+	if (!_renderer || !_renderer->Get_GameObject())
+		return false;
+
+	CMeshBuffer* meshBuffer = _renderer->Get_MeshBuffer();
+	if (!meshBuffer)
+		return false;
+
+	if (CSkinnedMeshRenderer* skinned = dynamic_cast<CSkinnedMeshRenderer*>(_renderer))
+	{
+		_float3 minBound = {};
+		_float3 maxBound = {};
+		if (skinned->TryGetAnimatedWorldBounds(minBound, maxBound))
+		{
+			BoundingBox::CreateFromPoints(_outAABB, XMLoadFloat3(&minBound), XMLoadFloat3(&maxBound));
+			return true;
+		}
+	}
+
+	const BoundingBox& localBox = meshBuffer->Get_Info().boundingBox;
+	BoundingOrientedBox localObb = {};
+	BoundingOrientedBox::CreateFromBoundingBox(localObb, localBox);
+
+	_matrix world = _renderer->Get_Transform()->Get_WorldMatrix();
+	BoundingOrientedBox worldObb = {};
+	localObb.Transform(worldObb, world);
+	BoundingBox::CreateFromBoundingOrientedBox(_outAABB, worldObb);
+	return true;
+}
+
+_bool CCamera::IsRendererVisible(CRenderer* _renderer) const
+{
+	BoundingBox worldAABB = {};
+	if (!TryBuildRendererWorldAABB(_renderer, worldAABB))
+		return false;
+
+	ContainmentType contain = m_sWorldFrustum.Contains(worldAABB);
+	return contain != ContainmentType::DISJOINT;
+}
+
+_bool CCamera::IsOctreeNodeLeaf(const OctreeNode* _node) const
+{
+	if (!_node)
+		return true;
+
+	for (const auto& child : _node->children)
+	{
+		if (child)
+			return false;
+	}
+	return true;
+}
+
+void CCamera::InsertStaticOctreeEntry(OctreeNode* _node, const OctreeEntry& _entry)
+{
+	if (!_node)
+		return;
+
+	if (_node->depth >= m_iOctreeMaxDepth)
+	{
+		_node->entries.push_back(_entry);
+		return;
+	}
+
+	const _float3& c = _node->bounds.Center;
+	const _float3& e = _node->bounds.Extents;
+	_float3 childExtent = { e.x * 0.5f, e.y * 0.5f, e.z * 0.5f };
+
+	_int fitChild = -1;
+	for (_int i = 0; i < 8; ++i)
+	{
+		_float3 sign =
+		{
+			(i & 1) ? 0.5f : -0.5f,
+			(i & 2) ? 0.5f : -0.5f,
+			(i & 4) ? 0.5f : -0.5f
+		};
+		_float3 childCenter =
+		{
+			c.x + e.x * sign.x,
+			c.y + e.y * sign.y,
+			c.z + e.z * sign.z
+		};
+
+		BoundingBox childBox = {};
+		childBox.Center = childCenter;
+		childBox.Extents = childExtent;
+
+		ContainmentType contain = childBox.Contains(_entry.worldAABB);
+		if (contain == ContainmentType::CONTAINS)
+		{
+			fitChild = i;
+			break;
+		}
+	}
+
+	if (fitChild < 0)
+	{
+		_node->entries.push_back(_entry);
+		return;
+	}
+
+	if (!_node->children[fitChild])
+	{
+		_node->children[fitChild] = make_unique<OctreeNode>();
+		_node->children[fitChild]->depth = _node->depth + 1;
+
+		_float3 sign =
+		{
+			(fitChild & 1) ? 0.5f : -0.5f,
+			(fitChild & 2) ? 0.5f : -0.5f,
+			(fitChild & 4) ? 0.5f : -0.5f
+		};
+		_node->children[fitChild]->bounds.Center =
+		{
+			c.x + e.x * sign.x,
+			c.y + e.y * sign.y,
+			c.z + e.z * sign.z
+		};
+		_node->children[fitChild]->bounds.Extents = childExtent;
+	}
+
+	InsertStaticOctreeEntry(_node->children[fitChild].get(), _entry);
+}
+
+void CCamera::BuildStaticOctree()
+{
+	m_pStaticOctreeRoot.reset();
+	if (m_vStaticMeshList.empty())
+		return;
+
+	vector<OctreeEntry> entries;
+	entries.reserve(m_vStaticMeshList.size());
+
+	_vector minV = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 0.f);
+	_vector maxV = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 0.f);
+
+	for (auto* renderer : m_vStaticMeshList)
+	{
+		if (!renderer || !renderer->Get_GameObject())
+			continue;
+		if (!renderer->Get_GameObject()->IsRecursiveActive() || !renderer->Get_Enable())
+			continue;
+
+		BoundingBox worldAABB = {};
+		if (!TryBuildRendererWorldAABB(renderer, worldAABB))
+			continue;
+
+		entries.push_back({ renderer, worldAABB });
+
+		_vector aabbMin = XMVectorSet(worldAABB.Center.x - worldAABB.Extents.x, worldAABB.Center.y - worldAABB.Extents.y, worldAABB.Center.z - worldAABB.Extents.z, 0.f);
+		_vector aabbMax = XMVectorSet(worldAABB.Center.x + worldAABB.Extents.x, worldAABB.Center.y + worldAABB.Extents.y, worldAABB.Center.z + worldAABB.Extents.z, 0.f);
+		minV = XMVectorMin(minV, aabbMin);
+		maxV = XMVectorMax(maxV, aabbMax);
+	}
+
+	if (entries.empty())
+		return;
+
+	BoundingBox rootBounds = {};
+	BoundingBox::CreateFromPoints(rootBounds, minV, maxV);
+
+	_float maxExtent = max(rootBounds.Extents.x, max(rootBounds.Extents.y, rootBounds.Extents.z));
+	rootBounds.Extents = { maxExtent, maxExtent, maxExtent };
+
+	m_pStaticOctreeRoot = make_unique<OctreeNode>();
+	m_pStaticOctreeRoot->bounds = rootBounds;
+	m_pStaticOctreeRoot->depth = 0;
+
+	for (const auto& entry : entries)
+		InsertStaticOctreeEntry(m_pStaticOctreeRoot.get(), entry);
+}
+
+void CCamera::QueryStaticOctree(const OctreeNode* _node, vector<CRenderer*>& _outVisible) const
+{
+	if (!_node)
+		return;
+
+	ContainmentType contain = m_sWorldFrustum.Contains(_node->bounds);
+	if (contain == ContainmentType::DISJOINT)
+		return;
+
+	if (contain == ContainmentType::CONTAINS)
+	{
+		for (const auto& entry : _node->entries)
+			_outVisible.push_back(entry.renderer);
+
+		for (const auto& child : _node->children)
+		{
+			if (!child)
+				continue;
+			QueryStaticOctree(child.get(), _outVisible);
+		}
+		return;
+	}
+
+	for (const auto& entry : _node->entries)
+	{
+		ContainmentType entryContain = m_sWorldFrustum.Contains(entry.worldAABB);
+		if (entryContain != ContainmentType::DISJOINT)
+			_outVisible.push_back(entry.renderer);
+	}
+
+	for (const auto& child : _node->children)
+	{
+		if (!child)
+			continue;
+		QueryStaticOctree(child.get(), _outVisible);
+	}
+}
+
+void CCamera::Collect_VisibleRenderers()
+{
+	m_vVisibleStaticMeshList.clear();
+	m_vVisibleDynamicMeshList.clear();
+	m_vVisibleDynamicMeshList.reserve(m_vDynamicMeshList.size());
+
+	BuildStaticOctree();
+	if (m_pStaticOctreeRoot)
+		QueryStaticOctree(m_pStaticOctreeRoot.get(), m_vVisibleStaticMeshList);
+
+	for (auto* renderer : m_vDynamicMeshList)
+	{
+		if (!renderer || !renderer->Get_GameObject())
+			continue;
+
+		if (!renderer->Get_GameObject()->IsRecursiveActive() || !renderer->Get_Enable())
+			continue;
+
+		if (IsRendererVisible(renderer))
+			m_vVisibleDynamicMeshList.push_back(renderer);
 	}
 }
 
@@ -1001,9 +1258,9 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	};
 
 	unordered_map<ShadowBatchKey, vector<CRenderer*>, ShadowBatchKeyHash> staticBatches;
-	staticBatches.reserve(m_vStaticMeshList.size());
+	staticBatches.reserve(m_vVisibleStaticMeshList.size());
 
-	for (auto* r : m_vStaticMeshList)
+	for (auto* r : m_vVisibleStaticMeshList)
 	{
 		if (!isRenderableShadowTarget(r))
 			continue;
@@ -1063,7 +1320,7 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 		}
 	}
 
-	for (auto* r : m_vDynamicMeshList)
+	for (auto* r : m_vVisibleDynamicMeshList)
 	{
 		if (!isRenderableShadowTarget(r))
 			continue;
