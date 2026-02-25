@@ -138,16 +138,76 @@ void CLight::BuildDirectionalShadow(CCamera* _cam, _float _shadowDistance, Shado
 	if (!_cam)
 		return;
 
-	vector3 camPos = _cam->Get_Transform()->Get_Position();
-	vector3 camFwd = _cam->Get_Transform()->Get_Directions().forward;
-	camFwd = camFwd.normalized();
+	vector3 center = _cam->Get_Transform()->Get_Position();
+	_float3 sceneMin = { FLT_MAX, FLT_MAX, FLT_MAX };
+	_float3 sceneMax = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
+	_bool hasSceneBounds = false;
 
-	vector3 center = camPos + camFwd * (_shadowDistance * 0.5f);
+	if (CGameObject* camObject = _cam->Get_GameObject())
+	{
+		if (CScene* scene = camObject->Get_Scene())
+		{
+			vector<CRenderer*> renderers = scene->Get_MeshObjects();
+			for (auto* renderer : renderers)
+			{
+				if (!renderer || !renderer->Get_GameObject() || !renderer->Get_Transform())
+					continue;
+				if (!renderer->Get_GameObject()->IsRecursiveActive() || !renderer->Get_Enable())
+					continue;
+				if (!renderer->IsCastShadow())
+					continue;
+
+				CMeshBuffer* meshBuffer = renderer->Get_MeshBuffer();
+				if (!meshBuffer)
+					continue;
+
+				const BoundingBox& localBox = meshBuffer->Get_Info().boundingBox;
+				BoundingOrientedBox localObb = {};
+				BoundingOrientedBox::CreateFromBoundingBox(localObb, localBox);
+
+				BoundingOrientedBox worldObb = {};
+				localObb.Transform(worldObb, renderer->Get_Transform()->Get_WorldMatrix());
+
+				XMFLOAT3 corners[8] = {};
+				worldObb.GetCorners(corners);
+
+				for (_int i = 0; i < 8; ++i)
+				{
+					sceneMin.x = min(sceneMin.x, corners[i].x);
+					sceneMin.y = min(sceneMin.y, corners[i].y);
+					sceneMin.z = min(sceneMin.z, corners[i].z);
+
+					sceneMax.x = max(sceneMax.x, corners[i].x);
+					sceneMax.y = max(sceneMax.y, corners[i].y);
+					sceneMax.z = max(sceneMax.z, corners[i].z);
+				}
+
+				hasSceneBounds = true;
+			}
+		}
+	}
+
+	_float extX = _shadowDistance * 0.5f;
+	_float extY = _shadowDistance * 0.5f;
+	_float extZ = _shadowDistance;
+	if (hasSceneBounds)
+	{
+		center = vector3(
+			(sceneMin.x + sceneMax.x) * 0.5f,
+			(sceneMin.y + sceneMax.y) * 0.5f,
+			(sceneMin.z + sceneMax.z) * 0.5f
+		);
+
+		extX = max((sceneMax.x - sceneMin.x) * 0.5f, 1.f);
+		extY = max((sceneMax.y - sceneMin.y) * 0.5f, 1.f);
+		extZ = max((sceneMax.z - sceneMin.z) * 0.5f, 1.f);
+	}
 
 	vector3 lightDir = Get_Transform()->Get_Directions().forward;
 	lightDir = lightDir.normalized();
 
-	vector3 lightPos = center - lightDir * _shadowDistance;
+	const _float radius = max(extZ, max(extX, extY));
+	vector3 lightPos = center - lightDir * (radius * 2.f);
 
 	_vector eye = XMVectorSet(lightPos.x, lightPos.y, lightPos.z, 1.f);
 	_vector at = XMVectorSet(center.x, center.y, center.z, 1.f);
@@ -160,11 +220,63 @@ void CLight::BuildDirectionalShadow(CCamera* _cam, _float _shadowDistance, Shado
 
 	_matrix V = XMMatrixLookAtLH(eye, at, up);
 
-	_float half = _shadowDistance * 0.5f;
-	_float nearZ = 0.0f;
-	_float farZ = _shadowDistance * 2.0f;
+	_float minX = -extX;
+	_float maxX = extX;
+	_float minY = -extY;
+	_float maxY = extY;
+	_float minZ = 0.f;
+	_float maxZ = radius * 4.f;
 
-	_matrix P = XMMatrixOrthographicOffCenterLH(-half, half, -half, half, nearZ, farZ);
+	if (hasSceneBounds)
+	{
+		XMFLOAT3 corners[8] =
+		{
+			{ sceneMin.x, sceneMin.y, sceneMin.z },
+			{ sceneMax.x, sceneMin.y, sceneMin.z },
+			{ sceneMin.x, sceneMax.y, sceneMin.z },
+			{ sceneMax.x, sceneMax.y, sceneMin.z },
+			{ sceneMin.x, sceneMin.y, sceneMax.z },
+			{ sceneMax.x, sceneMin.y, sceneMax.z },
+			{ sceneMin.x, sceneMax.y, sceneMax.z },
+			{ sceneMax.x, sceneMax.y, sceneMax.z }
+		};
+
+		minX = FLT_MAX;
+		minY = FLT_MAX;
+		minZ = FLT_MAX;
+		maxX = -FLT_MAX;
+		maxY = -FLT_MAX;
+		maxZ = -FLT_MAX;
+
+		for (_int i = 0; i < 8; ++i)
+		{
+			_vector p = XMVectorSet(corners[i].x, corners[i].y, corners[i].z, 1.f);
+			_vector lv = XMVector3TransformCoord(p, V);
+			_float x = XMVectorGetX(lv);
+			_float y = XMVectorGetY(lv);
+			_float z = XMVectorGetZ(lv);
+
+			minX = min(minX, x);
+			maxX = max(maxX, x);
+			minY = min(minY, y);
+			maxY = max(maxY, y);
+			minZ = min(minZ, z);
+			maxZ = max(maxZ, z);
+		}
+
+		const _float pad = 10.f;
+		minX -= pad;
+		maxX += pad;
+		minY -= pad;
+		maxY += pad;
+		minZ = max(0.f, minZ - pad);
+		maxZ += pad;
+	}
+
+	if (maxZ <= minZ)
+		maxZ = minZ + 1.f;
+
+	_matrix P = XMMatrixOrthographicOffCenterLH(minX, maxX, minY, maxY, minZ, maxZ);
 
 	XMStoreFloat4x4(reinterpret_cast<_float4x4*>(&_outShadowMatix.view), V);
 	XMStoreFloat4x4(reinterpret_cast<_float4x4*>(&_outShadowMatix.proj), P);
