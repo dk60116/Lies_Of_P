@@ -150,6 +150,9 @@ void CTransform::Render_Gizmo()
     if (mode == CEditor::TransformControleTool::SCALE)
         currentGizmoOperation = ImGuizmo::SCALE;
 
+    if (CSceneManager::GetInstance().IsPlaying() && m_pGameObject->IsStatic(CGameObject::STATIC_METHOD::TransformStatic))
+        return;
+
     _bool manipulated = ImGuizmo::Manipulate
     (
         view,
