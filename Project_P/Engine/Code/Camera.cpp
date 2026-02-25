@@ -1189,8 +1189,6 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 
 void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 {
-	Collect_VisibleRenderers();
-
 	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 	ID3D11DeviceContext* ctx = CGraphicDevice::GetInstance().Get_Context();
 
@@ -1289,9 +1287,9 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	};
 
 	unordered_map<ShadowBatchKey, vector<CRenderer*>, ShadowBatchKeyHash> staticBatches;
-	staticBatches.reserve(m_vVisibleStaticMeshList.size());
+	staticBatches.reserve(m_vStaticMeshList.size());
 
-	for (auto* r : m_vVisibleStaticMeshList)
+	for (auto* r : m_vStaticMeshList)
 	{
 		if (!isRenderableShadowTarget(r))
 			continue;
@@ -1351,7 +1349,7 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 		}
 	}
 
-	for (auto* r : m_vVisibleDynamicMeshList)
+	for (auto* r : m_vDynamicMeshList)
 	{
 		if (!isRenderableShadowTarget(r))
 			continue;
