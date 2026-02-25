@@ -2,8 +2,12 @@
 
 #include "Component.h"
 #include "Physics.h"
+#include <array>
+#include <memory>
 
 NS_BEGIN(Engine)
+
+class CRenderer;
 
 class ENGINE_DLL CCamera : public CComponent
 {
@@ -32,6 +36,10 @@ class ENGINE_DLL CCamera : public CComponent
 
 public:
 	enum ViewMode { PERSPECTIVE, ORTHOGRAPHIC };
+
+private:
+	struct OctreeEntry;
+	struct OctreeNode;
 
 protected:
 	explicit CCamera();
@@ -64,6 +72,14 @@ public:
 protected:
 	void Bind_ViewMatrix();
 	void Bind_ProjectionMatrix();
+	void Update_WorldFrustum();
+	void Collect_VisibleRenderers();
+	_bool IsRendererVisible(class CRenderer* _renderer) const;
+	_bool TryBuildRendererWorldAABB(class CRenderer* _renderer, BoundingBox& _outAABB) const;
+	void BuildStaticOctree();
+	void InsertStaticOctreeEntry(OctreeNode* _node, const OctreeEntry& _entry);
+	void QueryStaticOctree(const OctreeNode* _node, vector<CRenderer*>& _outVisible) const;
+	_bool IsOctreeNodeLeaf(const OctreeNode* _node) const;
 
 public:
 	void RenderMesh();
@@ -109,7 +125,24 @@ protected:
 
 	vector<CRenderer*> m_vStaticMeshList;
 	vector<CRenderer*> m_vDynamicMeshList;
+	vector<CRenderer*> m_vVisibleStaticMeshList;
+	vector<CRenderer*> m_vVisibleDynamicMeshList;
 	vector<CUI*> m_vUIList;
+	BoundingFrustum m_sWorldFrustum;
+
+	struct OctreeEntry
+	{
+		CRenderer* renderer = nullptr;
+		BoundingBox worldAABB = {};
+	};
+
+	struct OctreeNode
+	{
+		BoundingBox bounds = {};
+		vector<OctreeEntry> entries = {};
+		array<unique_ptr<OctreeNode>, 8> children = {};
+		_int depth = 0;
+	};
 
 private:
 	static const ColorValue s_vDefaultCameraColor;
@@ -133,6 +166,10 @@ private:
 	CLight::ShadowMatrices m_sMainLightMatrix;
 
 	ID3D11Texture2D* m_pPickStaging;
+
+	unique_ptr<OctreeNode> m_pStaticOctreeRoot;
+	_int m_iOctreeMaxDepth;
+	_int m_iOctreeMaxEntriesPerNode;
 
 	_bool m_bIsEditor;
 };
