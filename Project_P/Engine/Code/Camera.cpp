@@ -222,7 +222,6 @@ void CCamera::Update()
 	Bind_ViewMatrix();
 	Bind_ProjectionMatrix();
 	Update_WorldFrustum();
-	Collect_VisibleRenderers();
 }
 
 void CCamera::Render()
@@ -366,6 +365,8 @@ void CCamera::Bind_ProjectionMatrix()
 
 void CCamera::RenderMesh()
 {
+	Collect_VisibleRenderers();
+
 	for (TRAVERSAL_ITER(m_vVisibleStaticMeshList, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
@@ -1173,6 +1174,8 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 
 void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 {
+	Collect_VisibleRenderers();
+
 	ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
 	ID3D11DeviceContext* ctx = CGraphicDevice::GetInstance().Get_Context();
 
