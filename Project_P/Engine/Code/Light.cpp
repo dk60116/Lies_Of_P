@@ -164,6 +164,26 @@ void CLight::BuildDirectionalShadow(CCamera* _cam, _float _shadowDistance, Shado
 	_float nearZ = 0.0f;
 	_float farZ = _shadowDistance * 2.0f;
 
+	const _uint shadowMapSize = CSceneManager::GetInstance().Get_LightSetting().shadowMapSize;
+	const _float texelSize = (shadowMapSize > 0) ? (_shadowDistance / (_float)shadowMapSize) : 0.f;
+
+	if (texelSize > 0.f)
+	{
+		_vector centerWS = XMVectorSet(center.x, center.y, center.z, 1.f);
+		_vector centerLS = XMVector3TransformCoord(centerWS, V);
+
+		_float snappedX = floorf(XMVectorGetX(centerLS) / texelSize) * texelSize;
+		_float snappedY = floorf(XMVectorGetY(centerLS) / texelSize) * texelSize;
+
+		_vector snapOffsetLS = XMVectorSet(snappedX - XMVectorGetX(centerLS), snappedY - XMVectorGetY(centerLS), 0.f, 0.f);
+		_matrix invV = XMMatrixInverse(nullptr, V);
+		_vector snapOffsetWS = XMVector3TransformNormal(snapOffsetLS, invV);
+
+		eye = XMVectorAdd(eye, snapOffsetWS);
+		at = XMVectorAdd(at, snapOffsetWS);
+		V = XMMatrixLookAtLH(eye, at, up);
+	}
+
 	_matrix P = XMMatrixOrthographicOffCenterLH(-half, half, -half, half, nearZ, farZ);
 
 	XMStoreFloat4x4(reinterpret_cast<_float4x4*>(&_outShadowMatix.view), V);
