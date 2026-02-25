@@ -962,29 +962,110 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 
 	CMaterial* shadowDepthMat = Find_RectMaterial(CRenderTarget::RTType::ShadowDepth);
 
+	auto isRenderableShadowTarget = [](CRenderer* r)
+	{
+		if (!r || !r->Get_GameObject())
+			return false;
+		if (!r->Get_GameObject()->IsRecursiveActive())
+			return false;
+		if (!r->Get_Enable())
+			return false;
+		if (!r->IsCastShadow())
+			return false;
+		if (!r->Get_MeshBuffer())
+			return false;
+		return true;
+	};
+
+	struct ShadowBatchKey
+	{
+		CMeshBuffer* meshBuffer;
+		CMaterial* material;
+		_bool castShadow;
+
+		_bool operator==(const ShadowBatchKey& rhs) const
+		{
+			return meshBuffer == rhs.meshBuffer && material == rhs.material && castShadow == rhs.castShadow;
+		}
+	};
+
+	struct ShadowBatchKeyHash
+	{
+		size_t operator()(const ShadowBatchKey& key) const
+		{
+			size_t h1 = hash<void*>()(static_cast<void*>(key.meshBuffer));
+			size_t h2 = hash<void*>()(static_cast<void*>(key.material));
+			size_t h3 = hash<int>()(static_cast<int>(key.castShadow));
+			return h1 ^ (h2 << 1) ^ (h3 << 2);
+		}
+	};
+
+	unordered_map<ShadowBatchKey, vector<CRenderer*>, ShadowBatchKeyHash> staticBatches;
+	staticBatches.reserve(m_vStaticMeshList.size());
+
 	for (auto* r : m_vStaticMeshList)
 	{
-		if (!r)
-			continue;
-		if (!r->Get_GameObject()->IsRecursiveActive())
-			continue;
-		if (!r->Get_Enable())
-			continue;
-		if (!r->IsCastShadow())
+		if (!isRenderableShadowTarget(r))
 			continue;
 
-		r->Render_ShadowDepth(shadowDepthMat, m_sMainLightMatrix);
+		ShadowBatchKey key = { r->Get_MeshBuffer(), r->Get_Material(), r->IsCastShadow() };
+		staticBatches[key].push_back(r);
+	}
+
+	for (auto& kv : staticBatches)
+	{
+		auto& batch = kv.second;
+		if (batch.empty())
+			continue;
+
+		CRenderer* leader = batch[0];
+		if (!leader || !leader->Get_GameObject() || !leader->Get_Transform())
+			continue;
+
+		const _uint maxInstanceCount = 128u;
+		const vector3 leaderPos = leader->Get_Transform()->Get_Position();
+		const vector3 leaderRot = leader->Get_Transform()->Get_EulerAngles();
+		const vector3 leaderScale = leader->Get_Transform()->Get_LocalScale();
+
+		for (size_t offset = 0; offset < batch.size(); offset += maxInstanceCount)
+		{
+			const size_t remain = batch.size() - offset;
+			const _uint chunkCount = static_cast<_uint>(min<size_t>(remain, maxInstanceCount));
+
+			leader->CreateMeshInstancing(chunkCount);
+
+			for (_uint i = 0; i < chunkCount; ++i)
+			{
+				CRenderer* r = batch[offset + i];
+				if (!r || !r->Get_Transform())
+					continue;
+
+				const vector3 pos = r->Get_Transform()->Get_Position();
+				const vector3 rot = r->Get_Transform()->Get_EulerAngles();
+				const vector3 scale = r->Get_Transform()->Get_LocalScale();
+
+				const vector3 relPos = pos - leaderPos;
+				const vector3 relRot = rot - leaderRot;
+				const vector3 relScale = vector3
+				(
+					leaderScale.x != 0.f ? scale.x / leaderScale.x : 1.f,
+					leaderScale.y != 0.f ? scale.y / leaderScale.y : 1.f,
+					leaderScale.z != 0.f ? scale.z / leaderScale.z : 1.f
+				);
+
+				leader->SetInstancingPosition(i, relPos);
+				leader->SetInstancingRotation(i, relRot);
+				leader->SetInstancingSize(i, relScale);
+			}
+
+			leader->Render_ShadowDepth(shadowDepthMat, m_sMainLightMatrix);
+			leader->CreateMeshInstancing(0);
+		}
 	}
 
 	for (auto* r : m_vDynamicMeshList)
 	{
-		if (!r)
-			continue;
-		if (!r->Get_GameObject()->IsRecursiveActive())
-			continue;
-		if (!r->Get_Enable())
-			continue;
-		if (!r->IsCastShadow())
+		if (!isRenderableShadowTarget(r))
 			continue;
 
 		r->Render_ShadowDepth(shadowDepthMat, m_sMainLightMatrix);
