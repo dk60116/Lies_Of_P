@@ -954,7 +954,12 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	{
 		if (!r)
 			continue;
-		if (!r->Get_GameObject()->IsRecursiveActive())
+		CGameObject* owner = r->Get_GameObject();
+		if (!owner)
+			continue;
+		if (!owner->IsRecursiveActive())
+			continue;
+		if (owner->IsStatic(CGameObject::STATIC_METHOD::TransformStatic))
 			continue;
 		if (!r->Get_Enable())
 			continue;
