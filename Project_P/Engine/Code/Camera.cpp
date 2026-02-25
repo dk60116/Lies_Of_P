@@ -1248,6 +1248,13 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 
 	CMaterial* shadowDepthMat = Find_RectMaterial(CRenderTarget::RTType::ShadowDepth);
 
+	_matrix lightView = XMLoadFloat4x4(&m_sMainLightMatrix.view);
+	_matrix lightProj = XMLoadFloat4x4(&m_sMainLightMatrix.proj);
+	BoundingFrustum shadowFrustum = {};
+	BoundingFrustum::CreateFromMatrix(shadowFrustum, lightProj);
+	_matrix invLightView = XMMatrixInverse(nullptr, lightView);
+	shadowFrustum.Transform(shadowFrustum, invLightView);
+
 	auto isRenderableShadowTarget = [](CRenderer* r)
 	{
 		if (!r || !r->Get_GameObject())
@@ -1261,6 +1268,16 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 		if (!r->Get_MeshBuffer())
 			return false;
 		return true;
+	};
+
+	auto isShadowVisible = [this, &shadowFrustum](CRenderer* r)
+	{
+		BoundingBox worldAABB = {};
+		if (!TryBuildRendererWorldAABB(r, worldAABB))
+			return false;
+
+		ContainmentType contain = shadowFrustum.Contains(worldAABB);
+		return contain != ContainmentType::DISJOINT;
 	};
 
 	struct ShadowBatchKey
@@ -1292,6 +1309,8 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	for (auto* r : m_vStaticMeshList)
 	{
 		if (!isRenderableShadowTarget(r))
+			continue;
+		if (!isShadowVisible(r))
 			continue;
 
 		ShadowBatchKey key = { r->Get_MeshBuffer(), r->Get_Material(), r->IsCastShadow() };
@@ -1352,6 +1371,8 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	for (auto* r : m_vDynamicMeshList)
 	{
 		if (!isRenderableShadowTarget(r))
+			continue;
+		if (!isShadowVisible(r))
 			continue;
 
 		r->Render_ShadowDepth(shadowDepthMat, m_sMainLightMatrix);
