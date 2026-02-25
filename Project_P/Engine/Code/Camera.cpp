@@ -383,10 +383,25 @@ void CCamera::RenderMesh()
 
 void CCamera::Update_WorldFrustum()
 {
-	BoundingFrustum localFrustum = {};
-	BoundingFrustum::CreateFromMatrix(localFrustum, Get_ProjectionMatrix());
+	_matrix cullingView = Get_ViewMatrix();
+	_matrix cullingProj = Get_ProjectionMatrix();
 
-	_matrix invView = XMMatrixInverse(nullptr, Get_ViewMatrix());
+	if (m_bIsEditor)
+	{
+		if (CGameObject* selected = CEditor::GetInstance().Get_SelectedGameObject())
+		{
+			if (CCamera* selectedCamera = selected->GetComponent<CCamera>())
+			{
+				cullingView = selectedCamera->Get_ViewMatrix();
+				cullingProj = selectedCamera->Get_ProjectionMatrix();
+			}
+		}
+	}
+
+	BoundingFrustum localFrustum = {};
+	BoundingFrustum::CreateFromMatrix(localFrustum, cullingProj);
+
+	_matrix invView = XMMatrixInverse(nullptr, cullingView);
 	m_sWorldFrustum = localFrustum;
 	m_sWorldFrustum.Transform(m_sWorldFrustum, invView);
 }
