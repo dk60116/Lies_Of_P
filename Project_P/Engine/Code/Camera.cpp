@@ -30,6 +30,10 @@ CCamera::CCamera()
 	, m_sMainLightMatrix()
 	, m_pPickStaging(nullptr)
 	, m_bIsEditor(false)
+	, m_bStaticShadowReady(false)
+	, m_bStaticShadowSkipped(false)
+	, m_iStaticShadowMapSize(0)
+	, m_vStaticShadowViewProj()
 {
 	m_strName = L"Camera";
 }
@@ -924,9 +928,40 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	ctx->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
 	rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
-	ctx->OMSetRenderTargets(0, nullptr, dsvShadow);
 
 	const _uint shadowSize = (_uint)CSceneManager::GetInstance().Get_LightSetting().shadowMapSize;
+	if (m_iStaticShadowMapSize != shadowSize)
+	{
+		m_iStaticShadowMapSize = shadowSize;
+		m_bStaticShadowReady = false;
+		m_bStaticShadowSkipped = false;
+	}
+
+	_matrix shadowView = XMLoadFloat4x4(&m_sMainLightMatrix.view);
+	_matrix shadowProj = XMLoadFloat4x4(&m_sMainLightMatrix.proj);
+	_matrix shadowViewProj = XMMatrixMultiply(shadowView, shadowProj);
+	_float4x4 shadowViewProjFloat4x4 = {};
+	XMStoreFloat4x4(&shadowViewProjFloat4x4, shadowViewProj);
+
+	_bool isShadowMatrixChanged = false;
+	for (_uint y = 0; y < 4 && !isShadowMatrixChanged; ++y)
+	{
+		for (_uint x = 0; x < 4; ++x)
+		{
+			if (fabsf(shadowViewProjFloat4x4.m[y][x] - m_vStaticShadowViewProj.m[y][x]) > 0.0001f)
+			{
+				isShadowMatrixChanged = true;
+				break;
+			}
+		}
+	}
+
+	if (isShadowMatrixChanged)
+	{
+		m_vStaticShadowViewProj = shadowViewProjFloat4x4;
+		m_bStaticShadowReady = false;
+		m_bStaticShadowSkipped = false;
+	}
 	D3D11_VIEWPORT vpt = {};
 	vpt.TopLeftX = 0.f;
 	vpt.TopLeftY = 0.f;
@@ -935,8 +970,6 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	vpt.MinDepth = 0.f;
 	vpt.MaxDepth = 1.f;
 	ctx->RSSetViewports(1, &vpt);
-
-	ctx->ClearDepthStencilView(dsvShadow, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	if (m_pRTShadowDepthDS)
 		ctx->OMSetDepthStencilState(m_pRTShadowDepthDS, 0);
@@ -947,22 +980,61 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF);
 
 	auto& shadowList = m_vMeshList;
-
 	CMaterial* shadowDepthMat = Find_RectMaterial(CRenderTarget::RTType::ShadowDepth);
 
-	for (auto* r : shadowList)
-	{
-		if (!r)
-			continue;
-		if (!r->Get_GameObject()->IsRecursiveActive())
-			continue;
-		if (!r->Get_Enable())
-			continue;
-		if (!r->IsCastShadow())
-			continue;
+	auto renderByStatic = [&](const _bool renderStatic)
+		{
+			for (auto* r : shadowList)
+			{
+				if (!r)
+					continue;
+				if (!r->Get_GameObject()->IsRecursiveActive())
+					continue;
+				if (!r->Get_Enable())
+					continue;
+				if (!r->IsCastShadow())
+					continue;
 
-		r->Render_ShadowDepth(shadowDepthMat, m_sMainLightMatrix);
+				const _bool isStaticObj = r->Get_GameObject()->IsStatic(CGameObject::STATIC_METHOD::TransformStatic);
+				if (isStaticObj != renderStatic)
+					continue;
+
+				r->Render_ShadowDepth(shadowDepthMat, m_sMainLightMatrix);
+			}
+		};
+
+	if (!m_bStaticShadowReady && !m_bStaticShadowSkipped)
+	{
+		ID3D11DepthStencilView* dsvStatic = rtm.GetDSV(CRenderTarget::RTType::ShadowDepthStatic, false);
+		if (dsvStatic)
+		{
+			ctx->OMSetRenderTargets(0, nullptr, dsvStatic);
+			ctx->ClearDepthStencilView(dsvStatic, D3D11_CLEAR_DEPTH, 1.0f, 0);
+			renderByStatic(true);
+			m_bStaticShadowReady = true;
+		}
+		else
+		{
+			m_bStaticShadowSkipped = true;
+		}
 	}
+
+	if (m_bStaticShadowReady)
+	{
+		ID3D11Texture2D* shadowTex = rtm.GetTexture(CRenderTarget::RTType::ShadowDepth, false);
+		ID3D11Texture2D* shadowStaticTex = rtm.GetTexture(CRenderTarget::RTType::ShadowDepthStatic, false);
+		if (shadowTex && shadowStaticTex)
+			ctx->CopyResource(shadowTex, shadowStaticTex);
+		else
+			ctx->ClearDepthStencilView(dsvShadow, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	}
+	else
+	{
+		ctx->ClearDepthStencilView(dsvShadow, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	}
+
+	ctx->OMSetRenderTargets(0, nullptr, dsvShadow);
+	renderByStatic(false);
 
 	rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
 

@@ -75,7 +75,7 @@ ID3D11ShaderResourceView* CRenderTarget::GetSRV() const
 
 const bool CRenderTarget::IsDepth() const
 {
-    return m_type == RTType::Depth;
+    return m_type == RTType::Depth || m_type == RTType::ShadowDepth || m_type == RTType::ShadowDepthStatic;
 }
 
 const bool CRenderTarget::HasRTV() const
@@ -150,7 +150,7 @@ HRESULT CRenderTarget::Create(RTType type, ID3D11Device* device, _uint width, _u
         return S_OK;
     }
 
-    if (type == RTType::ShadowDepth)
+    if (type == RTType::ShadowDepth || type == RTType::ShadowDepthStatic)
     {
         D3D11_TEXTURE2D_DESC td{};
         td.Width = width;

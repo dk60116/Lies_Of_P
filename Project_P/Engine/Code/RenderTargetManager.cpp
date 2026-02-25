@@ -93,8 +93,15 @@ HRESULT CRenderTargetManager::RefreshShadowDepthTarget()
     if (it != rt.end())
         it->second.Destroy();
 
+    auto itStatic = rt.find(CRenderTarget::RTType::ShadowDepthStatic);
+    if (itStatic != rt.end())
+        itStatic->second.Destroy();
+
     const _uint shadowMapSize = CSceneManager::GetInstance().Get_LightSetting().shadowMapSize;
-    return rt[CRenderTarget::RTType::ShadowDepth].Create(CRenderTarget::RTType::ShadowDepth, device, shadowMapSize, shadowMapSize, DXGI_FORMAT_R32_TYPELESS, true);
+    if (FAILED(rt[CRenderTarget::RTType::ShadowDepth].Create(CRenderTarget::RTType::ShadowDepth, device, shadowMapSize, shadowMapSize, DXGI_FORMAT_R32_TYPELESS, true)))
+        return E_FAIL;
+
+    return rt[CRenderTarget::RTType::ShadowDepthStatic].Create(CRenderTarget::RTType::ShadowDepthStatic, device, shadowMapSize, shadowMapSize, DXGI_FORMAT_R32_TYPELESS, true);
 }
 
 void CRenderTargetManager::Bind_RenderTarget(const CRenderTarget::RTType type, ID3D11DeviceContext* context, const D3D11_VIEWPORT* vp, const _bool _isEditor)
@@ -111,7 +118,7 @@ void CRenderTargetManager::Bind_RenderTarget(const CRenderTarget::RTType type, I
 
     CRenderTarget& rt = it->second;
 
-    if (type == CRenderTarget::RTType::Depth || type == CRenderTarget::RTType::ShadowDepth)
+    if (type == CRenderTarget::RTType::Depth || type == CRenderTarget::RTType::ShadowDepth || type == CRenderTarget::RTType::ShadowDepthStatic)
     {
         ID3D11DepthStencilView* dsv = rt.GetDSV();
         if (!dsv)
@@ -175,7 +182,7 @@ void CRenderTargetManager::Clear_RenderTarget(const CRenderTarget::RTType type, 
 
     CRenderTarget& rt = it->second;
 
-    if (type == CRenderTarget::RTType::Depth || type == CRenderTarget::RTType::ShadowDepth)
+    if (type == CRenderTarget::RTType::Depth || type == CRenderTarget::RTType::ShadowDepth || type == CRenderTarget::RTType::ShadowDepthStatic)
     {
         ID3D11DepthStencilView* dsv = rt.GetDSV();
 
@@ -319,6 +326,9 @@ HRESULT CRenderTargetManager::CreateTargets(ID3D11Device* device, _uint width, _
         _uint shadowMapSize = CSceneManager::GetInstance().Get_LightSetting().shadowMapSize;
 
         if (FAILED(rt[CRenderTarget::RTType::ShadowDepth].Create(CRenderTarget::RTType::ShadowDepth, device, shadowMapSize, shadowMapSize, DXGI_FORMAT_R32_TYPELESS, true)))
+            return E_FAIL;
+
+        if (FAILED(rt[CRenderTarget::RTType::ShadowDepthStatic].Create(CRenderTarget::RTType::ShadowDepthStatic, device, shadowMapSize, shadowMapSize, DXGI_FORMAT_R32_TYPELESS, true)))
             return E_FAIL;
     }
 

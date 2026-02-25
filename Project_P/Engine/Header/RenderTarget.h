@@ -19,6 +19,7 @@ public:
         Material,
         Depth,
         ShadowDepth,
+        ShadowDepthStatic,
         Diffuse,
         Specular,
         ShadowMask

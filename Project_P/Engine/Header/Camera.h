@@ -134,6 +134,10 @@ private:
 	ID3D11Texture2D* m_pPickStaging;
 
 	_bool m_bIsEditor;
+	_bool m_bStaticShadowReady;
+	_bool m_bStaticShadowSkipped;
+	_uint m_iStaticShadowMapSize;
+	_float4x4 m_vStaticShadowViewProj;
 };
 
 NS_END
