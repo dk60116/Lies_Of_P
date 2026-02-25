@@ -14,7 +14,8 @@ CCamera::CCamera()
 	, m_fFar(600.f)
 	, m_fFieldOfView(60.f)
 	, m_fSize(5.f)
-	, m_vMeshList({})
+	, m_vStaticMeshList({})
+	, m_vDynamicMeshList({})
 	, m_vUIList({})
 	, m_mRTDebugDisplays({})
 	, m_pRectBuffer(nullptr)
@@ -221,7 +222,8 @@ void CCamera::Render()
 
 void CCamera::OnPostRender()
 {
-	m_vMeshList.clear();
+	m_vStaticMeshList.clear();
+	m_vDynamicMeshList.clear();
 }
 
 void CCamera::OnDestroy()
@@ -290,7 +292,13 @@ void CCamera::Set_BackgroundColor(const ColorValue& _color)
 
 void CCamera::Add_RenderTarget_Mesh(CRenderer* _mesh)
 {
-	m_vMeshList.push_back(_mesh);
+	if (!_mesh || !_mesh->Get_GameObject())
+		return;
+
+	if (_mesh->Get_GameObject()->IsStatic(CGameObject::STATIC_METHOD::TransformStatic))
+		m_vStaticMeshList.push_back(_mesh);
+	else
+		m_vDynamicMeshList.push_back(_mesh);
 }
 
 void CCamera::Add_RenderTarget_UI(CUI* _ui)
@@ -347,7 +355,13 @@ void CCamera::Bind_ProjectionMatrix()
 
 void CCamera::RenderMesh()
 {
-	for (TRAVERSAL_ITER(m_vMeshList, it))
+	for (TRAVERSAL_ITER(m_vStaticMeshList, it))
+	{
+		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
+			(*it)->Render_WithCamera(this);
+	}
+
+	for (TRAVERSAL_ITER(m_vDynamicMeshList, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->Render_WithCamera(this);
@@ -946,11 +960,23 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	const _float bf[4] = { 0,0,0,0 };
 	ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF);
 
-	auto& shadowList = m_vMeshList;
-
 	CMaterial* shadowDepthMat = Find_RectMaterial(CRenderTarget::RTType::ShadowDepth);
 
-	for (auto* r : shadowList)
+	for (auto* r : m_vStaticMeshList)
+	{
+		if (!r)
+			continue;
+		if (!r->Get_GameObject()->IsRecursiveActive())
+			continue;
+		if (!r->Get_Enable())
+			continue;
+		if (!r->IsCastShadow())
+			continue;
+
+		r->Render_ShadowDepth(shadowDepthMat, m_sMainLightMatrix);
+	}
+
+	for (auto* r : m_vDynamicMeshList)
 	{
 		if (!r)
 			continue;
