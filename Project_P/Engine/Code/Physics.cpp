@@ -806,7 +806,7 @@ void CPhysics::RenderRaycastDebugDisplay()
 		return;
 
 	const _matrix viewProj = camera->Get_ViewMatrix() * camera->Get_ProjectionMatrix();
-	ImDrawList* drawList = ImGui::GetForegroundDrawList();
+	ImDrawList* drawList = ImGui::GetBackgroundDrawList();
 	if (!drawList)
 		return;
 
