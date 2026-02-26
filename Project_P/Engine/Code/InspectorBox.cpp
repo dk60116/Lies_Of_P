@@ -1563,6 +1563,10 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 if (ImGui::Checkbox("Use Gravity", &useGravity))
                     cloth->SetUseGravity(useGravity);
 
+                _float shapeRetention = cloth->GetShapeRetention();
+                if (ImGui::SliderFloat("Shape Retention", &shapeRetention, 0.0f, 1.0f))
+                    cloth->SetShapeRetention(shapeRetention);
+
                 const _uint pinnedCount = cloth->GetPinnedTransformCount();
                 for (_uint pinIdx = 0; pinIdx < pinnedCount; ++pinIdx)
                 {

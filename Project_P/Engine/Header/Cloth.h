@@ -31,6 +31,8 @@ public:
 	void RebuildClothBody();
 	_bool GetUseGravity() const;
 	void SetUseGravity(const _bool _useGravity);
+	_float GetShapeRetention() const;
+	void SetShapeRetention(const _float _value);
 	void AddPinnedTransform(class CTransform* _transform);
 	void RemovePinnedTransform(const _uint _index);
 	void ClearPinnedTransforms();
@@ -58,6 +60,7 @@ private:
 	_float m_fTotalMass;
 	_float m_fDamping;
 	_float m_fCompliance;
+	_float m_fShapeRetention;
 	_bool m_bUseGravity;
 	_bool m_bHasLastSyncedPosition;
 	vector3 m_vLastSyncedPosition;

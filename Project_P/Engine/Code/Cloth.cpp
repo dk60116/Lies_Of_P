@@ -27,6 +27,7 @@ CCloth::CCloth()
 	, m_fTotalMass(1.5f)
 	, m_fDamping(0.08f)
 	, m_fCompliance(0.0002f)
+	, m_fShapeRetention(0.85f)
 	, m_bUseGravity(true)
 	, m_bHasLastSyncedPosition(false)
 	, m_vLastSyncedPosition(vector3::zero())
@@ -53,6 +54,7 @@ CComponent* CCloth::Clone() const
 	clone->m_fTotalMass = m_fTotalMass;
 	clone->m_fDamping = m_fDamping;
 	clone->m_fCompliance = m_fCompliance;
+	clone->m_fShapeRetention = m_fShapeRetention;
 	clone->m_bUseGravity = m_bUseGravity;
 	clone->m_bHasLastSyncedPosition = false;
 	clone->m_vLastSyncedPosition = vector3::zero();
@@ -170,6 +172,21 @@ void CCloth::SetUseGravity(const _bool _useGravity)
 	m_bUseGravity = _useGravity;
 	RebuildClothBody();
 	ApplyGravityToSoftBody();
+}
+
+_float CCloth::GetShapeRetention() const
+{
+	return m_fShapeRetention;
+}
+
+void CCloth::SetShapeRetention(const _float _value)
+{
+	const _float clamped = max(0.0f, min(1.0f, _value));
+	if (abs(m_fShapeRetention - clamped) < 0.0001f)
+		return;
+
+	m_fShapeRetention = clamped;
+	RebuildClothBody();
 }
 
 void CCloth::AddPinnedTransform(CTransform* _transform)
@@ -388,11 +405,18 @@ void CCloth::CreateSoftBody()
 	}
 
 	SoftBodySharedSettings::VertexAttributes attrs[2];
-	attrs[0].mCompliance = m_fCompliance;
-	attrs[0].mShearCompliance = m_fCompliance;
-	attrs[0].mBendCompliance = m_fCompliance * 2.0f;
+	const _float retentionFactor = 1.0f - m_fShapeRetention;
+	const _float structuralCompliance = max(0.000001f, m_fCompliance * (0.15f + retentionFactor * 2.0f));
+	const _float shearCompliance = max(0.000001f, m_fCompliance * (0.2f + retentionFactor * 1.8f));
+	const _float bendCompliance = max(0.000001f, m_fCompliance * (0.35f + retentionFactor * 2.2f));
+	attrs[0].mCompliance = structuralCompliance;
+	attrs[0].mShearCompliance = shearCompliance;
+	attrs[0].mBendCompliance = bendCompliance;
+	attrs[0].mLRAType = SoftBodySharedSettings::ELRAType::EuclideanDistance;
+	attrs[0].mLRAMaxDistanceMultiplier = 1.05f + (1.0f - m_fShapeRetention) * 0.25f;
 	attrs[1] = attrs[0];
 	settings->CreateConstraints(attrs, 2, SoftBodySharedSettings::EBendType::Distance);
+	settings->CalculateLRALengths();
 	settings->Optimize();
 
 	const vector3 pos = m_pGameObject->Get_Transform()->Get_Position();
