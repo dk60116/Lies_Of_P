@@ -141,8 +141,8 @@ PSOut PSMain(VSOut input)
     float2 uv = input.uv * gTiling + gOffset;
     float4 texColor = (useTexture != 0) ? gTexture.Sample(gSampler, uv) : float4(1, 1, 1, 1);
 
-    if (all(texColor.rgb < 0.001f) && texColor.a > 0.999f)
-        discard;
+    const float kCutoff = 0.5f;
+    clip(texColor.a - kCutoff);
 
     o.Albedo = saturate(baseColor * texColor);
     o.Object = gObjectID;

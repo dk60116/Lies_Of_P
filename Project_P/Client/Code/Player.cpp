@@ -66,6 +66,7 @@ HRESULT CPlayer::Initialize()
 	CTexture* wing_BaseTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Wing_Base (Texture)");
 	CTexture* wing_NormalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Wing_Normal (Texture)");
 	CTexture* wing_ORMTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Wing_ORM (Texture)");
+	CTexture* wing_AlphaTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Wing_Alpha (Texture)");
 
 	CTexture* frill_BaseTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Frill_Base (Texture)");
 	CTexture* frill_NormalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Frill_Normal (Texture)");
@@ -95,12 +96,14 @@ HRESULT CPlayer::Initialize()
 	m_vBodySuits[3]->Get_Material()->Set_FloatValue(L"gRoughness", 0.9f);
 	m_vBodySuits[3]->Get_Material()->Set_FloatValue(L"gMetallic", 0.f);
 
-	m_vBodySuits[4]->Set_Material(CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferCutoutLit (Material)"));
+	m_vBodySuits[4]->Set_Material(CResources::GetInstance().CloneOnGame<CMaterial>(L"G_TransparentLit (Material)"));
 	m_vBodySuits[4]->Get_Material()->Set_Texture(wing_BaseTex);
 	m_vBodySuits[4]->Get_Material()->Set_Texture(wing_NormalTex, 1);
 	m_vBodySuits[4]->Get_Material()->Set_Texture(wing_ORMTex, 2);
+	m_vBodySuits[4]->Get_Material()->Set_Texture(wing_AlphaTex, 3);
 	m_vBodySuits[4]->SetCastShadow(false);
 
+	m_vBodySuits[5]->Set_Material(CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferCutoutLit (Material)"));
 	m_vBodySuits[5]->Get_Material()->Set_Texture(frill_BaseTex);
 	m_vBodySuits[5]->Get_Material()->Set_Texture(frill_NormalTex, 1);
 	m_vBodySuits[5]->Get_Material()->Set_Texture(frill_ORMTex, 2);
@@ -143,13 +146,16 @@ HRESULT CPlayer::Initialize()
 
 	CTransform* headSlot = Get_Transform()->Find_ChildRecursive(L"Bip001-Head");
 	m_pHeadObj->Get_Transform()->SetParent(headSlot);
-	m_pHeadObj->Get_Transform()->Set_LocalPosition(vector3(0.012f, -151.302f, -11.860f));
+	//m_pHeadObj->Get_Transform()->Set_LocalPosition(vector3(0.012f, -151.302f, -11.860f));
 	m_pHeadObj->Get_Transform()->Set_LocalEulerAngles(vector3(-4.5f, 180.f, 0.f));
+
 	m_pHairObj->Get_Transform()->SetParent(m_pHeadObj->Get_Transform());
 	m_pHairObj->Get_Transform()->Set_LocalPosition(vector3::up() * 3.039f);
+
 	m_pPonyTailObj->Get_Transform()->SetParent(m_pHairObj->Get_Transform());
 	m_pPonyTailObj->Get_Transform()->Set_LocalPosition(-0.086f, -3.039f, 0.f);
 	m_pHairObj->Get_Transform()->Set_LocalEulerAngles(vector3::zero());
+
 	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp;
 
 	CGameManager::GetInstance().Set_Player(this);

@@ -1341,6 +1341,10 @@ namespace Engine
         _uint useNormalMap;
         _uint useORMMap;
         _uint boneCount;
+        _uint useAlphaMap;
+        _uint materialPadding0;
+        _uint materialPadding1;
+        _uint materialPadding2;
     };
 
     struct LightCB
