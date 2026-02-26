@@ -195,10 +195,7 @@ void CCloth::CreateSoftBody()
 		for (_uint x = 0; x < width; ++x)
 		{
 			_float3 p = _float3((float)x * spacing, -(float)y * spacing, 0.0f);
-			_float vtxInvMass = invMass;
-			if (y == 0)
-				vtxInvMass = 0.0f;
-			settings->mVertices.emplace_back(Float3(p.x, p.y, p.z), Float3(0, 0, 0), vtxInvMass);
+			settings->mVertices.emplace_back(Float3(p.x, p.y, p.z), Float3(0, 0, 0), invMass);
 		}
 	}
 
@@ -229,9 +226,11 @@ void CCloth::CreateSoftBody()
 	SoftBodyCreationSettings softBodySettings(settings, RVec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), Layers::MOVING);
 	softBodySettings.mLinearDamping = m_fDamping;
 	softBodySettings.mPressure = 0.0f;
+	softBodySettings.mGravityFactor = 1.0f;
 	softBodySettings.mNumIterations = 8;
 	softBodySettings.mUpdatePosition = true;
 	softBodySettings.mMakeRotationIdentity = true;
+	softBodySettings.mAllowSleeping = false;
 	softBodySettings.mUserData = reinterpret_cast<uint64>(this);
 
 	BodyInterface& bi = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
