@@ -3,7 +3,6 @@
 #include "Player.h"
 #include "PlayerCamera.h"
 #include "PlayerHUD.h"
-#include "Wolf.h"
 #include "Map_01_SilentStreet.h"
 
 CGameScene::CGameScene()
@@ -29,7 +28,7 @@ HRESULT CGameScene::Initialize()
 
 	CGameObject* lightObject = Add_GameObject(L"Directional Light");
 	m_pDirLight = lightObject->AddComponent<CLight>();
-	m_pDirLight->Set_Intensity(0.5f);
+	m_pDirLight->Set_Intensity(0.3f);
 	m_pDirLight->Set_Color(ColorValue(170, 230, 160));
 	m_pDirLight->Get_Transform()->Set_EulerAngles(45.f, 160.f, 0.f);
 
@@ -42,9 +41,6 @@ HRESULT CGameScene::Initialize()
 
 	CGameObject* playerObj = Add_GameObject(L"Player");
 	m_pPlayer = playerObj->AddComponent<CPlayer>();
-
-	//CGameObject* mapObj = Add_GameObject(L"Map");
-	//mapObj->AddComponent<CMap_01_SilentStreet>();
 
 	return S_OK;
 }

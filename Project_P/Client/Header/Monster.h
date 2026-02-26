@@ -36,9 +36,6 @@ public:
 	const MonsterStatus& Get_Status();
 
 protected:
-	CAnimationClip* Add_Animation(const wstring _name);
-
-protected:
 	wstring m_strSkinnedMeshBufferName;
 	_float m_fSkinnedMeshScaleFactor;
 	vector<CSkinnedMeshRenderer*> m_vMeshRenderers;

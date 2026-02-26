@@ -7,6 +7,7 @@ CPlayer::CPlayer()
 	: m_pController(nullptr)
 	, m_pHeadObj(nullptr)
 	, m_pHairObj(nullptr)
+	, m_pPonyTailObj(nullptr)
 	, m_pSkinnedMeshRenderer(nullptr)
 	, m_pAnimator(nullptr)
 	, m_pEquipWeapon(nullptr)
@@ -14,6 +15,7 @@ CPlayer::CPlayer()
 	, m_vBodySuits({})
 	, m_vFaces({})
 	, m_vHairs({})
+	, m_vPonyTailas({})
 	, m_iLightAttackComboCount(0)
 	, m_pWeaponHolder(nullptr)
 	, m_pBodyCollider(nullptr)
@@ -116,7 +118,17 @@ HRESULT CPlayer::Initialize()
 	m_pHairObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Eve_Hear");
 	m_vHairs = m_pHairObj->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveHairMain_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveHairMain_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
 
+	m_pPonyTailObj = m_pGameObject->Get_Scene()->Add_GameObject(L"EveHairPonyTail_Short");
+	m_vPonyTailas = m_pPonyTailObj->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveHairPonyTail_Short_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveHairPonyTail_Short_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
+
 	for (TRAVERSAL_ITER(m_vHairs, it))
+	{
+		(*it)->Get_Material()->Set_BaseColor(ColorValue::black().f4Color());
+		(*it)->Get_Material()->Set_FloatValue(L"gRoughness", 0.8f);
+		(*it)->Get_Material()->Set_FloatValue(L"gMetallic", 0.2f);
+	}
+
+	for (TRAVERSAL_ITER(m_vPonyTailas, it))
 	{
 		(*it)->Get_Material()->Set_BaseColor(ColorValue::black().f4Color());
 		(*it)->Get_Material()->Set_FloatValue(L"gRoughness", 0.8f);
@@ -133,7 +145,9 @@ HRESULT CPlayer::Initialize()
 	m_pHeadObj->Get_Transform()->Set_LocalPosition(vector3(0.012f, -151.302f, -11.860f));
 	m_pHeadObj->Get_Transform()->Set_LocalEulerAngles(vector3(-4.5f, 180.f, 0.f));
 	m_pHairObj->Get_Transform()->SetParent(m_pHeadObj->Get_Transform());
-	m_pHairObj->Get_Transform()->Set_LocalPosition(vector3::up() * 3.02f);
+	m_pHairObj->Get_Transform()->Set_LocalPosition(vector3::up() * 3.039f);
+	m_pPonyTailObj->Get_Transform()->SetParent(m_pHairObj->Get_Transform());
+	m_pPonyTailObj->Get_Transform()->Set_LocalPosition(-0.086f, -3.039f, 0.f);
 	m_pHairObj->Get_Transform()->Set_LocalEulerAngles(vector3::zero());
 	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp;
 
@@ -169,6 +183,7 @@ HRESULT CPlayer::Initialize()
 
 void CPlayer::Awake()
 {
+	Get_Transform()->Set_PositionZ(6.f);
 }
 
 void CPlayer::Start()

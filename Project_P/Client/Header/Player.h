@@ -66,7 +66,7 @@ private:
 
 private:
 	class CPlayerController* m_pController;
-	CGameObject* m_pHeadObj, *m_pHairObj;
+	CGameObject* m_pHeadObj, *m_pHairObj, *m_pPonyTailObj;
 
 	CSkinnedMeshRenderer* m_pSkinnedMeshRenderer;
 	CAnimator* m_pAnimator;
@@ -75,7 +75,7 @@ private:
 
 	PlayerStatus m_sPlayerStatus;
 
-	vector<CSkinnedMeshRenderer*> m_vBodySuits, m_vFaces, m_vHairs;
+	vector<CSkinnedMeshRenderer*> m_vBodySuits, m_vFaces, m_vHairs, m_vPonyTailas;
 
 	CTransform* m_pWeaponHolder;
 

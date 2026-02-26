@@ -142,11 +142,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\Header\Behaviour_Combat.h" />
-    <ClInclude Include="..\Header\Behaviour_Find.h" />
-    <ClInclude Include="..\Header\Behaviour_Idle.h" />
-    <ClInclude Include="..\Header\Behaviour_Patrole.h" />
-    <ClInclude Include="..\Header\Behaviour_Tracking.h" />
     <ClInclude Include="..\Header\Map_01_SilentStreet.h" />
     <ClInclude Include="..\Header\PlayerState_Attack.h" />
     <ClInclude Include="..\Header\PlayerState_Evade.h" />
@@ -159,8 +154,6 @@
     <ClInclude Include="..\Header\LoadingScene.h" />
     <ClInclude Include="..\Header\MainScene.h" />
     <ClInclude Include="..\Header\Monster.h" />
-    <ClInclude Include="..\Header\MonsterBehaviour.h" />
-    <ClInclude Include="..\Header\MonsterController.h" />
     <ClInclude Include="..\Header\Player.h" />
     <ClInclude Include="..\Header\PlayerCamera.h" />
     <ClInclude Include="..\Header\PlayerController.h" />
@@ -170,7 +163,6 @@
     <ClInclude Include="..\Header\PlayerState_Idle.h" />
     <ClInclude Include="..\Header\SceneMap.h" />
     <ClInclude Include="..\Header\Weapon.h" />
-    <ClInclude Include="..\Header\Wolf.h" />
     <ClInclude Include="..\Header\Eve_Sword.h" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="cpch.h" />
@@ -178,19 +170,12 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Code\Behaviour_Combat.cpp" />
-    <ClCompile Include="..\Code\Behaviour_Find.cpp" />
-    <ClCompile Include="..\Code\Behaviour_Idle.cpp" />
-    <ClCompile Include="..\Code\Behaviour_Patrole.cpp" />
-    <ClCompile Include="..\Code\Behaviour_Tracking.cpp" />
     <ClCompile Include="..\Code\GameManager.cpp" />
     <ClCompile Include="..\Code\GameScene.cpp" />
     <ClCompile Include="..\Code\LoadingScene.cpp" />
     <ClCompile Include="..\Code\MainScene.cpp" />
     <ClCompile Include="..\Code\Map_01_SilentStreet.cpp" />
     <ClCompile Include="..\Code\Monster.cpp" />
-    <ClCompile Include="..\Code\MonsterBehaviour.cpp" />
-    <ClCompile Include="..\Code\MonsterController.cpp" />
     <ClCompile Include="..\Code\Player.cpp" />
     <ClCompile Include="..\Code\PlayerCamera.cpp" />
     <ClCompile Include="..\Code\PlayerController.cpp" />
@@ -206,7 +191,6 @@
     <ClCompile Include="..\Code\PlayerState_Move.cpp" />
     <ClCompile Include="..\Code\SceneMap.cpp" />
     <ClCompile Include="..\Code\Weapon.cpp" />
-    <ClCompile Include="..\Code\Wolf.cpp" />
     <ClCompile Include="..\Code\Eve_Sword.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="cpch.cpp">

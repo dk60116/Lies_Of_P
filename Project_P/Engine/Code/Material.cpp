@@ -10,6 +10,7 @@ CMaterial::CMaterial()
 	, m_pLightBuffer(nullptr)
 	, m_pCustomBuffer(nullptr)
 	, m_vCustomBufferByteList({})
+	, m_bTransparent(false)
 	, m_bUseLight(false)
 	, m_bUseNormalMap(false)
 	, m_bUseORMMap(false)
@@ -33,6 +34,7 @@ CMaterial::CMaterial(const CMaterial& _other)
 	, m_pLightBuffer(nullptr)
 	, m_pCustomBuffer(nullptr)
 	, m_vCustomBufferByteList(_other.m_vCustomBufferByteList)
+	, m_bTransparent(_other.m_bTransparent)
 	, m_bUseLight(_other.m_bUseLight)
 	, m_bUseNormalMap(_other.m_bUseNormalMap)
 	, m_bUseORMMap(_other.m_bUseORMMap)
@@ -83,7 +85,8 @@ HRESULT CMaterial::Initialize(const wstring& _name, wstring _filePath, void* _de
 			return E_FAIL;
 
 		Set_Shader(matDesc->shaderPointer);
-		m_bUseLight = matDesc->usingRight;
+		m_bTransparent = matDesc->transparent;
+		m_bUseLight = matDesc->usingLight;
 		m_bUseNormalMap = matDesc->usingNormalMap;
 		m_bUseORMMap = matDesc->usingORMMap;
 
@@ -340,6 +343,11 @@ CShader* CMaterial::Get_Shader() const
 const _uint CMaterial::Get_TextureCount() const
 {
 	return static_cast<_uint>(m_vTextureList.size());
+}
+
+const _bool CMaterial::IsTransparnet() const
+{
+	return m_bTransparent;
 }
 
 const _bool CMaterial::IsUseLight() const

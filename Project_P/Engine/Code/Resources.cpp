@@ -1908,124 +1908,166 @@ void CResources::Ready_GameResources()
 	LoadResourceComplete_Game<CShader>(L"DefaultLine (Shader)", L"", &lineColorShaderDesc);
 
 	CShader* dlShader = LoadOnGame<CShader>(L"DefaultLine (Shader)");
-	CMaterial::MATERIALDESC dlMatDesc = { dlShader, false };
+	CMaterial::MATERIALDESC dlMatDesc = { dlShader, false, false };
 	LoadResourceComplete_Game<CMaterial>(L"DefaultLineMaterial (Material)", L"", &dlMatDesc);
 
 	CShader::SHADERDESC litShaderDesc = { L"../EngineResources/Shader/Lit.hlsl", L"", VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
 	LoadResourceComplete_Game<CShader>(L"Lit (Shader)", L"", &litShaderDesc);
 
 	CShader* litShader = LoadOnGame<CShader>(L"Lit (Shader)");
-	CMaterial::MATERIALDESC litMatDesc = { litShader, true };
+	CMaterial::MATERIALDESC litMatDesc = { litShader, false, true };
 	litMatDesc.customFloatValues.push_back({ L"gSmoothness", 0.f });
 	litMatDesc.customVector2Values.push_back({ L"gTiling", { 1.f, 1.f } });
 	litMatDesc.customVector2Values.push_back({ L"gOffset", { 0.f, 0.f } });
 	LoadResourceComplete_Game<CMaterial>(L"Lit (Material)", L"", &litMatDesc);
 
-	CShader::SHADERDESC skyBoxShaderDesc = { L"../EngineResources/Shader/Skybox.hlsl", L"",  VertexTexNormalTangentBuffer::numElements, VertexTexNormalTangentBuffer::elementDesc };
-	LoadResourceComplete_Game<CShader>(L"SkyBox (Shader)", L"", &skyBoxShaderDesc);
+	{
+		CShader::SHADERDESC skyBoxShaderDesc = { L"../EngineResources/Shader/Skybox.hlsl", L"",  VertexTexNormalTangentBuffer::numElements, VertexTexNormalTangentBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"SkyBox (Shader)", L"", &skyBoxShaderDesc);
 
-	CShader* skyBoxShader = LoadOnGame<CShader>(L"SkyBox (Shader)");
-	CMaterial::MATERIALDESC skyMatDesc = { skyBoxShader, false };
-	LoadResourceComplete_Game<CMaterial>(L"SkyBoxMaterial (Material)", L"", &skyMatDesc);
+		CShader* skyBoxShader = LoadOnGame<CShader>(L"SkyBox (Shader)");
+		CMaterial::MATERIALDESC skyMatDesc = { skyBoxShader, false, false };
+		LoadResourceComplete_Game<CMaterial>(L"SkyBoxMaterial (Material)", L"", &skyMatDesc);
 
-	CSkyBox::SKYBOXBUFFERDESC dskyDesk = { L"DefaultSky (Texture)" };
-	LoadResourceComplete_Game<CSkyBox>(L"DefaultSky (SkyBox)", L"", &dskyDesk);
+		CSkyBox::SKYBOXBUFFERDESC dskyDesk = { L"DefaultSky (Texture)" };
+		LoadResourceComplete_Game<CSkyBox>(L"DefaultSky (SkyBox)", L"", &dskyDesk);
+	}
 
-	CShader::SHADERDESC g_BufferlitShaderDesc = { L"../EngineResources/Shader/GBufferLit.hlsl", L"", VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
-	LoadResourceComplete_Game<CShader>(L"G_BufferLit (Shader)", L"", &g_BufferlitShaderDesc);
+	{
+		CShader::SHADERDESC g_BufferlitShaderDesc = { L"../EngineResources/Shader/GBufferLit.hlsl", L"", VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"G_BufferLit (Shader)", L"", &g_BufferlitShaderDesc);
 
-	CShader* g_BufferLitShader = LoadOnGame<CShader>(L"G_BufferLit (Shader)");
-	CMaterial::MATERIALDESC g_BufferLitMatDesc = { g_BufferLitShader, false, true, true };
-	g_BufferLitMatDesc.customFloatValues.push_back({ L"gOcculusion", 1.f });
-	g_BufferLitMatDesc.customFloatValues.push_back({ L"gRoughness", 0.5f });
-	g_BufferLitMatDesc.customFloatValues.push_back({ L"gMetallic", 0.f });
-	g_BufferLitMatDesc.customIntValues.push_back({ L"gObjectID", 0 });
-	g_BufferLitMatDesc.customVector2Values.push_back({ L"gTiling", {1.f, 1.f} });
-	LoadResourceComplete_Game<CMaterial>(L"G_BufferLit (Material)", L"", &g_BufferLitMatDesc);
+		CShader* g_BufferLitShader = LoadOnGame<CShader>(L"G_BufferLit (Shader)");
+		CMaterial::MATERIALDESC g_BufferLitMatDesc = { g_BufferLitShader, false, true, true, true };
+		g_BufferLitMatDesc.customFloatValues.push_back({ L"gOcculusion", 1.f });
+		g_BufferLitMatDesc.customFloatValues.push_back({ L"gRoughness", 0.5f });
+		g_BufferLitMatDesc.customFloatValues.push_back({ L"gMetallic", 0.f });
+		g_BufferLitMatDesc.customIntValues.push_back({ L"gObjectID", 0 });
+		g_BufferLitMatDesc.customVector2Values.push_back({ L"gTiling", {1.f, 1.f} });
+		LoadResourceComplete_Game<CMaterial>(L"G_BufferLit (Material)", L"", &g_BufferLitMatDesc);
+	}
 
-	CShader::SHADERDESC deferredPresentShaderDesc = { L"../EngineResources/Shader/DeferredPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
-	CShader* deferredPresentShader = LoadResourceComplete_Game<CShader>( L"DeferredPresent (Shader)", L"", &deferredPresentShaderDesc);
+	{
+		CShader::SHADERDESC g_BufferCutoutLitShaderDesc = { L"../EngineResources/Shader/GbufferCutoutLit.hlsl", L"", VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"G_BufferCutoutLit (Shader)", L"", &g_BufferCutoutLitShaderDesc);
 
-	CMaterial::MATERIALDESC deferredPresentMatDesc = { deferredPresentShader, false };
-	LoadResourceComplete_Game<CMaterial>(L"DeferredPresent (Material)", L"", &deferredPresentMatDesc);
+		CShader* g_BufferCutoutLitShader = LoadOnGame<CShader>(L"G_BufferCutoutLit (Shader)");
+		CMaterial::MATERIALDESC g_BufferCutoutLitMatDesc = { g_BufferCutoutLitShader, true, true, true, true };
+		g_BufferCutoutLitMatDesc.customFloatValues.push_back({ L"gOcculusion", 1.f });
+		g_BufferCutoutLitMatDesc.customFloatValues.push_back({ L"gRoughness", 0.5f });
+		g_BufferCutoutLitMatDesc.customFloatValues.push_back({ L"gMetallic", 0.f });
+		g_BufferCutoutLitMatDesc.customIntValues.push_back({ L"gObjectID", 0 });
+		g_BufferCutoutLitMatDesc.customVector2Values.push_back({ L"gTiling", {1.f, 1.f} });
+		LoadResourceComplete_Game<CMaterial>(L"G_BufferCutoutLit (Material)", L"", &g_BufferCutoutLitMatDesc);
+	}
 
-	CShader::SHADERDESC objectIDPresentShaderDesc = { L"../EngineResources/Shader/ObjectIDPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
-	CShader* objectIDPresentShader = LoadResourceComplete_Game<CShader>(L"ObjectIDPresent (Shader)", L"", &objectIDPresentShaderDesc);
+	{
+		CShader::SHADERDESC deferredPresentShaderDesc = { L"../EngineResources/Shader/DeferredPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
+		CShader* deferredPresentShader = LoadResourceComplete_Game<CShader>(L"DeferredPresent (Shader)", L"", &deferredPresentShaderDesc);
 
-	CMaterial::MATERIALDESC objectIDPresentMatDesc = { objectIDPresentShader, false };
-	LoadResourceComplete_Game<CMaterial>(L"ObjectIDPresent (Material)", L"", &objectIDPresentMatDesc);
+		CMaterial::MATERIALDESC deferredPresentMatDesc = { deferredPresentShader, false, false };
+		LoadResourceComplete_Game<CMaterial>(L"DeferredPresent (Material)", L"", &deferredPresentMatDesc);
+	}
 
-	CShader::SHADERDESC depthPresentShaderDesc = { L"../EngineResources/Shader/DepthPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
-	CShader* depthPresentShader = LoadResourceComplete_Game<CShader>(L"DepthPresent (Shader)", L"", &depthPresentShaderDesc);
+	{
+		CShader::SHADERDESC objectIDPresentShaderDesc = { L"../EngineResources/Shader/ObjectIDPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
+		CShader* objectIDPresentShader = LoadResourceComplete_Game<CShader>(L"ObjectIDPresent (Shader)", L"", &objectIDPresentShaderDesc);
 
-	CMaterial::MATERIALDESC depthPresentMatDesc = { depthPresentShader, false };
-	LoadResourceComplete_Game<CMaterial>(L"DepthPresent (Material)", L"", &depthPresentMatDesc);
+		CMaterial::MATERIALDESC objectIDPresentMatDesc = { objectIDPresentShader, false, false };
+		LoadResourceComplete_Game<CMaterial>(L"ObjectIDPresent (Material)", L"", &objectIDPresentMatDesc);
+	}
 
-	CShader::SHADERDESC shadowDepthPresentShaderDesc = { L"../EngineResources/Shader/ShadowDepthPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
-	LoadResourceComplete_Game<CShader>(L"ShadowDepthPresent (Shader)", L"", &shadowDepthPresentShaderDesc);
+	{
+		CShader::SHADERDESC depthPresentShaderDesc = { L"../EngineResources/Shader/DepthPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
+		CShader* depthPresentShader = LoadResourceComplete_Game<CShader>(L"DepthPresent (Shader)", L"", &depthPresentShaderDesc);
 
-	CShader* shadowDepthPresentShader = LoadOnGame<CShader>(L"ShadowDepthPresent (Shader)");
-	CMaterial::MATERIALDESC shadowDepthPresentMatDesc = { shadowDepthPresentShader, false };
-	LoadResourceComplete_Game<CMaterial>(L"ShadowDepthPresent (Material)", L"", &shadowDepthPresentMatDesc);
+		CMaterial::MATERIALDESC depthPresentMatDesc = { depthPresentShader, false, false };
+		LoadResourceComplete_Game<CMaterial>(L"DepthPresent (Material)", L"", &depthPresentMatDesc);
+	}
 
-	CShader::SHADERDESC shadowMaskPresentShaderDesc = { L"../EngineResources/Shader/ShadowMaskPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
-	LoadResourceComplete_Game<CShader>(L"ShadowMaskPresent (Shader)", L"", &shadowMaskPresentShaderDesc);
+	{
+		CShader::SHADERDESC shadowDepthPresentShaderDesc = { L"../EngineResources/Shader/ShadowDepthPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"ShadowDepthPresent (Shader)", L"", &shadowDepthPresentShaderDesc);
 
-	CShader* shadowMaskPresentShader = LoadOnGame<CShader>(L"ShadowMaskPresent (Shader)");
-	CMaterial::MATERIALDESC shadowMaskPresentMatDesc = { shadowMaskPresentShader, false };
-	LoadResourceComplete_Game<CMaterial>(L"ShadowMaskPresent (Material)", L"", &shadowMaskPresentMatDesc);
+		CShader* shadowDepthPresentShader = LoadOnGame<CShader>(L"ShadowDepthPresent (Shader)");
+		CMaterial::MATERIALDESC shadowDepthPresentMatDesc = { shadowDepthPresentShader, false, false };
+		LoadResourceComplete_Game<CMaterial>(L"ShadowDepthPresent (Material)", L"", &shadowDepthPresentMatDesc);
+	}
 
-	CShader::SHADERDESC deferredCombineShaderDesc = { L"../EngineResources/Shader/DeferredCombine.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
-	LoadResourceComplete_Game<CShader>(L"DeferredCombine (Shader)", L"", &deferredCombineShaderDesc);
+	{
+		CShader::SHADERDESC shadowMaskPresentShaderDesc = { L"../EngineResources/Shader/ShadowMaskPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"ShadowMaskPresent (Shader)", L"", &shadowMaskPresentShaderDesc);
 
-	CShader* deferredCombineShader = LoadOnGame<CShader>(L"DeferredCombine (Shader)");
-	CMaterial::MATERIALDESC deferredCombineMatDesc = { deferredCombineShader, false };
-	LoadResourceComplete_Game<CMaterial>(L"DeferredCombine (Material)", L"", &deferredCombineMatDesc);
+		CShader* shadowMaskPresentShader = LoadOnGame<CShader>(L"ShadowMaskPresent (Shader)");
+		CMaterial::MATERIALDESC shadowMaskPresentMatDesc = { shadowMaskPresentShader, false, false };
+		LoadResourceComplete_Game<CMaterial>(L"ShadowMaskPresent (Material)", L"", &shadowMaskPresentMatDesc);
+	}
 
-	CShader::SHADERDESC deferredDiffuseShaderDesc = { L"../EngineResources/Shader/DeferredDiffuse.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
-	LoadResourceComplete_Game<CShader>(L"DeferredDiffuse (Shader)", L"", &deferredDiffuseShaderDesc);
+	{
+		CShader::SHADERDESC deferredCombineShaderDesc = { L"../EngineResources/Shader/DeferredCombine.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"DeferredCombine (Shader)", L"", &deferredCombineShaderDesc);
 
-	CShader* deferredDiffuseShader = LoadOnGame<CShader>(L"DeferredDiffuse (Shader)");
-	CMaterial::MATERIALDESC deferredDiffuseMatDesc = { deferredDiffuseShader, true };
-	LoadResourceComplete_Game<CMaterial>(L"DeferredDiffuse (Material)", L"", &deferredDiffuseMatDesc);
+		CShader* deferredCombineShader = LoadOnGame<CShader>(L"DeferredCombine (Shader)");
+		CMaterial::MATERIALDESC deferredCombineMatDesc = { deferredCombineShader, false, false };
+		LoadResourceComplete_Game<CMaterial>(L"DeferredCombine (Material)", L"", &deferredCombineMatDesc);
+	}
 
-	CShader::SHADERDESC deferredSpecularShaderDesc = { L"../EngineResources/Shader/DeferredSpecular.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
-	LoadResourceComplete_Game<CShader>(L"DeferredSpecular (Shader)", L"", &deferredSpecularShaderDesc);
+	{
+		CShader::SHADERDESC deferredDiffuseShaderDesc = { L"../EngineResources/Shader/DeferredDiffuse.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"DeferredDiffuse (Shader)", L"", &deferredDiffuseShaderDesc);
 
-	CShader* deferredSpecularShader = LoadOnGame<CShader>(L"DeferredSpecular (Shader)");
-	CMaterial::MATERIALDESC deferredSpecularMatDesc = { deferredSpecularShader, true };
-	LoadResourceComplete_Game<CMaterial>(L"DeferredSpecular (Material)", L"", &deferredSpecularMatDesc);
+		CShader* deferredDiffuseShader = LoadOnGame<CShader>(L"DeferredDiffuse (Shader)");
+		CMaterial::MATERIALDESC deferredDiffuseMatDesc = { deferredDiffuseShader, false, true };
+		LoadResourceComplete_Game<CMaterial>(L"DeferredDiffuse (Material)", L"", &deferredDiffuseMatDesc);
+	}
 
-	CShader::SHADERDESC shadowDepthShaderDesc = { L"../EngineResources/Shader/ShadowDepth.hlsl", L"",  VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
-	LoadResourceComplete_Game<CShader>(L"ShadowDepth (Shader)", L"", &shadowDepthShaderDesc);
+	{
+		CShader::SHADERDESC deferredSpecularShaderDesc = { L"../EngineResources/Shader/DeferredSpecular.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"DeferredSpecular (Shader)", L"", &deferredSpecularShaderDesc);
 
-	CShader* shadowDepthShader = LoadOnGame<CShader>(L"ShadowDepth (Shader)");
-	CMaterial::MATERIALDESC shadowDepthMatDesc = { shadowDepthShader, false };
-	LoadResourceComplete_Game<CMaterial>(L"ShadowDepth (Material)", L"", &shadowDepthMatDesc);
+		CShader* deferredSpecularShader = LoadOnGame<CShader>(L"DeferredSpecular (Shader)");
+		CMaterial::MATERIALDESC deferredSpecularMatDesc = { deferredSpecularShader, false, true };
+		LoadResourceComplete_Game<CMaterial>(L"DeferredSpecular (Material)", L"", &deferredSpecularMatDesc);
+	}
 
-	CShader::SHADERDESC shadowMaskShaderDesc = { L"../EngineResources/Shader/ShadowMask.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
-	LoadResourceComplete_Game<CShader>(L"ShadowMask (Shader)", L"", &shadowMaskShaderDesc);
+	{
+		CShader::SHADERDESC shadowDepthShaderDesc = { L"../EngineResources/Shader/ShadowDepth.hlsl", L"",  VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"ShadowDepth (Shader)", L"", &shadowDepthShaderDesc);
 
-	CShader* shadowMaskShader = LoadOnGame<CShader>(L"ShadowMask (Shader)");
-	CMaterial::MATERIALDESC shadowMaskMatDesc = { shadowMaskShader, false };
-	LoadResourceComplete_Game<CMaterial>(L"ShadowMask (Material)", L"", &shadowMaskMatDesc);
+		CShader* shadowDepthShader = LoadOnGame<CShader>(L"ShadowDepth (Shader)");
+		CMaterial::MATERIALDESC shadowDepthMatDesc = { shadowDepthShader, false, false };
+		LoadResourceComplete_Game<CMaterial>(L"ShadowDepth (Material)", L"", &shadowDepthMatDesc);
+	}
 
-	CShader::SHADERDESC unlitColorShaderDesc = { L"../EngineResources/Shader/UnlitColor.hlsl", L"",  VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
-	LoadResourceComplete_Game<CShader>(L"UnlitColor (Shader)", L"", &unlitColorShaderDesc);
+	{
+		CShader::SHADERDESC shadowMaskShaderDesc = { L"../EngineResources/Shader/ShadowMask.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"ShadowMask (Shader)", L"", &shadowMaskShaderDesc);
 
-	CShader* ulcShader = LoadOnGame<CShader>(L"UnlitColor (Shader)");
-	CMaterial::MATERIALDESC ulcMatDesc = { ulcShader, false };
-	LoadResourceComplete_Game<CMaterial>(L"UnlitMaterial (Material)", L"", &ulcMatDesc);
+		CShader* shadowMaskShader = LoadOnGame<CShader>(L"ShadowMask (Shader)");
+		CMaterial::MATERIALDESC shadowMaskMatDesc = { shadowMaskShader, false, false };
+		LoadResourceComplete_Game<CMaterial>(L"ShadowMask (Material)", L"", &shadowMaskMatDesc);
+	}
+
+	{
+		CShader::SHADERDESC unlitColorShaderDesc = { L"../EngineResources/Shader/UnlitColor.hlsl", L"",  VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"UnlitColor (Shader)", L"", &unlitColorShaderDesc);
+
+		CShader* ulcShader = LoadOnGame<CShader>(L"UnlitColor (Shader)");
+		CMaterial::MATERIALDESC ulcMatDesc = { ulcShader, false, false };
+		LoadResourceComplete_Game<CMaterial>(L"UnlitMaterial (Material)", L"", &ulcMatDesc);
+	}
 
 	CShader::SHADERDESC outlineShaderDesc = { L"../EngineResources/Shader/Outline.hlsl", L"",  VertexSkinnedOutlineBuffer::numElements, VertexSkinnedOutlineBuffer::elementDesc };
 	LoadResourceComplete_Game<CShader>(L"Outline (Shader)", L"", &outlineShaderDesc);
+	
+	{
+		CShader::SHADERDESC dUIShaderDesc = { L"../EngineResources/Shader/DefaultUI.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"DefaultUI (Shader)", L"", &dUIShaderDesc);
 
-	CShader::SHADERDESC dUIShaderDesc = { L"../EngineResources/Shader/DefaultUI.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
-	LoadResourceComplete_Game<CShader>(L"DefaultUI (Shader)", L"", &dUIShaderDesc);
-
-	CShader* duiShader = LoadOnGame<CShader>(L"DefaultUI (Shader)");
-	CMaterial::MATERIALDESC duiMatDesc = { duiShader, false };
-	LoadResourceComplete_Game<CMaterial>(L"DefaultUIMaterial (Material)", L"", &duiMatDesc);
+		CShader* duiShader = LoadOnGame<CShader>(L"DefaultUI (Shader)");
+		CMaterial::MATERIALDESC duiMatDesc = { duiShader, false, false };
+		LoadResourceComplete_Game<CMaterial>(L"DefaultUIMaterial (Material)", L"", &duiMatDesc);
+	}
 
 	wstring dfPath = L"BinaryAssets/FontData/LiberationSans.spritefont";
 	LoadResourceComplete_Game<CFont>(L"Sans (Font)", L"", &dfPath);

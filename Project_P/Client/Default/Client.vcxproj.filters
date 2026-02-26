@@ -34,15 +34,6 @@
     <Filter Include="Scripts\Object\Monster">
       <UniqueIdentifier>{b429eb31-5b1a-4116-925e-90de21a678c5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Scripts\Object\Monster\Woolf">
-      <UniqueIdentifier>{b607f882-87d4-4497-9fb1-8ffd9ac63b8b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scripts\Object\Monster\Controller">
-      <UniqueIdentifier>{cb7a6411-3369-4889-8c97-5eade2d0e8ca}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scripts\Object\Monster\Controller\Behaviours">
-      <UniqueIdentifier>{d175a37c-e52c-446d-ad25-93b13ecb8e90}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Scripts\Object\Player\FSM">
       <UniqueIdentifier>{dd9702fa-5a14-46b1-88dd-d0e3fd657784}</UniqueIdentifier>
     </Filter>
@@ -87,9 +78,6 @@
     <ClInclude Include="..\Header\Monster.h">
       <Filter>Scripts\Object\Monster</Filter>
     </ClInclude>
-    <ClInclude Include="..\Header\Wolf.h">
-      <Filter>Scripts\Object\Monster\Woolf</Filter>
-    </ClInclude>
     <ClInclude Include="..\Header\Player.h">
       <Filter>Scripts\Object\Player</Filter>
     </ClInclude>
@@ -98,27 +86,6 @@
     </ClInclude>
     <ClInclude Include="..\Header\PlayerCamera.h">
       <Filter>Scripts\Object\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Header\MonsterController.h">
-      <Filter>Scripts\Object\Monster\Controller</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Header\Behaviour_Patrole.h">
-      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Header\MonsterBehaviour.h">
-      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Header\Behaviour_Idle.h">
-      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Header\Behaviour_Tracking.h">
-      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Header\Behaviour_Combat.h">
-      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Header\Behaviour_Find.h">
-      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerController.h">
       <Filter>Scripts\Object\Player</Filter>
@@ -185,9 +152,6 @@
     <ClCompile Include="..\Code\Monster.cpp">
       <Filter>Scripts\Object\Monster</Filter>
     </ClCompile>
-    <ClCompile Include="..\Code\Wolf.cpp">
-      <Filter>Scripts\Object\Monster\Woolf</Filter>
-    </ClCompile>
     <ClCompile Include="..\Code\PlayerCamera.cpp">
       <Filter>Scripts\Object\Player</Filter>
     </ClCompile>
@@ -196,27 +160,6 @@
     </ClCompile>
     <ClCompile Include="..\Code\PlayerHUD.cpp">
       <Filter>Scripts\Object\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Code\MonsterController.cpp">
-      <Filter>Scripts\Object\Monster\Controller</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Code\Behaviour_Patrole.cpp">
-      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Code\MonsterBehaviour.cpp">
-      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Code\Behaviour_Idle.cpp">
-      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Code\Behaviour_Tracking.cpp">
-      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Code\Behaviour_Combat.cpp">
-      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Code\Behaviour_Find.cpp">
-      <Filter>Scripts\Object\Monster\Controller\Behaviours</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerController.cpp">
       <Filter>Scripts\Object\Player</Filter>

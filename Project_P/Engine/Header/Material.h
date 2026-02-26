@@ -9,10 +9,11 @@ class ENGINE_DLL CMaterial final : public CEngineResource
 	friend class CResources;
 
 public:
-	typedef struct Material
+	typedef struct MaterialDescription
 	{
 		class CShader* shaderPointer;
-		_bool usingRight = true;
+		_bool transparent = false;
+		_bool usingLight = true;
 		_bool usingNormalMap = false;
 		_bool usingORMMap = false;
 		vector<pair<wstring, _float>> customFloatValues = {};
@@ -43,6 +44,7 @@ public:
 	void Bind_CustomValues();
 
 public:
+	const _bool IsTransparnet() const;
 	const _bool IsUseLight() const;
 	class CShader* Get_Shader() const;
 	const _uint Get_TextureCount() const;
@@ -89,7 +91,7 @@ private:
 	ID3D11Buffer* m_pCustomBuffer;
 	vector<BYTE> m_vCustomBufferByteList;
 
-	_bool m_bUseLight, m_bUseNormalMap, m_bUseORMMap;
+	_bool m_bTransparent, m_bUseLight, m_bUseNormalMap, m_bUseORMMap;
 	_float4 m_vBaseColor;
 	vector<class CTexture*> m_vTextureList;
 	unordered_map<wstring, _float> m_mFloatValues;
