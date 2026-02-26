@@ -283,7 +283,7 @@ void CCloth::CreateSoftBody()
 	softBodySettings.mUpdatePosition = true;
 	softBodySettings.mMakeRotationIdentity = true;
 	softBodySettings.mAllowSleeping = false;
-	softBodySettings.mUserData = reinterpret_cast<uint64>(this);
+	softBodySettings.mUserData = 0;
 
 	BodyInterface& bi = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
 	m_iSoftBodyID = bi.CreateAndAddSoftBody(softBodySettings, EActivation::Activate);
