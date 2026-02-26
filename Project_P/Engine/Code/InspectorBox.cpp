@@ -19,6 +19,7 @@
 #include "CapsuleCollider.h"
 #include "MeshCollider.h"
 #include "RigidBody.h"
+#include "SceneManager.h"
 
 #include <algorithm>
 #include <chrono>
@@ -1561,6 +1562,78 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 _bool useGravity = cloth->GetUseGravity();
                 if (ImGui::Checkbox("Use Gravity", &useGravity))
                     cloth->SetUseGravity(useGravity);
+
+                const _uint pinnedCount = cloth->GetPinnedTransformCount();
+                for (_uint pinIdx = 0; pinIdx < pinnedCount; ++pinIdx)
+                {
+                    CTransform* pinnedTransform = cloth->GetPinnedTransform(pinIdx);
+                    CGameObject* pinnedObject = pinnedTransform ? pinnedTransform->Get_GameObject() : nullptr;
+                    string pinnedName = pinnedObject ? CEngineString::WStringToString(pinnedObject->Get_ObjectName()) : string("Missing");
+                    string pinnedLabel = "Pinned " + to_string(pinIdx) + ": " + pinnedName;
+                    ImGui::TextUnformatted(pinnedLabel.c_str());
+                    ImGui::SameLine();
+                    const string removeLabel = "Remove##PinnedTransform" + to_string(reinterpret_cast<uintptr_t>(cloth)) + "_" + to_string(pinIdx);
+                    if (ImGui::Button(removeLabel.c_str()))
+                    {
+                        cloth->RemovePinnedTransform(pinIdx);
+                        break;
+                    }
+                }
+
+                if (ImGui::Button("Clear Pins"))
+                    cloth->ClearPinnedTransforms();
+
+                CScene* scene = CSceneManager::GetInstance().Get_CrtScene();
+                if (scene)
+                {
+                    vector<CTransform*> candidateTransforms;
+                    vector<string> candidateLabels;
+                    const list<CGameObject*>& objectList = scene->Get_ObjectList();
+                    for (CGameObject* candidateObj : objectList)
+                    {
+                        if (!candidateObj)
+                            continue;
+
+                        CTransform* candidateTransform = candidateObj->Get_Transform();
+                        if (!candidateTransform)
+                            continue;
+
+                        if (candidateObj == _obj)
+                            continue;
+
+                        _bool alreadyPinned = false;
+                        const _uint currentPinnedCount = cloth->GetPinnedTransformCount();
+                        for (_uint i = 0; i < currentPinnedCount; ++i)
+                        {
+                            if (cloth->GetPinnedTransform(i) == candidateTransform)
+                            {
+                                alreadyPinned = true;
+                                break;
+                            }
+                        }
+
+                        if (alreadyPinned)
+                            continue;
+
+                        candidateTransforms.push_back(candidateTransform);
+                        candidateLabels.push_back(CEngineString::WStringToString(candidateObj->Get_ObjectName()));
+                    }
+
+                    if (ImGui::BeginCombo("Add Pinned Transform", "Select Transform"))
+                    {
+                        for (_uint i = 0; i < candidateTransforms.size(); ++i)
+                        {
+                            const string itemLabel = candidateLabels[i] + "##PinnedCandidate" + to_string(reinterpret_cast<uintptr_t>(cloth)) + "_" + to_string(i);
+                            if (ImGui::Selectable(itemLabel.c_str(), false))
+                                cloth->AddPinnedTransform(candidateTransforms[i]);
+                        }
+
+                        if (candidateTransforms.empty())
+                            ImGui::Selectable("No available transforms", false, ImGuiSelectableFlags_Disabled);
+
+                        ImGui::EndCombo();
+                    }
+                }
             }
 
             if (CBoxCollider* boxCollider = dynamic_cast<CBoxCollider*>(component))

@@ -7,6 +7,7 @@
 #include "SkinnedMeshRenderer.h"
 #include "Material.h"
 #include "Resources.h"
+#include "Transform.h"
 
 #include <Jolt/Physics/Body/BodyInterface.h>
 #include <Jolt/Physics/Body/BodyLock.h>
@@ -56,6 +57,8 @@ CComponent* CCloth::Clone() const
 	clone->m_bHasLastSyncedPosition = false;
 	clone->m_vLastSyncedPosition = vector3::zero();
 	clone->m_strTexturePath = m_strTexturePath;
+	clone->m_vPinnedTransforms = m_vPinnedTransforms;
+	clone->m_vPinnedVertexIndices.clear();
 	clone->m_bPendingCreate = true;
 	return clone;
 }
@@ -104,6 +107,8 @@ void CCloth::FixedUpdate()
 		if (delta.lengthSq() > 0.0001f)
 			bi.SetPosition(m_iSoftBodyID, RVec3(currentTransformPos.x, currentTransformPos.y, currentTransformPos.z), EActivation::Activate);
 	}
+
+	ApplyPinnedTransformsToSoftBody();
 
 	PhysicsSystem& ps = CPhysics::GetInstance().GetPhysicsSystem();
 	BodyLockRead lock(ps.GetBodyLockInterface(), m_iSoftBodyID);
@@ -165,6 +170,52 @@ void CCloth::SetUseGravity(const _bool _useGravity)
 	m_bUseGravity = _useGravity;
 	RebuildClothBody();
 	ApplyGravityToSoftBody();
+}
+
+void CCloth::AddPinnedTransform(CTransform* _transform)
+{
+	if (!_transform)
+		return;
+
+	for (CTransform* pinned : m_vPinnedTransforms)
+	{
+		if (pinned == _transform)
+			return;
+	}
+
+	m_vPinnedTransforms.push_back(_transform);
+	RebuildClothBody();
+}
+
+void CCloth::RemovePinnedTransform(const _uint _index)
+{
+	if (_index >= m_vPinnedTransforms.size())
+		return;
+
+	m_vPinnedTransforms.erase(m_vPinnedTransforms.begin() + _index);
+	RebuildClothBody();
+}
+
+void CCloth::ClearPinnedTransforms()
+{
+	if (m_vPinnedTransforms.empty())
+		return;
+
+	m_vPinnedTransforms.clear();
+	RebuildClothBody();
+}
+
+_uint CCloth::GetPinnedTransformCount() const
+{
+	return static_cast<_uint>(m_vPinnedTransforms.size());
+}
+
+CTransform* CCloth::GetPinnedTransform(const _uint _index) const
+{
+	if (_index >= m_vPinnedTransforms.size())
+		return nullptr;
+
+	return m_vPinnedTransforms[_index];
 }
 
 CMaterial* CCloth::FindTargetMaterial()
@@ -245,6 +296,7 @@ void CCloth::CreateSoftBody()
 	vector<_uint> meshIndices = meshBuffer ? meshBuffer->Get_IndexBuffer() : vector<_uint>();
 
 	const _float invMass = 1.0f / mass;
+	m_vPinnedVertexIndices.clear();
 	if (!meshVertices.empty() && !meshIndices.empty() && (meshIndices.size() % 3 == 0))
 	{
 		settings->mVertices.reserve(meshVertices.size());
@@ -283,7 +335,7 @@ void CCloth::CreateSoftBody()
 		}
 
 		const _float pinThreshold = pinMax - pinExtent * 0.1f;
-		const _bool usePinning = (!m_bUseGravity) && (pinExtent > 0.0001f);
+		const _bool usePinning = (!m_bUseGravity) && (pinExtent > 0.0001f) && m_vPinnedTransforms.empty();
 
 		_uint pinnedCount = 0;
 		for (const auto& vtx : meshVertices)
@@ -360,6 +412,7 @@ void CCloth::CreateSoftBody()
 	m_bHasSoftBody = m_iSoftBodyID.IsInvalid() == false;
 	m_vLastSyncedPosition = pos;
 	m_bHasLastSyncedPosition = true;
+	ApplyPinnedTransformsToSoftBody();
 }
 
 void CCloth::ApplyGravityToSoftBody()
@@ -383,7 +436,84 @@ void CCloth::ApplyGravityToSoftBody()
     if (!softMotion)
         return;
 
-    softMotion->SetGravityFactor(m_bUseGravity ? 1.0f : 0.0f);
+	softMotion->SetGravityFactor(m_bUseGravity ? 1.0f : 0.0f);
+}
+
+void CCloth::ApplyPinnedTransformsToSoftBody()
+{
+	if (!m_bHasSoftBody)
+		return;
+
+	if (!CPhysics::GetInstance().IsInitialized())
+		return;
+
+	if (!m_pGameObject)
+		return;
+
+	CMeshRenderer* meshRenderer = m_pGameObject->GetComponent<CMeshRenderer>();
+	if (!meshRenderer)
+		return;
+
+	CMeshFilter* meshFilter = meshRenderer->Get_MeshFilter();
+	if (!meshFilter)
+		return;
+
+	CMeshBuffer* meshBuffer = meshFilter->Get_MeshBuffer();
+	if (!meshBuffer)
+		return;
+
+	const vector<VertexTexNormalTangentBuffer> baseVertices = meshBuffer->Get_VertexBuffer();
+	if (baseVertices.empty())
+		return;
+
+	PhysicsSystem& ps = CPhysics::GetInstance().GetPhysicsSystem();
+	BodyLockWrite lock(ps.GetBodyLockInterface(), m_iSoftBodyID);
+	if (!lock.Succeeded())
+		return;
+
+	Body& body = lock.GetBody();
+	if (!body.IsSoftBody())
+		return;
+
+	SoftBodyMotionProperties* softMotion = static_cast<SoftBodyMotionProperties*>(body.GetMotionPropertiesUnchecked());
+	if (!softMotion)
+		return;
+
+	auto& softVertices = softMotion->GetVertices();
+	if (softVertices.size() != baseVertices.size())
+		return;
+
+	const vector3 clothWorldPos = m_pGameObject->Get_Transform()->Get_Position();
+	m_vPinnedVertexIndices.clear();
+
+	for (CTransform* pinnedTransform : m_vPinnedTransforms)
+	{
+		if (!pinnedTransform)
+			continue;
+
+		const vector3 pinWorldPos = pinnedTransform->Get_Position();
+		const vector3 pinLocalPos = pinWorldPos - clothWorldPos;
+
+		_uint nearestIndex = 0;
+		_float nearestDistanceSq = FLT_MAX;
+		for (_uint i = 0; i < baseVertices.size(); ++i)
+		{
+			const vector3 diff = baseVertices[i].position - pinLocalPos;
+			const _float distSq = diff.lengthSq();
+			if (distSq < nearestDistanceSq)
+			{
+				nearestDistanceSq = distSq;
+				nearestIndex = i;
+			}
+		}
+
+		const Vec3 targetPos(pinLocalPos.x, pinLocalPos.y, pinLocalPos.z);
+		softVertices[nearestIndex].mPosition = targetPos;
+		softVertices[nearestIndex].mVelocity = Vec3::sZero();
+		softVertices[nearestIndex].mInvMass = 0.0f;
+		if (find(m_vPinnedVertexIndices.begin(), m_vPinnedVertexIndices.end(), nearestIndex) == m_vPinnedVertexIndices.end())
+			m_vPinnedVertexIndices.push_back(nearestIndex);
+	}
 }
 
 _bool CCloth::BuildClothRenderVerticesFromSoftBody(vector<VertexTexNormalTangentBuffer>& _outVertices)
@@ -462,4 +592,5 @@ void CCloth::DestroySoftBody()
 	m_iSoftBodyID = BodyID();
 	m_bHasLastSyncedPosition = false;
 	m_vLastSyncedPosition = vector3::zero();
+	m_vPinnedVertexIndices.clear();
 }
