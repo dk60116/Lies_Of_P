@@ -159,7 +159,11 @@ _bool CCloth::GetUseGravity() const
 
 void CCloth::SetUseGravity(const _bool _useGravity)
 {
+	if (m_bUseGravity == _useGravity)
+		return;
+
 	m_bUseGravity = _useGravity;
+	RebuildClothBody();
 	ApplyGravityToSoftBody();
 }
 
@@ -296,7 +300,7 @@ void CCloth::CreateSoftBody()
 			settings->mVertices.emplace_back(Float3(vtx.position.x, vtx.position.y, vtx.position.z), Float3(0, 0, 0), vertexInvMass);
 		}
 
-		if (pinnedCount == 0 && !settings->mVertices.empty())
+		if (usePinning && pinnedCount == 0 && !settings->mVertices.empty())
 			settings->mVertices[0].mInvMass = 0.0f;
 
 		for (_uint i = 0; i + 2 < meshIndices.size(); i += 3)
