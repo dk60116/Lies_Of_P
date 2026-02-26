@@ -452,8 +452,71 @@ CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateCube()
 
 CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateSphere()
 {
-    MeshBufferInitiaizeInfo result = {};
-    return result;
+    MeshBufferInitiaizeInfo info = {};
+
+    const _float radius = 0.5f;
+    const _uint stackCount = 16;
+    const _uint sliceCount = 24;
+
+    vector<VertexTexNormalTangentBuffer> vertices;
+    vector<_uint> indices;
+
+    vertices.reserve((stackCount + 1) * (sliceCount + 1));
+    indices.reserve(stackCount * sliceCount * 6);
+
+    for (_uint stack = 0; stack <= stackCount; ++stack)
+    {
+        const _float v = static_cast<_float>(stack) / static_cast<_float>(stackCount);
+        const _float phi = v * XM_PI;
+        const _float y = cosf(phi) * radius;
+        const _float ringRadius = sinf(phi) * radius;
+
+        for (_uint slice = 0; slice <= sliceCount; ++slice)
+        {
+            const _float u = static_cast<_float>(slice) / static_cast<_float>(sliceCount);
+            const _float theta = u * XM_2PI;
+
+            const _float x = cosf(theta) * ringRadius;
+            const _float z = sinf(theta) * ringRadius;
+
+            _float3 normal = { 0.f, 1.f, 0.f };
+            if (radius > 0.f)
+                normal = { x / radius, y / radius, z / radius };
+
+            _float3 tangent = { -sinf(theta), 0.f, cosf(theta) };
+
+            vertices.push_back({ { x, y, z }, normal, { u, v }, tangent });
+        }
+    }
+
+    const _uint ringVertexCount = sliceCount + 1;
+    for (_uint stack = 0; stack < stackCount; ++stack)
+    {
+        for (_uint slice = 0; slice < sliceCount; ++slice)
+        {
+            const _uint i0 = stack * ringVertexCount + slice;
+            const _uint i1 = i0 + 1;
+            const _uint i2 = i0 + ringVertexCount;
+            const _uint i3 = i2 + 1;
+
+            indices.push_back(i0); indices.push_back(i2); indices.push_back(i1);
+            indices.push_back(i1); indices.push_back(i2); indices.push_back(i3);
+        }
+    }
+
+    info.buffer.assign(reinterpret_cast<const uint8_t*>(vertices.data()), reinterpret_cast<const uint8_t*>(vertices.data()) + sizeof(VertexTexNormalTangentBuffer) * vertices.size());
+    info.indices.assign(indices.begin(), indices.end());
+
+    CMeshBuffer::MESHBUFFERDESC desc{};
+    desc.topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    desc.vertexSize = sizeof(VertexTexNormalTangentBuffer);
+    desc.vertextCount = static_cast<_uint>(vertices.size());
+    desc.indexCount = static_cast<_uint>(indices.size());
+    desc.boundingBox.Center = _float3(0.f, 0.f, 0.f);
+    desc.boundingBox.Extents = _float3(radius, radius, radius);
+    info.desc = desc;
+
+    return info;
 }
 
 CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateCylinder()
