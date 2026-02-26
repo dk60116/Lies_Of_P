@@ -394,8 +394,13 @@ void CCamera::RenderMesh()
 	_uint prevSampleMask = 0;
 	context->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
 
+	ID3D11DepthStencilState* prevDS = nullptr;
+	_uint prevStencilRef = 0;
+	context->OMGetDepthStencilState(&prevDS, &prevStencilRef);
+
 	const _float blendFactor[4] = { 0.f, 0.f, 0.f, 0.f };
 	context->OMSetBlendState(scene->Get_BlendingState(), blendFactor, 0xFFFFFFFF);
+	context->OMSetDepthStencilState(scene->Get_TransparentDepthStencillState(), prevStencilRef);
 
 	for (TRAVERSAL_ITER(m_vVisibleStaticMeshList_Transparent, it))
 	{
@@ -410,7 +415,9 @@ void CCamera::RenderMesh()
 	}
 
 	context->OMSetBlendState(prevBS, prevBlendFactor, prevSampleMask);
+	context->OMSetDepthStencilState(prevDS, prevStencilRef);
 	Safe_Release(prevBS);
+	Safe_Release(prevDS);
 }
 
 
@@ -720,6 +727,9 @@ void CCamera::Collect_VisibleRenderers()
 			continue;
 
 		if (!renderer->Get_GameObject()->IsRecursiveActive() || !renderer->Get_Enable())
+			continue;
+
+		if (!renderer->Get_Material())
 			continue;
 
 		if (IsRendererVisible(renderer))

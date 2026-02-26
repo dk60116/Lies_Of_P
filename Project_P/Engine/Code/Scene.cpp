@@ -270,6 +270,7 @@ CScene::CScene()
 	, m_pSkyBoxDepthStencillState(nullptr)
 	, m_pMeshDepthStencilState(nullptr)
 	, m_pUIDepthStencilState(nullptr)
+	, m_pTransparentDepthStencilState(nullptr)
 	, m_pSkyBoxResterizerState(nullptr)
 	, m_pMeshResterizerState(nullptr)
 	, m_pUIResterizerState(nullptr)
@@ -396,6 +397,9 @@ HRESULT CScene::Initialize()
 		depthTransparentDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 		depthTransparentDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 		depthTransparentDesc.StencilEnable = FALSE;
+
+		if (FAILED(m_pDevice->CreateDepthStencilState(&depthTransparentDesc, &m_pTransparentDepthStencilState)))
+			return E_FAIL;
 	}
 
 	// UI
@@ -2546,6 +2550,11 @@ ID3D11DepthStencilState* CScene::Get_MeshStencillState() const
 ID3D11DepthStencilState* CScene::Get_UIStencillState() const
 {
 	return m_pUIDepthStencilState;
+}
+
+ID3D11DepthStencilState* CScene::Get_TransparentDepthStencillState() const
+{
+	return m_pTransparentDepthStencilState;
 }
 
 ID3D11BlendState* CScene::Get_BlendingState() const

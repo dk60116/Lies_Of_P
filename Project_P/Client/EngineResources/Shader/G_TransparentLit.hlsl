@@ -127,7 +127,10 @@ float4 PSMain(VSOut input) : SV_Target
 {
     float2 uv = input.uv * gTiling + gOffset;
     float4 texColor = (useTexture != 0) ? gTexture.Sample(gSampler, uv) : float4(1, 1, 1, 1);
-    float alphaMask = gAlphaMap.Sample(gSampler, uv).r;
+    float4 alphaTex = gAlphaMap.Sample(gSampler, uv);
+    float alphaMask = alphaTex.r;
+    if (all(alphaTex == 0.0f))
+        alphaMask = 1.0f;
 
     float3 N = normalize(input.normalW);
     if (useNormalMap != 0)
