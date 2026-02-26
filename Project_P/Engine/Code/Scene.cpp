@@ -946,6 +946,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		if (dynamic_cast<CTerrain*>(component)) return L"Terrain";
 		if (dynamic_cast<CUI*>(component)) return L"UI";
 		if (dynamic_cast<CRigidBody*>(component)) return L"RigidBody";
+		if (dynamic_cast<CCloth*>(component)) return L"Cloth";
 		if (dynamic_cast<CBoxCollider*>(component)) return L"BoxCollider";
 		if (dynamic_cast<CSphereCollider*>(component)) return L"SphereCollider";
 		if (dynamic_cast<CCapsuleCollider*>(component)) return L"CapsuleCollider";
@@ -1129,6 +1130,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			if (componentName == L"Terrain" && dynamic_cast<CTerrain*>(component)) return true;
 			if (componentName == L"UI" && dynamic_cast<CUI*>(component)) return true;
 			if (componentName == L"RigidBody" && dynamic_cast<CRigidBody*>(component)) return true;
+			if (componentName == L"Cloth" && dynamic_cast<CCloth*>(component)) return true;
 			if (componentName == L"BoxCollider" && dynamic_cast<CBoxCollider*>(component)) return true;
 			if (componentName == L"SphereCollider" && dynamic_cast<CSphereCollider*>(component)) return true;
 			if (componentName == L"CapsuleCollider" && dynamic_cast<CCapsuleCollider*>(component)) return true;
@@ -1155,6 +1157,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		else if (componentName == L"Terrain") obj->AddComponent<CTerrain>();
 		else if (componentName == L"UI") obj->AddComponent<CUI>();
 		else if (componentName == L"RigidBody") obj->AddComponent<CRigidBody>();
+		else if (componentName == L"Cloth") obj->AddComponent<CCloth>();
 		else if (componentName == L"BoxCollider") obj->AddComponent<CBoxCollider>();
 		else if (componentName == L"SphereCollider") obj->AddComponent<CSphereCollider>();
 		else if (componentName == L"CapsuleCollider") obj->AddComponent<CCapsuleCollider>();

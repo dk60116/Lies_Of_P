@@ -43,6 +43,7 @@
 #include "CapsuleCollider.h"
 #include "MeshCollider.h"
 #include "RigidBody.h"
+#include "Cloth.h"
 #include "Animator.h"
 #include "AnimatorController.h"
 #include "SkyBox.h"

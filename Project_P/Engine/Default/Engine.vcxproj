@@ -168,6 +168,7 @@ call copy.bat</Command>
     <ClInclude Include="..\Header\SphereCollider.h" />
     <ClInclude Include="..\Header\CapsuleCollider.h" />
     <ClInclude Include="..\Header\Camera.h" />
+    <ClInclude Include="..\Header\Cloth.h" />
     <ClInclude Include="..\Header\Canvas.h" />
     <ClInclude Include="..\Header\Collider.h" />
     <ClInclude Include="..\Header\Component.h" />
@@ -241,6 +242,7 @@ call copy.bat</Command>
     <ClCompile Include="..\Code\MeshCollider.cpp" />
     <ClCompile Include="..\Code\SphereCollider.cpp" />
     <ClCompile Include="..\Code\CapsuleCollider.cpp" />
+    <ClCompile Include="..\Code\Cloth.cpp" />
     <ClCompile Include="..\Code\Camera.cpp" />
     <ClCompile Include="..\Code\Canvas.cpp" />
     <ClCompile Include="..\Code\Collider.cpp" />

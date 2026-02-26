@@ -193,6 +193,9 @@
     <ClInclude Include="..\Header\RigidBody.h">
       <Filter>Components\Physics</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\Cloth.h">
+      <Filter>Components\Physics</Filter>
+    </ClInclude>
     <ClInclude Include="..\Header\BoxCollider.h">
       <Filter>Components\Physics\Collider</Filter>
     </ClInclude>
@@ -528,6 +531,9 @@
       <Filter>Components\Physics\Collider</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\RigidBody.cpp">
+      <Filter>Components\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\Cloth.cpp">
       <Filter>Components\Physics</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\BoxCollider.cpp">

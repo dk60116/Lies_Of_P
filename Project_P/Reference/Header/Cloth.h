@@ -1,0 +1,54 @@
+#pragma once
+
+#include "Component.h"
+#include <Jolt/Physics/Body/BodyID.h>
+
+NS_BEGIN(Engine)
+
+class ENGINE_DLL CCloth final : public CComponent
+{
+	friend class CGameObject;
+
+protected:
+	explicit CCloth();
+	~CCloth();
+
+private:
+	static CCloth* Create();
+	CComponent* Clone() const override;
+
+public:
+	HRESULT Initialize() override;
+	void Awake() override;
+	void OnEnable() override;
+	void OnDisable() override;
+	void FixedUpdate() override;
+	void OnDestroy() override;
+
+public:
+	void SetTexturePath(const wstring& _path);
+	const wstring& GetTexturePath() const;
+	void RebuildClothBody();
+
+private:
+	class CMaterial* FindTargetMaterial();
+	void ApplyTextureToRenderer();
+	void CreateSoftBody();
+	void DestroySoftBody();
+	_bool HasRendererTarget() const;
+
+private:
+	JPH::BodyID m_iSoftBodyID;
+	_bool m_bHasSoftBody;
+	_bool m_bPendingCreate;
+
+	_uint m_iGridWidth;
+	_uint m_iGridHeight;
+	_float m_fGridSpacing;
+	_float m_fTotalMass;
+	_float m_fDamping;
+	_float m_fCompliance;
+	wstring m_strTexturePath;
+};
+
+NS_END

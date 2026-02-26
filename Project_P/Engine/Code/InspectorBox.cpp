@@ -2302,6 +2302,12 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
             _obj->AddComponent<CRigidBody>();
     }
 
+    if (ImGui::MenuItem("Cloth"))
+    {
+        if (!_obj->GetComponent<CCloth>())
+            _obj->AddComponent<CCloth>();
+    }
+
     ImGui::EndPopup();
 }
 
