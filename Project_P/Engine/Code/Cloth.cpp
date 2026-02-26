@@ -279,7 +279,7 @@ void CCloth::CreateSoftBody()
 		}
 
 		const _float pinThreshold = pinMax - pinExtent * 0.1f;
-		const _bool usePinning = pinExtent > 0.0001f;
+		const _bool usePinning = (!m_bUseGravity) && (pinExtent > 0.0001f);
 
 		_uint pinnedCount = 0;
 		for (const auto& vtx : meshVertices)
