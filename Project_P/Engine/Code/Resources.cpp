@@ -1947,9 +1947,9 @@ void CResources::Ready_GameResources()
 		LoadResourceComplete_Game<CMaterial>(L"G_BufferLit (Material)", L"", &g_BufferLitMatDesc);
 	}
 
-	{
-		CShader::SHADERDESC g_BufferCutoutLitShaderDesc = { L"../EngineResources/Shader/GbufferCutoutLit.hlsl", L"", VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
-		LoadResourceComplete_Game<CShader>(L"G_BufferCutoutLit (Shader)", L"", &g_BufferCutoutLitShaderDesc);
+		{
+			CShader::SHADERDESC g_BufferCutoutLitShaderDesc = { L"../EngineResources/Shader/GbufferCutoutLit.hlsl", L"", VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
+			LoadResourceComplete_Game<CShader>(L"G_BufferCutoutLit (Shader)", L"", &g_BufferCutoutLitShaderDesc);
 
 		CShader* g_BufferCutoutLitShader = LoadOnGame<CShader>(L"G_BufferCutoutLit (Shader)");
 		CMaterial::MATERIALDESC g_BufferCutoutLitMatDesc = { g_BufferCutoutLitShader, true, true, true, true };
@@ -1958,8 +1958,22 @@ void CResources::Ready_GameResources()
 		g_BufferCutoutLitMatDesc.customFloatValues.push_back({ L"gMetallic", 0.f });
 		g_BufferCutoutLitMatDesc.customIntValues.push_back({ L"gObjectID", 0 });
 		g_BufferCutoutLitMatDesc.customVector2Values.push_back({ L"gTiling", {1.f, 1.f} });
-		LoadResourceComplete_Game<CMaterial>(L"G_BufferCutoutLit (Material)", L"", &g_BufferCutoutLitMatDesc);
-	}
+			LoadResourceComplete_Game<CMaterial>(L"G_BufferCutoutLit (Material)", L"", &g_BufferCutoutLitMatDesc);
+		}
+
+		{
+			CShader::SHADERDESC g_TransparentLitShaderDesc = { L"../EngineResources/Shader/G_TransparentLit.hlsl", L"", VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
+			LoadResourceComplete_Game<CShader>(L"G_TransparentLit (Shader)", L"", &g_TransparentLitShaderDesc);
+
+			CShader* g_TransparentLitShader = LoadOnGame<CShader>(L"G_TransparentLit (Shader)");
+			CMaterial::MATERIALDESC g_TransparentLitMatDesc = { g_TransparentLitShader, true, true, true, true };
+			g_TransparentLitMatDesc.customFloatValues.push_back({ L"gOcculusion", 1.f });
+			g_TransparentLitMatDesc.customFloatValues.push_back({ L"gRoughness", 0.5f });
+			g_TransparentLitMatDesc.customFloatValues.push_back({ L"gMetallic", 0.f });
+			g_TransparentLitMatDesc.customIntValues.push_back({ L"gObjectID", 0 });
+			g_TransparentLitMatDesc.customVector2Values.push_back({ L"gTiling", {1.f, 1.f} });
+			LoadResourceComplete_Game<CMaterial>(L"G_TransparentLit (Material)", L"", &g_TransparentLitMatDesc);
+		}
 
 	{
 		CShader::SHADERDESC deferredPresentShaderDesc = { L"../EngineResources/Shader/DeferredPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
