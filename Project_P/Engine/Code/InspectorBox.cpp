@@ -1941,13 +1941,16 @@ void CInspectorBox::RenderSkinnedMeshRendererComponent(CGameObject* _obj, CSkinn
                 if (ImGui::IsItemHovered())
                     ImGui::SetTooltip("%s", textureName.c_str());
 
-                if (ImGui::BeginPopupContextItem("TextureContext"))
+                ImGui::SameLine();
+                if (ImGui::Button("Empty"))
+                    material->Set_Texture(nullptr, static_cast<_int>(i));
+
+                ImGui::SameLine();
+                if (ImGui::Button("Remove"))
                 {
-                    if (ImGui::MenuItem("Clear"))
-                        material->Set_Texture(nullptr, static_cast<_int>(i));
-                    if (ImGui::MenuItem("Remove Slot"))
-                        material->RemoveTextureSlot(static_cast<_int>(i));
-                    ImGui::EndPopup();
+                    material->Remove_Texture(static_cast<_int>(i));
+                    ImGui::PopID();
+                    break;
                 }
 
                 ImGui::PopID();
