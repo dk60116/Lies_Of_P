@@ -1556,6 +1556,13 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
             if (CMeshFilter* meshFilter = dynamic_cast<CMeshFilter*>(component))
                 RenderMeshFilterComponent(_obj, meshFilter);
 
+            if (CCloth* cloth = dynamic_cast<CCloth*>(component))
+            {
+                _bool useGravity = cloth->GetUseGravity();
+                if (ImGui::Checkbox("Use Gravity", &useGravity))
+                    cloth->SetUseGravity(useGravity);
+            }
+
             if (CBoxCollider* boxCollider = dynamic_cast<CBoxCollider*>(component))
             {
                 _bool isTrigger = boxCollider->IsTrigger();

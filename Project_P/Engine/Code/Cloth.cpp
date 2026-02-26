@@ -26,6 +26,7 @@ CCloth::CCloth()
 	, m_fTotalMass(1.5f)
 	, m_fDamping(0.08f)
 	, m_fCompliance(0.0002f)
+	, m_bUseGravity(true)
 	, m_strTexturePath(L"")
 {
 	m_strName = L"Cloth";
@@ -49,6 +50,7 @@ CComponent* CCloth::Clone() const
 	clone->m_fTotalMass = m_fTotalMass;
 	clone->m_fDamping = m_fDamping;
 	clone->m_fCompliance = m_fCompliance;
+	clone->m_bUseGravity = m_bUseGravity;
 	clone->m_strTexturePath = m_strTexturePath;
 	clone->m_bPendingCreate = true;
 	return clone;
@@ -132,6 +134,17 @@ void CCloth::RebuildClothBody()
 {
 	DestroySoftBody();
 	CreateSoftBody();
+}
+
+_bool CCloth::GetUseGravity() const
+{
+	return m_bUseGravity;
+}
+
+void CCloth::SetUseGravity(const _bool _useGravity)
+{
+	m_bUseGravity = _useGravity;
+	ApplyGravityToSoftBody();
 }
 
 CMaterial* CCloth::FindTargetMaterial()
@@ -265,7 +278,7 @@ void CCloth::CreateSoftBody()
 	SoftBodyCreationSettings softBodySettings(settings, RVec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), Layers::MOVING);
 	softBodySettings.mLinearDamping = m_fDamping;
 	softBodySettings.mPressure = 0.0f;
-	softBodySettings.mGravityFactor = 1.0f;
+	softBodySettings.mGravityFactor = m_bUseGravity ? 1.0f : 0.0f;
 	softBodySettings.mNumIterations = 8;
 	softBodySettings.mUpdatePosition = true;
 	softBodySettings.mMakeRotationIdentity = true;
@@ -275,6 +288,30 @@ void CCloth::CreateSoftBody()
 	BodyInterface& bi = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
 	m_iSoftBodyID = bi.CreateAndAddSoftBody(softBodySettings, EActivation::Activate);
 	m_bHasSoftBody = m_iSoftBodyID.IsInvalid() == false;
+}
+
+void CCloth::ApplyGravityToSoftBody()
+{
+    if (!m_bHasSoftBody)
+        return;
+
+    if (!CPhysics::GetInstance().IsInitialized())
+        return;
+
+    PhysicsSystem& ps = CPhysics::GetInstance().GetPhysicsSystem();
+    BodyLockWrite lock(ps.GetBodyLockInterface(), m_iSoftBodyID);
+    if (!lock.Succeeded())
+        return;
+
+    Body& body = lock.GetBody();
+    if (!body.IsSoftBody())
+        return;
+
+    SoftBodyMotionProperties* softMotion = static_cast<SoftBodyMotionProperties*>(body.GetMotionPropertiesUnchecked());
+    if (!softMotion)
+        return;
+
+    softMotion->SetGravityFactor(m_bUseGravity ? 1.0f : 0.0f);
 }
 
 _bool CCloth::BuildClothRenderVerticesFromSoftBody(vector<VertexTexNormalTangentBuffer>& _outVertices)
