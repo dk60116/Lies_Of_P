@@ -1900,6 +1900,8 @@ void CResources::Ready_GameResources()
 	LoadResourceComplete_Game<CMeshBuffer>(L"Rect (Mesh Buffer)", L"Rect");
 	LoadResourceComplete_Game<CMeshBuffer>(L"LineRect (Mesh Buffer)", L"LineRect");
 	LoadResourceComplete_Game<CMeshBuffer>(L"Cube (Mesh Buffer)", L"Cube");
+	LoadResourceComplete_Game<CMeshBuffer>(L"Sphere (Mesh Buffer)", L"Sphere");
+	LoadResourceComplete_Game<CMeshBuffer>(L"Cylinder (Mesh Buffer)", L"Cylinder");
 	LoadResourceComplete_Game<CMeshBuffer>(L"Quad (Mesh Buffer)", L"Quad");
 
 	LoadResourceComplete_Game<CTexture>(L"DefaultSky (Texture)", L"../EngineResources/Image/DefaultSkyBox.png");

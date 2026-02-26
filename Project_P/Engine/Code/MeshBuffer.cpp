@@ -38,6 +38,10 @@ HRESULT CMeshBuffer::Initialize(const wstring& _name, const wstring& _filePath, 
         info = CreateLineRect();
     else if (_filePath == L"../Assets/Cube")
         info = CreateCube();
+    else if (_filePath == L"../Assets/Sphere")
+        info = CreateSphere();
+    else if (_filePath == L"../Assets/Cylinder")
+        info = CreateCylinder();
     else if (_filePath == L"../Assets/Quad")
         info = CreateQuad();
     else if (_filePath == L"../Assets/Terrain")
