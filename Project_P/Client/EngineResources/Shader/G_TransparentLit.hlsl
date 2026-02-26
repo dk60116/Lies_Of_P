@@ -209,6 +209,6 @@ float4 PSMain(VSOut input) : SV_Target
     float3 litDiffuse = albedo * saturate(ambientSum + diffuseSum) * occ;
     float3 finalColor = saturate(litDiffuse + specularSum * (1.0f - metallic));
 
-    float finalAlpha = saturate(baseColor.a * texColor.a * alphaMask);
+    float finalAlpha = saturate(baseColor.a * alphaMask);
     return float4(finalColor, finalAlpha);
 }
