@@ -101,7 +101,7 @@ void CCloth::FixedUpdate()
 	if (m_bHasLastSyncedPosition)
 	{
 		const vector3 delta = currentTransformPos - m_vLastSyncedPosition;
-		if (delta.LengthSquared() > 0.0001f)
+		if (delta.lengthSq() > 0.0001f)
 			bi.SetPosition(m_iSoftBodyID, RVec3(currentTransformPos.x, currentTransformPos.y, currentTransformPos.z), EActivation::Activate);
 	}
 
