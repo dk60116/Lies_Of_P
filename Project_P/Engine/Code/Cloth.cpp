@@ -246,16 +246,58 @@ void CCloth::CreateSoftBody()
 		settings->mVertices.reserve(meshVertices.size());
 		settings->mFaces.reserve(meshIndices.size() / 3);
 
-		_float maxY = -FLT_MAX;
-		for (const auto& vtx : meshVertices)
-			maxY = max(maxY, vtx.position.y);
-		const _float pinThreshold = maxY - 0.02f;
-
+		_float minX = FLT_MAX, minY = FLT_MAX, minZ = FLT_MAX;
+		_float maxX = -FLT_MAX, maxY = -FLT_MAX, maxZ = -FLT_MAX;
 		for (const auto& vtx : meshVertices)
 		{
-			const _float vertexInvMass = (vtx.position.y >= pinThreshold) ? 0.0f : invMass;
+			minX = min(minX, vtx.position.x);
+			minY = min(minY, vtx.position.y);
+			minZ = min(minZ, vtx.position.z);
+			maxX = max(maxX, vtx.position.x);
+			maxY = max(maxY, vtx.position.y);
+			maxZ = max(maxZ, vtx.position.z);
+		}
+
+		const _float extentX = maxX - minX;
+		const _float extentY = maxY - minY;
+		const _float extentZ = maxZ - minZ;
+
+		_int pinAxis = 1;
+		float pinMax = maxY;
+		_float pinExtent = extentY;
+		if (extentX > pinExtent)
+		{
+			pinAxis = 0;
+			pinMax = maxX;
+			pinExtent = extentX;
+		}
+		if (extentZ > pinExtent)
+		{
+			pinAxis = 2;
+			pinMax = maxZ;
+			pinExtent = extentZ;
+		}
+
+		const _float pinThreshold = pinMax - pinExtent * 0.1f;
+		const _bool usePinning = pinExtent > 0.0001f;
+
+		_uint pinnedCount = 0;
+		for (const auto& vtx : meshVertices)
+		{
+			_float axisValue = vtx.position.y;
+			if (pinAxis == 0) axisValue = vtx.position.x;
+			else if (pinAxis == 2) axisValue = vtx.position.z;
+
+			const _bool pinned = usePinning && axisValue >= pinThreshold;
+			if (pinned)
+				++pinnedCount;
+
+			const _float vertexInvMass = pinned ? 0.0f : invMass;
 			settings->mVertices.emplace_back(Float3(vtx.position.x, vtx.position.y, vtx.position.z), Float3(0, 0, 0), vertexInvMass);
 		}
+
+		if (pinnedCount == 0 && !settings->mVertices.empty())
+			settings->mVertices[0].mInvMass = 0.0f;
 
 		for (_uint i = 0; i + 2 < meshIndices.size(); i += 3)
 			settings->mFaces.emplace_back(meshIndices[i + 0], meshIndices[i + 1], meshIndices[i + 2], 0);
