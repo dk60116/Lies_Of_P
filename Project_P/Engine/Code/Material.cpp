@@ -14,6 +14,7 @@ CMaterial::CMaterial()
 	, m_bUseLight(false)
 	, m_bUseNormalMap(false)
 	, m_bUseORMMap(false)
+	, m_bUseAlphaMap(false)
 	, m_vBaseColor(ColorValue::white().f4Color())
 	, m_vTextureList({})
 	, m_mIntValues({})
@@ -38,6 +39,7 @@ CMaterial::CMaterial(const CMaterial& _other)
 	, m_bUseLight(_other.m_bUseLight)
 	, m_bUseNormalMap(_other.m_bUseNormalMap)
 	, m_bUseORMMap(_other.m_bUseORMMap)
+	, m_bUseAlphaMap(_other.m_bUseAlphaMap)
 	, m_vTextureList({})
 	, m_vBaseColor(_other.m_vBaseColor)
 	, m_mFloatValues(_other.m_mFloatValues)
@@ -89,6 +91,7 @@ HRESULT CMaterial::Initialize(const wstring& _name, wstring _filePath, void* _de
 		m_bUseLight = matDesc->usingLight;
 		m_bUseNormalMap = matDesc->usingNormalMap;
 		m_bUseORMMap = matDesc->usingORMMap;
+		m_bUseAlphaMap = matDesc->usingAlphaMap;
 
 		for (const auto& [key, value] : matDesc->customFloatValues)
 		{
@@ -215,6 +218,10 @@ void CMaterial::Bind_Camera(const _float3 _camPos, const _fmatrix _view, const _
 	mat.useNormalMap = (m_bUseNormalMap && m_vTextureList.size() >= 2 && m_vTextureList[1] != nullptr);
 	mat.useORMMap = (m_bUseORMMap && m_vTextureList.size() >= 3 && m_vTextureList[2] != nullptr);
 	mat.boneCount = _boneCount;
+	mat.useAlphaMap = (m_bUseAlphaMap && m_vTextureList.size() >= 4 && m_vTextureList[3] != nullptr);
+	mat.materialPadding0 = 0;
+	mat.materialPadding1 = 0;
+	mat.materialPadding2 = 0;
 
 	context->UpdateSubresource(m_pMaterialBuffer, 0, nullptr, &mat, 0, 0);
 	context->VSSetConstantBuffers(2, 1, &m_pMaterialBuffer);

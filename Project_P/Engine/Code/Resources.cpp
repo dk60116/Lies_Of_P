@@ -1966,7 +1966,7 @@ void CResources::Ready_GameResources()
 			LoadResourceComplete_Game<CShader>(L"G_TransparentLit (Shader)", L"", &g_TransparentLitShaderDesc);
 
 			CShader* g_TransparentLitShader = LoadOnGame<CShader>(L"G_TransparentLit (Shader)");
-			CMaterial::MATERIALDESC g_TransparentLitMatDesc = { g_TransparentLitShader, true, true, true, true };
+			CMaterial::MATERIALDESC g_TransparentLitMatDesc = { g_TransparentLitShader, true, true, true, true, true };
 			g_TransparentLitMatDesc.customFloatValues.push_back({ L"gOcculusion", 1.f });
 			g_TransparentLitMatDesc.customFloatValues.push_back({ L"gRoughness", 0.5f });
 			g_TransparentLitMatDesc.customFloatValues.push_back({ L"gMetallic", 0.f });
