@@ -95,6 +95,7 @@ HRESULT CPlayer::Initialize()
 	m_vBodySuits[3]->Get_Material()->Set_FloatValue(L"gRoughness", 0.9f);
 	m_vBodySuits[3]->Get_Material()->Set_FloatValue(L"gMetallic", 0.f);
 
+	m_vBodySuits[4]->Set_Material(CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferCutoutLit (Material)"));
 	m_vBodySuits[4]->Get_Material()->Set_Texture(wing_BaseTex);
 	m_vBodySuits[4]->Get_Material()->Set_Texture(wing_NormalTex, 1);
 	m_vBodySuits[4]->Get_Material()->Set_Texture(wing_ORMTex, 2);

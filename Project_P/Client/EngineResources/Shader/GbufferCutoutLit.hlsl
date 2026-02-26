@@ -139,14 +139,12 @@ PSOut PSMain(VSOut input)
     PSOut o;
 
     float2 uv = input.uv * gTiling + gOffset;
+    float4 texColor = (useTexture != 0) ? gTexture.Sample(gSampler, uv) : float4(1, 1, 1, 1);
 
-    float4 texColor = (useTexture != 0) ? gTexture.Sample(gSampler, uv) : float4(1,1,1,1);
-    
-    if (texColor == float4(0.f, 0.f, 0.f, 1.f))
-        return float4(0.f, 0.f, 0.f, 0.f);
+    if (all(texColor.rgb < 0.001f) && texColor.a > 0.999f)
+        discard;
 
     o.Albedo = saturate(baseColor * texColor);
-    
     o.Object = gObjectID;
 
     float3 Nw = normalize(input.normalW);
@@ -154,30 +152,26 @@ PSOut PSMain(VSOut input)
     if (useNormalMap != 0)
     {
         float3 nTS = gNormalMap.Sample(gSampler, uv).rgb * 2.0f - 1.0f;
-
         float3 T = normalize(input.tangentW);
         float3 B = normalize(input.bitanW);
         float3 N = normalize(input.normalW);
-
         Nw = normalize(nTS.x * T + nTS.y * B + nTS.z * N);
     }
 
     o.Normal = float4(Nw * 0.5f + 0.5f, 1.0f);
-    
+
     float occ = gOcculusion;
     float rou = gRoughness;
     float met = gMetallic;
-    
+
     if (useORMMap != 0)
     {
         float3 orm = gORMMap.Sample(gSampler, uv).rgb;
-        
         occ = orm.r;
         rou = orm.g;
         met = orm.b;
     }
-    
-    o.Material = float4(occ, rou, met, 1.f);
 
+    o.Material = float4(occ, rou, met, 1.f);
     return o;
 }
