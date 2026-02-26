@@ -233,7 +233,9 @@ void CCamera::OnPostRender()
 	m_vStaticMeshList.clear();
 	m_vDynamicMeshList.clear();
 	m_vVisibleStaticMeshList.clear();
+	m_vVisibleStaticMeshList_Transparent.clear();
 	m_vVisibleDynamicMeshList.clear();
+	m_vVisibleDynamicMeshList_Transparent.clear();
 }
 
 void CCamera::OnDestroy()
@@ -378,6 +380,37 @@ void CCamera::RenderMesh()
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->Render_WithCamera(this);
 	}
+
+	SortTransparentRenderersByCameraDistance(m_vVisibleStaticMeshList_Transparent);
+	SortTransparentRenderersByCameraDistance(m_vVisibleDynamicMeshList_Transparent);
+
+	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
+	CScene* scene = CSceneManager::GetInstance().Get_CrtScene();
+	if (!context || !scene)
+		return;
+
+	ID3D11BlendState* prevBS = nullptr;
+	_float prevBlendFactor[4] = {};
+	_uint prevSampleMask = 0;
+	context->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
+
+	const _float blendFactor[4] = { 0.f, 0.f, 0.f, 0.f };
+	context->OMSetBlendState(scene->Get_BlendingState(), blendFactor, 0xFFFFFFFF);
+
+	for (TRAVERSAL_ITER(m_vVisibleStaticMeshList_Transparent, it))
+	{
+		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
+			(*it)->Render_WithCamera(this);
+	}
+
+	for (TRAVERSAL_ITER(m_vVisibleDynamicMeshList_Transparent, it))
+	{
+		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
+			(*it)->Render_WithCamera(this);
+	}
+
+	context->OMSetBlendState(prevBS, prevBlendFactor, prevSampleMask);
+	Safe_Release(prevBS);
 }
 
 
@@ -631,15 +664,55 @@ void CCamera::QueryStaticOctree(const OctreeNode* _node, vector<CRenderer*>& _ou
 	}
 }
 
+void CCamera::SortTransparentRenderersByCameraDistance(vector<CRenderer*>& _renderers) const
+{
+	if (_renderers.empty())
+		return;
+
+	vector3 cameraPos = Get_Transform()->Get_Position();
+
+	sort(_renderers.begin(), _renderers.end(), [&](CRenderer* _lhs, CRenderer* _rhs)
+		{
+			if (!_lhs || !_rhs)
+				return _lhs != nullptr;
+
+			vector3 lhsPos = _lhs->Get_Transform()->Get_Position();
+			vector3 rhsPos = _rhs->Get_Transform()->Get_Position();
+
+			const _float lhsDistSq = (lhsPos - cameraPos).SqrMagnitude();
+			const _float rhsDistSq = (rhsPos - cameraPos).SqrMagnitude();
+
+			return lhsDistSq > rhsDistSq;
+		});
+}
+
 void CCamera::Collect_VisibleRenderers()
 {
 	m_vVisibleStaticMeshList.clear();
+	m_vVisibleStaticMeshList_Transparent.clear();
 	m_vVisibleDynamicMeshList.clear();
+	m_vVisibleDynamicMeshList_Transparent.clear();
 	m_vVisibleDynamicMeshList.reserve(m_vDynamicMeshList.size());
 
 	BuildStaticOctree();
 	if (m_pStaticOctreeRoot)
 		QueryStaticOctree(m_pStaticOctreeRoot.get(), m_vVisibleStaticMeshList);
+
+	vector<CRenderer*> opaqueStatic = {};
+	opaqueStatic.reserve(m_vVisibleStaticMeshList.size());
+
+	for (auto* renderer : m_vVisibleStaticMeshList)
+	{
+		if (!renderer || !renderer->Get_Material())
+			continue;
+
+		if (!renderer->Get_Material()->IsTransparnet())
+			opaqueStatic.push_back(renderer);
+		else
+			m_vVisibleStaticMeshList_Transparent.push_back(renderer);
+	}
+
+	m_vVisibleStaticMeshList.swap(opaqueStatic);
 
 	for (auto* renderer : m_vDynamicMeshList)
 	{

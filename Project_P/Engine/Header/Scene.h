@@ -152,6 +152,8 @@ public:
 public:
     ID3D11DepthStencilState* Get_MeshStencillState() const;
     ID3D11DepthStencilState* Get_UIStencillState() const;
+    ID3D11BlendState* Get_BlendingState() const;
+    ID3D11BlendState* Get_NoneBlendingState() const;
 
 protected:
     HRESULT PreLoadResources();
