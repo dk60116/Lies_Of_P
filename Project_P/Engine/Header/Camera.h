@@ -76,7 +76,7 @@ protected:
 	void Collect_VisibleRenderers();
 	_bool IsRendererVisible(class CRenderer* _renderer) const;
 	_bool TryBuildRendererWorldAABB(class CRenderer* _renderer, BoundingBox& _outAABB) const;
-	void SortTransparentRenderersByCameraDistance(vector<CRenderer*>& _renderers) const;
+	void SortTransparentRenderersByCameraDistance(vector<CRenderer*>& _renderers);
 	void BuildStaticOctree();
 	void InsertStaticOctreeEntry(OctreeNode* _node, const OctreeEntry& _entry);
 	void QueryStaticOctree(const OctreeNode* _node, vector<CRenderer*>& _outVisible) const;

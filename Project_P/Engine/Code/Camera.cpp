@@ -664,7 +664,7 @@ void CCamera::QueryStaticOctree(const OctreeNode* _node, vector<CRenderer*>& _ou
 	}
 }
 
-void CCamera::SortTransparentRenderersByCameraDistance(vector<CRenderer*>& _renderers) const
+void CCamera::SortTransparentRenderersByCameraDistance(vector<CRenderer*>& _renderers)
 {
 	if (_renderers.empty())
 		return;
@@ -679,8 +679,8 @@ void CCamera::SortTransparentRenderersByCameraDistance(vector<CRenderer*>& _rend
 			vector3 lhsPos = _lhs->Get_Transform()->Get_Position();
 			vector3 rhsPos = _rhs->Get_Transform()->Get_Position();
 
-			const _float lhsDistSq = (lhsPos - cameraPos).SqrMagnitude();
-			const _float rhsDistSq = (rhsPos - cameraPos).SqrMagnitude();
+			const _float lhsDistSq = (lhsPos - cameraPos).lengthSq();
+			const _float rhsDistSq = (rhsPos - cameraPos).lengthSq();
 
 			return lhsDistSq > rhsDistSq;
 		});
