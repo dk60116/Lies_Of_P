@@ -53,6 +53,8 @@ private:
 	_float m_fDamping;
 	_float m_fCompliance;
 	_bool m_bUseGravity;
+	_bool m_bHasLastSyncedPosition;
+	vector3 m_vLastSyncedPosition;
 	wstring m_strTexturePath;
 };
 

@@ -27,6 +27,8 @@ CCloth::CCloth()
 	, m_fDamping(0.08f)
 	, m_fCompliance(0.0002f)
 	, m_bUseGravity(true)
+	, m_bHasLastSyncedPosition(false)
+	, m_vLastSyncedPosition(vector3::zero())
 	, m_strTexturePath(L"")
 {
 	m_strName = L"Cloth";
@@ -51,6 +53,8 @@ CComponent* CCloth::Clone() const
 	clone->m_fDamping = m_fDamping;
 	clone->m_fCompliance = m_fCompliance;
 	clone->m_bUseGravity = m_bUseGravity;
+	clone->m_bHasLastSyncedPosition = false;
+	clone->m_vLastSyncedPosition = vector3::zero();
 	clone->m_strTexturePath = m_strTexturePath;
 	clone->m_bPendingCreate = true;
 	return clone;
@@ -88,20 +92,32 @@ void CCloth::FixedUpdate()
 	if (!CPhysics::GetInstance().IsInitialized())
 		return;
 
+	if (!m_pGameObject || !m_pGameObject->Get_Transform())
+		return;
+
+	BodyInterface& bi = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
+	const vector3 currentTransformPos = m_pGameObject->Get_Transform()->Get_Position();
+
+	if (m_bHasLastSyncedPosition)
+	{
+		const vector3 delta = currentTransformPos - m_vLastSyncedPosition;
+		if (delta.LengthSquared() > 0.0001f)
+			bi.SetPosition(m_iSoftBodyID, RVec3(currentTransformPos.x, currentTransformPos.y, currentTransformPos.z), EActivation::Activate);
+	}
+
 	PhysicsSystem& ps = CPhysics::GetInstance().GetPhysicsSystem();
 	BodyLockRead lock(ps.GetBodyLockInterface(), m_iSoftBodyID);
-	if (lock.Succeeded() && m_pGameObject && m_pGameObject->Get_Transform())
+	if (lock.Succeeded())
 	{
 		const Body& body = lock.GetBody();
 		const RVec3 pos = body.GetCenterOfMassPosition();
-		m_pGameObject->Get_Transform()->Set_Position(vector3((float)pos.GetX(), (float)pos.GetY(), (float)pos.GetZ()));
+		m_vLastSyncedPosition = vector3((float)pos.GetX(), (float)pos.GetY(), (float)pos.GetZ());
+		m_bHasLastSyncedPosition = true;
+		m_pGameObject->Get_Transform()->Set_Position(m_vLastSyncedPosition);
 	}
 
 	vector<VertexTexNormalTangentBuffer> clothVertices;
 	if (!BuildClothRenderVerticesFromSoftBody(clothVertices))
-		return;
-
-	if (!m_pGameObject)
 		return;
 
 	if (CMeshRenderer* meshRenderer = m_pGameObject->GetComponent<CMeshRenderer>())
@@ -230,8 +246,16 @@ void CCloth::CreateSoftBody()
 		settings->mVertices.reserve(meshVertices.size());
 		settings->mFaces.reserve(meshIndices.size() / 3);
 
+		_float maxY = -FLT_MAX;
 		for (const auto& vtx : meshVertices)
-			settings->mVertices.emplace_back(Float3(vtx.position.x, vtx.position.y, vtx.position.z), Float3(0, 0, 0), invMass);
+			maxY = max(maxY, vtx.position.y);
+		const _float pinThreshold = maxY - 0.02f;
+
+		for (const auto& vtx : meshVertices)
+		{
+			const _float vertexInvMass = (vtx.position.y >= pinThreshold) ? 0.0f : invMass;
+			settings->mVertices.emplace_back(Float3(vtx.position.x, vtx.position.y, vtx.position.z), Float3(0, 0, 0), vertexInvMass);
+		}
 
 		for (_uint i = 0; i + 2 < meshIndices.size(); i += 3)
 			settings->mFaces.emplace_back(meshIndices[i + 0], meshIndices[i + 1], meshIndices[i + 2], 0);
@@ -288,6 +312,8 @@ void CCloth::CreateSoftBody()
 	BodyInterface& bi = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
 	m_iSoftBodyID = bi.CreateAndAddSoftBody(softBodySettings, EActivation::Activate);
 	m_bHasSoftBody = m_iSoftBodyID.IsInvalid() == false;
+	m_vLastSyncedPosition = pos;
+	m_bHasLastSyncedPosition = true;
 }
 
 void CCloth::ApplyGravityToSoftBody()
@@ -388,4 +414,6 @@ void CCloth::DestroySoftBody()
 
 	m_bHasSoftBody = false;
 	m_iSoftBodyID = BodyID();
+	m_bHasLastSyncedPosition = false;
+	m_vLastSyncedPosition = vector3::zero();
 }
