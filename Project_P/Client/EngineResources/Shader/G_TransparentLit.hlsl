@@ -125,7 +125,15 @@ VSOut VSMain(VSIn v)
     return o;
 }
 
-float4 PSMain(VSOut input) : SV_Target
+struct PSOut
+{
+    float4 Albedo : SV_Target0;
+    uint Object : SV_Target1;
+    float4 Normal : SV_Target2;
+    float4 Material : SV_Target3;
+};
+
+PSOut PSMain(VSOut input)
 {
     float2 uv = input.uv * gTiling + gOffset;
     float4 texColor = (useTexture != 0) ? gTexture.Sample(gSampler, uv) : float4(1, 1, 1, 1);
@@ -209,6 +217,11 @@ float4 PSMain(VSOut input) : SV_Target
     float3 litDiffuse = albedo * saturate(ambientSum + diffuseSum) * occ;
     float3 finalColor = saturate(litDiffuse + specularSum * (1.0f - metallic));
 
+    PSOut o;
     float finalAlpha = saturate(baseColor.a * alphaMask);
-    return float4(finalColor, finalAlpha);
+    o.Albedo = float4(finalColor, finalAlpha);
+    o.Object = gObjectID;
+    o.Normal = float4(N * 0.5f + 0.5f, 1.0f);
+    o.Material = float4(occ, roughness, metallic, 1.0f);
+    return o;
 }
