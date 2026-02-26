@@ -204,30 +204,51 @@ void CCloth::CreateSoftBody()
 	const _float mass = (m_fTotalMass <= 0.001f) ? 0.001f : m_fTotalMass;
 
 	Ref<SoftBodySharedSettings> settings = new SoftBodySharedSettings();
-	settings->mVertices.reserve(width * height);
-	settings->mFaces.reserve((width - 1) * (height - 1) * 2);
+
+	CMeshRenderer* meshRenderer = m_pGameObject->GetComponent<CMeshRenderer>();
+	CMeshFilter* meshFilter = meshRenderer ? meshRenderer->Get_MeshFilter() : nullptr;
+	CMeshBuffer* meshBuffer = meshFilter ? meshFilter->Get_MeshBuffer() : nullptr;
+	vector<VertexTexNormalTangentBuffer> meshVertices = meshBuffer ? meshBuffer->Get_VertexBuffer() : vector<VertexTexNormalTangentBuffer>();
+	vector<_uint> meshIndices = meshBuffer ? meshBuffer->Get_IndexBuffer() : vector<_uint>();
 
 	const _float invMass = 1.0f / mass;
-	for (_uint y = 0; y < height; ++y)
+	if (!meshVertices.empty() && !meshIndices.empty() && (meshIndices.size() % 3 == 0))
 	{
-		for (_uint x = 0; x < width; ++x)
-		{
-			_float3 p = _float3((float)x * spacing, -(float)y * spacing, 0.0f);
-			settings->mVertices.emplace_back(Float3(p.x, p.y, p.z), Float3(0, 0, 0), invMass);
-		}
-	}
+		settings->mVertices.reserve(meshVertices.size());
+		settings->mFaces.reserve(meshIndices.size() / 3);
 
-	auto idx = [width](_uint x, _uint y) { return y * width + x; };
-	for (_uint y = 0; y + 1 < height; ++y)
+		for (const auto& vtx : meshVertices)
+			settings->mVertices.emplace_back(Float3(vtx.position.x, vtx.position.y, vtx.position.z), Float3(0, 0, 0), invMass);
+
+		for (_uint i = 0; i + 2 < meshIndices.size(); i += 3)
+			settings->mFaces.emplace_back(meshIndices[i + 0], meshIndices[i + 1], meshIndices[i + 2], 0);
+	}
+	else
 	{
-		for (_uint x = 0; x + 1 < width; ++x)
+		settings->mVertices.reserve(width * height);
+		settings->mFaces.reserve((width - 1) * (height - 1) * 2);
+
+		for (_uint y = 0; y < height; ++y)
 		{
-			const _uint i0 = idx(x, y);
-			const _uint i1 = idx(x + 1, y);
-			const _uint i2 = idx(x, y + 1);
-			const _uint i3 = idx(x + 1, y + 1);
-			settings->mFaces.emplace_back(i0, i2, i1, 0);
-			settings->mFaces.emplace_back(i1, i2, i3, 0);
+			for (_uint x = 0; x < width; ++x)
+			{
+				_float3 p = _float3((float)x * spacing, -(float)y * spacing, 0.0f);
+				settings->mVertices.emplace_back(Float3(p.x, p.y, p.z), Float3(0, 0, 0), invMass);
+			}
+		}
+
+		auto idx = [width](_uint x, _uint y) { return y * width + x; };
+		for (_uint y = 0; y + 1 < height; ++y)
+		{
+			for (_uint x = 0; x + 1 < width; ++x)
+			{
+				const _uint i0 = idx(x, y);
+				const _uint i1 = idx(x + 1, y);
+				const _uint i2 = idx(x, y + 1);
+				const _uint i3 = idx(x + 1, y + 1);
+				settings->mFaces.emplace_back(i0, i2, i1, 0);
+				settings->mFaces.emplace_back(i1, i2, i3, 0);
+			}
 		}
 	}
 
