@@ -86,6 +86,15 @@ void CCloth::FixedUpdate()
 	if (!CPhysics::GetInstance().IsInitialized())
 		return;
 
+	PhysicsSystem& ps = CPhysics::GetInstance().GetPhysicsSystem();
+	BodyLockRead lock(ps.GetBodyLockInterface(), m_iSoftBodyID);
+	if (lock.Succeeded() && m_pGameObject && m_pGameObject->Get_Transform())
+	{
+		const Body& body = lock.GetBody();
+		const RVec3 pos = body.GetCenterOfMassPosition();
+		m_pGameObject->Get_Transform()->Set_Position(vector3((float)pos.GetX(), (float)pos.GetY(), (float)pos.GetZ()));
+	}
+
 	vector<VertexTexNormalTangentBuffer> clothVertices;
 	if (!BuildClothRenderVerticesFromSoftBody(clothVertices))
 		return;
