@@ -124,9 +124,13 @@ protected:
 	_float m_fSize;
 
 	vector<CRenderer*> m_vStaticMeshList;
+	vector<CRenderer*> m_vStaticMeshList_Transparent;
 	vector<CRenderer*> m_vDynamicMeshList;
+	vector<CRenderer*> m_vDynamicMeshList_Transparnet;
 	vector<CRenderer*> m_vVisibleStaticMeshList;
+	vector<CRenderer*> m_vVisibleStaticMeshList_Transparent;
 	vector<CRenderer*> m_vVisibleDynamicMeshList;
+	vector<CRenderer*> m_vVisibleDynamicMeshList_Transparent;
 	vector<CUI*> m_vUIList;
 	BoundingFrustum m_sWorldFrustum;
 

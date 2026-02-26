@@ -650,7 +650,12 @@ void CCamera::Collect_VisibleRenderers()
 			continue;
 
 		if (IsRendererVisible(renderer))
-			m_vVisibleDynamicMeshList.push_back(renderer);
+		{
+			if (!renderer->Get_Material()->IsTransparnet())
+				m_vVisibleDynamicMeshList.push_back(renderer);
+			else
+				m_vVisibleDynamicMeshList_Transparent.push_back(renderer);
+		}
 	}
 }
 
