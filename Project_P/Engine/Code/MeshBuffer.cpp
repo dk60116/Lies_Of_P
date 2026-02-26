@@ -456,6 +456,90 @@ CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateSphere()
     return result;
 }
 
+CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateCylinder()
+{
+    MeshBufferInitiaizeInfo info = {};
+
+    const _float radius = 0.5f;
+    const _float halfHeight = 0.5f;
+    const _uint sliceCount = 24;
+
+    vector<VertexTexNormalTangentBuffer> vertices;
+    vector<_uint> indices;
+
+    vertices.reserve(sliceCount * 4 + 2);
+    indices.reserve(sliceCount * 12);
+
+    for (_uint i = 0; i < sliceCount; ++i)
+    {
+        const _float t0 = (static_cast<_float>(i) / static_cast<_float>(sliceCount)) * XM_2PI;
+        const _float t1 = (static_cast<_float>(i + 1) / static_cast<_float>(sliceCount)) * XM_2PI;
+
+        const _float x0 = cosf(t0) * radius;
+        const _float z0 = sinf(t0) * radius;
+        const _float x1 = cosf(t1) * radius;
+        const _float z1 = sinf(t1) * radius;
+
+        const _float u0 = static_cast<_float>(i) / static_cast<_float>(sliceCount);
+        const _float u1 = static_cast<_float>(i + 1) / static_cast<_float>(sliceCount);
+
+        const _uint base = static_cast<_uint>(vertices.size());
+
+        vertices.push_back({ { x0, -halfHeight, z0 }, { x0 / radius, 0.f, z0 / radius }, { u0, 1.f }, { -z0 / radius, 0.f, x0 / radius } });
+        vertices.push_back({ { x0,  halfHeight, z0 }, { x0 / radius, 0.f, z0 / radius }, { u0, 0.f }, { -z0 / radius, 0.f, x0 / radius } });
+        vertices.push_back({ { x1,  halfHeight, z1 }, { x1 / radius, 0.f, z1 / radius }, { u1, 0.f }, { -z1 / radius, 0.f, x1 / radius } });
+        vertices.push_back({ { x1, -halfHeight, z1 }, { x1 / radius, 0.f, z1 / radius }, { u1, 1.f }, { -z1 / radius, 0.f, x1 / radius } });
+
+        indices.push_back(base + 0); indices.push_back(base + 1); indices.push_back(base + 2);
+        indices.push_back(base + 0); indices.push_back(base + 2); indices.push_back(base + 3);
+    }
+
+    const _uint topCenter = static_cast<_uint>(vertices.size());
+    vertices.push_back({ { 0.f, halfHeight, 0.f }, { 0.f, 1.f, 0.f }, { 0.5f, 0.5f }, { 1.f, 0.f, 0.f } });
+
+    const _uint bottomCenter = static_cast<_uint>(vertices.size());
+    vertices.push_back({ { 0.f, -halfHeight, 0.f }, { 0.f, -1.f, 0.f }, { 0.5f, 0.5f }, { 1.f, 0.f, 0.f } });
+
+    for (_uint i = 0; i < sliceCount; ++i)
+    {
+        const _float t0 = (static_cast<_float>(i) / static_cast<_float>(sliceCount)) * XM_2PI;
+        const _float t1 = (static_cast<_float>(i + 1) / static_cast<_float>(sliceCount)) * XM_2PI;
+
+        const _float x0 = cosf(t0) * radius;
+        const _float z0 = sinf(t0) * radius;
+        const _float x1 = cosf(t1) * radius;
+        const _float z1 = sinf(t1) * radius;
+
+        const _uint topV0 = static_cast<_uint>(vertices.size());
+        vertices.push_back({ { x0, halfHeight, z0 }, { 0.f, 1.f, 0.f }, { 0.5f + (x0 / (2.f * radius)), 0.5f - (z0 / (2.f * radius)) }, { 1.f, 0.f, 0.f } });
+        const _uint topV1 = static_cast<_uint>(vertices.size());
+        vertices.push_back({ { x1, halfHeight, z1 }, { 0.f, 1.f, 0.f }, { 0.5f + (x1 / (2.f * radius)), 0.5f - (z1 / (2.f * radius)) }, { 1.f, 0.f, 0.f } });
+
+        indices.push_back(topCenter); indices.push_back(topV1); indices.push_back(topV0);
+
+        const _uint bottomV0 = static_cast<_uint>(vertices.size());
+        vertices.push_back({ { x0, -halfHeight, z0 }, { 0.f, -1.f, 0.f }, { 0.5f + (x0 / (2.f * radius)), 0.5f + (z0 / (2.f * radius)) }, { 1.f, 0.f, 0.f } });
+        const _uint bottomV1 = static_cast<_uint>(vertices.size());
+        vertices.push_back({ { x1, -halfHeight, z1 }, { 0.f, -1.f, 0.f }, { 0.5f + (x1 / (2.f * radius)), 0.5f + (z1 / (2.f * radius)) }, { 1.f, 0.f, 0.f } });
+
+        indices.push_back(bottomCenter); indices.push_back(bottomV0); indices.push_back(bottomV1);
+    }
+
+    info.buffer.assign(reinterpret_cast<const uint8_t*>(vertices.data()), reinterpret_cast<const uint8_t*>(vertices.data()) + sizeof(VertexTexNormalTangentBuffer) * vertices.size());
+    info.indices.assign(indices.begin(), indices.end());
+
+    CMeshBuffer::MESHBUFFERDESC desc{};
+    desc.topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    desc.vertexSize = sizeof(VertexTexNormalTangentBuffer);
+    desc.vertextCount = static_cast<_uint>(vertices.size());
+    desc.indexCount = static_cast<_uint>(indices.size());
+    desc.boundingBox.Center = _float3(0.f, 0.f, 0.f);
+    desc.boundingBox.Extents = _float3(radius, halfHeight, radius);
+    info.desc = desc;
+
+    return info;
+}
+
 CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateQuad()
 {
     MeshBufferInitiaizeInfo info = {};
