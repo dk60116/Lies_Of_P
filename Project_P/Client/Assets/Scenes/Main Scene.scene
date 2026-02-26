@@ -1,2 +1,5 @@
 SceneName : Main Scene
 Building_0_Stage01_Building_00_Auto_1770860081845 : Map/Map01/Building_0/Stage01_Building_00.fbx : [Mesh]
+Weapons_WoodenSword_Auto_1772131663412 : Weapons/WoodenSword.fbx : [Mesh]
+Floor_2_Stage01_Floor_02_Auto_1772133114521 : Map/Map01/Floor_2/Stage01_Floor_02.fbx : [Mesh]
+Sphere (Mesh Buffer) : Sphere : [Mesh] [Editor]

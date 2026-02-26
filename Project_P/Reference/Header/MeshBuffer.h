@@ -79,6 +79,7 @@ public:
 	virtual void Set_Scalefactor(const _float _value);
 	vector<VertexTexNormalTangentBuffer> Get_VertexBuffer() const;
 	vector<_uint> Get_IndexBuffer() const;
+	void Update_VertexBuffer(const vector<VertexTexNormalTangentBuffer>& _vertices);
 	const MESHBUFFERDESC& Get_Info();
 
 protected:
