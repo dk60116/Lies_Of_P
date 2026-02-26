@@ -354,7 +354,16 @@ const _uint CMaterial::Get_TextureCount() const
 
 const _bool CMaterial::IsTransparnet() const
 {
-	return m_bTransparent;
+	if (!m_bTransparent)
+		return false;
+
+	if (m_vBaseColor.w < 0.999f)
+		return true;
+
+	if (m_bUseAlphaMap && m_vTextureList.size() >= 4 && m_vTextureList[3] != nullptr)
+		return true;
+
+	return false;
 }
 
 const _bool CMaterial::IsUseLight() const
