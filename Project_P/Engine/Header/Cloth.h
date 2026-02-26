@@ -36,6 +36,7 @@ private:
 	void CreateSoftBody();
 	void DestroySoftBody();
 	_bool HasRendererTarget() const;
+	_bool BuildClothRenderVerticesFromSoftBody(vector<VertexTexNormalTangentBuffer>& _outVertices);
 
 private:
 	JPH::BodyID m_iSoftBodyID;

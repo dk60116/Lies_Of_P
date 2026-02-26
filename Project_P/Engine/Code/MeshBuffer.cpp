@@ -857,6 +857,23 @@ vector<VertexTexNormalTangentBuffer> CMeshBuffer::Get_VertexBuffer() const
     return result;
 }
 
+
+void CMeshBuffer::Update_VertexBuffer(const vector<VertexTexNormalTangentBuffer>& _vertices)
+{
+    if (!m_pVertexBuffer || !m_pVertexSysMem)
+        return;
+
+    if (m_sInfo.vertexSize != sizeof(VertexTexNormalTangentBuffer))
+        return;
+
+    if (_vertices.size() != m_sInfo.vertextCount)
+        return;
+
+    const size_t totalSize = sizeof(VertexTexNormalTangentBuffer) * _vertices.size();
+    memcpy(m_pVertexSysMem, _vertices.data(), totalSize);
+
+    CGraphicDevice::GetInstance().Get_Context()->UpdateSubresource(m_pVertexBuffer, 0, nullptr, _vertices.data(), 0, 0);
+}
 vector<_uint> CMeshBuffer::Get_IndexBuffer() const
 {
     vector<_uint> result;

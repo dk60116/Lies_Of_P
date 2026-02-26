@@ -2,6 +2,8 @@
 #include "Cloth.h"
 #include "Physics.h"
 #include "MeshRenderer.h"
+#include "MeshFilter.h"
+#include "MeshBuffer.h"
 #include "SkinnedMeshRenderer.h"
 #include "Material.h"
 #include "Resources.h"
@@ -10,6 +12,7 @@
 #include <Jolt/Physics/Body/BodyLock.h>
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Jolt/Physics/SoftBody/SoftBodySharedSettings.h>
+#include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
 
 using namespace JPH;
 
@@ -83,15 +86,21 @@ void CCloth::FixedUpdate()
 	if (!CPhysics::GetInstance().IsInitialized())
 		return;
 
-	PhysicsSystem& ps = CPhysics::GetInstance().GetPhysicsSystem();
-	BodyLockRead lock(ps.GetBodyLockInterface(), m_iSoftBodyID);
-	if (!lock.Succeeded())
+	vector<VertexTexNormalTangentBuffer> clothVertices;
+	if (!BuildClothRenderVerticesFromSoftBody(clothVertices))
 		return;
 
-	const Body& body = lock.GetBody();
-	const RVec3 pos = body.GetCenterOfMassPosition();
-	if (m_pGameObject && m_pGameObject->Get_Transform())
-		m_pGameObject->Get_Transform()->Set_Position(vector3((float)pos.GetX(), (float)pos.GetY(), (float)pos.GetZ()));
+	if (!m_pGameObject)
+		return;
+
+	if (CMeshRenderer* meshRenderer = m_pGameObject->GetComponent<CMeshRenderer>())
+	{
+		if (CMeshFilter* meshFilter = meshRenderer->Get_MeshFilter())
+		{
+			if (CMeshBuffer* meshBuffer = meshFilter->Get_MeshBuffer())
+				meshBuffer->Update_VertexBuffer(clothVertices);
+		}
+	}
 }
 
 void CCloth::OnDestroy()
@@ -236,6 +245,59 @@ void CCloth::CreateSoftBody()
 	BodyInterface& bi = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
 	m_iSoftBodyID = bi.CreateAndAddSoftBody(softBodySettings, EActivation::Activate);
 	m_bHasSoftBody = m_iSoftBodyID.IsInvalid() == false;
+}
+
+_bool CCloth::BuildClothRenderVerticesFromSoftBody(vector<VertexTexNormalTangentBuffer>& _outVertices)
+{
+    _outVertices.clear();
+
+    if (!CPhysics::GetInstance().IsInitialized())
+        return false;
+
+    PhysicsSystem& ps = CPhysics::GetInstance().GetPhysicsSystem();
+    BodyLockRead lock(ps.GetBodyLockInterface(), m_iSoftBodyID);
+    if (!lock.Succeeded())
+        return false;
+
+    const Body& body = lock.GetBody();
+    if (!body.IsSoftBody())
+        return false;
+
+    const SoftBodyMotionProperties* softMotion = static_cast<const SoftBodyMotionProperties*>(body.GetMotionPropertiesUnchecked());
+    if (!softMotion)
+        return false;
+
+    if (!m_pGameObject)
+        return false;
+
+    CMeshRenderer* meshRenderer = m_pGameObject->GetComponent<CMeshRenderer>();
+    if (!meshRenderer)
+        return false;
+
+    CMeshFilter* meshFilter = meshRenderer->Get_MeshFilter();
+    if (!meshFilter)
+        return false;
+
+    CMeshBuffer* meshBuffer = meshFilter->Get_MeshBuffer();
+    if (!meshBuffer)
+        return false;
+
+    vector<VertexTexNormalTangentBuffer> baseVertices = meshBuffer->Get_VertexBuffer();
+    if (baseVertices.empty())
+        return false;
+
+    const auto& softVertices = softMotion->GetVertices();
+    if (baseVertices.size() != softVertices.size())
+        return false;
+
+    for (_uint i = 0; i < baseVertices.size(); ++i)
+    {
+        const Vec3& p = softVertices[i].mPosition;
+        baseVertices[i].position = _float3(p.GetX(), p.GetY(), p.GetZ());
+    }
+
+    _outVertices = move(baseVertices);
+    return true;
 }
 
 void CCloth::DestroySoftBody()
