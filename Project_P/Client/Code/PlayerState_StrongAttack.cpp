@@ -68,7 +68,7 @@ void CPlayerState_StrongAttack::Initialize(CPlayerControllerContext* _ctx, const
             ealClip->Add_ActionTrigger(at);
             m_pCtx->Animator()->RegisterActionHandler(L"StrongAttack_0" + to_wstring(i) + L"_Exit", [this]()
                 {
-                    m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, false);
+                    m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack_S, false);
                     m_pCtx->SetCanTurn(true);
                 });
         }
@@ -136,12 +136,62 @@ void CPlayerState_StrongAttack::Enter()
 
 void CPlayerState_StrongAttack::Update()
 {
+    __super::Update();
+
+    if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack_S))
+    {
+        if (m_bUnderTerm)
+            m_bPressedContinue = true;
+        else
+            ContinueCombo();
+    }
+
+    if (m_iCrtCombo >= 3)
+    {
+        if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack_S) && m_bUnderLimit)
+        {
+            m_bLastContinue = true;
+            return;
+        }
+
+        if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack_S) && !m_bUnderLimit)
+        {
+            Enter();
+            return;
+        }
+    }
+
+    if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move) && !m_bUnderLimit)
+        m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack_S, false);
+
+    if (m_pCtx->IsBigTurn())
+        Exit();
 }
 
 void CPlayerState_StrongAttack::Exit()
 {
+    __super::Exit();
+
+    m_pCtx->Animator()->SetBool(L"comboContinue", false);
+    m_pCtx->Animator()->SetBool(L"isStrongAttack", false);
+
+    m_pCtx->SetCanMove(true);
+    m_pCtx->SetCanTurn(true);
+    m_pCtx->SetCanJump(true);
 }
 
 void CPlayerState_StrongAttack::ContinueCombo()
 {
+    if (m_bLastContinue)
+    {
+        Enter();
+        return;
+    }
+
+    if (m_bCanContinue)
+    {
+        m_pCtx->Animator()->SetBool(L"comboContinue", true);
+    }
+    else
+        Enter();
 }
