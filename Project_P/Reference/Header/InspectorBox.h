@@ -28,6 +28,7 @@ private:
 	void ShowComponents(CGameObject* _obj);
 	void ShowAddComponentMenu(CGameObject* _obj);
 	void RenderMeshRendererComponent(CMeshRenderer* _meshRenderer);
+	void RenderSkinnedMeshRendererComponent(CGameObject* _obj, CSkinnedMeshRenderer* _skinnedMeshRenderer);
 	void RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _meshFilter);
 	void RenderSelectedAssetInfo(const fs::path& path);
 	void RenderSelectedAssetPreview(const fs::path& path);

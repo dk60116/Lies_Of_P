@@ -29,6 +29,8 @@ public:
 	void SetTexturePath(const wstring& _path);
 	const wstring& GetTexturePath() const;
 	void RebuildClothBody();
+	_bool GetUseGravity() const;
+	void SetUseGravity(const _bool _useGravity);
 
 private:
 	class CMaterial* FindTargetMaterial();
@@ -36,6 +38,8 @@ private:
 	void CreateSoftBody();
 	void DestroySoftBody();
 	_bool HasRendererTarget() const;
+	_bool BuildClothRenderVerticesFromSoftBody(vector<VertexTexNormalTangentBuffer>& _outVertices);
+	void ApplyGravityToSoftBody();
 
 private:
 	JPH::BodyID m_iSoftBodyID;
@@ -48,6 +52,9 @@ private:
 	_float m_fTotalMass;
 	_float m_fDamping;
 	_float m_fCompliance;
+	_bool m_bUseGravity;
+	_bool m_bHasLastSyncedPosition;
+	vector3 m_vLastSyncedPosition;
 	wstring m_strTexturePath;
 };
 

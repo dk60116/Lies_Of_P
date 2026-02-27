@@ -1,6 +1,7 @@
 #include "cpch.h"
 #include "PlayerState_Attack.h"
 #include "PlayerController.h"
+#include "PlayerState_StrongAttack.h"
 
 CPlayerState_Attack::CPlayerState_Attack()
     : m_bCanContinue(false)
@@ -11,6 +12,7 @@ CPlayerState_Attack::CPlayerState_Attack()
     , m_iComboTerm()
     , m_iComboLimit()
     , m_iTurnLock()
+    , m_bLastContinue(false)
 {
 }
 

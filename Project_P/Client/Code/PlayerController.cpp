@@ -6,6 +6,7 @@
 #include "PlayerState_Idle.h"
 #include "PlayerState_Move.h"
 #include "PlayerState_Attack.h"
+#include "PlayerState_StrongAttack.h"
 #include "PlayerState_Guard.h"
 #include "PlayerState_Evade.h"
 #include "PlayerState_Jump.h"
@@ -46,6 +47,7 @@ HRESULT CPlayerController::Initialize()
 	m_mStateList.insert({ PlayerState::Idle, new CPlayerState_Idle() });
 	m_mStateList.insert({ PlayerState::Move, new CPlayerState_Move() });
 	m_mStateList.insert({ PlayerState::Attack, new CPlayerState_Attack() });
+	m_mStateList.insert({ PlayerState::Attack_S, new CPlayerState_StrongAttack() });
 	m_mStateList.insert({ PlayerState::Guard, new CPlayerState_Guard() });
 	m_mStateList.insert({ PlayerState::Evade, new CPlayerState_Evade() });
 	m_mStateList.insert({ PlayerState::Jump, new CPlayerState_Jump() });
@@ -104,6 +106,8 @@ void CPlayerController::Update()
 		m_pCtx->BufferAction(PlayerState::Jump);
     if (m_mKeyDown[Attack] && m_pCtx->IsCanAttack())
         m_pCtx->BufferAction(PlayerState::Attack);
+	if (m_mKeyDown[Attack_S] && m_pCtx->IsCanAttack())
+		m_pCtx->BufferAction(PlayerState::Attack_S);
 	if (m_mKeyHold[Guard] && m_pCtx->IsCanGuard() && !m_pCtx->IsActionActive(PlayerState::Guard))
 		m_pCtx->BufferAction(PlayerState::Guard);
 	if (m_mKeyDown[Evade] && m_pCtx->IsCanEvade())
@@ -234,6 +238,7 @@ void CPlayerController::Update_Key()
 	KEY_CODE key_Jump = KEY_CODE::SPACE;
 
 	_uint mouse0 = 0;
+	_uint mouse1 = 1;
 
 	m_mKeyHold[Forward] = CInput::GetInstance().GetKey(key_F);
 	m_mKeyHold[Back] = CInput::GetInstance().GetKey(key_B);
@@ -253,6 +258,10 @@ void CPlayerController::Update_Key()
 	m_mKeyHold[Attack] = CInput::GetInstance().GetMouseButton(mouse0);
 	m_mKeyDown[Attack] = CInput::GetInstance().GetMouseButtonDown(mouse0);
 	m_mKeyUp[Attack] = CInput::GetInstance().GetMouseButtonUp(mouse0);
+
+	m_mKeyHold[Attack_S] = CInput::GetInstance().GetMouseButton(mouse1);
+	m_mKeyDown[Attack_S] = CInput::GetInstance().GetMouseButtonDown(mouse1);
+	m_mKeyUp[Attack_S] = CInput::GetInstance().GetMouseButtonUp(mouse1);
 
 	m_mKeyHold[Guard] = CInput::GetInstance().GetKey(key_Guard);
 	m_mKeyDown[Guard] = CInput::GetInstance().GetKeyDown(key_Guard);

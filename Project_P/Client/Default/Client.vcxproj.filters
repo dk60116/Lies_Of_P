@@ -123,6 +123,9 @@
     <ClInclude Include="..\Header\Map_01_SilentStreet.h">
       <Filter>Scripts\Object\Map</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\PlayerState_StrongAttack.h">
+      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Code\MainScene.cpp">
@@ -196,6 +199,9 @@
     </ClCompile>
     <ClCompile Include="..\Code\Map_01_SilentStreet.cpp">
       <Filter>Scripts\Object\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerState_StrongAttack.cpp">
+      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

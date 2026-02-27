@@ -27,6 +27,7 @@ bool isInputDir=false
 bool isJump=false
 trigger jump
 bool isGround=false
+bool isStrongAttack=false
 
 [state Jump_End]
 blendTree=2d
@@ -51,7 +52,7 @@ pos=121,258
 [state Attack_Light_04]
 motion=Eve_Attack_Light_04
 speedMul=1.000000
-pos=-112,481
+pos=-886,887
 
 [state Run_Forward_Start]
 blendTree=2d
@@ -87,7 +88,7 @@ pos=407,373
 [state Attack_Light_01]
 motion=Eve_Attack_Light_01
 speedMul=1.000000
-pos=-357,160
+pos=-849,573
 
 [state Run_TurnL]
 blendTree=2d
@@ -122,12 +123,12 @@ pos=655,-169
 [state Attack_Light_02]
 motion=Eve_Attack_Light_02
 speedMul=1.000000
-pos=-408,341
+pos=-856,675
 
 [state Attack_Light_03]
 motion=Eve_Attack_Light_03
 speedMul=1.000000
-pos=-411,492
+pos=-865,779
 
 [state SprintToRun]
 blendTree=direct
@@ -194,6 +195,11 @@ child=Eve_Battle_JumpForward_Start,1.000000,1.000000
 speedMul=1.000000
 pos=-39,-597
 
+[state Attack_Strong_01]
+motion=Eve_Attack_Strong_01
+speedMul=1.000000
+pos=-135,689
+
 [entry]
 to=Idle
 blend=0.150000
@@ -248,6 +254,14 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 cond=isJump==true && jump
+
+[any]
+to=Attack_Strong_01
+blend=0.150000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+cond=isStrongAttack==true && attackCombo==0
 
 [transition Idle->Run_Forward_Start]
 blend=0.150000
@@ -343,14 +357,6 @@ transitionOffset=0.000000
 [transition Attack_Light_02->Attack_Light_03]
 blend=0.150000
 cond=comboContinue==true
-exitTime=0.100000
-fixedDuration=false
-transitionDuration=0.150000
-transitionOffset=0.000000
-
-[transition Attack_Light_04->Run_Forward_Start]
-blend=0.200000
-cond=speed>0.100000
 exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
@@ -703,6 +709,20 @@ transitionOffset=0.000000
 [transition Jump_End->Idle]
 blend=0.150000
 cond=speed<=0.000000 && isJump==false
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_Strong_01->Idle]
+blend=0.150000
+cond=isAttack==false
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_Light_04->Run_Forward_Start]
+blend=0.150000
+exitTime=0.300000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

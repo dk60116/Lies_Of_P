@@ -161,6 +161,7 @@
     <ClInclude Include="..\Header\PlayerHUD.h" />
     <ClInclude Include="..\Header\PlayerState.h" />
     <ClInclude Include="..\Header\PlayerState_Idle.h" />
+    <ClInclude Include="..\Header\PlayerState_StrongAttack.h" />
     <ClInclude Include="..\Header\SceneMap.h" />
     <ClInclude Include="..\Header\Weapon.h" />
     <ClInclude Include="..\Header\Eve_Sword.h" />
@@ -189,6 +190,7 @@
     <ClCompile Include="..\Code\PlayerState_Jump.cpp" />
     <ClCompile Include="..\Code\PlayerState_Locomotion.cpp" />
     <ClCompile Include="..\Code\PlayerState_Move.cpp" />
+    <ClCompile Include="..\Code\PlayerState_StrongAttack.cpp" />
     <ClCompile Include="..\Code\SceneMap.cpp" />
     <ClCompile Include="..\Code\Weapon.cpp" />
     <ClCompile Include="..\Code\Eve_Sword.cpp" />

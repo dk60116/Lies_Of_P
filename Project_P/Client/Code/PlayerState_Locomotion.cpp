@@ -67,10 +67,10 @@ void CPlayerState_Locomotion::Update()
 {
     __super::Update();
 
-    // 1) 버퍼 타이머는 반복으로 Tick
-    static const std::array<CPlayerController::PlayerState, 4> kTickStates =
+    static const array<CPlayerController::PlayerState, 5> kTickStates =
     {
         CPlayerController::PlayerState::Attack,
+        CPlayerController::PlayerState::Attack_S,
         CPlayerController::PlayerState::Guard,
         CPlayerController::PlayerState::Evade,
         CPlayerController::PlayerState::Jump
@@ -82,11 +82,12 @@ void CPlayerState_Locomotion::Update()
     CPlayerState* next = nullptr;
     bool handled = false;
 
-    static const array<CPlayerController::PlayerState, 4> kBufferedPriority =
+    static const array<CPlayerController::PlayerState, 5> kBufferedPriority =
     {
         CPlayerController::PlayerState::Jump,
         CPlayerController::PlayerState::Evade,
         CPlayerController::PlayerState::Guard,
+        CPlayerController::PlayerState::Attack_S,
         CPlayerController::PlayerState::Attack
     };
 
@@ -118,10 +119,11 @@ void CPlayerState_Locomotion::Update()
 
     if (!handled)
     {
-        static const array<CPlayerController::PlayerState, 4> kActivePriority =
+        static const array<CPlayerController::PlayerState, 5> kActivePriority =
         {
             CPlayerController::PlayerState::Evade,
             CPlayerController::PlayerState::Guard,
+            CPlayerController::PlayerState::Attack_S,
             CPlayerController::PlayerState::Attack,
             CPlayerController::PlayerState::Jump
         };

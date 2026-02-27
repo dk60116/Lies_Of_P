@@ -106,7 +106,7 @@ HRESULT CPlayer::Initialize()
 	m_vBodySuits[5]->Set_Material(CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferCutoutLit (Material)"));
 	m_vBodySuits[5]->Get_Material()->Set_Texture(frill_BaseTex);
 	m_vBodySuits[5]->Get_Material()->Set_Texture(frill_NormalTex, 1);
-	m_vBodySuits[5]->Get_Material()->Set_Texture(frill_ORMTex, 2);
+	//m_vBodySuits[5]->Get_Material()->Set_Texture(frill_ORMTex, 2);
 
 	m_pHeadObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Eve_Head");
 	m_vFaces = m_pHeadObj->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveHead_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveHead_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
