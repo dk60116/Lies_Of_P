@@ -10,7 +10,6 @@ CPlayerState_StrongAttack::CPlayerState_StrongAttack()
     , m_bUnderLimit(false)
     , m_iComboTerm()
     , m_iComboLimit()
-    , m_iTurnLock()
     , m_bLastContinue(false)
 {
 }
@@ -24,17 +23,13 @@ void CPlayerState_StrongAttack::Initialize(CPlayerControllerContext* _ctx, const
 {
     __super::Initialize(_ctx, _type);
 
-    m_iComboTerm[0] = 6;
-    m_iComboTerm[1] = 8;
-    m_iComboTerm[2] = 12;
+    m_iComboTerm[0] = 8;
+    m_iComboTerm[1] = 20;
+    m_iComboTerm[2] = 55;
 
-    m_iComboLimit[0] = 12;
-    m_iComboLimit[1] = 15;
-    m_iComboLimit[2] = 18;
-
-    m_iTurnLock[0] = 0;
-    m_iTurnLock[1] = 10;
-    m_iTurnLock[2] = 10;
+    m_iComboLimit[0] = 15;
+    m_iComboLimit[1] = 23;
+    m_iComboLimit[2] = 60;
 
     for (_int i = 1; i <= 3; ++i)
     {
@@ -45,12 +40,11 @@ void CPlayerState_StrongAttack::Initialize(CPlayerControllerContext* _ctx, const
         const _uint endFrame = ealClip->Get_NormalizedFrameIndex(0.78f);
         const _uint termFrame = m_iComboTerm[i - 1];
         const _uint limitFrame = m_iComboLimit[i - 1];
-        const _uint turnLockFrame = m_iTurnLock[i - 1];
 
         {
             CAnimationClip::ActionTrigger at = { 1, L"StrongAttack_0" + to_wstring(i) + L"_Enter" };
             ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"StrongAttack_0" + to_wstring(i) + L"_Enter", [this]()
+            m_pCtx->Animator()->RegisterActionHandler(L"StrongAttack_0" + to_wstring(i) + L"_Enter", [this, i]()
                 {
                     ++m_iCrtCombo;
                     m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
@@ -59,7 +53,9 @@ void CPlayerState_StrongAttack::Initialize(CPlayerControllerContext* _ctx, const
                     m_bPressedContinue = false;
                     m_bUnderTerm = true;
                     m_bUnderLimit = true;
-                    m_pCtx->SetCanTurn(true);
+
+                    if (i > 1)
+                        m_pCtx->SetCanTurn(true);
                 });
         }
 
@@ -69,7 +65,6 @@ void CPlayerState_StrongAttack::Initialize(CPlayerControllerContext* _ctx, const
             m_pCtx->Animator()->RegisterActionHandler(L"StrongAttack_0" + to_wstring(i) + L"_Exit", [this]()
                 {
                     m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack_S, false);
-                    m_pCtx->SetCanTurn(true);
                 });
         }
 
@@ -83,8 +78,6 @@ void CPlayerState_StrongAttack::Initialize(CPlayerControllerContext* _ctx, const
 
                     if (m_bPressedContinue)
                         ContinueCombo();
-
-                    m_pCtx->SetCanTurn(true);
                 });
         }
 
@@ -98,16 +91,6 @@ void CPlayerState_StrongAttack::Initialize(CPlayerControllerContext* _ctx, const
                     m_bUnderLimit = false;
                 });
         }
-
-        // Turn
-        {
-            CAnimationClip::ActionTrigger at = { turnLockFrame, L"StrongAttack_0" + to_wstring(i) + L"_Turn" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"StrongAttack_0" + to_wstring(i) + L"_Turn", [this]()
-                {
-                    m_pCtx->SetCanTurn(false);
-                });
-        }
     }
 }
 
@@ -118,12 +101,13 @@ void CPlayerState_StrongAttack::Enter()
     m_pCtx->SetBattle(true);
 
     m_pCtx->SetCanMove(false);
+    m_pCtx->SetCanTurn(false);
     m_pCtx->SetCanJump(false);
 
     m_pCtx->Animator()->SetInt(L"AttackCombo", 0);
     m_pCtx->SetAnimMoveSpeed(0.f);
-    m_pCtx->Animator()->SetTrigger(L"Attack");
     m_pCtx->Animator()->SetBool(L"isStrongAttack", true);
+    m_pCtx->Animator()->SetTrigger(L"Attack");
     m_pCtx->Animator()->SetBool(L"comboContinue", false);
 
     m_iCrtCombo = 0;
@@ -163,6 +147,8 @@ void CPlayerState_StrongAttack::Update()
 
     if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move) && !m_bUnderLimit)
         m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack_S, false);
+
+    CDebug::LogError(m_iCrtCombo);
 
     if (m_pCtx->IsBigTurn())
         Exit();

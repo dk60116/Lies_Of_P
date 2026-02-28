@@ -133,8 +133,6 @@ void CPlayerState_Jump::Enter()
 
 	m_vForwardDir = m_pCtx->GetMoveWorldDir();
 	
-	CDebug::LogError(m_vForwardDir);
-
 	m_pCtx->StopMoveImmediate();
 
 	vector3 jumpVector = vector3::up() * m_pCtx->PlayerStatus().jumpPower;
@@ -161,7 +159,7 @@ void CPlayerState_Jump::Update()
 	}
 
 	if (m_bForward)
-		m_pCtx->AddPosition(m_vForwardDir * 2.5f * DELTA_TIME);
+		m_pCtx->AddPosition(m_vForwardDir * 2.2f * DELTA_TIME);
 }
 
 void CPlayerState_Jump::Exit()

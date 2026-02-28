@@ -32,7 +32,6 @@ private:
     _uint m_iCrtCombo;
     _uint m_iComboTerm[3];
     _uint m_iComboLimit[3];
-    _uint m_iTurnLock[3];
 
     _bool m_bLastContinue;
 };
