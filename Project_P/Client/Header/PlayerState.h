@@ -16,10 +16,10 @@ public:
     virtual void Enter();
     virtual void Exit();
     virtual void Update() PURE;
+    CPlayerController::PlayerState GetStateType() const;
 
 protected:
     CPlayerControllerContext* m_pCtx;
     CPlayerController::PlayerState m_eStateType;
     _float m_fPassedTime;
 };
-

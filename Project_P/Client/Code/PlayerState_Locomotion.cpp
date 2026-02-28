@@ -128,11 +128,17 @@ void CPlayerState_Locomotion::Update()
             CPlayerController::PlayerState::Jump
         };
 
+        const auto currentState = m_pChild ? m_pChild->GetStateType() : CPlayerController::PlayerState::Count;
+
         for (TRAVERSAL_ITER(kActivePriority, it))
         {
             const auto st = *it;
 
             if (!m_pCtx->IsActionActive(st))
+                continue;
+
+            if ((currentState == CPlayerController::PlayerState::Attack && st == CPlayerController::PlayerState::Attack_S) ||
+                (currentState == CPlayerController::PlayerState::Attack_S && st == CPlayerController::PlayerState::Attack))
                 continue;
 
             auto f = m_mChildList.find(st);

@@ -33,6 +33,11 @@ void CPlayerState::Exit()
 	m_fPassedTime = 0.f;
 }
 
+const CPlayerController::PlayerState CPlayerState::GetStateType() const
+{
+	return m_eStateType;
+}
+
 void CPlayerState::Update()
 {
 	m_fPassedTime += DELTA_TIME;
