@@ -118,23 +118,19 @@ void CPlayerState_Attack::Enter()
     m_bUnderTerm = true;
     m_bUnderLimit = true;
     m_bLastContinue = false;
+    m_bStrong = false;
 }
 
 void CPlayerState_Attack::Update()
 {
     __super::Update();
 
-    if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack) || m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack_S))
+    if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack))
     {
         if (m_bUnderTerm)
             m_bPressedContinue = true;
         else
             ContinueCombo();
-    }
-
-    if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack_S))
-    {
-        m_bStrong = true;
     }
 
     if (m_iCrtCombo >= 4)
