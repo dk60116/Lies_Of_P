@@ -33,7 +33,7 @@ void CPlayerState::Exit()
 	m_fPassedTime = 0.f;
 }
 
-const CPlayerController::PlayerState CPlayerState::GetStateType() const
+CPlayerController::PlayerState CPlayerState::GetStateType() const
 {
 	return m_eStateType;
 }
