@@ -122,21 +122,21 @@ void CPlayerCamera::Update()
     HWND hWnd = CDisplay::GetInstance().Get_GameWindow();
     if (!hWnd) return;
 
-    if (!IsOurWindowActive(hWnd))
+    const bool canUpdateMouse = IsOurWindowActive(hWnd);
+
+    if (!canUpdateMouse)
     {
         ClipCursor(nullptr);
         m_bIgnoreNextDelta = true;
-        return;
     }
-
-    if (m_bMouseLocked)
+    else if (m_bMouseLocked)
         LockCursorToClient(hWnd);
     else
         ClipCursor(nullptr);
 
     _float dx = 0.f, dy = 0.f;
 
-    if (m_bMouseLocked)
+    if (m_bMouseLocked && canUpdateMouse)
     {
         const POINT center = GetClientCenterScreen(hWnd);
         POINT cur{};
