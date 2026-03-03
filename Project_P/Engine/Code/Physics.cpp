@@ -756,7 +756,7 @@ void CPhysics::RenderRaycastDebugDisplay()
 	{
 		const _vector va = XMVectorSet(a.x, a.y, a.z, 1.f);
 		const _vector vb = XMVectorSet(b.x, b.y, b.z, 1.f);
-		const _vector delta = vb - va;
+		const _vector delta = XMVectorSubtract(vb, va);
 		const _float length = XMVectorGetX(XMVector3Length(delta));
 		if (length <= 0.0001f)
 			return false;
@@ -780,7 +780,7 @@ void CPhysics::RenderRaycastDebugDisplay()
 			}
 		}
 
-		const _vector mid = (va + vb) * 0.5f;
+		const _vector mid = XMVectorScale(XMVectorAdd(va, vb), 0.5f);
 		const _matrix scale = XMMatrixScaling(length, 1.f, 1.f);
 		const _matrix trans = XMMatrixTranslationFromVector(mid);
 		outWorld = scale * rot * trans;
