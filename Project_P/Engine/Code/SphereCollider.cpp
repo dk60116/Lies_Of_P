@@ -135,57 +135,46 @@ void CSphereCollider::Render_Gizmo()
     const vector3 scale = Get_Transform()->Get_LocalScale();
     const _float maxScale = max(fabsf(scale.x), max(fabsf(scale.y), fabsf(scale.z)));
     const _float radius = max(m_fRadius * maxScale, 0.001f);
-    const _uint segmentCount = 36u;
+    const _uint segmentCount = 48u;
     const _matrix objectWorld = Get_Transform()->Get_WorldMatrix();
-    const _matrix centerOffset = XMMatrixTranslation(m_vCenter.x, m_vCenter.y, m_vCenter.z);
-    const _matrix world = centerOffset * objectWorld;
+    const _vector localCenter = XMVectorSet(m_vCenter.x, m_vCenter.y, m_vCenter.z, 1.f);
+    const _vector worldCenter4 = XMVector3TransformCoord(localCenter, objectWorld);
+    const vector3 worldCenter = vector3(XMVectorGetX(worldCenter4), XMVectorGetY(worldCenter4), XMVectorGetZ(worldCenter4));
+    vector3 camRight = cam->Get_Transform()->Get_Directions().right;
+    vector3 camUp = cam->Get_Transform()->Get_Directions().up;
+
+    if (camRight.LengthSquared() <= 0.000001f)
+        camRight = vector3::right();
+    else
+        camRight.Normalize();
+
+    if (camUp.LengthSquared() <= 0.000001f)
+        camUp = vector3::up();
+    else
+        camUp.Normalize();
 
     _float3 camPos = _float3();
     _matrix matView = cam->Get_ViewMatrix();
     _matrix matProj = cam->Get_ProjectionMatrix();
 
-    auto drawCircle = [&](_int axis)
+    for (_uint i = 0; i < segmentCount; ++i)
     {
-        for (_uint i = 0; i < segmentCount; ++i)
-        {
-            const _float t0 = (XM_2PI * static_cast<_float>(i)) / static_cast<_float>(segmentCount);
-            const _float t1 = (XM_2PI * static_cast<_float>(i + 1)) / static_cast<_float>(segmentCount);
+        const _float t0 = (XM_2PI * static_cast<_float>(i)) / static_cast<_float>(segmentCount);
+        const _float t1 = (XM_2PI * static_cast<_float>(i + 1)) / static_cast<_float>(segmentCount);
 
-            _vector p0 = XMVectorZero();
-            _vector p1 = XMVectorZero();
+        const vector3 p0v = worldCenter + (camRight * cosf(t0) + camUp * sinf(t0)) * radius;
+        const vector3 p1v = worldCenter + (camRight * cosf(t1) + camUp * sinf(t1)) * radius;
+        const _vector p0 = XMVectorSet(p0v.x, p0v.y, p0v.z, 1.f);
+        const _vector p1 = XMVectorSet(p1v.x, p1v.y, p1v.z, 1.f);
 
-            if (axis == 0)
-            {
-                p0 = XMVectorSet(0.f, cosf(t0) * radius, sinf(t0) * radius, 1.f);
-                p1 = XMVectorSet(0.f, cosf(t1) * radius, sinf(t1) * radius, 1.f);
-            }
-            else if (axis == 1)
-            {
-                p0 = XMVectorSet(cosf(t0) * radius, 0.f, sinf(t0) * radius, 1.f);
-                p1 = XMVectorSet(cosf(t1) * radius, 0.f, sinf(t1) * radius, 1.f);
-            }
-            else
-            {
-                p0 = XMVectorSet(cosf(t0) * radius, sinf(t0) * radius, 0.f, 1.f);
-                p1 = XMVectorSet(cosf(t1) * radius, sinf(t1) * radius, 0.f, 1.f);
-            }
+        _matrix lineWorld = XMMatrixIdentity();
+        if (!BuildLineWorldMatrix(p0, p1, lineWorld))
+            continue;
 
-            p0 = XMVector3Transform(p0, world);
-            p1 = XMVector3Transform(p1, world);
-
-            _matrix lineWorld = XMMatrixIdentity();
-            if (!BuildLineWorldMatrix(p0, p1, lineWorld))
-                continue;
-
-            m_pLineMaterial->Bind_Matrix(lineWorld);
-            m_pLineMaterial->Bind_Camera(camPos, matView, matProj, 0);
-            m_pLineMesh->Render();
-        }
-    };
-
-    drawCircle(0);
-    drawCircle(1);
-    drawCircle(2);
+        m_pLineMaterial->Bind_Matrix(lineWorld);
+        m_pLineMaterial->Bind_Camera(camPos, matView, matProj, 0);
+        m_pLineMesh->Render();
+    }
 #endif
 }
 
