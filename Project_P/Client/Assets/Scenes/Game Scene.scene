@@ -60,7 +60,10 @@ Eve_Attack_Light_04 : Player/Eve/Animations/Eve_Attack_Light_04.fbx : [Animation
 Eve_Attack_Strong_01 : Player/Eve/Animations/Eve_Attack_Strong_01.fbx : [Animation Clip]
 Eve_Attack_Strong_02 : Player/Eve/Animations/Eve_Attack_Strong_02.fbx : [Animation Clip]
 Eve_Attack_Strong_03 : Player/Eve/Animations/Eve_Attack_Strong_03.fbx : [Animation Clip]
-Eve_Attack_Strong_04 : Player/Eve/Animations/Eve_Attack_Strong_04.fbx : [Animation Clip]
+Eve_Attack_LS12 : Player/Eve/Animations/Eve_Attack_LS12.fbx : [Animation Clip]
+Eve_Attack_SS23 : Player/Eve/Animations/Eve_Attack_SS23.fbx : [Animation Clip]
+Eve_Attack_SS34 : Player/Eve/Animations/Eve_Attack_SS34.fbx : [Animation Clip]
+Eve_Attack_SL23 : Player/Eve/Animations/Eve_Attack_SL23.fbx : [Animation Clip]
 // Eve Animations - Guard
 Eve_Guard_Start : Player/Eve/Animations/Eve_Guard_Start.fbx : [Animation Clip]
 Eve_Guard_Idle : Player/Eve/Animations/Eve_Guard_Idle.fbx : [Animation Clip] [Loop]

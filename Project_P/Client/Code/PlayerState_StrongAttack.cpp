@@ -148,8 +148,6 @@ void CPlayerState_StrongAttack::Update()
     if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move) && !m_bUnderLimit)
         m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack_S, false);
 
-    CDebug::LogError(m_iCrtCombo);
-
     if (m_pCtx->IsBigTurn())
         Exit();
 }

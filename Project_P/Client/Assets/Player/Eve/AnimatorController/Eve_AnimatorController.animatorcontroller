@@ -123,7 +123,7 @@ pos=870,359
 [state Attack_Light_02]
 motion=Eve_Attack_Light_02
 speedMul=1.000000
-pos=-835,677
+pos=-801,657
 
 [state Attack_Light_03]
 motion=Eve_Attack_Light_03
@@ -210,10 +210,25 @@ motion=Eve_Attack_Strong_03
 speedMul=1.000000
 pos=-95,799
 
-[state Attack_Light_01_Strong_02]
-motion=Eve_Attack_Strong_02
+[state Eve_Attack_LS12]
+motion=Eve_Attack_LS12
 speedMul=1.000000
-pos=-1077,622
+pos=-552,830
+
+[state Eve_Attack_SS23]
+motion=Eve_Attack_SS23
+speedMul=1.000000
+pos=-544,935
+
+[state Eve_Attack_SS34]
+motion=Eve_Attack_SS34
+speedMul=1.000000
+pos=-526,1050
+
+[state Eve_Attack_SL23]
+motion=Eve_Attack_SL23
+speedMul=1.000000
+pos=-294,884
 
 [entry]
 to=Idle
@@ -442,7 +457,7 @@ transitionOffset=0.000000
 [transition Run_TurnL->Attack_Light_02]
 blend=0.150000
 cond=isAttack==true && attackCombo==1
-exitTime=0.200000
+exitTime=0.150000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -770,15 +785,71 @@ transitionOffset=0.000000
 [transition Attack_Strong_03->Idle]
 blend=0.150000
 cond=isStrongAttack==false
-exitTime=0.650000
+exitTime=0.200000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Attack_Light_01->Attack_Light_01_Strong_02]
+[transition Attack_Light_01->Eve_Attack_LS12]
 blend=0.150000
 cond=comboContinue==true && isStrongAttack==true
 exitTime=0.100000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_LS12->Idle]
+blend=0.150000
+cond=isStrongAttack==false
+exitTime=0.150000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_LS12->Eve_Attack_SS23]
+blend=0.150000
+cond=isStrongAttack==true && comboContinue==true
+exitTime=0.200000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_SS23->Idle]
+blend=0.150000
+cond=isStrongAttack==false
+exitTime=0.160000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_SS23->Eve_Attack_SS34]
+blend=0.150000
+cond=isStrongAttack==true && comboContinue==true
+exitTime=0.250000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_SS34->Idle]
+blend=0.150000
+cond=isStrongAttack==false
+exitTime=0.150000
+fixedDuration=false
+transitionDuration=0.170000
+transitionOffset=0.000000
+
+[transition Eve_Attack_LS12->Eve_Attack_SL23]
+blend=0.150000
+cond=isAttack==true && comboContinue==true
+exitTime=0.200000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_SL23->Idle]
+blend=0.150000
+cond=isAttack==false
+exitTime=0.200000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
