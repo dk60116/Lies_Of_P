@@ -1,7 +1,6 @@
 #include "cpch.h"
 #include "PlayerState_Attack.h"
 #include "PlayerController.h"
-#include "PlayerState_StrongAttack.h"
 
 CPlayerState_Attack::CPlayerState_Attack()
     : m_bCanContinue(false)
@@ -394,7 +393,7 @@ void CPlayerState_Attack::Enter()
     m_pCtx->SetAnimMoveSpeed(0.f);
     m_pCtx->Animator()->SetTrigger(L"Attack");
     m_pCtx->Animator()->SetBool(L"isAttack", true);
-    m_pCtx->Animator()->SetBool(L"isStrongAttack", true);
+    m_pCtx->Animator()->SetBool(L"isStrongAttack", false);
     m_pCtx->Animator()->SetBool(L"comboContinue", false);
 
     m_iCrtCombo = 0;
@@ -426,7 +425,7 @@ void CPlayerState_Attack::Update()
             ContinueCombo();
     }
 
-    if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack) && !m_bUnderLimit)
+    if ((m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack) || m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack_S)) && !m_bUnderLimit)
     {
         Enter();
         return;

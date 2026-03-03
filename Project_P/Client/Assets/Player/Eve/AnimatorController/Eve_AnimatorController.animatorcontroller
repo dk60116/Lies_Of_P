@@ -213,7 +213,7 @@ pos=-108,697
 [state Attack_Strong_03]
 motion=Eve_Attack_Strong_03
 speedMul=1.000000
-pos=-95,799
+pos=-86,809
 
 [state Eve_Attack_LS12]
 motion=Eve_Attack_LS12
@@ -762,7 +762,7 @@ transitionOffset=0.000000
 [transition Attack_Strong_01->Attack_Strong_02]
 blend=0.150000
 cond=comboContinue==true
-exitTime=0.150000
+exitTime=0.200000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
@@ -778,7 +778,7 @@ transitionOffset=0.000000
 [transition Attack_Strong_02->Attack_Strong_03]
 blend=0.150000
 cond=comboContinue==true
-exitTime=0.200000
+exitTime=0.250000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

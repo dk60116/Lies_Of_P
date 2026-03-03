@@ -6,7 +6,6 @@
 #include "PlayerState_Idle.h"
 #include "PlayerState_Move.h"
 #include "PlayerState_Attack.h"
-#include "PlayerState_StrongAttack.h"
 #include "PlayerState_Guard.h"
 #include "PlayerState_Evade.h"
 #include "PlayerState_Jump.h"
@@ -47,7 +46,6 @@ HRESULT CPlayerController::Initialize()
 	m_mStateList.insert({ PlayerState::Idle, new CPlayerState_Idle() });
 	m_mStateList.insert({ PlayerState::Move, new CPlayerState_Move() });
 	m_mStateList.insert({ PlayerState::Attack, new CPlayerState_Attack() });
-	m_mStateList.insert({ PlayerState::Attack_S, new CPlayerState_StrongAttack() });
 	m_mStateList.insert({ PlayerState::Guard, new CPlayerState_Guard() });
 	m_mStateList.insert({ PlayerState::Evade, new CPlayerState_Evade() });
 	m_mStateList.insert({ PlayerState::Jump, new CPlayerState_Jump() });
