@@ -22,6 +22,7 @@
 #include "BoxCollider.h"
 #include "MeshCollider.h"
 #include "RigidBody.h"
+#include "Physics.h"
 #include <filesystem>
 #include <unordered_map>
 #include <unordered_set>
@@ -681,6 +682,8 @@ void CScene::Render_Editor()
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->Render_Gizmo();
+
+	CPhysics::GetInstance().RenderRaycastDebugDisplay();
 
 	m_pEditorCamera->RenderRTDebugDisplay(true);
 

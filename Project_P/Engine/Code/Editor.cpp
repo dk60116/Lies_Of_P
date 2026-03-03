@@ -148,7 +148,6 @@ void CEditor::Editor_Update_During()
 
 void CEditor::Editor_Update_End()
 {
-	CPhysics::GetInstance().RenderRaycastDebugDisplay();
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 }
