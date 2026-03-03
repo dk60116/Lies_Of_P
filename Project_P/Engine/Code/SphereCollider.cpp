@@ -143,15 +143,17 @@ void CSphereCollider::Render_Gizmo()
     vector3 camRight = cam->Get_Transform()->Get_Directions().right;
     vector3 camUp = cam->Get_Transform()->Get_Directions().up;
 
-    if (camRight.LengthSquared() <= 0.000001f)
+    const _float camRightLen2 = camRight.x * camRight.x + camRight.y * camRight.y + camRight.z * camRight.z;
+    if (camRightLen2 <= 0.000001f)
         camRight = vector3::right();
     else
-        camRight.Normalize();
+        camRight = camRight.normalized();
 
-    if (camUp.LengthSquared() <= 0.000001f)
+    const _float camUpLen2 = camUp.x * camUp.x + camUp.y * camUp.y + camUp.z * camUp.z;
+    if (camUpLen2 <= 0.000001f)
         camUp = vector3::up();
     else
-        camUp.Normalize();
+        camUp = camUp.normalized();
 
     _float3 camPos = _float3();
     _matrix matView = cam->Get_ViewMatrix();
