@@ -383,6 +383,14 @@ void CPlayerState_Attack::Enter()
 {
 	__super::Enter();
 
+    const _bool isLeftClickEnter = m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack);
+    const _bool isRightClickEnter = m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack_S);
+
+    if (isRightClickEnter && !isLeftClickEnter)
+        m_bStrong = true;
+    else if (isLeftClickEnter)
+        m_bStrong = false;
+
     m_pCtx->SetBattle(true);
 
     m_pCtx->SetCanMove(false);
@@ -392,8 +400,8 @@ void CPlayerState_Attack::Enter()
     m_pCtx->Animator()->SetInt(L"AttackCombo", 0);
     m_pCtx->SetAnimMoveSpeed(0.f);
     m_pCtx->Animator()->SetTrigger(L"Attack");
-    m_pCtx->Animator()->SetBool(L"isAttack", true);
-    m_pCtx->Animator()->SetBool(L"isStrongAttack", false);
+    m_pCtx->Animator()->SetBool(L"isAttack", !m_bStrong);
+    m_pCtx->Animator()->SetBool(L"isStrongAttack", m_bStrong);
     m_pCtx->Animator()->SetBool(L"comboContinue", false);
 
     m_iCrtCombo = 0;
@@ -402,7 +410,6 @@ void CPlayerState_Attack::Enter()
     m_bUnderTerm = true;
     m_bUnderLimit = true;
     m_bLastContinue = false;
-    m_bStrong = false;
 }
 
 void CPlayerState_Attack::Update()
