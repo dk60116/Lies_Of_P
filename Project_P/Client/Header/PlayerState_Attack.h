@@ -31,6 +31,8 @@ private:
     _uint m_iCrtCombo;
     _uint m_iComboTerm[4];
     _uint m_iComboLimit[4];
+    _uint m_iComboTerm_S[3];
+    _uint m_iComboLimit_S[3];
 
     _bool m_bStrong;
     _bool m_bLastContinue;

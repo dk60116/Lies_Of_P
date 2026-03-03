@@ -107,7 +107,7 @@ void CPlayerController::Update()
     if (m_mKeyDown[Attack] && m_pCtx->IsCanAttack())
         m_pCtx->BufferAction(PlayerState::Attack);
 	if (m_mKeyDown[Attack_S] && m_pCtx->IsCanAttack())
-		m_pCtx->BufferAction(PlayerState::Attack_S);
+		m_pCtx->BufferAction(PlayerState::Attack);
 	if (m_mKeyHold[Guard] && m_pCtx->IsCanGuard() && !m_pCtx->IsActionActive(PlayerState::Guard))
 		m_pCtx->BufferAction(PlayerState::Guard);
 	if (m_mKeyDown[Evade] && m_pCtx->IsCanEvade())

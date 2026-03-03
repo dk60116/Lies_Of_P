@@ -11,6 +11,8 @@ CPlayerState_Attack::CPlayerState_Attack()
     , m_bUnderLimit(false)
     , m_iComboTerm()
     , m_iComboLimit()
+    , m_iComboTerm_S()
+    , m_iComboLimit_S()
     , m_bStrong(false)
     , m_bLastContinue(false)
 {
@@ -91,6 +93,76 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
             m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Exit", [this]()
                 {
                     Exit();
+                });
+        }
+    }
+
+    m_iComboTerm_S[0] = 8;
+    m_iComboTerm_S[1] = 20;
+    m_iComboTerm_S[2] = 55;
+
+    m_iComboLimit_S[0] = 15;
+    m_iComboLimit_S[1] = 23;
+    m_iComboLimit_S[2] = 60;
+
+    for (_int i = 1; i <= 3; ++i)
+    {
+        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_Strong_0" + to_wstring(i) + L" (Animation Clip)");
+
+        const wstring clipName = ealClip->Get_ResourceName();
+        const _uint frameCount = ealClip->Get_FrameCount();
+        const _uint endFrame = ealClip->Get_NormalizedFrameIndex(0.78f);
+        const _uint termFrame = m_iComboTerm_S[i - 1];
+        const _uint limitFrame = m_iComboLimit_S[i - 1];
+
+        {
+            CAnimationClip::ActionTrigger at = { 1, L"StrongAttack_0" + to_wstring(i) + L"_Enter" };
+            ealClip->Add_ActionTrigger(at);
+            m_pCtx->Animator()->RegisterActionHandler(L"StrongAttack_0" + to_wstring(i) + L"_Enter", [this, i]()
+                {
+                    ++m_iCrtCombo;
+                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
+                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
+                    m_bCanContinue = true;
+                    m_bPressedContinue = false;
+                    m_bUnderTerm = true;
+                    m_bUnderLimit = true;
+
+                    if (i > 1)
+                        m_pCtx->SetCanTurn(true);
+                });
+        }
+
+        {
+            CAnimationClip::ActionTrigger at = { endFrame, L"StrongAttack_0" + to_wstring(i) + L"_Exit" };
+            ealClip->Add_ActionTrigger(at);
+            m_pCtx->Animator()->RegisterActionHandler(L"StrongAttack_0" + to_wstring(i) + L"_Exit", [this]()
+                {
+                    m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack_S, false);
+                });
+        }
+
+        // Continue Term
+        {
+            CAnimationClip::ActionTrigger at = { termFrame, L"StrongAttack_0" + to_wstring(i) + L"_Term" };
+            ealClip->Add_ActionTrigger(at);
+            m_pCtx->Animator()->RegisterActionHandler(L"StrongAttack_0" + to_wstring(i) + L"_Term", [this]()
+                {
+                    m_bUnderTerm = false;
+
+                    if (m_bPressedContinue)
+                        ContinueCombo();
+                });
+        }
+
+        // Continue Limit
+        {
+            CAnimationClip::ActionTrigger at = { limitFrame, L"StrongAttack_0" + to_wstring(i) + L"_Limit" };
+            ealClip->Add_ActionTrigger(at);
+            m_pCtx->Animator()->RegisterActionHandler(L"StrongAttack_0" + to_wstring(i) + L"_Limit", [this]()
+                {
+                    m_bCanContinue = false;
+                    m_bUnderLimit = false;
                 });
         }
     }
@@ -322,6 +394,7 @@ void CPlayerState_Attack::Enter()
     m_pCtx->SetAnimMoveSpeed(0.f);
     m_pCtx->Animator()->SetTrigger(L"Attack");
     m_pCtx->Animator()->SetBool(L"isAttack", true);
+    m_pCtx->Animator()->SetBool(L"isStrongAttack", true);
     m_pCtx->Animator()->SetBool(L"comboContinue", false);
 
     m_iCrtCombo = 0;
@@ -353,20 +426,11 @@ void CPlayerState_Attack::Update()
             ContinueCombo();
     }
 
-    //if (m_iCrtCombo >= 4 && !m_bStrong)
-    //{
-    //    if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack) && m_bUnderLimit)
-    //    {
-    //        m_bLastContinue = true;
-    //        return;
-    //    }
-
-    //    if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack) && !m_bUnderLimit)
-    //    {
-    //        Enter();
-    //        return;
-    //    }
-    //}
+    if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack) && !m_bUnderLimit)
+    {
+        Enter();
+        return;
+    }
 
     if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move) && !m_bUnderLimit)
     {

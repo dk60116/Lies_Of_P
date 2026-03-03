@@ -73,6 +73,7 @@ public:
 	void Tick(_float _deltaSeconds);
 	void Step(const _float _fixedDeltaSeconds);
 	void RenderRaycastDebugDisplay();
+	void ClearRaycastDebugDisplay();
 
 public:
 	void  SetFixedDeltaTime(const _float _fixedDt);  
@@ -135,6 +136,8 @@ private:
 	};
 
 	vector<DebugRaycastDisplay> m_vDebugRaycasts;
+	class CMeshBuffer* m_pLineMesh;
+	class CMaterial* m_pLineMaterial;
 	void AddDebugRaycastDisplay(const vector3& _start, const vector3& _end, const _bool _hit);
 	void AddDebugRaycastDisplay(const BoxRay& _boxRay, const _bool _hit);
 	void AddDebugRaycastDisplay(const SphereRay& _sphereRay, const _bool _hit);
