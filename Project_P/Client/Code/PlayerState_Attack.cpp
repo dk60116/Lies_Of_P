@@ -101,33 +101,37 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
 
         const _uint endFrame = ealClip->Get_LastFrameIndex();
 
-        CAnimationClip::ActionTrigger atStart = { 1, L"Eve_Attack_LS12_Start" };
-        ealClip->Add_ActionTrigger(atStart);
-        m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS12_Start", [this]()
-            {
-                ++m_iCrtCombo;
-                m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
-                m_pCtx->Animator()->SetBool(L"comboContinue", false);
-                m_bCanContinue = true;
-                m_bPressedContinue = false;
-                m_bUnderTerm = true;
-                m_bUnderLimit = true;
+        {
+            CAnimationClip::ActionTrigger atStart = { 1, L"Eve_Attack_LS12_Start" };
+            ealClip->Add_ActionTrigger(atStart);
+            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS12_Start", [this]()
+                {
+                    ++m_iCrtCombo;
+                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
+                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
+                    m_bCanContinue = true;
+                    m_bPressedContinue = false;
+                    m_bUnderTerm = true;
+                    m_bUnderLimit = true;
 
-                m_pCtx->SetCanTurn(true);
-            });
-
-        CAnimationClip::ActionTrigger atTerm = { 15, L"Eve_Attack_LS12_Term" };
-        ealClip->Add_ActionTrigger(atTerm);
-        m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS12_Term", [this]()
-            {
-                m_bUnderTerm = false;
-
-                if (m_bPressedContinue)
-                    ContinueCombo();
-            });
+                    m_pCtx->SetCanTurn(true);
+                });
+        }
 
         {
-            CAnimationClip::ActionTrigger atLimit = { 22, L"Eve_Attack_LS12_Limit" };
+            CAnimationClip::ActionTrigger atTerm = { 20, L"Eve_Attack_LS12_Term" };
+            ealClip->Add_ActionTrigger(atTerm);
+            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS12_Term", [this]()
+                {
+                    m_bUnderTerm = false;
+
+                    if (m_bPressedContinue)
+                        ContinueCombo();
+                });
+        }
+
+        {
+            CAnimationClip::ActionTrigger atLimit = { 24, L"Eve_Attack_LS12_Limit" };
             ealClip->Add_ActionTrigger(atLimit);
             m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS12_Limit", [this]()
                 {
@@ -219,7 +223,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
         }
 
         {
-            CAnimationClip::ActionTrigger atTerm = { 20, L"Eve_Attack_SS34_Term" };
+            CAnimationClip::ActionTrigger atTerm = { 16, L"Eve_Attack_SS34_Term" };
             ealClip->Add_ActionTrigger(atTerm);
             m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SS34_Term", [this]()
                 {
@@ -231,7 +235,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
         }
 
         {
-            CAnimationClip::ActionTrigger atLimit = { 26, L"Eve_Attack_SS34_Limit" };
+            CAnimationClip::ActionTrigger atLimit = { 20, L"Eve_Attack_SS34_Limit" };
             ealClip->Add_ActionTrigger(atLimit);
             m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SS34_Limit", [this]()
                 {
@@ -268,8 +272,6 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
                     m_bPressedContinue = false;
                     m_bUnderTerm = true;
                     m_bUnderLimit = true;
-
-                    CDebug::LogError("Enter");
                 });
         }
 
@@ -373,10 +375,6 @@ void CPlayerState_Attack::Update()
 
     if (m_pCtx->IsBigTurn() && !m_bUnderLimit)
         Exit();
-
-    _bool c;
-    m_pCtx->Animator()->GetBool(L"comboContinue", c);
-    CDebug::LogError(m_bPressedContinue);
 }
 
 void CPlayerState_Attack::Exit()
