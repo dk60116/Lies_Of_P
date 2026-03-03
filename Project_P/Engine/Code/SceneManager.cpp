@@ -1,6 +1,7 @@
 #include "epch.h"
 #include "SceneManager.h"
 #include "RenderTargetManager.h"
+#include "Physics.h"
 
 namespace
 {
@@ -153,6 +154,8 @@ void CSceneManager::LoadScene(wstring _scene)
 	else
 		CDebug::Log(L"Load scene start: " + _scene);
 
+	CPhysics::GetInstance().ClearRaycastDebugDisplay();
+
 #ifndef  _CLIENT_BUILD
 	if (m_pCrtScene)
 		CEditor::GetInstance().Set_EditorCamTransform(Get_EditorCamera()->Get_Transform());
@@ -174,6 +177,8 @@ void CSceneManager::LoadScene(CScene* _scene)
 
 void CSceneManager::LoadComplete()
 {
+	CPhysics::GetInstance().ClearRaycastDebugDisplay();
+
 	const PlayState prevPlayState = m_ePlayState;
 
 	m_pCrtScene = nullptr;

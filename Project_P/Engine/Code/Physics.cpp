@@ -4,8 +4,9 @@
 #include "Collider.h"
 #ifndef _CLIENT_BUILD
 #include "Camera.h"
-#include "GraphicDevice.h"
-#include "imgui.h"
+#include "Resources.h"
+#include "MeshBuffer.h"
+#include "Material.h"
 #endif
 #include <Jolt/Physics/Body/BodyLock.h>
 #include <Jolt/Physics/Collision/CastResult.h>
@@ -57,89 +58,7 @@ namespace Engine
 			return CSceneManager::GetInstance().ContainLayerMask(_obj->GetLayer(), _mask);
 		}
 
-#ifndef _CLIENT_BUILD
-		inline _bool WorldToEditorScreen(const vector3& _world, const _matrix& _viewProj, const D3D11_VIEWPORT& _vp, ImVec2& _outScreen)
-		{
-			const _vector p = XMVectorSet(_world.x, _world.y, _world.z, 1.0f);
-			const _vector clip = XMVector4Transform(p, _viewProj);
-			const float w = XMVectorGetW(clip);
-			if (fabsf(w) <= FLT_EPSILON)
-				return false;
 
-			const float invW = 1.0f / w;
-			const float ndcX = XMVectorGetX(clip) * invW;
-			const float ndcY = XMVectorGetY(clip) * invW;
-			const float ndcZ = XMVectorGetZ(clip) * invW;
-			if (ndcZ < -1.0f || ndcZ > 1.0f)
-				return false;
-
-			_outScreen.x = _vp.TopLeftX + (ndcX + 1.0f) * 0.5f * _vp.Width;
-			_outScreen.y = _vp.TopLeftY + (1.0f - ndcY) * 0.5f * _vp.Height;
-			return true;
-		}
-
-		inline vector3 RotatePoint(const vector3& _p, const quaternion& _q)
-		{
-			const _vector v = XMVectorSet(_p.x, _p.y, _p.z, 0.0f);
-			const _vector q = XMVectorSet(_q.x, _q.y, _q.z, _q.w);
-			const _vector r = XMVector3Rotate(v, q);
-			return vector3(XMVectorGetX(r), XMVectorGetY(r), XMVectorGetZ(r));
-		}
-
-		inline void DrawWireBox(ImDrawList* _drawList, const _matrix& _viewProj, const D3D11_VIEWPORT& _vp, const vector3& _center, const vector3& _halfExtent, const quaternion& _rotation, const ImU32 _color)
-		{
-			vector3 corners[8] =
-			{
-				vector3(-_halfExtent.x, -_halfExtent.y, -_halfExtent.z),
-				vector3(_halfExtent.x, -_halfExtent.y, -_halfExtent.z),
-				vector3(_halfExtent.x, _halfExtent.y, -_halfExtent.z),
-				vector3(-_halfExtent.x, _halfExtent.y, -_halfExtent.z),
-				vector3(-_halfExtent.x, -_halfExtent.y, _halfExtent.z),
-				vector3(_halfExtent.x, -_halfExtent.y, _halfExtent.z),
-				vector3(_halfExtent.x, _halfExtent.y, _halfExtent.z),
-				vector3(-_halfExtent.x, _halfExtent.y, _halfExtent.z)
-			};
-
-			for (_uint i = 0; i < 8; ++i)
-				corners[i] = _center + RotatePoint(corners[i], _rotation);
-
-			constexpr _int edge[12][2] =
-			{
-				{0, 1}, {1, 2}, {2, 3}, {3, 0},
-				{4, 5}, {5, 6}, {6, 7}, {7, 4},
-				{0, 4}, {1, 5}, {2, 6}, {3, 7}
-			};
-
-			for (_int i = 0; i < 12; ++i)
-			{
-				ImVec2 p0;
-				ImVec2 p1;
-				if (!WorldToEditorScreen(corners[edge[i][0]], _viewProj, _vp, p0))
-					continue;
-				if (!WorldToEditorScreen(corners[edge[i][1]], _viewProj, _vp, p1))
-					continue;
-				_drawList->AddLine(p0, p1, _color, 1.5f);
-			}
-		}
-
-		inline void DrawScreenSpaceCircle(ImDrawList* _drawList, const _matrix& _viewProj, const D3D11_VIEWPORT& _vp, const vector3& _center, const vector3& _cameraRight, const _float _radius, const ImU32 _color)
-		{
-			ImVec2 center;
-			ImVec2 radiusPoint;
-			if (!WorldToEditorScreen(_center, _viewProj, _vp, center))
-				return;
-			if (!WorldToEditorScreen(_center + _cameraRight * _radius, _viewProj, _vp, radiusPoint))
-				return;
-
-			const float dx = radiusPoint.x - center.x;
-			const float dy = radiusPoint.y - center.y;
-			const float pixelRadius = sqrtf(dx * dx + dy * dy);
-			if (pixelRadius <= 0.0f)
-				return;
-
-			_drawList->AddCircle(center, pixelRadius, _color, 48, 1.8f);
-		}
-#endif
 	}
 	class CPhysics::BroadPhaseLayerInterfaceImpl final : public BroadPhaseLayerInterface
 	{
@@ -626,6 +545,10 @@ CPhysics::CPhysics()
 	, m_fMaxFrameDelta(0.25f)
 	, m_iMaxSubSteps(8)
 	, m_iCollisionSteps(1)
+#ifndef _CLIENT_BUILD
+	, m_pLineMesh(nullptr)
+	, m_pLineMaterial(nullptr)
+#endif
 {
 }
 
@@ -699,6 +622,23 @@ HRESULT CPhysics::Initialize()
 	m_PhysicsSystem.OptimizeBroadPhase();
 
 	m_bJoltInitialized = true;
+
+#ifndef _CLIENT_BUILD
+	if (!m_pLineMesh)
+	{
+		m_pLineMesh = CResources::GetInstance().LoadOnGame<CMeshBuffer>(L"Line (Mesh Buffer)");
+		if (m_pLineMesh)
+			m_pLineMesh->AddRef();
+	}
+
+	if (!m_pLineMaterial)
+	{
+		m_pLineMaterial = CResources::GetInstance().CloneOnGame<CMaterial>(L"DefaultLineMaterial (Material)");
+		if (m_pLineMaterial)
+			m_pLineMaterial->AddRef();
+	}
+#endif
+
 	return S_OK;
 }
 
@@ -753,6 +693,12 @@ void CPhysics::Release()
 	}
 
 	m_bJoltInitialized = false;
+
+#ifndef _CLIENT_BUILD
+	Safe_Release(m_pLineMesh);
+	Safe_Release(m_pLineMaterial);
+	m_vDebugRaycasts.clear();
+#endif
 }
 
 void CPhysics::Tick(_float _deltaSeconds)
@@ -787,11 +733,10 @@ void CPhysics::Tick(_float _deltaSeconds)
 void CPhysics::RenderRaycastDebugDisplay()
 {
 #ifndef _CLIENT_BUILD
-	if (m_vDebugRaycasts.empty())
+	if (m_vDebugRaycasts.empty() || !m_pLineMesh || !m_pLineMaterial)
 		return;
 
 	CCamera* camera = CSceneManager::GetInstance().Get_EditorCamera();
-	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_EditorViewport();
 
 	if (!camera)
 	{
@@ -799,41 +744,146 @@ void CPhysics::RenderRaycastDebugDisplay()
 		camera = scene ? scene->Get_Camera() : nullptr;
 	}
 
-	if (!vp)
-		vp = CGraphicDevice::GetInstance().Get_CurrentViewport();
 
-	if (!camera || !vp)
+	if (!camera)
 		return;
 
-	const _matrix viewProj = camera->Get_ViewMatrix() * camera->Get_ProjectionMatrix();
-	ImDrawList* drawList = ImGui::GetBackgroundDrawList();
-	if (!drawList)
-		return;
+	_float3 camPos = _float3();
+	_matrix matView = camera->Get_ViewMatrix();
+	_matrix matProj = camera->Get_ProjectionMatrix();
+
+	auto buildLineWorld = [] (const vector3& a, const vector3& b, _matrix& outWorld)
+	{
+		const _vector va = XMVectorSet(a.x, a.y, a.z, 1.f);
+		const _vector vb = XMVectorSet(b.x, b.y, b.z, 1.f);
+		const _vector delta = vb - va;
+		const _float length = XMVectorGetX(XMVector3Length(delta));
+		if (length <= 0.0001f)
+			return false;
+
+		const _vector dir = XMVector3Normalize(delta);
+		const _vector xAxis = XMVectorSet(1.f, 0.f, 0.f, 0.f);
+		const _float dot = XMVectorGetX(XMVector3Dot(xAxis, dir));
+		_matrix rot = XMMatrixIdentity();
+
+		if (dot < 0.9999f)
+		{
+			if (dot > -0.9999f)
+			{
+				const _vector axis = XMVector3Normalize(XMVector3Cross(xAxis, dir));
+				const _float angle = acosf(dot);
+				rot = XMMatrixRotationAxis(axis, angle);
+			}
+			else
+			{
+				rot = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 0.f), XM_PI);
+			}
+		}
+
+		const _vector mid = (va + vb) * 0.5f;
+		const _matrix scale = XMMatrixScaling(length, 1.f, 1.f);
+		const _matrix trans = XMMatrixTranslationFromVector(mid);
+		outWorld = scale * rot * trans;
+		return true;
+	};
+
+	auto renderLine = [&] (const vector3& a, const vector3& b, const _float4& color)
+	{
+		_matrix world = XMMatrixIdentity();
+		if (!buildLineWorld(a, b, world))
+			return;
+
+		m_pLineMaterial->Set_BaseColor(color);
+		m_pLineMaterial->Bind_Matrix(world);
+		m_pLineMaterial->Bind_Camera(camPos, matView, matProj, 0);
+		m_pLineMesh->Render();
+	};
+
+	auto rotatePoint = [] (const vector3& p, const quaternion& q)
+	{
+		const _vector v = XMVectorSet(p.x, p.y, p.z, 0.0f);
+		const _vector qv = XMVectorSet(q.x, q.y, q.z, q.w);
+		const _vector r = XMVector3Rotate(v, qv);
+		return vector3(XMVectorGetX(r), XMVectorGetY(r), XMVectorGetZ(r));
+	};
+
+	auto drawWireBox3D = [&] (const vector3& center, const vector3& halfExtent, const quaternion& rotation, const _float4& color)
+	{
+		vector3 corners[8] =
+		{
+			vector3(-halfExtent.x, -halfExtent.y, -halfExtent.z),
+			vector3(halfExtent.x, -halfExtent.y, -halfExtent.z),
+			vector3(halfExtent.x, halfExtent.y, -halfExtent.z),
+			vector3(-halfExtent.x, halfExtent.y, -halfExtent.z),
+			vector3(-halfExtent.x, -halfExtent.y, halfExtent.z),
+			vector3(halfExtent.x, -halfExtent.y, halfExtent.z),
+			vector3(halfExtent.x, halfExtent.y, halfExtent.z),
+			vector3(-halfExtent.x, halfExtent.y, halfExtent.z)
+		};
+
+		for (_uint i = 0; i < 8; ++i)
+			corners[i] = center + rotatePoint(corners[i], rotation);
+
+		constexpr _int edge[12][2] =
+		{
+			{0, 1}, {1, 2}, {2, 3}, {3, 0},
+			{4, 5}, {5, 6}, {6, 7}, {7, 4},
+			{0, 4}, {1, 5}, {2, 6}, {3, 7}
+		};
+
+		for (_int i = 0; i < 12; ++i)
+			renderLine(corners[edge[i][0]], corners[edge[i][1]], color);
+	};
+
+	auto drawCircle3D = [&] (const vector3& center, const vector3& axisA, const vector3& axisB, const _float radius, const _float4& color)
+	{
+		const _uint segmentCount = 48u;
+		for (_uint i = 0; i < segmentCount; ++i)
+		{
+			const _float t0 = XM_2PI * static_cast<_float>(i) / static_cast<_float>(segmentCount);
+			const _float t1 = XM_2PI * static_cast<_float>(i + 1) / static_cast<_float>(segmentCount);
+			const vector3 p0 = center + (axisA * cosf(t0) + axisB * sinf(t0)) * radius;
+			const vector3 p1 = center + (axisA * cosf(t1) + axisB * sinf(t1)) * radius;
+			renderLine(p0, p1, color);
+		}
+	};
+
+	vector3 camRight = camera->Get_Transform()->Get_Directions().right;
+	vector3 camUp = camera->Get_Transform()->Get_Directions().up;
+	const _float camRightLen2 = camRight.x * camRight.x + camRight.y * camRight.y + camRight.z * camRight.z;
+	if (camRightLen2 <= 0.000001f)
+		camRight = vector3::right();
+	else
+		camRight = camRight.normalized();
+	const _float camUpLen2 = camUp.x * camUp.x + camUp.y * camUp.y + camUp.z * camUp.z;
+	if (camUpLen2 <= 0.000001f)
+		camUp = vector3::up();
+	else
+		camUp = camUp.normalized();
 
 	for (const DebugRaycastDisplay& debugRay : m_vDebugRaycasts)
 	{
-		ImVec2 p0;
-		ImVec2 p1;
-		if (!WorldToEditorScreen(debugRay.start, viewProj, *vp, p0))
-			continue;
-		if (!WorldToEditorScreen(debugRay.end, viewProj, *vp, p1))
-			continue;
-
-		const ImU32 color = debugRay.hit ? IM_COL32(80, 255, 120, 255) : IM_COL32(255, 80, 80, 255);
-		drawList->AddLine(p0, p1, color, 2.0f);
+		const _float4 color = debugRay.hit ? _float4(0.314f, 1.f, 0.47f, 1.f) : _float4(1.f, 0.314f, 0.314f, 1.f);
+		renderLine(debugRay.start, debugRay.end, color);
 
 		if (debugRay.shape == DebugRaycastShape::Box)
 		{
-			DrawWireBox(drawList, viewProj, *vp, debugRay.start, debugRay.halfExtent, debugRay.rotation, color);
-			DrawWireBox(drawList, viewProj, *vp, debugRay.end, debugRay.halfExtent, debugRay.rotation, color);
+			drawWireBox3D(debugRay.start, debugRay.halfExtent, debugRay.rotation, color);
+			drawWireBox3D(debugRay.end, debugRay.halfExtent, debugRay.rotation, color);
 		}
 		else if (debugRay.shape == DebugRaycastShape::Sphere)
 		{
-			const vector3 cameraRight = camera->Get_Transform()->Get_Directions().right;
-			DrawScreenSpaceCircle(drawList, viewProj, *vp, debugRay.start, cameraRight, debugRay.radius, color);
-			DrawScreenSpaceCircle(drawList, viewProj, *vp, debugRay.end, cameraRight, debugRay.radius, color);
+			drawCircle3D(debugRay.start, camRight, camUp, debugRay.radius, color);
+			drawCircle3D(debugRay.end, camRight, camUp, debugRay.radius, color);
 		}
 	}
+#endif
+}
+
+void CPhysics::ClearRaycastDebugDisplay()
+{
+#ifndef _CLIENT_BUILD
+	m_vDebugRaycasts.clear();
 #endif
 }
 

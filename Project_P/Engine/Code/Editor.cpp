@@ -124,7 +124,6 @@ void CEditor::Editor_Update_Begin()
 void CEditor::Editor_Update_During()
 {
 	ChangeControleTool();
-	CPhysics::GetInstance().RenderRaycastDebugDisplay();
 
 	if (m_bIsMovingCamera)
 	{
@@ -149,6 +148,7 @@ void CEditor::Editor_Update_During()
 
 void CEditor::Editor_Update_End()
 {
+	CPhysics::GetInstance().RenderRaycastDebugDisplay();
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 }
