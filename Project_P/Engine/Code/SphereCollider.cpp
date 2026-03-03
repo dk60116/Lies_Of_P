@@ -140,43 +140,51 @@ void CSphereCollider::Render_Gizmo()
     const _vector localCenter = XMVectorSet(m_vCenter.x, m_vCenter.y, m_vCenter.z, 1.f);
     const _vector worldCenter4 = XMVector3TransformCoord(localCenter, objectWorld);
     const vector3 worldCenter = vector3(XMVectorGetX(worldCenter4), XMVectorGetY(worldCenter4), XMVectorGetZ(worldCenter4));
-    vector3 camRight = cam->Get_Transform()->Get_Directions().right;
-    vector3 camUp = cam->Get_Transform()->Get_Directions().up;
+    auto normalizeOr = [] (const vector3& v, const vector3& fallback)
+    {
+        const _float len2 = v.x * v.x + v.y * v.y + v.z * v.z;
+        if (len2 <= 0.000001f)
+            return fallback;
+        return v.normalized();
+    };
 
-    const _float camRightLen2 = camRight.x * camRight.x + camRight.y * camRight.y + camRight.z * camRight.z;
-    if (camRightLen2 <= 0.000001f)
-        camRight = vector3::right();
-    else
-        camRight = camRight.normalized();
-
-    const _float camUpLen2 = camUp.x * camUp.x + camUp.y * camUp.y + camUp.z * camUp.z;
-    if (camUpLen2 <= 0.000001f)
-        camUp = vector3::up();
-    else
-        camUp = camUp.normalized();
+    const auto dirs = Get_Transform()->Get_Directions();
+    const vector3 worldRight = normalizeOr(dirs.right, vector3::right());
+    const vector3 worldUp = normalizeOr(dirs.up, vector3::up());
+    const vector3 worldForward = normalizeOr(dirs.forward, vector3::forward());
+    const vector3 camRight = normalizeOr(cam->Get_Transform()->Get_Directions().right, vector3::right());
+    const vector3 camUp = normalizeOr(cam->Get_Transform()->Get_Directions().up, vector3::up());
 
     _float3 camPos = _float3();
     _matrix matView = cam->Get_ViewMatrix();
     _matrix matProj = cam->Get_ProjectionMatrix();
 
-    for (_uint i = 0; i < segmentCount; ++i)
+    auto drawCircle = [&] (const vector3& axisA, const vector3& axisB)
     {
-        const _float t0 = (XM_2PI * static_cast<_float>(i)) / static_cast<_float>(segmentCount);
-        const _float t1 = (XM_2PI * static_cast<_float>(i + 1)) / static_cast<_float>(segmentCount);
+        for (_uint i = 0; i < segmentCount; ++i)
+        {
+            const _float t0 = (XM_2PI * static_cast<_float>(i)) / static_cast<_float>(segmentCount);
+            const _float t1 = (XM_2PI * static_cast<_float>(i + 1)) / static_cast<_float>(segmentCount);
 
-        const vector3 p0v = worldCenter + (camRight * cosf(t0) + camUp * sinf(t0)) * radius;
-        const vector3 p1v = worldCenter + (camRight * cosf(t1) + camUp * sinf(t1)) * radius;
-        const _vector p0 = XMVectorSet(p0v.x, p0v.y, p0v.z, 1.f);
-        const _vector p1 = XMVectorSet(p1v.x, p1v.y, p1v.z, 1.f);
+            const vector3 p0v = worldCenter + (axisA * cosf(t0) + axisB * sinf(t0)) * radius;
+            const vector3 p1v = worldCenter + (axisA * cosf(t1) + axisB * sinf(t1)) * radius;
+            const _vector p0 = XMVectorSet(p0v.x, p0v.y, p0v.z, 1.f);
+            const _vector p1 = XMVectorSet(p1v.x, p1v.y, p1v.z, 1.f);
 
-        _matrix lineWorld = XMMatrixIdentity();
-        if (!BuildLineWorldMatrix(p0, p1, lineWorld))
-            continue;
+            _matrix lineWorld = XMMatrixIdentity();
+            if (!BuildLineWorldMatrix(p0, p1, lineWorld))
+                continue;
 
-        m_pLineMaterial->Bind_Matrix(lineWorld);
-        m_pLineMaterial->Bind_Camera(camPos, matView, matProj, 0);
-        m_pLineMesh->Render();
-    }
+            m_pLineMaterial->Bind_Matrix(lineWorld);
+            m_pLineMaterial->Bind_Camera(camPos, matView, matProj, 0);
+            m_pLineMesh->Render();
+        }
+    };
+
+    drawCircle(camRight, camUp);
+    drawCircle(worldRight, worldUp);
+    drawCircle(worldRight, worldForward);
+    drawCircle(worldUp, worldForward);
 #endif
 }
 
