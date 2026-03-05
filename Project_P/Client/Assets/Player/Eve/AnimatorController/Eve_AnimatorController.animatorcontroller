@@ -29,11 +29,6 @@ trigger jump
 bool isGround=false
 bool isStrongAttack=false
 
-[state Attack_Light_04]
-motion=Eve_Attack_Light_04
-speedMul=1.000000
-pos=-865,989
-
 [state Run_Forward_Start]
 blendTree=2d
 paramX=isBattle
@@ -44,6 +39,20 @@ child=Eve_Run_Forward_Start,0.000000,1.000000
 child=Eve_BattleSprint_Start,1.000000,2.000000
 speedMul=1.000000
 pos=578,145
+
+[state Attack_Light_04]
+motion=Eve_Attack_Light_04
+speedMul=1.000000
+pos=-865,989
+
+[state Idle]
+blendTree=direct
+param=isBattle
+directBlend=0.500000
+child=Eve_Idle,0.000000
+child=Eve_BattleIdle,1.000000
+speedMul=1.000000
+pos=116,236
 
 [state Jump_End]
 blendTree=2d
@@ -56,19 +65,10 @@ child=Eve_Battle_JumpForward_End,1.000000,1.000000
 speedMul=1.000000
 pos=246,-597
 
-[state Idle]
-blendTree=direct
-param=isBattle
-directBlend=0.500000
-child=Eve_Idle,0.000000
-child=Eve_BattleIdle,1.000000
-speedMul=1.000000
-pos=121,258
-
 [state Attack_Light_01]
 motion=Eve_Attack_Light_01
 speedMul=1.000000
-pos=-844,558
+pos=-865,536
 
 [state Run_End]
 blendTree=2d
@@ -101,6 +101,14 @@ child=Eve_BattleSprintTurn_L,1.000000,2.000000
 speedMul=1.000000
 pos=305,-292
 
+[state SprintEnd]
+blendTree=direct
+param=isBattle
+child=Eve_Sprint_End,0.000000
+child=Eve_BattleSprint_End,1.000000
+speedMul=1.000000
+pos=870,359
+
 [state Run_TurnR]
 blendTree=2d
 paramX=isBattle
@@ -112,33 +120,15 @@ child=Eve_BattleSprintTurn_R,1.000000,2.000000
 speedMul=1.000000
 pos=655,-169
 
-[state SprintEnd]
-blendTree=direct
-param=isBattle
-child=Eve_Sprint_End,0.000000
-child=Eve_BattleSprint_End,1.000000
-speedMul=1.000000
-pos=870,359
-
 [state Attack_Light_02]
 motion=Eve_Attack_Light_02
 speedMul=1.000000
-pos=-828,695
-
-[state Eve_Attack_SS34(S)]
-motion=Eve_Attack_SS34
-speedMul=1.000000
-pos=-475,1110
+pos=-841,706
 
 [state Attack_Light_03]
 motion=Eve_Attack_Light_03
 speedMul=1.000000
 pos=-873,829
-
-[state Guard_Start]
-motion=Eve_Guard_Start
-speedMul=1.000000
-pos=-102,-180
 
 [state SprintToRun]
 blendTree=direct
@@ -147,6 +137,11 @@ child=Eve_SprintToRun,0.000000
 child=Eve_BattleSprintToRun,1.000000
 speedMul=1.000000
 pos=873,494
+
+[state Guard_Start]
+motion=Eve_Guard_Start
+speedMul=1.000000
+pos=-102,-180
 
 [state Guard_Idle]
 motion=Eve_Guard_Idle
@@ -203,17 +198,17 @@ pos=-39,-597
 [state Attack_Strong_01]
 motion=Eve_Attack_Strong_01
 speedMul=1.000000
-pos=-101,589
+pos=-101,601
 
 [state Attack_Strong_02]
 motion=Eve_Attack_Strong_02
 speedMul=1.000000
-pos=-108,697
+pos=-79,713
 
 [state Attack_Strong_03]
 motion=Eve_Attack_Strong_03
 speedMul=1.000000
-pos=-86,809
+pos=-74,844
 
 [state Eve_Attack_LS12]
 motion=Eve_Attack_LS12
@@ -223,12 +218,27 @@ pos=-548,835
 [state Eve_Attack_SS23]
 motion=Eve_Attack_SS23
 speedMul=1.000000
-pos=-510,965
+pos=-544,961
 
 [state Eve_Attack_SL23]
 motion=Eve_Attack_SL23
 speedMul=1.000000
-pos=-232,999
+pos=-244,960
+
+[state Eve_Attack_SS34]
+motion=Eve_Attack_SS34
+speedMul=1.000000
+pos=-475,1110
+
+[state Eve_Attack_SL12]
+motion=Eve_Attack_SL12
+speedMul=1.000000
+pos=173,659
+
+[state Eve_Attack_LS23]
+motion=Eve_Attack_LS23
+speedMul=1.000000
+pos=406,713
 
 [entry]
 to=Idle
@@ -378,7 +388,7 @@ transitionOffset=0.000000
 
 [transition Attack_Light_03->Attack_Light_04]
 blend=0.150000
-cond=comboContinue==true
+cond=comboContinue==true && isAttack==true
 exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
@@ -386,7 +396,7 @@ transitionOffset=0.000000
 
 [transition Attack_Light_02->Attack_Light_03]
 blend=0.150000
-cond=comboContinue==true
+cond=comboContinue==true && isAttack==true
 exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
@@ -394,7 +404,7 @@ transitionOffset=0.000000
 
 [transition Attack_Light_01->Run_Forward_Start]
 blend=0.200000
-cond=speed>0.100000
+cond=speed>0.100000 && isAttack==false
 exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
@@ -402,7 +412,7 @@ transitionOffset=0.000000
 
 [transition Attack_Light_02->Run_Forward_Start]
 blend=0.200000
-cond=speed>0.100000 && comboContinue==false
+cond=speed>0.100000 && isAttack==false
 exitTime=0.150000
 fixedDuration=false
 transitionDuration=0.150000
@@ -502,7 +512,7 @@ transitionOffset=0.000000
 
 [transition Attack_Light_01->Idle]
 blend=0.150000
-cond=comboContinue==false && speed==0.000000
+cond=speed==0.000000 && isAttack==false
 exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
@@ -510,7 +520,7 @@ transitionOffset=0.000000
 
 [transition Attack_Light_02->Idle]
 blend=0.150000
-cond=comboContinue==false && speed==0.000000
+cond=speed==0.000000 && isAttack==false
 exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
@@ -526,7 +536,7 @@ transitionOffset=0.000000
 
 [transition Attack_Light_04->Idle]
 blend=0.150000
-cond=comboContinue==false && speed==0.000000
+cond=speed==0.000000 && isAttack==false
 exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
@@ -745,15 +755,15 @@ transitionOffset=0.000000
 
 [transition Attack_Strong_01->Idle]
 blend=0.150000
-cond=isStrongAttack==false
-exitTime=0.150000
+cond=speed==0.000000 && isStrongAttack==false
+exitTime=0.180000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
 [transition Attack_Light_04->Run_Forward_Start]
 blend=0.150000
-cond=speed>0.100000 && comboContinue==false
+cond=comboContinue==false && isAttack==false
 exitTime=0.300000
 fixedDuration=false
 transitionDuration=0.150000
@@ -761,15 +771,15 @@ transitionOffset=0.000000
 
 [transition Attack_Strong_01->Attack_Strong_02]
 blend=0.150000
-cond=comboContinue==true
-exitTime=0.200000
+cond=comboContinue==true && isStrongAttack==true
+exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
 [transition Attack_Strong_02->Idle]
 blend=0.150000
-cond=isStrongAttack==false
+cond=speed==0.000000 && isStrongAttack==false
 exitTime=0.200000
 fixedDuration=false
 transitionDuration=0.150000
@@ -777,15 +787,15 @@ transitionOffset=0.000000
 
 [transition Attack_Strong_02->Attack_Strong_03]
 blend=0.150000
-cond=comboContinue==true
-exitTime=0.250000
+cond=comboContinue==true && isStrongAttack==true
+exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
 [transition Attack_Strong_03->Idle]
 blend=0.150000
-cond=isStrongAttack==false
+cond=speed==0.000000 && isStrongAttack==false
 exitTime=0.200000
 fixedDuration=false
 transitionDuration=0.150000
@@ -801,7 +811,7 @@ transitionOffset=0.000000
 
 [transition Eve_Attack_LS12->Idle]
 blend=0.150000
-cond=speed==0.000000 && comboContinue==false
+cond=speed==0.000000 && isStrongAttack==false
 exitTime=0.320000
 fixedDuration=false
 transitionDuration=0.200000
@@ -815,15 +825,15 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Eve_Attack_SS23->Eve_Attack_SS34(S)]
+[transition Eve_Attack_SS23->Eve_Attack_SS34]
 blend=0.150000
-cond=comboContinue==true
+cond=comboContinue==true && isStrongAttack==true
 exitTime=0.250000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Eve_Attack_SS34(S)->Idle]
+[transition Eve_Attack_SS34->Idle]
 blend=0.150000
 cond=comboContinue==false && speed==0.000000
 exitTime=0.120000
@@ -849,7 +859,7 @@ transitionOffset=0.000000
 
 [transition Eve_Attack_LS12->Run_Forward_Start]
 blend=0.150000
-cond=speed>0.100000 && comboContinue==false
+cond=speed>0.100000 && isStrongAttack==false
 exitTime=0.320000
 fixedDuration=false
 transitionDuration=0.200000
@@ -858,14 +868,14 @@ transitionOffset=0.000000
 [transition Eve_Attack_SS23->Run_Forward_Start]
 blend=0.150000
 cond=speed>0.100000 && comboContinue==false
-exitTime=0.340000
+exitTime=0.150000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Eve_Attack_SS34(S)->Run_Forward_Start]
+[transition Eve_Attack_SS34->Run_Forward_Start]
 blend=0.150000
-cond=speed>0.100000 && comboContinue==false
+cond=speed>0.100000 && isStrongAttack==false
 exitTime=0.120000
 fixedDuration=false
 transitionDuration=0.150000
@@ -884,6 +894,77 @@ blend=0.150000
 cond=isStrongAttack==true && comboContinue==true
 exitTime=0.200000
 fixedDuration=false
-transitionDuration=0.200000
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_Strong_01->Eve_Attack_SL12]
+blend=0.150000
+cond=comboContinue==true && isAttack==true
+exitTime=0.100000
+fixedDuration=false
+transitionDuration=0.100000
+transitionOffset=0.000000
+
+[transition Eve_Attack_SL12->Idle]
+blend=0.150000
+cond=speed==0.000000 && isAttack==false
+fixedDuration=false
+transitionDuration=0.120000
+transitionOffset=0.000000
+
+[transition Attack_Strong_01->Run_Forward_Start]
+blend=0.150000
+cond=speed>0.100000 && isStrongAttack==false
+exitTime=0.180000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_Strong_02->Run_Forward_Start]
+blend=0.150000
+cond=speed>0.100000 && isStrongAttack==false
+exitTime=0.100000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_Strong_03->Run_Forward_Start]
+blend=0.150000
+cond=speed>0.100000 && isStrongAttack==false
+exitTime=0.100000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_SL12->Run_Forward_Start]
+blend=0.150000
+cond=speed>0.100000 && isAttack==false
+exitTime=0.120000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_LS23->Run_Forward_Start]
+blend=0.150000
+cond=speed>0.100000 && isStrongAttack==false
+exitTime=0.400000
+fixedDuration=false
+transitionDuration=0.125000
+transitionOffset=0.000000
+
+[transition Eve_Attack_LS23->Idle]
+blend=0.150000
+cond=speed==0.000000 && isStrongAttack==false
+exitTime=0.400000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_SL12->Eve_Attack_LS23]
+blend=0.150000
+cond=comboContinue==true && isStrongAttack==true
+exitTime=0.100000
+fixedDuration=false
+transitionDuration=0.400000
 transitionOffset=0.000000
 
