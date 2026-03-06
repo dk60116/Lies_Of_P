@@ -636,6 +636,7 @@ void CScene::Render_Editor()
 	}
 
 	auto& trm = CRenderTargetManager::GetInstance();
+	CCamera* debugDisplayCamera = m_pEditorCamera;
 
 	trm.Bind_GBuffer(ctx, rtVP, true); 
 	trm.Clear_GBuffer(true);
@@ -672,6 +673,31 @@ void CScene::Render_Editor()
 	m_pEditorCamera->RenderShadowMaskPass(rtVP);
 	m_pEditorCamera->RenderCombine(rtVP);
 
+	if (CGameObject* selected = CEditor::GetInstance().Get_SelectedGameObject())
+	{
+		if (CCamera* selectedCamera = selected->GetComponent<CCamera>())
+		{
+			if (selectedCamera != m_pEditorCamera
+				&& selectedCamera->Get_GameObject()
+				&& selectedCamera->Get_GameObject()->IsRecursiveActive()
+				&& selectedCamera->Get_Enable())
+			{
+				trm.Bind_GBuffer(ctx, rtVP);
+				trm.Clear_GBuffer();
+
+				selectedCamera->RenderMesh();
+				selectedCamera->RenderShadowDepthPass(rtVP);
+				selectedCamera->RenderObjectIDPass(rtVP);
+				selectedCamera->RenderLightingPass_ToDiffuse(rtVP);
+				selectedCamera->RenderLightingPass_ToSpecular(rtVP);
+				selectedCamera->RenderShadowMaskPass(rtVP);
+				selectedCamera->RenderCombine(rtVP);
+
+				debugDisplayCamera = selectedCamera;
+			}
+		}
+	}
+
 	CGraphicDevice::GetInstance().Set_RenderTarget(CEditor::GetInstance().Get_EditorWindow());
 
 	ColorValue back = ColorValue::gray(0.3f);
@@ -685,7 +711,10 @@ void CScene::Render_Editor()
 
 	CPhysics::GetInstance().RenderRaycastDebugDisplay();
 
-	m_pEditorCamera->RenderRTDebugDisplay(true);
+	if (debugDisplayCamera == m_pEditorCamera)
+		m_pEditorCamera->RenderRTDebugDisplay(true);
+	else
+		debugDisplayCamera->RenderRTDebugDisplay(false);
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->OnPostRender_Editor();
