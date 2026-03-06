@@ -66,6 +66,8 @@ Eve_Attack_SS34 : Player/Eve/Animations/Eve_Attack_SS34.fbx : [Animation Clip]
 Eve_Attack_SL12 : Player/Eve/Animations/Eve_Attack_SL12.fbx : [Animation Clip]
 Eve_Attack_SL23 : Player/Eve/Animations/Eve_Attack_SL23.fbx : [Animation Clip]
 Eve_Attack_LS23 : Player/Eve/Animations/Eve_Attack_LS23.fbx : [Animation Clip]
+Eve_Attack_SL34 : Player/Eve/Animations/Eve_Attack_SL34.fbx : [Animation Clip]
+Eve_Attack_LS45 : Player/Eve/Animations/Eve_Attack_LS45.fbx : [Animation Clip]
 // Eve Animations - Guard
 Eve_Guard_Start : Player/Eve/Animations/Eve_Guard_Start.fbx : [Animation Clip]
 Eve_Guard_Idle : Player/Eve/Animations/Eve_Guard_Idle.fbx : [Animation Clip] [Loop]

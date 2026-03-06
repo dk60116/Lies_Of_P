@@ -402,7 +402,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
         }
 
         {
-            CAnimationClip::ActionTrigger atTerm = { 30, L"Eve_Attack_SL12_Term" };
+            CAnimationClip::ActionTrigger atTerm = { 15, L"Eve_Attack_SL12_Term" };
             ealClip->Add_ActionTrigger(atTerm);
             m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL12_Term", [this]()
                 {
@@ -414,7 +414,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
         }
 
         {
-            CAnimationClip::ActionTrigger atLimit = { 35, L"Eve_Attack_SL12_Limit" };
+            CAnimationClip::ActionTrigger atLimit = { 18, L"Eve_Attack_SL12_Limit" };
             ealClip->Add_ActionTrigger(atLimit);
             m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL12_Limit", [this]()
                 {
@@ -455,7 +455,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
         }
 
         {
-            CAnimationClip::ActionTrigger atTerm = { 30, L"Eve_Attack_LS23_Term" };
+            CAnimationClip::ActionTrigger atTerm = { 18, L"Eve_Attack_LS23_Term" };
             ealClip->Add_ActionTrigger(atTerm);
             m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS23_Term", [this]()
                 {
@@ -467,7 +467,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
         }
 
         {
-            CAnimationClip::ActionTrigger atLimit = { 35, L"Eve_Attack_LS23_Limit" };
+            CAnimationClip::ActionTrigger atLimit = { 21, L"Eve_Attack_LS23_Limit" };
             ealClip->Add_ActionTrigger(atLimit);
             m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS23_Limit", [this]()
                 {
@@ -480,6 +480,112 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
             CAnimationClip::ActionTrigger atEnd = { endFrame, L"Eve_Attack_LS23_End" };
             ealClip->Add_ActionTrigger(atEnd);
             m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS23_End", [this]()
+                {
+                    Exit();
+                });
+        }
+    }
+
+    // S3->L4
+    {
+        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_SL34 (Animation Clip)");
+
+        const _uint endFrame = ealClip->Get_LastFrameIndex();
+
+        {
+            CAnimationClip::ActionTrigger atStart = { 1, L"Eve_Attack_SL34_Start" };
+            ealClip->Add_ActionTrigger(atStart);
+            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL34_Start", [this]()
+                {
+                    ++m_iCrtCombo;
+                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
+                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
+                    m_bCanContinue = true;
+                    m_bPressedContinue = false;
+                    m_bUnderTerm = true;
+                    m_bUnderLimit = true;
+                });
+        }
+
+        {
+            CAnimationClip::ActionTrigger atTerm = { 20, L"Eve_Attack_SL34_Term" };
+            ealClip->Add_ActionTrigger(atTerm);
+            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL34_Term", [this]()
+                {
+                    m_bUnderTerm = false;
+
+                    if (m_bPressedContinue)
+                        ContinueCombo();
+                });
+        }
+
+        {
+            CAnimationClip::ActionTrigger atLimit = { 23, L"Eve_Attack_SL34_Limit" };
+            ealClip->Add_ActionTrigger(atLimit);
+            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL34_Limit", [this]()
+                {
+                    m_bCanContinue = false;
+                    m_bUnderLimit = false;
+                });
+        }
+
+        {
+            CAnimationClip::ActionTrigger atEnd = { endFrame, L"Eve_Attack_SL34_End" };
+            ealClip->Add_ActionTrigger(atEnd);
+            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL34_End", [this]()
+                {
+                    Exit();
+                });
+        }
+    }
+
+    // L4->S5
+    {
+        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_LS45 (Animation Clip)");
+
+        const _uint endFrame = ealClip->Get_LastFrameIndex();
+
+        {
+            CAnimationClip::ActionTrigger atStart = { 1, L"Eve_Attack_LS45_Start" };
+            ealClip->Add_ActionTrigger(atStart);
+            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS45_Start", [this]()
+                {
+                    ++m_iCrtCombo;
+                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
+                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
+                    m_bCanContinue = true;
+                    m_bPressedContinue = false;
+                    m_bUnderTerm = true;
+                    m_bUnderLimit = true;
+                });
+        }
+
+        {
+            CAnimationClip::ActionTrigger atTerm = { 32, L"Eve_Attack_LS45_Term" };
+            ealClip->Add_ActionTrigger(atTerm);
+            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS45_Term", [this]()
+                {
+                    m_bUnderTerm = false;
+
+                    if (m_bPressedContinue)
+                        ContinueCombo();
+                });
+        }
+
+        {
+            CAnimationClip::ActionTrigger atLimit = { 35, L"Eve_Attack_LS45_Limit" };
+            ealClip->Add_ActionTrigger(atLimit);
+            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS45_Limit", [this]()
+                {
+                    m_bCanContinue = false;
+                    m_bUnderLimit = false;
+                });
+        }
+
+        {
+            CAnimationClip::ActionTrigger atEnd = { endFrame, L"Eve_Attack_LS45_End" };
+            ealClip->Add_ActionTrigger(atEnd);
+            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS45_End", [this]()
                 {
                     Exit();
                 });
@@ -550,11 +656,6 @@ void CPlayerState_Attack::Update()
     {
         Exit();
     }
-
-    if (m_pCtx->IsBigTurn() && !m_bUnderLimit)
-        Exit();
-
-    CDebug::LogError(m_bStrong);
 }
 
 void CPlayerState_Attack::Exit()
