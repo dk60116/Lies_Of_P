@@ -1,7 +1,110 @@
 #include "epch.h"
 #include "SkinnedMeshRenderer.h"
 #include "EditorCamera.h"
+#include <cstring>
+#include <unordered_map>
 
+namespace
+{
+	struct TransformLocalPose
+	{
+		vector3 position = vector3::zero();
+		vector3 scale = vector3::one();
+		quaternion rotation = quaternion::identity();
+	};
+
+	struct SkinningRuntimeCache
+	{
+		_bool animatedLocalBoundsValid = false;
+		_bool animatedWorldBoundsValid = false;
+		_bool meshWorldMatrixValid = false;
+		uint64_t skinningPoseVersion = 0;
+		uint64_t uploadedPoseVersion = 0;
+		uint64_t cachedLocalBoundsPoseVersion = 0;
+		uint64_t cachedWorldBoundsPoseVersion = 0;
+		TransformLocalPose cachedMeshLocalPose = {};
+		_float4x4 cachedMeshWorldMatrix = {};
+		_float3 cachedAnimatedLocalBoundsMin = {};
+		_float3 cachedAnimatedLocalBoundsMax = {};
+		_float3 cachedAnimatedWorldBoundsMin = {};
+		_float3 cachedAnimatedWorldBoundsMax = {};
+		vector<TransformLocalPose> cachedBoneLocalPoses = {};
+	};
+
+	unordered_map<const CSkinnedMeshRenderer*, SkinningRuntimeCache>& GetSkinningRuntimeCaches()
+	{
+		static auto* caches = new unordered_map<const CSkinnedMeshRenderer*, SkinningRuntimeCache>();
+		return *caches;
+	}
+
+	SkinningRuntimeCache& GetSkinningRuntimeCache(const CSkinnedMeshRenderer* _renderer)
+	{
+		return GetSkinningRuntimeCaches()[_renderer];
+	}
+
+	void RemoveSkinningRuntimeCache(const CSkinnedMeshRenderer* _renderer)
+	{
+		GetSkinningRuntimeCaches().erase(_renderer);
+	}
+
+	void AdvanceCacheVersion(uint64_t& _version)
+	{
+		++_version;
+		if (_version == 0ull)
+			_version = 1ull;
+	}
+
+	_bool IsSameFloat4x4(const _float4x4& _lhs, const _float4x4& _rhs)
+	{
+		return 0 == memcmp(&_lhs, &_rhs, sizeof(_float4x4));
+	}
+
+	TransformLocalPose CaptureLocalPose(CTransform* _transform)
+	{
+		TransformLocalPose pose = {};
+		if (!_transform)
+			return pose;
+
+		pose.position = _transform->Get_LocalPosition();
+		pose.scale = _transform->Get_LocalScale();
+		pose.rotation = _transform->Get_LocalQuaternion();
+		return pose;
+	}
+
+	_bool IsSameLocalPose(const TransformLocalPose& _lhs, const TransformLocalPose& _rhs)
+	{
+		return _lhs.position == _rhs.position
+			&& _lhs.scale == _rhs.scale
+			&& _lhs.rotation == _rhs.rotation;
+	}
+
+	void BuildWorldBoundsFromLocalAABB(const _float3& _localMin, const _float3& _localMax, const _matrix& _world, _float3& _outMin, _float3& _outMax)
+	{
+		const _vector corners[8] =
+		{
+			XMVectorSet(_localMin.x, _localMin.y, _localMin.z, 1.f),
+			XMVectorSet(_localMax.x, _localMin.y, _localMin.z, 1.f),
+			XMVectorSet(_localMax.x, _localMax.y, _localMin.z, 1.f),
+			XMVectorSet(_localMin.x, _localMax.y, _localMin.z, 1.f),
+			XMVectorSet(_localMin.x, _localMin.y, _localMax.z, 1.f),
+			XMVectorSet(_localMax.x, _localMin.y, _localMax.z, 1.f),
+			XMVectorSet(_localMax.x, _localMax.y, _localMax.z, 1.f),
+			XMVectorSet(_localMin.x, _localMax.y, _localMax.z, 1.f)
+		};
+
+		_vector minV = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 0.f);
+		_vector maxV = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 0.f);
+		for (_uint i = 0; i < 8; ++i)
+		{
+			const _vector worldCorner = XMVector3TransformCoord(corners[i], _world);
+			minV = XMVectorMin(minV, worldCorner);
+			maxV = XMVectorMax(maxV, worldCorner);
+		}
+
+		XMStoreFloat3(&_outMin, minV);
+		XMStoreFloat3(&_outMax, maxV);
+	}
+}
 CSkinnedMeshRenderer::CSkinnedMeshRenderer()
 	: CRenderer{}
 	, m_pMeshBuffer(nullptr)
@@ -15,11 +118,11 @@ CSkinnedMeshRenderer::CSkinnedMeshRenderer()
 	, m_vCachedBoneMatrices({})
 {
 	m_strName = L"Skinned Mesh Renderer";
-	InvalidateSkinningCache();
 }
 
 CSkinnedMeshRenderer::~CSkinnedMeshRenderer()
 {
+	RemoveSkinningRuntimeCache(this);
 }
 
 CSkinnedMeshRenderer* CSkinnedMeshRenderer::Create()
@@ -111,6 +214,7 @@ void CSkinnedMeshRenderer::OnDestroy()
 	m_vBones.clear();
 	m_vRootBone.clear();
 	InvalidateSkinningCache();
+	RemoveSkinningRuntimeCache(this);
 }
 
 const _uint CSkinnedMeshRenderer::Get_BoneCount() const
@@ -168,6 +272,8 @@ uint64_t CSkinnedMeshRenderer::ComputeSkinningPoseHash(_uint _boneCount) const
 
 void CSkinnedMeshRenderer::InvalidateSkinningCache() const
 {
+	auto& cache = GetSkinningRuntimeCache(this);
+
 	m_bSkinningCacheValid = false;
 	m_iCachedBoneCount = 0;
 	m_iCachedPoseHash = 0;
@@ -179,8 +285,18 @@ void CSkinnedMeshRenderer::InvalidateSkinningCache() const
 	const _matrix identity = XMMatrixIdentity();
 	for (auto& cachedBoneMatrix : m_vCachedBoneMatrices)
 		XMStoreFloat4x4(&cachedBoneMatrix, identity);
-}
 
+	cache.animatedLocalBoundsValid = false;
+	cache.animatedWorldBoundsValid = false;
+	cache.meshWorldMatrixValid = false;
+	cache.skinningPoseVersion = 0;
+	cache.uploadedPoseVersion = 0;
+	cache.cachedLocalBoundsPoseVersion = 0;
+	cache.cachedWorldBoundsPoseVersion = 0;
+	cache.cachedMeshLocalPose = {};
+	cache.cachedMeshWorldMatrix = {};
+	cache.cachedBoneLocalPoses.clear();
+}
 _bool CSkinnedMeshRenderer::TryUpdateSkinningCache(_uint* _outBoneCount) const
 {
 	if (_outBoneCount)
@@ -188,6 +304,8 @@ _bool CSkinnedMeshRenderer::TryUpdateSkinningCache(_uint* _outBoneCount) const
 
 	if (!m_pMeshBuffer)
 		return false;
+
+	auto& cache = GetSkinningRuntimeCache(this);
 
 	const _uint meshBoneCount = m_pMeshBuffer->Get_BoneCount();
 	const _uint offsetBoneCount = static_cast<_uint>(m_pMeshBuffer->m_vBoneOffsetMatrices.size());
@@ -199,28 +317,52 @@ _bool CSkinnedMeshRenderer::TryUpdateSkinningCache(_uint* _outBoneCount) const
 	if (m_vCachedBoneMatrices.size() != MAX_BONE)
 		m_vCachedBoneMatrices.resize(MAX_BONE);
 
+	CTransform* meshTransform = (m_pGameObject) ? m_pGameObject->Get_Transform() : nullptr;
+	const TransformLocalPose meshLocalPose = CaptureLocalPose(meshTransform);
+
+	_bool poseUnchanged = m_bSkinningCacheValid
+		&& m_iCachedBoneCount == boneCount
+		&& m_vCachedSkinMatrices.size() == boneCount
+		&& cache.cachedBoneLocalPoses.size() == boneCount
+		&& IsSameLocalPose(cache.cachedMeshLocalPose, meshLocalPose);
+
+	if (poseUnchanged)
+	{
+		for (_uint i = 0; i < boneCount; ++i)
+		{
+			if (!IsSameLocalPose(cache.cachedBoneLocalPoses[i], CaptureLocalPose(m_vBones[i])))
+			{
+				poseUnchanged = false;
+				break;
+			}
+		}
+	}
+
+	if (poseUnchanged)
+		return true;
+
 	if (boneCount == 0)
 	{
 		const _matrix identity = XMMatrixIdentity();
 		for (auto& cachedBoneMatrix : m_vCachedBoneMatrices)
 			XMStoreFloat4x4(&cachedBoneMatrix, identity);
 
+		cache.cachedBoneLocalPoses.clear();
+		cache.cachedMeshLocalPose = meshLocalPose;
 		m_vCachedSkinMatrices.clear();
 		m_iCachedBoneCount = 0;
 		m_iCachedPoseHash = 1ull;
 		m_bSkinningCacheValid = true;
+		cache.animatedLocalBoundsValid = false;
+		cache.animatedWorldBoundsValid = false;
+		cache.meshWorldMatrixValid = false;
+		cache.uploadedPoseVersion = 0;
+		AdvanceCacheVersion(cache.skinningPoseVersion);
 		return true;
 	}
 
-	const uint64_t poseHash = ComputeSkinningPoseHash(boneCount);
-	if (m_bSkinningCacheValid
-		&& m_iCachedBoneCount == boneCount
-		&& m_iCachedPoseHash == poseHash
-		&& m_vCachedSkinMatrices.size() == boneCount)
-	{
-		return true;
-	}
-
+	if (cache.cachedBoneLocalPoses.size() != boneCount)
+		cache.cachedBoneLocalPoses.resize(boneCount);
 	if (m_vCachedSkinMatrices.size() != boneCount)
 		m_vCachedSkinMatrices.resize(boneCount);
 
@@ -230,14 +372,16 @@ _bool CSkinnedMeshRenderer::TryUpdateSkinningCache(_uint* _outBoneCount) const
 
 	_matrix meshWorld = XMMatrixIdentity();
 	_matrix meshWorldInv = XMMatrixIdentity();
-	if (m_pGameObject && m_pGameObject->Get_Transform())
+	if (meshTransform)
 	{
-		meshWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
+		meshWorld = meshTransform->Get_WorldMatrix();
 		meshWorldInv = XMMatrixInverse(nullptr, meshWorld);
 	}
 
 	for (_uint i = 0; i < boneCount; ++i)
 	{
+		cache.cachedBoneLocalPoses[i] = CaptureLocalPose(m_vBones[i]);
+
 		_matrix skinMatrix = XMMatrixIdentity();
 		if (m_vBones[i])
 		{
@@ -252,15 +396,24 @@ _bool CSkinnedMeshRenderer::TryUpdateSkinningCache(_uint* _outBoneCount) const
 	}
 
 	m_iCachedBoneCount = boneCount;
-	m_iCachedPoseHash = poseHash;
+	m_iCachedPoseHash = 0;
+	cache.cachedMeshLocalPose = meshLocalPose;
 	m_bSkinningCacheValid = true;
+	cache.animatedLocalBoundsValid = false;
+	cache.animatedWorldBoundsValid = false;
+	cache.meshWorldMatrixValid = false;
+	cache.uploadedPoseVersion = 0;
+	AdvanceCacheVersion(cache.skinningPoseVersion);
 	return true;
 }
-
 _bool CSkinnedMeshRenderer::UploadBoneMatricesFromCache() const
 {
 	if (!m_pBoneMatrixBuffer || m_vCachedBoneMatrices.size() != MAX_BONE)
 		return false;
+
+	auto& cache = GetSkinningRuntimeCache(this);
+	if (cache.skinningPoseVersion != 0ull && cache.uploadedPoseVersion == cache.skinningPoseVersion)
+		return true;
 
 	D3D11_MAPPED_SUBRESOURCE mappedRes = {};
 	const HRESULT hr = m_pContext->Map(m_pBoneMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedRes);
@@ -269,9 +422,9 @@ _bool CSkinnedMeshRenderer::UploadBoneMatricesFromCache() const
 
 	memcpy(mappedRes.pData, m_vCachedBoneMatrices.data(), sizeof(_float4x4) * MAX_BONE);
 	m_pContext->Unmap(m_pBoneMatrixBuffer, 0);
+	cache.uploadedPoseVersion = cache.skinningPoseVersion;
 	return true;
 }
-
 _bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3& _outMax) const
 {
 	if (!m_pMeshBuffer || !m_pMeshBuffer->m_pVertexSysMem)
@@ -285,54 +438,85 @@ _bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3&
 	if (!TryUpdateSkinningCache(&boneCount) || boneCount == 0)
 		return false;
 
-	auto* vertices = static_cast<const VertexSkinnedBuffer*>(m_pMeshBuffer->m_pVertexSysMem);
+	auto& cache = GetSkinningRuntimeCache(this);
 
-	_matrix meshWorld = XMMatrixIdentity();
-	if (m_pGameObject && m_pGameObject->Get_Transform())
-		meshWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
-
-	_vector minV = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 0.f);
-	_vector maxV = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 0.f);
-	_bool hasPoint = false;
-
-	for (_uint v = 0; v < info.vertextCount; ++v)
+	if (!cache.animatedLocalBoundsValid || cache.cachedLocalBoundsPoseVersion != cache.skinningPoseVersion)
 	{
-		const VertexSkinnedBuffer& src = vertices[v];
-		const _vector p = XMVectorSet(src.position.x, src.position.y, src.position.z, 1.f);
-		_vector skinned = XMVectorZero();
-		_float totalW = 0.f;
+		auto* vertices = static_cast<const VertexSkinnedBuffer*>(m_pMeshBuffer->m_pVertexSysMem);
+		_vector minV = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 0.f);
+		_vector maxV = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 0.f);
+		_bool hasPoint = false;
 
-		for (_uint k = 0; k < 4; ++k)
+		for (_uint v = 0; v < info.vertextCount; ++v)
 		{
-			const _uint idx = src.boneIndices[k];
-			const _float w = src.boneWeights[k];
-			if (w <= 0.f || idx >= boneCount)
+			const VertexSkinnedBuffer& src = vertices[v];
+			const _vector p = XMVectorSet(src.position.x, src.position.y, src.position.z, 1.f);
+			_vector skinned = XMVectorZero();
+			_float totalW = 0.f;
+
+			for (_uint k = 0; k < 4; ++k)
+			{
+				const _uint idx = src.boneIndices[k];
+				const _float w = src.boneWeights[k];
+				if (w <= 0.f || idx >= boneCount)
+					continue;
+
+				const _matrix skinMatrix = XMLoadFloat4x4(&m_vCachedSkinMatrices[idx]);
+				skinned = XMVectorAdd(skinned, XMVectorScale(XMVector3Transform(p, skinMatrix), w));
+				totalW += w;
+			}
+
+			if (totalW <= 0.f)
 				continue;
 
-			const _matrix skinMatrix = XMLoadFloat4x4(&m_vCachedSkinMatrices[idx]);
-			skinned = XMVectorAdd(skinned, XMVectorScale(XMVector3Transform(p, skinMatrix), w));
-			totalW += w;
+			skinned = XMVectorScale(skinned, 1.f / totalW);
+			hasPoint = true;
+			minV = XMVectorMin(minV, skinned);
+			maxV = XMVectorMax(maxV, skinned);
 		}
 
-		if (totalW <= 0.f)
-			continue;
+		if (!hasPoint)
+		{
+			cache.animatedLocalBoundsValid = false;
+			cache.animatedWorldBoundsValid = false;
+			cache.meshWorldMatrixValid = false;
+			return false;
+		}
 
-		skinned = XMVectorScale(skinned, 1.f / totalW);
-		const _vector worldSkinned = XMVector3Transform(skinned, meshWorld);
-
-		hasPoint = true;
-		minV = XMVectorMin(minV, worldSkinned);
-		maxV = XMVectorMax(maxV, worldSkinned);
+		XMStoreFloat3(&cache.cachedAnimatedLocalBoundsMin, minV);
+		XMStoreFloat3(&cache.cachedAnimatedLocalBoundsMax, maxV);
+		cache.cachedLocalBoundsPoseVersion = cache.skinningPoseVersion;
+		cache.animatedLocalBoundsValid = true;
+		cache.animatedWorldBoundsValid = false;
+		cache.meshWorldMatrixValid = false;
 	}
 
-	if (!hasPoint)
-		return false;
+	CTransform* meshTransform = (m_pGameObject) ? m_pGameObject->Get_Transform() : nullptr;
+	const _matrix meshWorld = meshTransform ? meshTransform->Get_WorldMatrix() : XMMatrixIdentity();
+	_float4x4 meshWorldMatrix = {};
+	XMStoreFloat4x4(&meshWorldMatrix, meshWorld);
 
-	XMStoreFloat3(&_outMin, minV);
-	XMStoreFloat3(&_outMax, maxV);
+	if (!cache.animatedWorldBoundsValid
+		|| cache.cachedWorldBoundsPoseVersion != cache.skinningPoseVersion
+		|| !cache.meshWorldMatrixValid
+		|| !IsSameFloat4x4(cache.cachedMeshWorldMatrix, meshWorldMatrix))
+	{
+		BuildWorldBoundsFromLocalAABB(
+			cache.cachedAnimatedLocalBoundsMin,
+			cache.cachedAnimatedLocalBoundsMax,
+			meshWorld,
+			cache.cachedAnimatedWorldBoundsMin,
+			cache.cachedAnimatedWorldBoundsMax);
+		cache.cachedWorldBoundsPoseVersion = cache.skinningPoseVersion;
+		cache.cachedMeshWorldMatrix = meshWorldMatrix;
+		cache.meshWorldMatrixValid = true;
+		cache.animatedWorldBoundsValid = true;
+	}
+
+	_outMin = cache.cachedAnimatedWorldBoundsMin;
+	_outMax = cache.cachedAnimatedWorldBoundsMax;
 	return true;
 }
-
 void CSkinnedMeshRenderer::CreateBoneHierachy(const vector<CSkinnedMeshBuffer::SKINNEDSKELETAL>& nodes, _int nodeIdx, CTransform* parentTf)
 {
 	const auto& n = nodes[nodeIdx];
