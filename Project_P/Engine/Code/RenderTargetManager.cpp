@@ -217,10 +217,6 @@ void CRenderTargetManager::Clear_GBuffer(const _bool _isEditor)
     Clear_RenderTarget(CRenderTarget::RTType::Normal, _isEditor);
     Clear_RenderTarget(CRenderTarget::RTType::Material, _isEditor);
     Clear_RenderTarget(CRenderTarget::RTType::Depth, _isEditor);
-    Clear_RenderTarget(CRenderTarget::RTType::Diffuse, _isEditor);
-    Clear_RenderTarget(CRenderTarget::RTType::Specular, _isEditor);
-    Clear_RenderTarget(CRenderTarget::RTType::ShadowMask, _isEditor);
-    Clear_RenderTarget(CRenderTarget::RTType::Combine, _isEditor);
 }
 
 ID3D11Texture2D* CRenderTargetManager::GetTexture(const CRenderTarget::RTType type, const _bool _isEditor) const

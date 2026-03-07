@@ -90,7 +90,7 @@ HRESULT CCamera::Initialize()
 	CMaterial* diffuseMat = Add_RectMaterial(CRenderTarget::RTType::Diffuse, L"DeferredDiffuse (Material)");
 	CMaterial* specularMat = Add_RectMaterial(CRenderTarget::RTType::Specular, L"DeferredSpecular (Material)");
 	CMaterial* shadowMaskMat = Add_RectMaterial(CRenderTarget::RTType::ShadowMask, L"ShadowMask (Material)");
-
+	CMaterial* lightingCombinedMat = Add_RectMaterial(CRenderTarget::RTType::LightingCombined, L"DeferredLightingCombined (Material)");
 	auto pushDisplay = [&](CRenderTarget::RTType type, CMaterial* mat)
 		{
 			RTDebugDisplay desc = {};
@@ -1042,6 +1042,124 @@ void CCamera::RenderObjectIDPass(const D3D11_VIEWPORT* vp)
 {
 }
 
+void CCamera::RenderLightingCombined(const D3D11_VIEWPORT* vp)
+{
+	CMaterial* lightingMat = Find_RectMaterial(CRenderTarget::RTType::LightingCombined);
+
+	if (!lightingMat || !m_pRectBuffer || !m_pInvViewProjCB || !m_pShadowCB)
+		return;
+
+	ID3D11DeviceContext* ctx = CGraphicDevice::GetInstance().Get_Context();
+	if (!ctx)
+		return;
+
+	auto& rtm = CRenderTargetManager::GetInstance();
+
+	ID3D11ShaderResourceView* srvAlbedo = rtm.GetSRV(CRenderTarget::RTType::Albedo, m_bIsEditor);
+	ID3D11ShaderResourceView* srvNormal = rtm.GetSRV(CRenderTarget::RTType::Normal, m_bIsEditor);
+	ID3D11ShaderResourceView* srvDepth = rtm.GetSRV(CRenderTarget::RTType::Depth, m_bIsEditor);
+	ID3D11ShaderResourceView* srvMaterial = rtm.GetSRV(CRenderTarget::RTType::Material, m_bIsEditor);
+	ID3D11ShaderResourceView* srvShadowDepth = rtm.GetSRV(CRenderTarget::RTType::ShadowDepth, false);
+	ID3D11RenderTargetView* rtvCombine = rtm.GetRTV(CRenderTarget::RTType::Combine, m_bIsEditor);
+
+	if (!srvAlbedo || !srvNormal || !srvDepth || !srvMaterial || !rtvCombine)
+		return;
+
+	ID3D11RenderTargetView* prevRTV = nullptr;
+	ID3D11DepthStencilView* prevDSV = nullptr;
+	ctx->OMGetRenderTargets(1, &prevRTV, &prevDSV);
+
+	D3D11_VIEWPORT prevVP = {};
+	_uint prevVPCount = 1;
+	ctx->RSGetViewports(&prevVPCount, &prevVP);
+
+	ID3D11DepthStencilState* prevDS = nullptr;
+	_uint prevStencilRef = 0;
+	ID3D11RasterizerState* prevRS = nullptr;
+	ID3D11BlendState* prevBS = nullptr;
+	_float prevBlendFactor[4] = {};
+	_uint prevSampleMask = 0;
+
+	ctx->OMGetDepthStencilState(&prevDS, &prevStencilRef);
+	ctx->RSGetState(&prevRS);
+	ctx->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
+
+	rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
+	ctx->OMSetRenderTargets(1, &rtvCombine, nullptr);
+
+	const D3D11_VIEWPORT* useVP = vp ? vp : ResolveViewport();
+	if (!useVP)
+		useVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
+	if (useVP)
+		ctx->RSSetViewports(1, useVP);
+
+	const _float clear[4] = { (_float)m_vBackgroundColor.r, (_float)m_vBackgroundColor.g, (_float)m_vBackgroundColor.b, 1.f };
+	ctx->ClearRenderTargetView(rtvCombine, clear);
+
+	if (m_pRTDebugDS)
+		ctx->OMSetDepthStencilState(m_pRTDebugDS, 0);
+	if (m_pRTDebugRS)
+		ctx->RSSetState(m_pRTDebugRS);
+
+	const _float bf[4] = { 0.f, 0.f, 0.f, 0.f };
+	ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF);
+
+	const _float W = useVP ? useVP->Width : (_float)CDisplay::GetInstance().Get_ScreenResolution().x;
+	const _float H = useVP ? useVP->Height : (_float)CDisplay::GetInstance().Get_ScreenResolution().y;
+
+	_matrix v = XMMatrixIdentity();
+	_matrix p = XMMatrixOrthographicOffCenterLH(0.f, W, H, 0.f, 0.f, 1.f);
+	_matrix w = XMMatrixScaling(W, H, 1.f) * XMMatrixTranslation(W * 0.5f, H * 0.5f, 0.f);
+	_float3 camPos = Get_Transform()->Get_Position();
+
+	InvViewProjCB invCB = { m_vVPInverseMatrix };
+	ctx->UpdateSubresource(m_pInvViewProjCB, 0, nullptr, &invCB, 0, 0);
+	ctx->PSSetConstantBuffers(5, 1, &m_pInvViewProjCB);
+
+	ShadowCB scb = {};
+	if (m_pMainLight && srvShadowDepth)
+	{
+		_matrix lv = XMLoadFloat4x4(&m_sMainLightMatrix.view);
+		_matrix lp = XMLoadFloat4x4(&m_sMainLightMatrix.proj);
+		_matrix lightVP = XMMatrixMultiply(lv, lp);
+
+		XMStoreFloat4x4(&scb.shadowViewProj, lightVP);
+
+		const _float shadowSize = (_float)CSceneManager::GetInstance().Get_LightSetting().shadowMapSize;
+		scb.invShadowMapSize = _float2(1.0f / shadowSize, 1.0f / shadowSize);
+		scb.bias = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().shadowBias;
+	}
+	ctx->UpdateSubresource(m_pShadowCB, 0, nullptr, &scb, 0, 0);
+	ctx->PSSetConstantBuffers(6, 1, &m_pShadowCB);
+
+	lightingMat->Bind_Matrix(w);
+	lightingMat->Bind_Camera(camPos, v, p, 0);
+
+	vector<_matrix>& lights = CSceneManager::GetInstance().Get_CrtScene()->Get_LightData();
+	lightingMat->Bind_Light(lights.empty() ? nullptr : lights.data(), (_uint)lights.size());
+
+	ID3D11ShaderResourceView* srvs[5] = { srvAlbedo, srvNormal, srvDepth, srvMaterial, srvShadowDepth };
+	ctx->PSSetShaderResources(0, 5, srvs);
+
+	m_pRectBuffer->Render();
+
+	rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
+
+	ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
+	if (prevVPCount > 0)
+		ctx->RSSetViewports(1, &prevVP);
+
+	ctx->OMSetDepthStencilState(prevDS, prevStencilRef);
+	ctx->RSSetState(prevRS);
+	ctx->OMSetBlendState(prevBS, prevBlendFactor, prevSampleMask);
+
+	Safe_Release(prevRTV);
+	Safe_Release(prevDSV);
+	Safe_Release(prevDS);
+	Safe_Release(prevRS);
+	Safe_Release(prevBS);
+}
+
 void CCamera::RenderLightingPass_ToDiffuse(const D3D11_VIEWPORT* vp)
 {
 	CMaterial* shadingMat = Find_RectMaterial(CRenderTarget::RTType::Diffuse);
@@ -1509,23 +1627,13 @@ void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 {
 	ID3D11DeviceContext* ctx = CGraphicDevice::GetInstance().Get_Context();
 
-	if (!ctx || !m_pRectBuffer || !m_pInvViewProjCB || !m_pShadowCB)
+	if (!ctx)
 		return;
 
 	auto& rtm = CRenderTargetManager::GetInstance();
 
 	ID3D11RenderTargetView* rtvShadowMask = rtm.GetRTV(CRenderTarget::RTType::ShadowMask, m_bIsEditor);
-	ID3D11ShaderResourceView* srvSceneDepth = rtm.GetSRV(CRenderTarget::RTType::Depth, m_bIsEditor);
-	ID3D11ShaderResourceView* srvShadowDepth = rtm.GetSRV(CRenderTarget::RTType::ShadowDepth, false);
-
-	if (!rtvShadowMask || !srvSceneDepth || !srvShadowDepth)
-		return;
-
-	CMaterial* shadowMaskMat = Find_RectMaterial(CRenderTarget::RTType::ShadowMask);
-	if (!shadowMaskMat)
-		return;
-
-	if (!m_pMainLight)
+	if (!rtvShadowMask)
 		return;
 
 	ID3D11RenderTargetView* prevRTV = nullptr;
@@ -1560,6 +1668,46 @@ void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 
 	const _float clear[4] = { 1.f, 1.f, 1.f, 1.f };
 	ctx->ClearRenderTargetView(rtvShadowMask, clear);
+
+	if (!m_pRectBuffer || !m_pInvViewProjCB || !m_pShadowCB)
+	{
+		ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
+		if (prevVPCount > 0)
+			ctx->RSSetViewports(1, &prevVP);
+
+		ctx->OMSetDepthStencilState(prevDS, prevStencilRef);
+		ctx->RSSetState(prevRS);
+		ctx->OMSetBlendState(prevBS, prevBlendFactor, prevSampleMask);
+
+		Safe_Release(prevRTV);
+		Safe_Release(prevDSV);
+		Safe_Release(prevDS);
+		Safe_Release(prevRS);
+		Safe_Release(prevBS);
+		return;
+	}
+
+	ID3D11ShaderResourceView* srvSceneDepth = rtm.GetSRV(CRenderTarget::RTType::Depth, m_bIsEditor);
+	ID3D11ShaderResourceView* srvShadowDepth = rtm.GetSRV(CRenderTarget::RTType::ShadowDepth, false);
+	CMaterial* shadowMaskMat = Find_RectMaterial(CRenderTarget::RTType::ShadowMask);
+
+	if (!srvSceneDepth || !srvShadowDepth || !shadowMaskMat || !m_pMainLight)
+	{
+		ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
+		if (prevVPCount > 0)
+			ctx->RSSetViewports(1, &prevVP);
+
+		ctx->OMSetDepthStencilState(prevDS, prevStencilRef);
+		ctx->RSSetState(prevRS);
+		ctx->OMSetBlendState(prevBS, prevBlendFactor, prevSampleMask);
+
+		Safe_Release(prevRTV);
+		Safe_Release(prevDSV);
+		Safe_Release(prevDS);
+		Safe_Release(prevRS);
+		Safe_Release(prevBS);
+		return;
+	}
 
 	if (m_pRTDebugDS)
 		ctx->OMSetDepthStencilState(m_pRTDebugDS, 0);

@@ -2029,6 +2029,15 @@ void CResources::Ready_GameResources()
 	}
 
 	{
+		CShader::SHADERDESC deferredLightingCombinedShaderDesc = { L"../EngineResources/Shader/DeferredLightingCombined.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"DeferredLightingCombined (Shader)", L"", &deferredLightingCombinedShaderDesc);
+
+		CShader* deferredLightingCombinedShader = LoadOnGame<CShader>(L"DeferredLightingCombined (Shader)");
+		CMaterial::MATERIALDESC deferredLightingCombinedMatDesc = { deferredLightingCombinedShader, false, true };
+		LoadResourceComplete_Game<CMaterial>(L"DeferredLightingCombined (Material)", L"", &deferredLightingCombinedMatDesc);
+	}
+
+	{
 		CShader::SHADERDESC deferredDiffuseShaderDesc = { L"../EngineResources/Shader/DeferredDiffuse.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
 		LoadResourceComplete_Game<CShader>(L"DeferredDiffuse (Shader)", L"", &deferredDiffuseShaderDesc);
 

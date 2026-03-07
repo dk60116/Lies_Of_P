@@ -21,7 +21,8 @@ public:
         ShadowDepth,
         Diffuse,
         Specular,
-        ShadowMask
+        ShadowMask,
+        LightingCombined
     };
 
 public:

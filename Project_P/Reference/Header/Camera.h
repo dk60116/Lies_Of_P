@@ -91,6 +91,7 @@ public:
 	void RenderObjectIDPass(const D3D11_VIEWPORT* vp);
 	void RenderLightingPass_ToDiffuse(const D3D11_VIEWPORT* vp);
 	void RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp);
+	void RenderLightingCombined(const D3D11_VIEWPORT* vp);
 	void RenderShadowDepthPass(const D3D11_VIEWPORT* vp);
 	void RenderShadowMaskPass(const D3D11_VIEWPORT* vp);
 	void RenderRTDebugDisplay(const _bool _renderingEditorPass);
