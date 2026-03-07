@@ -3,6 +3,7 @@
 #include "EditorCamera.h"
 #include <cstring>
 #include <unordered_map>
+#include <cstdlib>
 
 namespace
 {
@@ -31,20 +32,60 @@ namespace
 		vector<TransformLocalPose> cachedBoneLocalPoses = {};
 	};
 
-	unordered_map<const CSkinnedMeshRenderer*, SkinningRuntimeCache>& GetSkinningRuntimeCaches()
+	unordered_map<const CSkinnedMeshRenderer*, SkinningRuntimeCache>*& GetSkinningRuntimeCachesPtr()
 	{
-		static auto* caches = new unordered_map<const CSkinnedMeshRenderer*, SkinningRuntimeCache>();
-		return *caches;
+		static unordered_map<const CSkinnedMeshRenderer*, SkinningRuntimeCache>* caches = nullptr;
+		return caches;
+	}
+
+	bool& IsSkinningRuntimeCacheShutdown()
+	{
+		static _bool shutdown = false;
+		return shutdown;
+	}
+
+	void CleanupSkinningRuntimeCachesAtExit()
+	{
+		IsSkinningRuntimeCacheShutdown() = true;
+
+		auto*& caches = GetSkinningRuntimeCachesPtr();
+		delete caches;
+		caches = nullptr;
+	}
+
+	unordered_map<const CSkinnedMeshRenderer*, SkinningRuntimeCache>* GetSkinningRuntimeCaches()
+	{
+		if (IsSkinningRuntimeCacheShutdown())
+			return nullptr;
+
+		auto*& caches = GetSkinningRuntimeCachesPtr();
+		if (!caches)
+		{
+			caches = new unordered_map<const CSkinnedMeshRenderer*, SkinningRuntimeCache>();
+			atexit(&CleanupSkinningRuntimeCachesAtExit);
+		}
+
+		return caches;
 	}
 
 	SkinningRuntimeCache& GetSkinningRuntimeCache(const CSkinnedMeshRenderer* _renderer)
 	{
-		return GetSkinningRuntimeCaches()[_renderer];
+		static SkinningRuntimeCache dummyCache = {};
+
+		auto* caches = GetSkinningRuntimeCaches();
+		if (!caches)
+			return dummyCache;
+
+		return (*caches)[_renderer];
 	}
 
 	void RemoveSkinningRuntimeCache(const CSkinnedMeshRenderer* _renderer)
 	{
-		GetSkinningRuntimeCaches().erase(_renderer);
+		auto* caches = GetSkinningRuntimeCachesPtr();
+		if (!caches)
+			return;
+
+		caches->erase(_renderer);
 	}
 
 	void AdvanceCacheVersion(uint64_t& _version)
@@ -744,3 +785,6 @@ const _float CSkinnedMeshRenderer::GetScaleFactor() const
 {
 	return m_pMeshBuffer->Get_ScaleFactor();
 }
+
+
+

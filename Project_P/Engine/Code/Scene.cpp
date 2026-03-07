@@ -805,6 +805,8 @@ void CScene::SceneRelease()
 
 	m_lCameraList.clear();
 	m_lLightList.clear();
+	for (TRAVERSAL_ITER(m_lCanvasList, it))
+		Safe_Release(*it);
 	m_lCanvasList.clear();
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
@@ -2569,3 +2571,4 @@ ID3D11BlendState* CScene::Get_NoneBlendingState() const
 {
 	return m_pNoneBlendingState;
 }
+
