@@ -619,8 +619,8 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 	const _float3 camPos = cPos.toFloat3();
 
 	const _matrix matWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
-	const _matrix matView = _cam->Get_ViewMatrix();
-	const _matrix matProj = _cam->Get_ProjectionMatrix();
+	const _matrix matView = _cam->GetViewMatrix();
+	const _matrix matProj = _cam->GetProjectionMatrix();
 
 	_uint boneCount = 0;
 	if (!TryUpdateSkinningCache(&boneCount))

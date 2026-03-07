@@ -100,7 +100,8 @@ namespace
 const ColorValue CCamera::s_vDefaultCameraColor = ColorValue(49, 77, 121, 255);
 
 CCamera::CCamera()
-	: m_eCamViewMode()
+	: m_eClearFlag(ClearFlags::Skybox)
+	, m_eCamViewMode(ViewMode::Perspective)
 	, m_vViewMatrix()
 	, m_vProjMatrix()
 	, m_vVPInverseMatrix()
@@ -152,6 +153,7 @@ CComponent* CCamera::Clone() const
 {
 	CCamera* clone = new CCamera();
 
+	clone->m_eClearFlag = this->m_eClearFlag;
 	clone->m_eCamViewMode = this->m_eCamViewMode;
 	clone->m_vBackgroundColor = s_vDefaultCameraColor;
 	clone->m_fAspect = this->m_fAspect;
@@ -360,24 +362,34 @@ void CCamera::OnDestroy()
 		scene->Remove_Camera(this);
 }
 
-_matrix CCamera::Get_ViewMatrix() const
+_matrix CCamera::GetViewMatrix() const
 {
 	_matrix result = XMLoadFloat4x4(&m_vViewMatrix);
 	return result;
 }
 
-_matrix CCamera::Get_ProjectionMatrix() const
+_matrix CCamera::GetProjectionMatrix() const
 {
 	_matrix result = XMLoadFloat4x4(&m_vProjMatrix);
 	return result;
 }
 
-const CCamera::ViewMode CCamera::Get_ViewMode() const
+const CCamera::ClearFlags CCamera::GetClearFlags() const
+{
+	return m_eClearFlag;
+}
+
+void CCamera::SetClearFlags(const ClearFlags _flag)
+{
+	m_eClearFlag = _flag;
+}
+
+const CCamera::ViewMode CCamera::GetViewMode() const
 {
 	return m_eCamViewMode;
 }
 
-void CCamera::Set_ViewMode(const ViewMode _mode)
+void CCamera::SetViewMode(const ViewMode _mode)
 {
 	m_eCamViewMode = _mode;
 }
@@ -397,7 +409,7 @@ const ColorValue& CCamera::Get_BackgroundColor() const
 	return m_vBackgroundColor;
 }
 
-void CCamera::Set_BackgroundColor(const ColorValue& _color)
+void CCamera::SetBackgroundColor(const ColorValue& _color)
 {
 	m_vBackgroundColor = _color;
 }
@@ -428,7 +440,7 @@ void CCamera::Bind_ProjectionMatrix()
 {
 	switch (m_eCamViewMode)
 	{
-	case CCamera::PERSPECTIVE:
+	case CCamera::ViewMode::Perspective:
 	{
 		_matrix projMat = XMMatrixPerspectiveFovLH
 		(
@@ -441,7 +453,7 @@ void CCamera::Bind_ProjectionMatrix()
 	}
 	break;
 
-	case CCamera::ORTHOGRAPHIC:
+	case CCamera::ViewMode::Orthographic:
 	{
 		const _float fHalfHeight = m_fSize * 0.5f;
 		const _float fHalfWidth = fHalfHeight * m_fAspect;
@@ -461,7 +473,7 @@ void CCamera::Bind_ProjectionMatrix()
 		break;
 	}
 
-	_matrix inv = XMMatrixInverse(nullptr, Get_ViewMatrix() * Get_ProjectionMatrix());
+	_matrix inv = XMMatrixInverse(nullptr, GetViewMatrix() * GetProjectionMatrix());
 	XMStoreFloat4x4(&m_vVPInverseMatrix, inv);
 }
 
@@ -584,8 +596,8 @@ void CCamera::RenderMesh()
 
 void CCamera::Update_WorldFrustum()
 {
-	_matrix cullingView = Get_ViewMatrix();
-	_matrix cullingProj = Get_ProjectionMatrix();
+	_matrix cullingView = GetViewMatrix();
+	_matrix cullingProj = GetProjectionMatrix();
 
 	if (m_bIsEditor)
 	{
@@ -593,8 +605,8 @@ void CCamera::Update_WorldFrustum()
 		{
 			if (CCamera* selectedCamera = selected->GetComponent<CCamera>())
 			{
-				cullingView = selectedCamera->Get_ViewMatrix();
-				cullingProj = selectedCamera->Get_ProjectionMatrix();
+				cullingView = selectedCamera->GetViewMatrix();
+				cullingProj = selectedCamera->GetProjectionMatrix();
 			}
 		}
 	}
@@ -2170,7 +2182,7 @@ CPhysics::Ray CCamera::ScreenPointToRay_Editor(const vector2Int& _pixel, _float 
 	_float3 origin, dir;
 	XMStoreFloat3(&origin, ptNear);
 
-	if (m_eCamViewMode == PERSPECTIVE)
+	if (m_eCamViewMode == ViewMode::Perspective)
 	{
 		_vector camPos = Get_Transform()->Get_WorldMatrix().r[3];
 		_vector rayDir = XMVectorSubtract(ptFar, camPos);

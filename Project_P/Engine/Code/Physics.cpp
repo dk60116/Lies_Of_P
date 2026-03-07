@@ -749,8 +749,8 @@ void CPhysics::RenderRaycastDebugDisplay()
 		return;
 
 	_float3 camPos = _float3();
-	_matrix matView = camera->Get_ViewMatrix();
-	_matrix matProj = camera->Get_ProjectionMatrix();
+	_matrix matView = camera->GetViewMatrix();
+	_matrix matProj = camera->GetProjectionMatrix();
 
 	auto buildLineWorld = [] (const vector3& a, const vector3& b, _matrix& outWorld)
 	{

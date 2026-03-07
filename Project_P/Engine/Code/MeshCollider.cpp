@@ -288,8 +288,8 @@ void CMeshCollider::Render_Gizmo()
     const _matrix gizmoWorld = centerOffset * Get_Transform()->Get_WorldMatrix();
 
     _float3 camPos = _float3();
-    _matrix matView = cam->Get_ViewMatrix();
-    _matrix matProj = cam->Get_ProjectionMatrix();
+    _matrix matView = cam->GetViewMatrix();
+    _matrix matProj = cam->GetProjectionMatrix();
 
     ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
     if (!context)

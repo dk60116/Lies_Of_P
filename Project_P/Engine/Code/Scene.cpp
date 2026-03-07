@@ -76,8 +76,8 @@ namespace
 
 		_vector camPosV = camera->Get_Transform()->Get_Position().toXMVector();
 		XMStoreFloat3(&outCamPos, camPosV);
-		outView = camera->Get_ViewMatrix();
-		outProj = camera->Get_ProjectionMatrix();
+		outView = camera->GetViewMatrix();
+		outProj = camera->GetProjectionMatrix();
 		return true;
 	}
 
@@ -210,8 +210,8 @@ namespace
 		if (!selectedCamera || selectedCamera == camera)
 			return;
 
-		_matrix selectedView = selectedCamera->Get_ViewMatrix();
-		_matrix selectedProj = selectedCamera->Get_ProjectionMatrix();
+		_matrix selectedView = selectedCamera->GetViewMatrix();
+		_matrix selectedProj = selectedCamera->GetProjectionMatrix();
 		_matrix invVP = XMMatrixInverse(nullptr, selectedView * selectedProj);
 
 		const _vector clipCorners[8] =

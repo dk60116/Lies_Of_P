@@ -58,7 +58,7 @@ void CSkyBox::RenderSky(CCamera* _camera)
 
 	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
 	
-	_matrix viewMat = _camera->Get_ViewMatrix();
+	_matrix viewMat = _camera->GetViewMatrix();
 
 	_float4x4 viewFloat4x4;
 	XMStoreFloat4x4(&viewFloat4x4, viewMat);
@@ -74,7 +74,7 @@ void CSkyBox::RenderSky(CCamera* _camera)
 	(
 		_camera->Get_Transform()->Get_Position(),
 		viewNoTrans,
-		_camera->Get_ProjectionMatrix()
+		_camera->GetProjectionMatrix()
 	);
 
 	__super::Render(); 

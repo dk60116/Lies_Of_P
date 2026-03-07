@@ -109,8 +109,8 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 	vector3 cPos = _cam->Get_Transform()->Get_Position();
 	_float3 camPos = cPos.toFloat3();
 	_matrix matWorld = Get_Transform()->Get_WorldMatrix();
-	_matrix matView = _cam->Get_ViewMatrix();
-	_matrix matProj = _cam->Get_ProjectionMatrix();
+	_matrix matView = _cam->GetViewMatrix();
+	_matrix matProj = _cam->GetProjectionMatrix();
 
 	// ̴ + ؽó +   ε
 	m_pMaterial->Bind_Matrix(matWorld);

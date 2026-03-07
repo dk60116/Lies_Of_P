@@ -163,8 +163,8 @@ void CBoxCollider::Render_Gizmo()
     };
 
     _float3 camPos = _float3();
-    _matrix matView = cam->Get_ViewMatrix();
-    _matrix matProj = cam->Get_ProjectionMatrix();
+    _matrix matView = cam->GetViewMatrix();
+    _matrix matProj = cam->GetProjectionMatrix();
 
     for (_uint i = 0; i < 12; ++i)
     {

@@ -320,7 +320,7 @@ void CTopToolBar::Show2DButton()
 		CCamera* editorCam = CSceneManager::GetInstance().Get_EditorCamera();
 		editorCam->Get_Transform()->Set_PositionZ(-999999.f);
 		editorCam->Get_Transform()->Set_EulerAngles(vector3::zero());
-		editorCam->Set_ViewMode(CCamera::ViewMode::ORTHOGRAPHIC);
+		editorCam->SetViewMode(CCamera::ViewMode::Orthographic);
 	}
 }
 

@@ -147,8 +147,8 @@ void CCapsuleCollider::Render_Gizmo()
     const _matrix world = centerOffset * objectWorld;
 
     _float3 camPos = _float3();
-    _matrix matView = cam->Get_ViewMatrix();
-    _matrix matProj = cam->Get_ProjectionMatrix();
+    _matrix matView = cam->GetViewMatrix();
+    _matrix matProj = cam->GetProjectionMatrix();
 
     auto drawSegment = [&](const _vector& p0, const _vector& p1)
     {

@@ -101,8 +101,8 @@ void CTransform::Render_Gizmo()
 
     CCamera* editorCam = CSceneManager::GetInstance().Get_CrtScene()->Get_EditorCamera();
 
-    _matrix viewMatrix = editorCam->Get_ViewMatrix();
-    _matrix projMatrix = editorCam->Get_ProjectionMatrix();
+    _matrix viewMatrix = editorCam->GetViewMatrix();
+    _matrix projMatrix = editorCam->GetProjectionMatrix();
 
     _matrix worldMatrix = XMLoadFloat4x4(&m_vMatWorld);
 

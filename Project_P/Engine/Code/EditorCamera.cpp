@@ -141,7 +141,7 @@ void CEditorCamera::Update_Editor()
 
 	if (_wheel != 0)
 	{
-		if (m_eCamViewMode == ViewMode::PERSPECTIVE)
+		if (m_eCamViewMode == ViewMode::Perspective)
 		{
 			if (!isShift)
 				camTransform.Add_Position(camTransform.Get_Directions().forward * _wheel * DELTA_TIME * m_sOptions.zoomSpeed);

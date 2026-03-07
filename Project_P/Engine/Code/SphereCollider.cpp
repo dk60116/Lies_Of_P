@@ -156,8 +156,8 @@ void CSphereCollider::Render_Gizmo()
     const vector3 camUp = normalizeOr(cam->Get_Transform()->Get_Directions().up, vector3::up());
 
     _float3 camPos = _float3();
-    _matrix matView = cam->Get_ViewMatrix();
-    _matrix matProj = cam->Get_ProjectionMatrix();
+    _matrix matView = cam->GetViewMatrix();
+    _matrix matProj = cam->GetProjectionMatrix();
 
     auto drawCircle = [&] (const vector3& axisA, const vector3& axisB)
     {

@@ -36,7 +36,8 @@ class ENGINE_DLL CCamera : public CComponent
 	};
 
 public:
-	enum ViewMode { PERSPECTIVE, ORTHOGRAPHIC };
+	enum class ClearFlags { Skybox, SolidColor, DepthOnly, DontClear };
+	enum class ViewMode { Perspective, Orthographic };
 
 protected:
 	struct OctreeEntry;
@@ -58,14 +59,16 @@ public:
 	void OnDestroy() override;
 
 public:
-	_matrix Get_ViewMatrix() const;
-	_matrix Get_ProjectionMatrix() const;
-	const ViewMode Get_ViewMode() const;
-	void Set_ViewMode(const ViewMode _mode);
+	_matrix GetViewMatrix() const;
+	_matrix GetProjectionMatrix() const;
+	const ClearFlags GetClearFlags() const;
+	void SetClearFlags(const ClearFlags _flag);
+	const ViewMode GetViewMode() const;
+	void SetViewMode(const ViewMode _mode);
 	void SetNear(const _float _value);
 	void SetFar(const _float _value);
 	const ColorValue& Get_BackgroundColor() const;
-	void Set_BackgroundColor(const ColorValue& _color);
+	void SetBackgroundColor(const ColorValue& _color);
 
 	void Add_RenderTarget_Mesh(class CRenderer* _mesh);
 	void Add_RenderTarget_UI(class CUI* _ui);
@@ -117,6 +120,7 @@ protected:
 	void Find_MainLight();
 
 protected:
+	ClearFlags m_eClearFlag;
 	ViewMode m_eCamViewMode;
 	_float4x4 m_vViewMatrix, m_vProjMatrix, m_vVPInverseMatrix;
 

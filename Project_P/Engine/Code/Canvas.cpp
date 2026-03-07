@@ -67,8 +67,8 @@ void CCanvas::Render_Editor()
 	vector3 cPos = cam->Get_Transform()->Get_Position();
 	_float3 camPos = cPos.toFloat3();
 	_matrix matWorld = Get_Transform()->Get_WorldMatrix();
-	_matrix matView = cam->Get_ViewMatrix();
-	_matrix matProj = cam->Get_ProjectionMatrix();
+	_matrix matView = cam->GetViewMatrix();
+	_matrix matProj = cam->GetProjectionMatrix();
 
 	if (m_pLineMat)
 	{
