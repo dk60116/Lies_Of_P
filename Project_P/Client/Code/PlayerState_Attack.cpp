@@ -34,70 +34,6 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
     m_iComboLimit[2] = 15;
     m_iComboLimit[3] = 16;
 
-    const _float endRate = 0.78f;
-
-    for (_int i = 1; i <= 4; ++i)
-    {
-        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_Light_0" + to_wstring(i) + L" (Animation Clip)");
-
-        const wstring clipName = ealClip->Get_ResourceName();
-        const _uint frameCount = ealClip->Get_FrameCount();
-        const _uint termFrame = m_iComboTerm[i - 1];
-        const _uint limitFrame = m_iComboLimit[i - 1];
-        const _uint endFrame = ealClip->Get_NormalizedFrameIndex(endRate);
-
-        {
-            CAnimationClip::ActionTrigger at = { 1, L"LightAttack0" + to_wstring(i) + L"_Enter" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Enter", [this, i]()
-                {
-                    ++m_iCrtCombo;
-                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
-                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
-                    m_bCanContinue = true;
-                    m_bPressedContinue = false;
-                    m_bUnderTerm = true;
-                    m_bUnderLimit = true;
-
-                    if (i > 1)
-                        m_pCtx->SetCanTurn(true);
-                });
-        }
-        
-        // Continue Term
-        {
-            CAnimationClip::ActionTrigger at = { termFrame, L"LightAttack0" + to_wstring(i) + L"_Term" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Term", [this]()
-                {
-                    m_bUnderTerm = false;
-
-                    if (m_bPressedContinue)
-                        ContinueCombo();
-                });
-        }
-
-        // Continue Limit
-        {
-            CAnimationClip::ActionTrigger at = { limitFrame, L"LightAttack0" + to_wstring(i) + L"_Limit" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Limit", [this]()
-                {
-                    m_bCanContinue = false;
-                    m_bUnderLimit = false;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { endFrame, L"LightAttack0" + to_wstring(i) + L"_Exit" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"LightAttack0" + to_wstring(i) + L"_Exit", [this]()
-                {
-                    Exit();
-                });
-        }
-    }
-
     m_iComboTerm_S[0] = 9;
     m_iComboTerm_S[1] = 22;
     m_iComboTerm_S[2] = 55;
@@ -106,663 +42,172 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
     m_iComboLimit_S[1] = 25;
     m_iComboLimit_S[2] = 62;
 
+    const _float endRate = 0.78f;
+
+    const auto registerActionTrigger = [this](CAnimationClip* clip, const _uint frame, const wstring& triggerName, const function<void()>& handler)
+    {
+        CAnimationClip::ActionTrigger at = { frame, triggerName };
+        clip->Add_ActionTrigger(at);
+        m_pCtx->Animator()->RegisterActionHandler(triggerName, handler);
+    };
+
+    const auto beginCombo = [this](const _bool canTurnOnStart, const function<void()>& onStart)
+    {
+        ++m_iCrtCombo;
+
+        if (onStart)
+            onStart();
+
+        m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
+        m_pCtx->Animator()->SetBool(L"comboContinue", false);
+        m_bCanContinue = true;
+        m_bPressedContinue = false;
+        m_bUnderTerm = true;
+        m_bUnderLimit = true;
+
+        if (canTurnOnStart)
+            m_pCtx->SetCanTurn(true);
+    };
+
+    const auto registerComboWindow = [this, &registerActionTrigger](
+        CAnimationClip* clip,
+        const _uint termFrame,
+        const wstring& termTrigger,
+        const _uint limitFrame,
+        const wstring& limitTrigger)
+    {
+        registerActionTrigger(clip, termFrame, termTrigger, [this]()
+            {
+                m_bUnderTerm = false;
+
+                if (m_bPressedContinue)
+                    ContinueCombo();
+            });
+
+        registerActionTrigger(clip, limitFrame, limitTrigger, [this]()
+            {
+                m_bCanContinue = false;
+                m_bUnderLimit = false;
+            });
+    };
+
+    const auto registerComboClip = [this, endRate, &registerActionTrigger, &beginCombo, &registerComboWindow](
+        const wstring& clipName,
+        const wstring& startTrigger,
+        const wstring& termTrigger,
+        const wstring& limitTrigger,
+        const wstring& endTrigger,
+        const _uint termFrame,
+        const _uint limitFrame,
+        const _bool canTurnOnStart,
+        const function<void()>& onStart) -> CAnimationClip*
+    {
+        CAnimationClip* clip = CResources::GetInstance().LoadOnScene<CAnimationClip>(clipName);
+        const _uint endFrame = clip->Get_NormalizedFrameIndex(endRate);
+
+        registerActionTrigger(clip, 1, startTrigger, [beginCombo, canTurnOnStart, onStart]()
+            {
+                beginCombo(canTurnOnStart, onStart);
+            });
+        registerComboWindow(clip, termFrame, termTrigger, limitFrame, limitTrigger);
+        registerActionTrigger(clip, endFrame, endTrigger, [this]()
+            {
+                Exit();
+            });
+
+        return clip;
+    };
+
+    for (_int i = 1; i <= 4; ++i)
+    {
+        const wstring attackIndex = to_wstring(i);
+
+        registerComboClip(
+            L"Eve_Attack_Light_0" + attackIndex + L" (Animation Clip)",
+            L"LightAttack0" + attackIndex + L"_Enter",
+            L"LightAttack0" + attackIndex + L"_Term",
+            L"LightAttack0" + attackIndex + L"_Limit",
+            L"LightAttack0" + attackIndex + L"_Exit",
+            m_iComboTerm[i - 1],
+            m_iComboLimit[i - 1],
+            i > 1,
+            nullptr);
+    }
+
     for (_int i = 1; i <= 3; ++i)
     {
-        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_Strong_0" + to_wstring(i) + L" (Animation Clip)");
+        const wstring attackIndex = to_wstring(i);
 
-        const wstring clipName = ealClip->Get_ResourceName();
-        const _uint frameCount = ealClip->Get_FrameCount();
-        const _uint termFrame = m_iComboTerm_S[i - 1];
-        const _uint limitFrame = m_iComboLimit_S[i - 1];
-        const _uint endFrame = ealClip->Get_NormalizedFrameIndex(endRate);
-
-        {
-            CAnimationClip::ActionTrigger at = { 1, L"StrongAttack_0" + to_wstring(i) + L"_Enter" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"StrongAttack_0" + to_wstring(i) + L"_Enter", [this, i]()
-                {
-                    ++m_iCrtCombo;
-                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
-                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
-                    m_bCanContinue = true;
-                    m_bPressedContinue = false;
-                    m_bUnderTerm = true;
-                    m_bUnderLimit = true;
-
-                    if (i > 1)
-                        m_pCtx->SetCanTurn(true);
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { endFrame, L"StrongAttack_0" + to_wstring(i) + L"_Exit" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"StrongAttack_0" + to_wstring(i) + L"_Exit", [this]()
-                {
-                    Exit();
-                });
-        }
-
-        // Continue Term
-        {
-            CAnimationClip::ActionTrigger at = { termFrame, L"StrongAttack_0" + to_wstring(i) + L"_Term" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"StrongAttack_0" + to_wstring(i) + L"_Term", [this]()
-                {
-                    m_bUnderTerm = false;
-
-                    if (m_bPressedContinue)
-                        ContinueCombo();
-                });
-        }
-
-        // Continue Limit
-        {
-            CAnimationClip::ActionTrigger at = { limitFrame, L"StrongAttack_0" + to_wstring(i) + L"_Limit" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"StrongAttack_0" + to_wstring(i) + L"_Limit", [this]()
-                {
-                    m_bCanContinue = false;
-                    m_bUnderLimit = false;
-                });
-        }
+        registerComboClip(
+            L"Eve_Attack_Strong_0" + attackIndex + L" (Animation Clip)",
+            L"StrongAttack_0" + attackIndex + L"_Enter",
+            L"StrongAttack_0" + attackIndex + L"_Term",
+            L"StrongAttack_0" + attackIndex + L"_Limit",
+            L"StrongAttack_0" + attackIndex + L"_Exit",
+            m_iComboTerm_S[i - 1],
+            m_iComboLimit_S[i - 1],
+            i > 1,
+            nullptr);
     }
 
-    // L1->S2
+    struct AttackSequenceDesc
     {
-        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_LS12 (Animation Clip)");
+        const wchar_t* clipName;
+        const wchar_t* triggerPrefix;
+        _uint termFrame;
+        _uint limitFrame;
+        _bool canTurnOnStart;
+    };
 
-        const _uint endFrame = ealClip->Get_NormalizedFrameIndex(0.78f);
-
-        {
-            CAnimationClip::ActionTrigger at = { 1, L"Eve_Attack_LS12_Start" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS12_Start", [this]()
-                {
-                    ++m_iCrtCombo;
-                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
-                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
-                    m_bCanContinue = true;
-                    m_bPressedContinue = false;
-                    m_bUnderTerm = true;
-                    m_bUnderLimit = true;
-
-                    m_pCtx->SetCanTurn(true);
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 20, L"Eve_Attack_LS12_Term" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS12_Term", [this]()
-                {
-                    m_bUnderTerm = false;
-
-                    if (m_bPressedContinue)
-                        ContinueCombo();
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 24, L"Eve_Attack_LS12_Limit" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS12_Limit", [this]()
-                {
-                    m_bCanContinue = false;
-                    m_bUnderLimit = false;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { endFrame, L"Eve_Attack_LS12_End" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS12_End", [this]()
-                {
-                    Exit();
-                });
-        }
-    }
-
-    // S2->S3
+    const AttackSequenceDesc attackSequenceDescs[] =
     {
-        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_SS23 (Animation Clip)");
+        { L"Eve_Attack_LS12 (Animation Clip)", L"Eve_Attack_LS12", 20, 24, true },
+        { L"Eve_Attack_SS23 (Animation Clip)", L"Eve_Attack_SS23", 27, 32, false },
+        { L"Eve_Attack_SS34 (Animation Clip)", L"Eve_Attack_SS34", 16, 20, false },
+        { L"Eve_Attack_SL23 (Animation Clip)", L"Eve_Attack_SL23", 18, 24, false },
+        { L"Eve_Attack_SL12 (Animation Clip)", L"Eve_Attack_SL12", 15, 18, false },
+        { L"Eve_Attack_LS23 (Animation Clip)", L"Eve_Attack_LS23", 18, 21, false },
+        { L"Eve_Attack_SL34 (Animation Clip)", L"Eve_Attack_SL34", 20, 23, false },
+        { L"Eve_Attack_LS45 (Animation Clip)", L"Eve_Attack_LS45", 32, 35, false },
+        { L"Eve_Attack_LLS23 (Animation Clip)", L"Eve_Attack_LLS23", 21, 24, false },
+        { L"Eve_Attack_LLLS34 (Animation Clip)", L"Eve_Attack_LLLS34", 21, 24, false }
+    };
 
-        const _uint endFrame = ealClip->Get_NormalizedFrameIndex(endRate);
-
-        {
-            CAnimationClip::ActionTrigger at = { 1, L"Eve_Attack_SS23_Start" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SS23_Start", [this]()
-                {
-                    ++m_iCrtCombo;
-                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
-                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
-                    m_bCanContinue = true;
-                    m_bPressedContinue = false;
-                    m_bUnderTerm = true;
-                    m_bUnderLimit = true;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 27, L"Eve_Attack_SS23_Term" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SS23_Term", [this]()
-                {
-                    m_bUnderTerm = false;
-
-                    if (m_bPressedContinue)
-                        ContinueCombo();
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 32, L"Eve_Attack_SS23_Limit" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SS23_Limit", [this]()
-                {
-                    m_bCanContinue = false;
-                    m_bUnderLimit = false;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { endFrame, L"Eve_Attack_SS23_End" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SS23_End", [this]()
-                {
-                    Exit();
-                });
-        }
-    }
-
-    // S3->S4
+    for (const AttackSequenceDesc& desc : attackSequenceDescs)
     {
-        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_SS34 (Animation Clip)");
+        const wstring prefix = desc.triggerPrefix;
 
-        const _uint endFrame = ealClip->Get_NormalizedFrameIndex(endRate);
-
-        {
-            CAnimationClip::ActionTrigger at = { 1, L"Eve_Attack_SS34_Start" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SS34_Start", [this]()
-                {
-                    ++m_iCrtCombo;
-                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
-                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
-                    m_bCanContinue = true;
-                    m_bPressedContinue = false;
-                    m_bUnderTerm = true;
-                    m_bUnderLimit = true;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 16, L"Eve_Attack_SS34_Term" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SS34_Term", [this]()
-                {
-                    m_bUnderTerm = false;
-
-                    if (m_bPressedContinue)
-                        ContinueCombo();
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 20, L"Eve_Attack_SS34_Limit" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SS34_Limit", [this]()
-                {
-                    m_bCanContinue = false;
-                    m_bUnderLimit = false;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { endFrame, L"Eve_Attack_SS34_End" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SS34_End", [this]()
-                {
-                    Exit();
-                });
-        }
+        registerComboClip(
+            desc.clipName,
+            prefix + L"_Start",
+            prefix + L"_Term",
+            prefix + L"_Limit",
+            prefix + L"_End",
+            desc.termFrame,
+            desc.limitFrame,
+            desc.canTurnOnStart,
+            nullptr);
     }
 
-    // S2->L3
-    {
-        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_SL23 (Animation Clip)");
-
-        const _uint endFrame = ealClip->Get_NormalizedFrameIndex(endRate);
-
+    CAnimationClip* thrustClip = registerComboClip(
+        L"Eve_Attack_Thrust (Animation Clip)",
+        L"Eve_Attack_Thrust_Start",
+        L"Eve_Attack_Thrust_Term",
+        L"Eve_Attack_Thrust_Limit",
+        L"Eve_Attack_Thrust_End",
+        21,
+        24,
+        false,
+        [this]()
         {
-            CAnimationClip::ActionTrigger at = { 1, L"Eve_Attack_SL23_Start" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL23_Start", [this]()
-                {
-                    ++m_iCrtCombo;
-                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
-                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
-                    m_bCanContinue = true;
-                    m_bPressedContinue = false;
-                    m_bUnderTerm = true;
-                    m_bUnderLimit = true;
-                });
-        }
+            m_bThrust = true;
+        });
 
+    registerActionTrigger(thrustClip, 11, L"Eve_Attack_Thrust_Stop", [this]()
         {
-            CAnimationClip::ActionTrigger at = { 18, L"Eve_Attack_SL23_Term" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL23_Term", [this]()
-                {
-                    m_bUnderTerm = false;
-
-                    if (m_bPressedContinue)
-                        ContinueCombo();
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 24, L"Eve_Attack_SL23_Limit" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL23_Limit", [this]()
-                {
-                    m_bCanContinue = false;
-                    m_bUnderLimit = false;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { endFrame, L"Eve_Attack_SL23_End" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL23_End", [this]()
-                {
-                    Exit();
-                });
-        }
-    }
-
-    // S1->L2
-    {
-        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_SL12 (Animation Clip)");
-
-        const _uint endFrame = ealClip->Get_NormalizedFrameIndex(endRate);
-
-        {
-            CAnimationClip::ActionTrigger at = { 1, L"Eve_Attack_SL12_Start" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL12_Start", [this]()
-                {
-                    ++m_iCrtCombo;
-                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
-                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
-                    m_bCanContinue = true;
-                    m_bPressedContinue = false;
-                    m_bUnderTerm = true;
-                    m_bUnderLimit = true;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 15, L"Eve_Attack_SL12_Term" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL12_Term", [this]()
-                {
-                    m_bUnderTerm = false;
-
-                    if (m_bPressedContinue)
-                        ContinueCombo();
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 18, L"Eve_Attack_SL12_Limit" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL12_Limit", [this]()
-                {
-                    m_bCanContinue = false;
-                    m_bUnderLimit = false;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { endFrame, L"Eve_Attack_SL12_End" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL12_End", [this]()
-                {
-                    Exit();
-                });
-        }
-    }
-
-    // L2->S3
-    {
-        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_LS23 (Animation Clip)");
-
-        const _uint endFrame = ealClip->Get_NormalizedFrameIndex(endRate);
-
-        {
-            CAnimationClip::ActionTrigger at = { 1, L"Eve_Attack_LS23_Start" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS23_Start", [this]()
-                {
-                    ++m_iCrtCombo;
-                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
-                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
-                    m_bCanContinue = true;
-                    m_bPressedContinue = false;
-                    m_bUnderTerm = true;
-                    m_bUnderLimit = true;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 18, L"Eve_Attack_LS23_Term" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS23_Term", [this]()
-                {
-                    m_bUnderTerm = false;
-
-                    if (m_bPressedContinue)
-                        ContinueCombo();
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 21, L"Eve_Attack_LS23_Limit" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS23_Limit", [this]()
-                {
-                    m_bCanContinue = false;
-                    m_bUnderLimit = false;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { endFrame, L"Eve_Attack_LS23_End" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS23_End", [this]()
-                {
-                    Exit();
-                });
-        }
-    }
-
-    // S3->L4
-    {
-        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_SL34 (Animation Clip)");
-
-        const _uint endFrame = ealClip->Get_NormalizedFrameIndex(endRate);
-
-        {
-            CAnimationClip::ActionTrigger at = { 1, L"Eve_Attack_SL34_Start" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL34_Start", [this]()
-                {
-                    ++m_iCrtCombo;
-                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
-                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
-                    m_bCanContinue = true;
-                    m_bPressedContinue = false;
-                    m_bUnderTerm = true;
-                    m_bUnderLimit = true;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 20, L"Eve_Attack_SL34_Term" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL34_Term", [this]()
-                {
-                    m_bUnderTerm = false;
-
-                    if (m_bPressedContinue)
-                        ContinueCombo();
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 23, L"Eve_Attack_SL34_Limit" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL34_Limit", [this]()
-                {
-                    m_bCanContinue = false;
-                    m_bUnderLimit = false;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { endFrame, L"Eve_Attack_SL34_End" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_SL34_End", [this]()
-                {
-                    Exit();
-                });
-        }
-    }
-
-    // L4->S5
-    {
-        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_LS45 (Animation Clip)");
-
-        const _uint endFrame = ealClip->Get_NormalizedFrameIndex(endRate);
-
-        {
-            CAnimationClip::ActionTrigger at = { 1, L"Eve_Attack_LS45_Start" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS45_Start", [this]()
-                {
-                    ++m_iCrtCombo;
-                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
-                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
-                    m_bCanContinue = true;
-                    m_bPressedContinue = false;
-                    m_bUnderTerm = true;
-                    m_bUnderLimit = true;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 32, L"Eve_Attack_LS45_Term" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS45_Term", [this]()
-                {
-                    m_bUnderTerm = false;
-
-                    if (m_bPressedContinue)
-                        ContinueCombo();
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 35, L"Eve_Attack_LS45_Limit" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS45_Limit", [this]()
-                {
-                    m_bCanContinue = false;
-                    m_bUnderLimit = false;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { endFrame, L"Eve_Attack_LS45_End" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LS45_End", [this]()
-                {
-                    Exit();
-                });
-        }
-    }
-
-    // L1->L2->S3
-    {
-        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_LLS23 (Animation Clip)");
-
-        const _uint endFrame = ealClip->Get_NormalizedFrameIndex(endRate);
-
-        {
-            CAnimationClip::ActionTrigger at = { 1, L"Eve_Attack_LLS23_Start" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LLS23_Start", [this]()
-                {
-                    ++m_iCrtCombo;
-                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
-                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
-                    m_bCanContinue = true;
-                    m_bPressedContinue = false;
-                    m_bUnderTerm = true;
-                    m_bUnderLimit = true;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 21, L"Eve_Attack_LLS23_Term" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LLS23_Term", [this]()
-                {
-                    m_bUnderTerm = false;
-
-                    if (m_bPressedContinue)
-                        ContinueCombo();
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 24, L"Eve_Attack_LLS23_Limit" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LLS23_Limit", [this]()
-                {
-                    m_bCanContinue = false;
-                    m_bUnderLimit = false;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { endFrame, L"Eve_Attack_LLS23_End" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LLS23_End", [this]()
-                {
-                    Exit();
-                });
-        }
-    }
-
-    // L1->L2->L3->S4
-    {
-        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_LLLS34 (Animation Clip)");
-
-        const _uint endFrame = ealClip->Get_NormalizedFrameIndex(endRate);
-
-        {
-            CAnimationClip::ActionTrigger at = { 1, L"Eve_Attack_LLLS34_Start" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LLLS34_Start", [this]()
-                {
-                    ++m_iCrtCombo;
-                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
-                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
-                    m_bCanContinue = true;
-                    m_bPressedContinue = false;
-                    m_bUnderTerm = true;
-                    m_bUnderLimit = true;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 21, L"Eve_Attack_LLLS34_Term" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LLLS34_Term", [this]()
-                {
-                    m_bUnderTerm = false;
-
-                    if (m_bPressedContinue)
-                        ContinueCombo();
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 24, L"Eve_Attack_LLLS34_Limit" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LLLS34_Limit", [this]()
-                {
-                    m_bCanContinue = false;
-                    m_bUnderLimit = false;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { endFrame, L"Eve_Attack_LLLS34_End" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_LLLS34_End", [this]()
-                {
-                    Exit();
-                });
-        }
-    }
-
-    // Thrust
-    {
-        CAnimationClip* ealClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_Thrust (Animation Clip)");
-
-        const _uint endFrame = ealClip->Get_NormalizedFrameIndex(endRate);
-
-        {
-            CAnimationClip::ActionTrigger at = { 1, L"Eve_Attack_Thrust_Start" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_Thrust_Start", [this]()
-                {
-                    ++m_iCrtCombo;
-                    m_bThrust = true;
-                    m_pCtx->Animator()->SetInt(L"AttackCombo", m_iCrtCombo);
-                    m_pCtx->Animator()->SetBool(L"comboContinue", false);
-                    m_bCanContinue = true;
-                    m_bPressedContinue = false;
-                    m_bUnderTerm = true;
-                    m_bUnderLimit = true;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 11, L"Eve_Attack_Thrust_Stop" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_Thrust_Stop", [this]()
-                {
-                    m_bThrust = false;
-                    m_pCtx->StopMoveImmediate();
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 21, L"Eve_Attack_Thrust_Term" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_Thrust_Term", [this]()
-                {
-                    m_bUnderTerm = false;
-
-                    if (m_bPressedContinue)
-                        ContinueCombo();
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { 24, L"Eve_Attack_Thrust_Limit" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_Thrust_Limit", [this]()
-                {
-                    m_bCanContinue = false;
-                    m_bUnderLimit = false;
-                });
-        }
-
-        {
-            CAnimationClip::ActionTrigger at = { endFrame, L"Eve_Attack_Thrust_End" };
-            ealClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"Eve_Attack_Thrust_End", [this]()
-                {
-                    Exit();
-                });
-        }
-    }
+            m_bThrust = false;
+            m_pCtx->StopMoveImmediate();
+        });
 }
 
 void CPlayerState_Attack::Enter()
