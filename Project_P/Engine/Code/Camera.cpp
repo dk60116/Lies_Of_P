@@ -1,7 +1,102 @@
 #include "epch.h"
 #include "Camera.h"
+#include "MeshRenderer.h"
 #include "SkinnedMeshRenderer.h"
 
+namespace
+{
+	bool IsSameWorldMatrix(const _float4x4& lhs, const _float4x4& rhs)
+	{
+		return memcmp(&lhs, &rhs, sizeof(_float4x4)) == 0;
+	}
+
+	bool AreBoundingBoxesEquivalent(const BoundingBox& lhs, const BoundingBox& rhs)
+	{
+		const _float epsilon = 1e-4f;
+		auto nearlyEqual = [epsilon](_float a, _float b)
+		{
+			return fabsf(a - b) <= epsilon;
+		};
+
+		return nearlyEqual(lhs.Center.x, rhs.Center.x)
+			&& nearlyEqual(lhs.Center.y, rhs.Center.y)
+			&& nearlyEqual(lhs.Center.z, rhs.Center.z)
+			&& nearlyEqual(lhs.Extents.x, rhs.Extents.x)
+			&& nearlyEqual(lhs.Extents.y, rhs.Extents.y)
+			&& nearlyEqual(lhs.Extents.z, rhs.Extents.z);
+	}
+
+	struct RendererBatchKey
+	{
+		CMeshBuffer* meshBuffer = nullptr;
+		CMaterial* material = nullptr;
+
+		bool operator==(const RendererBatchKey& rhs) const
+		{
+			return meshBuffer == rhs.meshBuffer && material == rhs.material;
+		}
+	};
+
+	struct RendererBatchKeyHash
+	{
+		size_t operator()(const RendererBatchKey& key) const
+		{
+			const size_t h1 = hash<void*>()(static_cast<void*>(key.meshBuffer));
+			const size_t h2 = hash<void*>()(static_cast<void*>(key.material));
+			return h1 ^ (h2 << 1);
+		}
+	};
+
+	_bool PrepareInstancingChunk(CRenderer* leader, const vector<CRenderer*>& batch, size_t offset, const _uint maxInstanceCount)
+	{
+		if (!leader || !leader->Get_Transform() || offset >= batch.size() || maxInstanceCount == 0)
+			return false;
+
+		vector<CRenderer*> chunkRenderers = {};
+		chunkRenderers.reserve(min<size_t>(batch.size() - offset, maxInstanceCount));
+
+		for (size_t i = offset; i < batch.size() && chunkRenderers.size() < maxInstanceCount; ++i)
+		{
+			CRenderer* renderer = batch[i];
+			if (!renderer || !renderer->Get_Transform())
+				continue;
+
+			chunkRenderers.push_back(renderer);
+		}
+
+		if (chunkRenderers.empty())
+			return false;
+
+		leader->CreateMeshInstancing(static_cast<_uint>(chunkRenderers.size()));
+
+		const vector3 leaderPos = leader->Get_Transform()->Get_Position();
+		const vector3 leaderRot = leader->Get_Transform()->Get_EulerAngles();
+		const vector3 leaderScale = leader->Get_Transform()->Get_LocalScale();
+
+		for (_uint i = 0; i < static_cast<_uint>(chunkRenderers.size()); ++i)
+		{
+			CRenderer* renderer = chunkRenderers[i];
+			const vector3 pos = renderer->Get_Transform()->Get_Position();
+			const vector3 rot = renderer->Get_Transform()->Get_EulerAngles();
+			const vector3 scale = renderer->Get_Transform()->Get_LocalScale();
+
+			const vector3 relPos = pos - leaderPos;
+			const vector3 relRot = rot - leaderRot;
+			const vector3 relScale =
+			{
+				leaderScale.x != 0.f ? scale.x / leaderScale.x : 1.f,
+				leaderScale.y != 0.f ? scale.y / leaderScale.y : 1.f,
+				leaderScale.z != 0.f ? scale.z / leaderScale.z : 1.f
+			};
+
+			leader->SetInstancingPosition(i, relPos);
+			leader->SetInstancingRotation(i, relRot);
+			leader->SetInstancingSize(i, relScale);
+		}
+
+		return true;
+	}
+}
 const ColorValue CCamera::s_vDefaultCameraColor = ColorValue(49, 77, 121, 255);
 
 CCamera::CCamera()
@@ -35,6 +130,8 @@ CCamera::CCamera()
 	, m_sMainLightMatrix()
 	, m_pPickStaging(nullptr)
 	, m_pStaticOctreeRoot(nullptr)
+	, m_vStaticOctreeRenderers({})
+	, m_mRendererBoundsCache({})
 	, m_iOctreeMaxDepth(4)
 	, m_iOctreeMaxEntriesPerNode(16)
 	, m_bIsEditor(false)
@@ -243,6 +340,9 @@ void CCamera::OnDestroy()
 	m_mRectMats.clear();
 
 	m_mRTDebugDisplays.clear();
+	m_pStaticOctreeRoot.reset();
+	m_vStaticOctreeRenderers.clear();
+	m_mRendererBoundsCache.clear();
 
 	Safe_Release(m_pRTDebugDS);
 	Safe_Release(m_pRTShadowDepthDS);
@@ -369,10 +469,71 @@ void CCamera::RenderMesh()
 {
 	Collect_VisibleRenderers();
 
-	for (TRAVERSAL_ITER(m_vVisibleStaticMeshList, it))
+	if (!m_bIsEditor)
 	{
-		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
-			(*it)->Render_WithCamera(this);
+		unordered_map<RendererBatchKey, vector<CRenderer*>, RendererBatchKeyHash> staticBatches = {};
+		staticBatches.reserve(m_vVisibleStaticMeshList.size());
+
+		vector<CRenderer*> nonBatchedStatic = {};
+		nonBatchedStatic.reserve(m_vVisibleStaticMeshList.size());
+
+		for (auto* renderer : m_vVisibleStaticMeshList)
+		{
+			if (!renderer || !renderer->Get_GameObject())
+				continue;
+			if (!renderer->Get_GameObject()->IsRecursiveActive() || !renderer->Get_Enable())
+				continue;
+
+			auto* meshRenderer = dynamic_cast<CMeshRenderer*>(renderer);
+			CMaterial* material = renderer->Get_Material();
+			CMeshBuffer* meshBuffer = renderer->Get_MeshBuffer();
+			if (!meshRenderer || !material || material->IsTransparnet() || !meshBuffer)
+			{
+				nonBatchedStatic.push_back(renderer);
+				continue;
+			}
+
+			RendererBatchKey key = { meshBuffer, material };
+			staticBatches[key].push_back(renderer);
+		}
+
+		for (auto* renderer : nonBatchedStatic)
+			renderer->Render_WithCamera(this);
+
+		for (auto& kv : staticBatches)
+		{
+			auto& batch = kv.second;
+			if (batch.empty())
+				continue;
+
+			CRenderer* leader = batch[0];
+			if (!leader || !leader->Get_GameObject() || !leader->Get_Transform())
+				continue;
+
+			if (batch.size() == 1)
+			{
+				leader->Render_WithCamera(this);
+				continue;
+			}
+
+			const _uint maxInstanceCount = 128u;
+			for (size_t offset = 0; offset < batch.size(); offset += maxInstanceCount)
+			{
+				if (!PrepareInstancingChunk(leader, batch, offset, maxInstanceCount))
+					continue;
+
+				leader->Render_WithCamera(this);
+				leader->CreateMeshInstancing(0);
+			}
+		}
+	}
+	else
+	{
+		for (TRAVERSAL_ITER(m_vVisibleStaticMeshList, it))
+		{
+			if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
+				(*it)->Render_WithCamera(this);
+		}
 	}
 
 	for (TRAVERSAL_ITER(m_vVisibleDynamicMeshList, it))
@@ -446,9 +607,12 @@ void CCamera::Update_WorldFrustum()
 	m_sWorldFrustum.Transform(m_sWorldFrustum, invView);
 }
 
-_bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, BoundingBox& _outAABB) const
+_bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, BoundingBox& _outAABB, _bool* _outChanged) const
 {
-	if (!_renderer || !_renderer->Get_GameObject())
+	if (_outChanged)
+		*_outChanged = false;
+
+	if (!_renderer || !_renderer->Get_GameObject() || !_renderer->Get_Transform())
 		return false;
 
 	CMeshBuffer* meshBuffer = _renderer->Get_MeshBuffer();
@@ -462,6 +626,22 @@ _bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, BoundingBox& _out
 		if (skinned->TryGetAnimatedWorldBounds(minBound, maxBound))
 		{
 			BoundingBox::CreateFromPoints(_outAABB, XMLoadFloat3(&minBound), XMLoadFloat3(&maxBound));
+			if (_outChanged)
+				*_outChanged = true;
+			return true;
+		}
+	}
+
+	_float4x4 worldMatrix = {};
+	XMStoreFloat4x4(&worldMatrix, _renderer->Get_Transform()->Get_WorldMatrix());
+
+	auto cacheIt = m_mRendererBoundsCache.find(_renderer);
+	if (cacheIt != m_mRendererBoundsCache.end())
+	{
+		const RendererBoundsCache& cache = cacheIt->second;
+		if (cache.valid && cache.meshBuffer == meshBuffer && IsSameWorldMatrix(cache.worldMatrix, worldMatrix))
+		{
+			_outAABB = cache.worldAABB;
 			return true;
 		}
 	}
@@ -470,9 +650,8 @@ _bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, BoundingBox& _out
 	BoundingOrientedBox localObb = {};
 	BoundingOrientedBox::CreateFromBoundingBox(localObb, localBox);
 
-	_matrix world = _renderer->Get_Transform()->Get_WorldMatrix();
 	BoundingOrientedBox worldObb = {};
-	localObb.Transform(worldObb, world);
+	localObb.Transform(worldObb, XMLoadFloat4x4(&worldMatrix));
 
 	XMFLOAT3 corners[8] = {};
 	worldObb.GetCorners(corners);
@@ -487,6 +666,20 @@ _bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, BoundingBox& _out
 	}
 
 	BoundingBox::CreateFromPoints(_outAABB, minV, maxV);
+
+	RendererBoundsCache& cache = m_mRendererBoundsCache[_renderer];
+	const _bool changed = !cache.valid
+		|| cache.meshBuffer != meshBuffer
+		|| !AreBoundingBoxesEquivalent(cache.worldAABB, _outAABB);
+
+	cache.worldAABB = _outAABB;
+	cache.worldMatrix = worldMatrix;
+	cache.meshBuffer = meshBuffer;
+	cache.valid = true;
+
+	if (_outChanged)
+		*_outChanged = changed;
+
 	return true;
 }
 
@@ -587,15 +780,22 @@ void CCamera::InsertStaticOctreeEntry(OctreeNode* _node, const OctreeEntry& _ent
 
 void CCamera::BuildStaticOctree()
 {
-	m_pStaticOctreeRoot.reset();
 	if (m_vStaticMeshList.empty())
+	{
+		m_pStaticOctreeRoot.reset();
+		m_vStaticOctreeRenderers.clear();
 		return;
+	}
 
-	vector<OctreeEntry> entries;
+	vector<CRenderer*> currentStaticRenderers = {};
+	currentStaticRenderers.reserve(m_vStaticMeshList.size());
+
+	vector<OctreeEntry> entries = {};
 	entries.reserve(m_vStaticMeshList.size());
 
 	_vector minV = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 0.f);
 	_vector maxV = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 0.f);
+	_bool boundsChanged = false;
 
 	for (auto* renderer : m_vStaticMeshList)
 	{
@@ -604,10 +804,14 @@ void CCamera::BuildStaticOctree()
 		if (!renderer->Get_GameObject()->IsRecursiveActive() || !renderer->Get_Enable())
 			continue;
 
+		currentStaticRenderers.push_back(renderer);
+
 		BoundingBox worldAABB = {};
-		if (!TryBuildRendererWorldAABB(renderer, worldAABB))
+		_bool rendererChanged = false;
+		if (!TryBuildRendererWorldAABB(renderer, worldAABB, &rendererChanged))
 			continue;
 
+		boundsChanged = boundsChanged || rendererChanged;
 		entries.push_back({ renderer, worldAABB });
 
 		_vector aabbMin = XMVectorSet(worldAABB.Center.x - worldAABB.Extents.x, worldAABB.Center.y - worldAABB.Extents.y, worldAABB.Center.z - worldAABB.Extents.z, 0.f);
@@ -615,6 +819,15 @@ void CCamera::BuildStaticOctree()
 		minV = XMVectorMin(minV, aabbMin);
 		maxV = XMVectorMax(maxV, aabbMax);
 	}
+
+	const _bool rendererSetChanged = m_vStaticOctreeRenderers.size() != currentStaticRenderers.size()
+		|| !equal(m_vStaticOctreeRenderers.begin(), m_vStaticOctreeRenderers.end(), currentStaticRenderers.begin());
+
+	if (!rendererSetChanged && !boundsChanged && m_pStaticOctreeRoot)
+		return;
+
+	m_pStaticOctreeRoot.reset();
+	m_vStaticOctreeRenderers = currentStaticRenderers;
 
 	if (entries.empty())
 		return;

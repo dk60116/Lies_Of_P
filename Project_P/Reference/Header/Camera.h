@@ -4,6 +4,7 @@
 #include "Physics.h"
 #include <array>
 #include <memory>
+#include <unordered_map>
 
 NS_BEGIN(Engine)
 
@@ -75,7 +76,7 @@ protected:
 	void Update_WorldFrustum();
 	void Collect_VisibleRenderers();
 	_bool IsRendererVisible(class CRenderer* _renderer) const;
-	_bool TryBuildRendererWorldAABB(class CRenderer* _renderer, BoundingBox& _outAABB) const;
+	_bool TryBuildRendererWorldAABB(class CRenderer* _renderer, BoundingBox& _outAABB, _bool* _outChanged = nullptr) const;
 	void SortTransparentRenderersByCameraDistance(vector<CRenderer*>& _renderers);
 	void BuildStaticOctree();
 	void InsertStaticOctreeEntry(OctreeNode* _node, const OctreeEntry& _entry);
@@ -148,6 +149,14 @@ protected:
 		_int depth = 0;
 	};
 
+	struct RendererBoundsCache
+	{
+		BoundingBox worldAABB = {};
+		_float4x4 worldMatrix = {};
+		CMeshBuffer* meshBuffer = nullptr;
+		_bool valid = false;
+	};
+
 private:
 	static const ColorValue s_vDefaultCameraColor;
 
@@ -172,6 +181,8 @@ private:
 	ID3D11Texture2D* m_pPickStaging;
 
 	unique_ptr<OctreeNode> m_pStaticOctreeRoot;
+	vector<CRenderer*> m_vStaticOctreeRenderers;
+	mutable unordered_map<CRenderer*, RendererBoundsCache> m_mRendererBoundsCache;
 	_int m_iOctreeMaxDepth;
 	_int m_iOctreeMaxEntriesPerNode;
 

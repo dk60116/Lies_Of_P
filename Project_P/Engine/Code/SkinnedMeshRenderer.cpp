@@ -8,8 +8,14 @@ CSkinnedMeshRenderer::CSkinnedMeshRenderer()
 	, m_vBones({})
 	, m_vRootBone({})
 	, m_pBoneMatrixBuffer(nullptr)
+	, m_bSkinningCacheValid(false)
+	, m_iCachedBoneCount(0)
+	, m_iCachedPoseHash(0)
+	, m_vCachedSkinMatrices({})
+	, m_vCachedBoneMatrices({})
 {
 	m_strName = L"Skinned Mesh Renderer";
+	InvalidateSkinningCache();
 }
 
 CSkinnedMeshRenderer::~CSkinnedMeshRenderer()
@@ -35,19 +41,17 @@ CComponent* CSkinnedMeshRenderer::Clone() const
 	clone->m_vBones.reserve(this->m_vBones.size());
 	for (auto* b : this->m_vBones)
 	{
-		if (b) b->AddRef();
+		if (b)
+			b->AddRef();
 		clone->m_vBones.push_back(b);
 	}
 
 	clone->m_vRootBone = this->m_vRootBone;
-	
-	for (auto r : clone->m_vRootBone)
+	for (auto* r : clone->m_vRootBone)
 		r->AddRef();
 
-	clone->m_pBoneMatrixBuffer = this->m_pBoneMatrixBuffer;
-	if (clone->m_pBoneMatrixBuffer)
-		clone->m_pBoneMatrixBuffer->AddRef();
-
+	clone->m_pBoneMatrixBuffer = nullptr;
+	clone->InvalidateSkinningCache();
 	return clone;
 }
 
@@ -56,9 +60,6 @@ HRESULT CSkinnedMeshRenderer::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
-	auto mat = m_pMaterial;
-
-	//      
 	D3D11_BUFFER_DESC desc = {};
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	desc.ByteWidth = sizeof(_matrix) * MAX_BONE;
@@ -106,11 +107,10 @@ void CSkinnedMeshRenderer::OnDestroy()
 
 	for (TRAVERSAL_ITER(m_vRootBone, it))
 		Safe_Release(*it);
-	
-	m_vBones.clear();
-	m_vRootBone.clear();
 
 	m_vBones.clear();
+	m_vRootBone.clear();
+	InvalidateSkinningCache();
 }
 
 const _uint CSkinnedMeshRenderer::Get_BoneCount() const
@@ -133,6 +133,144 @@ const _float4x4& CSkinnedMeshRenderer::Get_BoneOffsetMatrix(const _uint _index) 
 	return m_pMeshBuffer->Get_BoneOffsetMatrix(_index);
 }
 
+uint64_t CSkinnedMeshRenderer::ComputeSkinningPoseHash(_uint _boneCount) const
+{
+	uint64_t hash = 1469598103934665603ull;
+	const uint64_t prime = 1099511628211ull;
+
+	auto hashBytes = [&hash, prime](const void* data, size_t size)
+	{
+		const _ubyte* bytes = reinterpret_cast<const _ubyte*>(data);
+		for (size_t i = 0; i < size; ++i)
+		{
+			hash ^= bytes[i];
+			hash *= prime;
+		}
+	};
+
+	hashBytes(&_boneCount, sizeof(_boneCount));
+
+	_float4x4 meshWorld = {};
+	if (m_pGameObject && m_pGameObject->Get_Transform())
+		XMStoreFloat4x4(&meshWorld, m_pGameObject->Get_Transform()->Get_WorldMatrix());
+	hashBytes(&meshWorld, sizeof(meshWorld));
+
+	for (_uint i = 0; i < _boneCount; ++i)
+	{
+		_float4x4 boneWorld = {};
+		if (i < m_vBones.size() && m_vBones[i])
+			XMStoreFloat4x4(&boneWorld, m_vBones[i]->Get_WorldMatrix());
+		hashBytes(&boneWorld, sizeof(boneWorld));
+	}
+
+	return hash;
+}
+
+void CSkinnedMeshRenderer::InvalidateSkinningCache() const
+{
+	m_bSkinningCacheValid = false;
+	m_iCachedBoneCount = 0;
+	m_iCachedPoseHash = 0;
+	m_vCachedSkinMatrices.clear();
+
+	if (m_vCachedBoneMatrices.size() != MAX_BONE)
+		m_vCachedBoneMatrices.resize(MAX_BONE);
+
+	const _matrix identity = XMMatrixIdentity();
+	for (auto& cachedBoneMatrix : m_vCachedBoneMatrices)
+		XMStoreFloat4x4(&cachedBoneMatrix, identity);
+}
+
+_bool CSkinnedMeshRenderer::TryUpdateSkinningCache(_uint* _outBoneCount) const
+{
+	if (_outBoneCount)
+		*_outBoneCount = 0;
+
+	if (!m_pMeshBuffer)
+		return false;
+
+	const _uint meshBoneCount = m_pMeshBuffer->Get_BoneCount();
+	const _uint offsetBoneCount = static_cast<_uint>(m_pMeshBuffer->m_vBoneOffsetMatrices.size());
+	const _uint boneCount = min<_uint>(min<_uint>(static_cast<_uint>(m_vBones.size()), meshBoneCount), min<_uint>(offsetBoneCount, MAX_BONE));
+
+	if (_outBoneCount)
+		*_outBoneCount = boneCount;
+
+	if (m_vCachedBoneMatrices.size() != MAX_BONE)
+		m_vCachedBoneMatrices.resize(MAX_BONE);
+
+	if (boneCount == 0)
+	{
+		const _matrix identity = XMMatrixIdentity();
+		for (auto& cachedBoneMatrix : m_vCachedBoneMatrices)
+			XMStoreFloat4x4(&cachedBoneMatrix, identity);
+
+		m_vCachedSkinMatrices.clear();
+		m_iCachedBoneCount = 0;
+		m_iCachedPoseHash = 1ull;
+		m_bSkinningCacheValid = true;
+		return true;
+	}
+
+	const uint64_t poseHash = ComputeSkinningPoseHash(boneCount);
+	if (m_bSkinningCacheValid
+		&& m_iCachedBoneCount == boneCount
+		&& m_iCachedPoseHash == poseHash
+		&& m_vCachedSkinMatrices.size() == boneCount)
+	{
+		return true;
+	}
+
+	if (m_vCachedSkinMatrices.size() != boneCount)
+		m_vCachedSkinMatrices.resize(boneCount);
+
+	const _matrix identity = XMMatrixIdentity();
+	for (auto& cachedBoneMatrix : m_vCachedBoneMatrices)
+		XMStoreFloat4x4(&cachedBoneMatrix, identity);
+
+	_matrix meshWorld = XMMatrixIdentity();
+	_matrix meshWorldInv = XMMatrixIdentity();
+	if (m_pGameObject && m_pGameObject->Get_Transform())
+	{
+		meshWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
+		meshWorldInv = XMMatrixInverse(nullptr, meshWorld);
+	}
+
+	for (_uint i = 0; i < boneCount; ++i)
+	{
+		_matrix skinMatrix = XMMatrixIdentity();
+		if (m_vBones[i])
+		{
+			const _matrix invBindPose = XMLoadFloat4x4(&m_pMeshBuffer->m_vBoneOffsetMatrices[i]);
+			const _matrix boneWorld = m_vBones[i]->Get_WorldMatrix();
+			const _matrix boneMeshLocal = boneWorld * meshWorldInv;
+			skinMatrix = invBindPose * boneMeshLocal;
+		}
+
+		XMStoreFloat4x4(&m_vCachedSkinMatrices[i], skinMatrix);
+		XMStoreFloat4x4(&m_vCachedBoneMatrices[i], XMMatrixTranspose(skinMatrix));
+	}
+
+	m_iCachedBoneCount = boneCount;
+	m_iCachedPoseHash = poseHash;
+	m_bSkinningCacheValid = true;
+	return true;
+}
+
+_bool CSkinnedMeshRenderer::UploadBoneMatricesFromCache() const
+{
+	if (!m_pBoneMatrixBuffer || m_vCachedBoneMatrices.size() != MAX_BONE)
+		return false;
+
+	D3D11_MAPPED_SUBRESOURCE mappedRes = {};
+	const HRESULT hr = m_pContext->Map(m_pBoneMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedRes);
+	if (FAILED(hr))
+		return false;
+
+	memcpy(mappedRes.pData, m_vCachedBoneMatrices.data(), sizeof(_float4x4) * MAX_BONE);
+	m_pContext->Unmap(m_pBoneMatrixBuffer, 0);
+	return true;
+}
 
 _bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3& _outMax) const
 {
@@ -143,31 +281,15 @@ _bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3&
 	if (info.vertexSize != sizeof(VertexSkinnedBuffer) || info.vertextCount == 0)
 		return false;
 
-	auto* vertices = static_cast<const VertexSkinnedBuffer*>(m_pMeshBuffer->m_pVertexSysMem);
-
-	const _uint boneCount = min<_uint>(static_cast<_uint>(m_vBones.size()), m_pMeshBuffer->Get_BoneCount());
-	if (boneCount == 0)
+	_uint boneCount = 0;
+	if (!TryUpdateSkinningCache(&boneCount) || boneCount == 0)
 		return false;
 
+	auto* vertices = static_cast<const VertexSkinnedBuffer*>(m_pMeshBuffer->m_pVertexSysMem);
+
 	_matrix meshWorld = XMMatrixIdentity();
-	_matrix meshWorldInv = XMMatrixIdentity();
 	if (m_pGameObject && m_pGameObject->Get_Transform())
-	{
 		meshWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
-		meshWorldInv = XMMatrixInverse(nullptr, meshWorld);
-	}
-
-	vector<_matrix> skinMats(boneCount, XMMatrixIdentity());
-	for (_uint i = 0; i < boneCount; ++i)
-	{
-		if (!m_vBones[i])
-			continue;
-
-		_matrix invBindPose = XMLoadFloat4x4(&m_pMeshBuffer->m_vBoneOffsetMatrices[i]);
-		_matrix boneWorld = m_vBones[i]->Get_WorldMatrix();
-		_matrix boneMeshLocal = boneWorld * meshWorldInv;
-		skinMats[i] = invBindPose * boneMeshLocal;
-	}
 
 	_vector minV = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 0.f);
 	_vector maxV = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 0.f);
@@ -176,7 +298,7 @@ _bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3&
 	for (_uint v = 0; v < info.vertextCount; ++v)
 	{
 		const VertexSkinnedBuffer& src = vertices[v];
-		_vector p = XMVectorSet(src.position.x, src.position.y, src.position.z, 1.f);
+		const _vector p = XMVectorSet(src.position.x, src.position.y, src.position.z, 1.f);
 		_vector skinned = XMVectorZero();
 		_float totalW = 0.f;
 
@@ -187,7 +309,8 @@ _bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3&
 			if (w <= 0.f || idx >= boneCount)
 				continue;
 
-			skinned = XMVectorAdd(skinned, XMVectorScale(XMVector3Transform(p, skinMats[idx]), w));
+			const _matrix skinMatrix = XMLoadFloat4x4(&m_vCachedSkinMatrices[idx]);
+			skinned = XMVectorAdd(skinned, XMVectorScale(XMVector3Transform(p, skinMatrix), w));
 			totalW += w;
 		}
 
@@ -195,7 +318,7 @@ _bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3&
 			continue;
 
 		skinned = XMVectorScale(skinned, 1.f / totalW);
-		_vector worldSkinned = XMVector3Transform(skinned, meshWorld);
+		const _vector worldSkinned = XMVector3Transform(skinned, meshWorld);
 
 		hasPoint = true;
 		minV = XMVectorMin(minV, worldSkinned);
@@ -209,6 +332,7 @@ _bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3&
 	XMStoreFloat3(&_outMax, maxV);
 	return true;
 }
+
 void CSkinnedMeshRenderer::CreateBoneHierachy(const vector<CSkinnedMeshBuffer::SKINNEDSKELETAL>& nodes, _int nodeIdx, CTransform* parentTf)
 {
 	const auto& n = nodes[nodeIdx];
@@ -232,10 +356,13 @@ void CSkinnedMeshRenderer::CreateBoneHierachy(const vector<CSkinnedMeshBuffer::S
 	if (it != m_pMeshBuffer->m_vBoneNames.end())
 	{
 		size_t idx = static_cast<size_t>(distance(m_pMeshBuffer->m_vBoneNames.begin(), it));
-		if (m_vBones.size() <= idx) m_vBones.resize(idx + 1, nullptr);
+		if (m_vBones.size() <= idx)
+			m_vBones.resize(idx + 1, nullptr);
 		m_vBones[idx] = boneTf;
 		boneTf->AddRef();
 	}
+
+	InvalidateSkinningCache();
 
 	for (auto childId : n.childsId)
 		CreateBoneHierachy(nodes, childId, boneTf);
@@ -264,49 +391,17 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 	m_pMaterial->Set_IntValue(L"gObjectID", m_pGameObject->Get_UniqueID());
 
 	vector3 cPos = _cam->Get_Transform()->Get_Position();
-	_float3 camPos = cPos.toFloat3();
+	const _float3 camPos = cPos.toFloat3();
 
-	_matrix matWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
-	_matrix matView = _cam->Get_ViewMatrix();
-	_matrix matProj = _cam->Get_ProjectionMatrix();
+	const _matrix matWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
+	const _matrix matView = _cam->Get_ViewMatrix();
+	const _matrix matProj = _cam->Get_ProjectionMatrix();
 
-	const _uint meshBoneCount = m_pMeshBuffer ? m_pMeshBuffer->Get_BoneCount() : 0;
-	const _uint offsetBoneCount = static_cast<_uint>(m_pMeshBuffer ? m_pMeshBuffer->m_vBoneOffsetMatrices.size() : 0);
-	const _uint boneCount = min<_uint>(min<_uint>(static_cast<_uint>(m_vBones.size()), meshBoneCount), min<_uint>(offsetBoneCount, MAX_BONE));
-
-	_matrix boneMatrices[MAX_BONE];
-	for (_int i = 0; i < MAX_BONE; ++i)
-		boneMatrices[i] = XMMatrixIdentity();
-
-	_matrix meshWorldInv = XMMatrixIdentity();
+	_uint boneCount = 0;
+	if (!TryUpdateSkinningCache(&boneCount))
 	{
-		if (m_pGameObject && m_pGameObject->Get_Transform())
-		{
-			_matrix meshWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
-			meshWorldInv = XMMatrixInverse(nullptr, meshWorld);
-		}
-	}
-
-	for (_uint i = 0; i < boneCount; ++i)
-	{
-		if (!m_vBones[i])
-			continue;
-
-		//   
-		_matrix boneWorld = m_vBones[i]->Get_WorldMatrix();
-
-		//  ε (Offset)
-		// (m_vBoneOffsetMatrices ε m_vBones   )
-		_matrix invBindPose = XMMatrixIdentity();
-		invBindPose = XMLoadFloat4x4(&m_pMeshBuffer->m_vBoneOffsetMatrices[i]);
-
-		// bone mesh local ȯ
-		// (boneWorld * meshWorldInv) : boneWorld  meshLocal
-		_matrix boneMeshLocal = boneWorld * meshWorldInv;
-
-		//   
-		// (invBindPose * currentBone)  
-		boneMatrices[i] = XMMatrixTranspose(invBindPose * boneMeshLocal);
+		CDebug::LogError(L"Skinned MeshRenderer - Failed to build skinning cache: " + m_pGameObject->Get_ObjectNameID());
+		return;
 	}
 
 	if (!m_pBoneMatrixBuffer)
@@ -315,29 +410,17 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 		return;
 	}
 
-	D3D11_MAPPED_SUBRESOURCE mappedRes = {};
-	HRESULT hrMap = m_pContext->Map(m_pBoneMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedRes);
-	if (SUCCEEDED(hrMap))
-	{
-		memcpy(mappedRes.pData, boneMatrices, sizeof(_matrix) * MAX_BONE);
-		m_pContext->Unmap(m_pBoneMatrixBuffer, 0);
-	}
-	else
+	if (!UploadBoneMatricesFromCache())
 	{
 		CDebug::LogError(L"Skinned MeshRenderer - Failed Map BoneMatrixBuffer: " + m_pGameObject->Get_ObjectNameID());
 		return;
 	}
 
 	Bind_InstanceBuffer(matWorld);
-
-	// 6) Material bind (boneCount Ŭ )
 	m_pMaterial->Bind_Matrix(matWorld);
 	m_pMaterial->Bind_Camera(camPos, matView, matProj, boneCount);
-
-	// 7) Bones CB bind (b3)
 	m_pContext->VSSetConstantBuffers(3, 1, &m_pBoneMatrixBuffer);
 
-	// 8) Draw
 	if (IsInstancingEnabled())
 		m_pMeshBuffer->Render_Instanced(GetInstanceCount());
 	else
@@ -364,57 +447,27 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 		return;
 	}
 
-	_matrix matWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
+	const _matrix matWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
+	const _matrix matView = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.view));
+	const _matrix matProj = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.proj));
 
-	_matrix matView = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.view));
-	_matrix matProj = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.proj));
-
-	const _uint meshBoneCount = m_pMeshBuffer->Get_BoneCount();
-	const _uint offsetBoneCount = static_cast<_uint>(m_pMeshBuffer->m_vBoneOffsetMatrices.size());
-	const _uint boneCount = min<_uint>(min<_uint>(static_cast<_uint>(m_vBones.size()), meshBoneCount), min<_uint>(offsetBoneCount, MAX_BONE));
-
-	_matrix boneMatrices[MAX_BONE];
-	for (int i = 0; i < MAX_BONE; ++i)
-		boneMatrices[i] = XMMatrixIdentity();
-
-	_matrix meshWorldInv = XMMatrixIdentity();
+	_uint boneCount = 0;
+	if (!TryUpdateSkinningCache(&boneCount))
 	{
-		if (m_pGameObject && m_pGameObject->Get_Transform())
-		{
-			_matrix meshWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
-			meshWorldInv = XMMatrixInverse(nullptr, meshWorld);
-		}
+		CDebug::LogError(L"SkinnedMeshRenderer::Render_ShadowDepth - Failed to build skinning cache: " + m_pGameObject->Get_ObjectNameID());
+		return;
 	}
 
-	for (_uint i = 0; i < boneCount; ++i)
-	{
-		if (!m_vBones[i])
-			continue;
-
-		_matrix boneWorld = m_vBones[i]->Get_WorldMatrix();
-		_matrix invBindPose = XMLoadFloat4x4(&m_pMeshBuffer->m_vBoneOffsetMatrices[i]);
-
-		_matrix boneMeshLocal = boneWorld * meshWorldInv;
-
-		boneMatrices[i] = XMMatrixTranspose(invBindPose * boneMeshLocal);
-	}
-
-	D3D11_MAPPED_SUBRESOURCE mappedRes = {};
-	HRESULT hr = m_pContext->Map(m_pBoneMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedRes);
-	if (FAILED(hr))
+	if (!UploadBoneMatricesFromCache())
 	{
 		CDebug::LogError(L"SkinnedMeshRenderer::Render_ShadowDepth - Failed Map BoneMatrixBuffer: " + m_pGameObject->Get_ObjectNameID());
 		return;
 	}
 
-	memcpy(mappedRes.pData, boneMatrices, sizeof(_matrix) * MAX_BONE);
-	m_pContext->Unmap(m_pBoneMatrixBuffer, 0);
-
 	_float3 dummyPos = { 0.f, 0.f, 0.f };
 	Bind_InstanceBuffer(matWorld);
 	_shadowDepthMat->Bind_Matrix(matWorld);
 	_shadowDepthMat->Bind_Camera(dummyPos, matView, matProj, boneCount);
-
 	m_pContext->VSSetConstantBuffers(3, 1, &m_pBoneMatrixBuffer);
 
 	if (IsInstancingEnabled())
@@ -443,16 +496,17 @@ void CSkinnedMeshRenderer::Set_MeshBuffer(CSkinnedMeshBuffer* _mesh)
 		return;
 
 	Safe_Release(m_pMeshBuffer);
-
 	m_pMeshBuffer = _mesh;
 
 	if (!m_pMeshBuffer)
 	{
 		CDebug::LogError("Skinned MeshRenderer - Set_Mesh Failed - Skinned MeshRenderer: No MeshBuffer");
+		InvalidateSkinningCache();
 		return;
 	}
 
 	m_pMeshBuffer->AddRef();
+	InvalidateSkinningCache();
 }
 
 void CSkinnedMeshRenderer::Set_Bones(const vector<CTransform*>& _bones, vector<CTransform*> _rootBone)
@@ -470,15 +524,16 @@ void CSkinnedMeshRenderer::Set_Bones(const vector<CTransform*>& _bones, vector<C
 	m_vBones.reserve(_bones.size());
 	for (auto* t : _bones)
 	{
-		if (t) 
+		if (t)
 			t->AddRef();
 		m_vBones.push_back(t);
 	}
-	
-	m_vRootBone = _rootBone;
 
+	m_vRootBone = _rootBone;
 	for (TRAVERSAL_ITER(m_vRootBone, it))
 		(*it)->AddRef();
+
+	InvalidateSkinningCache();
 }
 
 vector<CTransform*>& CSkinnedMeshRenderer::GetRootBons()
@@ -497,6 +552,7 @@ void CSkinnedMeshRenderer::AddRootBone(CTransform* _tf)
 	{
 		m_vRootBone.push_back(_tf);
 		m_vRootBone.back()->AddRef();
+		InvalidateSkinningCache();
 	}
 }
 

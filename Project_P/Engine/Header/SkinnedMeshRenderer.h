@@ -54,11 +54,22 @@ public:
 	const _float GetScaleFactor() const override;
 
 private:
+	uint64_t ComputeSkinningPoseHash(_uint _boneCount) const;
+	_bool TryUpdateSkinningCache(_uint* _outBoneCount = nullptr) const;
+	_bool UploadBoneMatricesFromCache() const;
+	void InvalidateSkinningCache() const;
+
+private:
 	CSkinnedMeshBuffer* m_pMeshBuffer;
 	vector<CTransform*> m_vBones;
 	vector<CTransform*> m_vRootBone;
 
 	ID3D11Buffer* m_pBoneMatrixBuffer;
+	mutable _bool m_bSkinningCacheValid;
+	mutable _uint m_iCachedBoneCount;
+	mutable uint64_t m_iCachedPoseHash;
+	mutable vector<_float4x4> m_vCachedSkinMatrices;
+	mutable vector<_float4x4> m_vCachedBoneMatrices;
 };
 
 NS_END

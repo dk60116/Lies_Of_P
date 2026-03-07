@@ -2,6 +2,12 @@
 #include "Material.h"
 #include "Shader.h"
 
+namespace
+{
+	constexpr _uint kMaxPSTextureSlots = D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT;
+	_uint gLastBoundPSTextureSlotCount = 0;
+}
+
 CMaterial::CMaterial()
 	: m_pShader(nullptr)
 	, m_pMatrixBuffer(nullptr)
@@ -10,6 +16,11 @@ CMaterial::CMaterial()
 	, m_pLightBuffer(nullptr)
 	, m_pCustomBuffer(nullptr)
 	, m_vCustomBufferByteList({})
+	, m_sLastCameraCB({})
+	, m_sLastMaterialCB({})
+	, m_bCameraBufferDirty(true)
+	, m_bMaterialBufferDirty(true)
+	, m_bCustomBufferDirty(true)
 	, m_bTransparent(false)
 	, m_bUseLight(false)
 	, m_bUseNormalMap(false)
@@ -35,6 +46,11 @@ CMaterial::CMaterial(const CMaterial& _other)
 	, m_pLightBuffer(nullptr)
 	, m_pCustomBuffer(nullptr)
 	, m_vCustomBufferByteList(_other.m_vCustomBufferByteList)
+	, m_sLastCameraCB({})
+	, m_sLastMaterialCB({})
+	, m_bCameraBufferDirty(true)
+	, m_bMaterialBufferDirty(true)
+	, m_bCustomBufferDirty(true)
 	, m_bTransparent(_other.m_bTransparent)
 	, m_bUseLight(_other.m_bUseLight)
 	, m_bUseNormalMap(_other.m_bUseNormalMap)
@@ -170,6 +186,7 @@ void CMaterial::OnDestroy()
 	Safe_Release(m_pCameraBuffer);
 	Safe_Release(m_pMaterialBuffer);
 	Safe_Release(m_pLightBuffer);
+	Safe_Release(m_pCustomBuffer);
 
 	m_vCustomBufferByteList.clear();
 
@@ -191,28 +208,32 @@ void CMaterial::Bind_Matrix(const _fmatrix _world)
 void CMaterial::Bind_Camera(const _float3 _camPos, const _fmatrix _view, const _cmatrix _projection, const _uint _boneCount)
 {
 	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
+	if (!context)
+		return;
 
 	if (m_pShader)
 		m_pShader->Bind();
 
 	Bind_Texture();
 
-	CameraCB camCB = {};
+	CachedCameraCB camCB = {};
 	camCB.camPos = _camPos;
-	camCB.view = XMMatrixTranspose(_view);
-	camCB.proj = XMMatrixTranspose(_projection);
-	context->UpdateSubresource(m_pCameraBuffer, 0, nullptr, &camCB, 0, 0);
-	context->VSSetConstantBuffers(1, 1, &m_pCameraBuffer);
-	context->PSSetConstantBuffers(1, 1, &m_pCameraBuffer);
-
-	MaterialCB mat = {};
-
-	if (m_vTextureList.size() >= 3)
+	XMStoreFloat4x4(&camCB.view, XMMatrixTranspose(_view));
+	XMStoreFloat4x4(&camCB.proj, XMMatrixTranspose(_projection));
+	if (m_pCameraBuffer)
 	{
-		CMaterial* m = this;
-		int a = 0;
+		if (m_bCameraBufferDirty || memcmp(&m_sLastCameraCB, &camCB, sizeof(CachedCameraCB)) != 0)
+		{
+			context->UpdateSubresource(m_pCameraBuffer, 0, nullptr, &camCB, 0, 0);
+			m_sLastCameraCB = camCB;
+			m_bCameraBufferDirty = false;
+		}
+
+		context->VSSetConstantBuffers(1, 1, &m_pCameraBuffer);
+		context->PSSetConstantBuffers(1, 1, &m_pCameraBuffer);
 	}
 
+	CachedMaterialCB mat = {};
 	mat.baseColor = m_vBaseColor;
 	mat.useTexture = (!m_vTextureList.empty() && m_vTextureList[0] != nullptr);
 	mat.useNormalMap = (m_bUseNormalMap && m_vTextureList.size() >= 2 && m_vTextureList[1] != nullptr);
@@ -223,11 +244,20 @@ void CMaterial::Bind_Camera(const _float3 _camPos, const _fmatrix _view, const _
 	mat.materialPadding1 = 0;
 	mat.materialPadding2 = 0;
 
-	context->UpdateSubresource(m_pMaterialBuffer, 0, nullptr, &mat, 0, 0);
-	context->VSSetConstantBuffers(2, 1, &m_pMaterialBuffer);
-	context->PSSetConstantBuffers(2, 1, &m_pMaterialBuffer);
+	if (m_pMaterialBuffer)
+	{
+		if (m_bMaterialBufferDirty || memcmp(&m_sLastMaterialCB, &mat, sizeof(CachedMaterialCB)) != 0)
+		{
+			context->UpdateSubresource(m_pMaterialBuffer, 0, nullptr, &mat, 0, 0);
+			m_sLastMaterialCB = mat;
+			m_bMaterialBufferDirty = false;
+		}
 
-	if (m_vCustomBufferByteList.size() > 0)
+		context->VSSetConstantBuffers(2, 1, &m_pMaterialBuffer);
+		context->PSSetConstantBuffers(2, 1, &m_pMaterialBuffer);
+	}
+
+	if (m_pCustomBuffer)
 		Bind_CustomValues();
 }
 
@@ -248,6 +278,34 @@ void CMaterial::Bind_Light(_matrix* _lights, const _uint _count)
 }
 
 void CMaterial::Bind_CustomValues()
+{
+	if (!m_pCustomBuffer)
+		return;
+
+	if (m_bCustomBufferDirty)
+	{
+		Rebuild_CustomBufferByteList();
+
+		if (!m_vCustomBufferByteList.empty())
+		{
+			ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
+			if (!context)
+				return;
+
+			context->UpdateSubresource(m_pCustomBuffer, 0, nullptr, m_vCustomBufferByteList.data(), 0, 0);
+		}
+
+		m_bCustomBufferDirty = false;
+	}
+
+	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
+	if (!context)
+		return;
+
+	context->PSSetConstantBuffers(10, 1, &m_pCustomBuffer);
+}
+
+void CMaterial::Rebuild_CustomBufferByteList()
 {
 	m_vCustomBufferByteList.clear();
 
@@ -290,56 +348,12 @@ void CMaterial::Bind_CustomValues()
 	}
 	for (const auto& [key, value] : m_mMatrixValues)
 	{
-		const BYTE* _11 = reinterpret_cast<const BYTE*>(&value._11);
-		const BYTE* _12 = reinterpret_cast<const BYTE*>(&value._12);
-		const BYTE* _13 = reinterpret_cast<const BYTE*>(&value._13);
-		const BYTE* _14 = reinterpret_cast<const BYTE*>(&value._14);
-
-		const BYTE* _21 = reinterpret_cast<const BYTE*>(&value._21);
-		const BYTE* _22 = reinterpret_cast<const BYTE*>(&value._22);
-		const BYTE* _23 = reinterpret_cast<const BYTE*>(&value._23);
-		const BYTE* _24 = reinterpret_cast<const BYTE*>(&value._24);
-
-		const BYTE* _31 = reinterpret_cast<const BYTE*>(&value._31);
-		const BYTE* _32 = reinterpret_cast<const BYTE*>(&value._32);
-		const BYTE* _33 = reinterpret_cast<const BYTE*>(&value._33);
-		const BYTE* _34 = reinterpret_cast<const BYTE*>(&value._34);
-
-		const BYTE* _41 = reinterpret_cast<const BYTE*>(&value._41);
-		const BYTE* _42 = reinterpret_cast<const BYTE*>(&value._42);
-		const BYTE* _43 = reinterpret_cast<const BYTE*>(&value._43);
-		const BYTE* _44 = reinterpret_cast<const BYTE*>(&value._44);
-
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _11, _11 + sizeof(float));
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _12, _12 + sizeof(float));
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _13, _13 + sizeof(float));
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _14, _14 + sizeof(float));
-
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _21, _21 + sizeof(float));
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _22, _22 + sizeof(float));
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _23, _23 + sizeof(float));
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _24, _24 + sizeof(float));
-
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _31, _31 + sizeof(float));
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _32, _32 + sizeof(float));
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _33, _33 + sizeof(float));
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _34, _34 + sizeof(float));
-
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _41, _41 + sizeof(float));
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _42, _42 + sizeof(float));
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _43, _43 + sizeof(float));
-		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), _44, _44 + sizeof(float));
+		const BYTE* pMat = reinterpret_cast<const BYTE*>(&value);
+		m_vCustomBufferByteList.insert(m_vCustomBufferByteList.end(), pMat, pMat + sizeof(_float4x4));
 	}
 
 	while (m_vCustomBufferByteList.size() % 16 != 0)
 		m_vCustomBufferByteList.push_back(0);
-
-	if (!m_pCustomBuffer || m_vCustomBufferByteList.empty())
-		return;
-
-	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
-	context->UpdateSubresource(m_pCustomBuffer, 0, nullptr, m_vCustomBufferByteList.data(), 0, 0);
-	context->PSSetConstantBuffers(10, 1, &m_pCustomBuffer);
 }
 
 CShader* CMaterial::Get_Shader() const
@@ -515,6 +529,8 @@ void CMaterial::Set_Texture(CTexture* _texture, _int _index)
 
 	if (_texture)
 		_texture->AddRef();
+
+	m_bMaterialBufferDirty = true;
 }
 
 void CMaterial::Remove_Texture(_int _index)
@@ -524,11 +540,13 @@ void CMaterial::Remove_Texture(_int _index)
 
 	Safe_Release(m_vTextureList[_index]);
 	m_vTextureList.erase(m_vTextureList.begin() + _index);
+	m_bMaterialBufferDirty = true;
 }
 
 void CMaterial::Set_BaseColor(const _float4& _color)
 {
 	m_vBaseColor = _color;
+	m_bMaterialBufferDirty = true;
 }
 
 void CMaterial::Set_FloatValue(const wstring& _key, const _float _value)
@@ -536,7 +554,10 @@ void CMaterial::Set_FloatValue(const wstring& _key, const _float _value)
 	auto it = m_mFloatValues.find(_key);
 
 	if (it != m_mFloatValues.end())
+	{
 		m_mFloatValues[_key] = _value;
+		m_bCustomBufferDirty = true;
+	}
 	else
 		CDebug::LogError(L"Material - Set_FloatValue Failed - Key not found: " + _key  + L" - " + m_strResourceName);
 }
@@ -546,7 +567,10 @@ void CMaterial::Set_IntValue(const wstring& _key, const _int _value)
 	auto it = m_mIntValues.find(_key);
 
 	if (it != m_mIntValues.end())
+	{
 		m_mIntValues[_key] = _value;
+		m_bCustomBufferDirty = true;
+	}
 	else
 		CDebug::LogError(L"Material - Set_IntValue Failed - Key not found: " + _key + L" - " + m_strResourceName);
 }
@@ -556,7 +580,10 @@ void CMaterial::Set_Vector2Value(const wstring& _key, const _float2 _value)
 	auto it = m_mVector2Values.find(_key);
 
 	if (it != m_mVector2Values.end())
+	{
 		m_mVector2Values[_key] = _value;
+		m_bCustomBufferDirty = true;
+	}
 	else
 		CDebug::LogError(L"Material - Set_Vector2Value Failed - Key not found: " + _key + L" - " + m_strResourceName);
 }
@@ -566,7 +593,10 @@ void CMaterial::Set_Vector3Value(const wstring& _key, const _float3& _value)
 	auto it = m_mVector3Values.find(_key);
 
 	if (it != m_mVector3Values.end())
+	{
 		m_mVector3Values[_key] = _value;
+		m_bCustomBufferDirty = true;
+	}
 	else
 		CDebug::LogError(L"Material - Set_Vector3Value Failed - Key not found: " + _key + L" - " + m_strResourceName);
 }
@@ -576,7 +606,10 @@ void CMaterial::Set_Vector4Value(const wstring& _key, const _float4& _value)
 	auto it = m_mVector4Values.find(_key);
 
 	if (it != m_mVector4Values.end())
+	{
 		m_mVector4Values[_key] = _value;
+		m_bCustomBufferDirty = true;
+	}
 	else
 		CDebug::LogError(L"Material - Set_Vector4Value Failed - Key not found: " + _key + L" - " + m_strResourceName);
 }
@@ -586,7 +619,10 @@ void CMaterial::Set_MatrixValue(const wstring& _key, const _float4x4& _value)
 	auto it = m_mMatrixValues.find(_key);
 
 	if (it != m_mMatrixValues.end())
+	{
 		m_mMatrixValues[_key] = _value;
+		m_bCustomBufferDirty = true;
+	}
 	else
 		CDebug::LogError(L"Material - Set_MatrixValue Failed - Key not found: " + _key + L" - " + m_strResourceName);
 }
@@ -617,11 +653,11 @@ HRESULT CMaterial::Create_ConstantBuffer()
 	if (FAILED(device->CreateBuffer(&desc, nullptr, &m_pMatrixBuffer)))
 		return E_FAIL;
 
-	desc.ByteWidth = sizeof(CameraCB);
+	desc.ByteWidth = sizeof(CachedCameraCB);
 	if (FAILED(device->CreateBuffer(&desc, nullptr, &m_pCameraBuffer)))
 		return E_FAIL;
 
-	desc.ByteWidth = sizeof(MaterialCB);
+	desc.ByteWidth = sizeof(CachedMaterialCB);
 	if (FAILED(device->CreateBuffer(&desc, nullptr, &m_pMaterialBuffer)))
 		return E_FAIL;
 
@@ -656,19 +692,25 @@ HRESULT CMaterial::Create_ConstantBuffer()
 void CMaterial::Bind_Texture() const
 {
 	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
+	if (!context)
+		return;
 
-	ID3D11ShaderResourceView* nullSRV[16] = {};
-	context->PSSetShaderResources(0, 16, nullSRV);
-
-	for (size_t i = 0; i < m_vTextureList.size(); ++i)
+	const _uint textureCount = static_cast<_uint>(min<size_t>(m_vTextureList.size(), kMaxPSTextureSlots));
+	for (_uint i = 0; i < textureCount; ++i)
 	{
 		ID3D11ShaderResourceView* srv = nullptr;
 		if (m_vTextureList[i])
-		{
 			srv = m_vTextureList[i]->Get_SRV();
-			context->PSSetShaderResources((_uint)i, 1, &srv);
-		}
+
+		context->PSSetShaderResources(i, 1, &srv);
 	}
+
+	if (textureCount < gLastBoundPSTextureSlotCount)
+	{
+		ID3D11ShaderResourceView* nullSRV[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT] = {};
+		context->PSSetShaderResources(textureCount, gLastBoundPSTextureSlotCount - textureCount, nullSRV);
+	}
+	gLastBoundPSTextureSlotCount = textureCount;
 
 	static ID3D11SamplerState* gSamplerState = nullptr;
 	if (!gSamplerState)

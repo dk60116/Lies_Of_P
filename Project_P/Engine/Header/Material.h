@@ -79,7 +79,7 @@ public:
 
 private:
 	HRESULT Create_ConstantBuffer();
-
+	void Rebuild_CustomBufferByteList();
 	void Bind_Texture() const;
 
 private:
@@ -91,6 +91,30 @@ private:
 	ID3D11Buffer* m_pLightBuffer;
 	ID3D11Buffer* m_pCustomBuffer;
 	vector<BYTE> m_vCustomBufferByteList;
+	struct CachedCameraCB
+	{
+		_float3 camPos = {};
+		_float padding = 0.f;
+		_float4x4 view = {};
+		_float4x4 proj = {};
+	};
+	struct CachedMaterialCB
+	{
+		_float4 baseColor = {};
+		_uint useTexture = 0;
+		_uint useNormalMap = 0;
+		_uint useORMMap = 0;
+		_uint boneCount = 0;
+		_uint useAlphaMap = 0;
+		_uint materialPadding0 = 0;
+		_uint materialPadding1 = 0;
+		_uint materialPadding2 = 0;
+	};
+	CachedCameraCB m_sLastCameraCB;
+	CachedMaterialCB m_sLastMaterialCB;
+	_bool m_bCameraBufferDirty;
+	_bool m_bMaterialBufferDirty;
+	_bool m_bCustomBufferDirty;
 
 	_bool m_bTransparent, m_bUseLight, m_bUseNormalMap, m_bUseORMMap, m_bUseAlphaMap;
 	_float4 m_vBaseColor;
@@ -104,4 +128,3 @@ private:
 };
 
 NS_END
-
