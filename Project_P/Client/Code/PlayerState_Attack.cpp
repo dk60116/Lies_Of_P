@@ -13,7 +13,6 @@ CPlayerState_Attack::CPlayerState_Attack()
     , m_iComboTerm_S()
     , m_iComboLimit_S()
     , m_bStrong(false)
-    , m_bLastContinue(false)
     , m_bThrust(false)
 {
 }
@@ -796,7 +795,6 @@ void CPlayerState_Attack::Enter()
     m_bPressedContinue = false;
     m_bUnderTerm = true;
     m_bUnderLimit = true;
-    m_bLastContinue = false;
     m_bThrust = false;
 }
 
@@ -852,12 +850,6 @@ void CPlayerState_Attack::Exit()
 
 void CPlayerState_Attack::ContinueCombo()
 {
-    if (m_bLastContinue)
-    {
-        Enter();
-        return;
-    }
-
     if (m_bCanContinue)
     {
         m_pCtx->Animator()->SetBool(L"comboContinue", true);

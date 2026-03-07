@@ -35,8 +35,6 @@ private:
     _uint m_iComboLimit_S[3];
 
     _bool m_bStrong;
-    _bool m_bLastContinue;
-
     _bool m_bThrust;
 };
 
