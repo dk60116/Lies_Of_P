@@ -29,6 +29,11 @@ trigger jump
 bool isGround=false
 bool isStrongAttack=false
 
+[state Eve_Attack_LLS23]
+motion=Eve_Attack_LLS23
+speedMul=1.000000
+pos=-1190,711
+
 [state Jump_End]
 blendTree=2d
 paramX=isBattle
@@ -52,7 +57,7 @@ pos=116,236
 [state Attack_Light_04]
 motion=Eve_Attack_Light_04
 speedMul=1.000000
-pos=-865,989
+pos=-888,978
 
 [state Run_Forward_Start]
 blendTree=2d
@@ -88,7 +93,7 @@ pos=407,373
 [state Attack_Light_01]
 motion=Eve_Attack_Light_01
 speedMul=1.000000
-pos=-865,536
+pos=-885,534
 
 [state Run_TurnL]
 blendTree=2d
@@ -161,7 +166,7 @@ pos=-725,-251
 [state Eve_Attack_LS45]
 motion=Eve_Attack_LS45
 speedMul=1.000000
-pos=817,716
+pos=825,708
 
 [state Guard_Walk_During]
 motion=Eve_Guard_Walk_Forward_During
@@ -180,6 +185,11 @@ child=Eve_Evade_Forward,1.000000
 child=Eve_Evade_Backward,0.000000
 speedMul=1.000000
 pos=-767,269
+
+[state Attack_ST34]
+motion=Eve_Attack_Strong_02
+speedMul=1.000000
+pos=-1359,866
 
 [state IdleToBattle_End]
 blendTree=direct
@@ -228,7 +238,7 @@ pos=-535,991
 [state Eve_Attack_SL23]
 motion=Eve_Attack_SL23
 speedMul=1.000000
-pos=-255,974
+pos=-320,937
 
 [state Eve_Attack_SS34]
 motion=Eve_Attack_SS34
@@ -249,6 +259,21 @@ pos=393,704
 motion=Eve_Attack_SL34
 speedMul=1.000000
 pos=611,707
+
+[state Eve_Attack_ST34]
+motion=Eve_Attack_Thrust
+speedMul=1.000000
+pos=-1259,578
+
+[state Eve_Attack_LSLS_34]
+motion=Eve_Attack_Strong_02
+speedMul=1.000000
+pos=-98,1002
+
+[state Attack_LLLS34]
+motion=Eve_Attack_LLLS34
+speedMul=1.000000
+pos=-1146,950
 
 [entry]
 to=Idle
@@ -414,7 +439,7 @@ transitionOffset=0.000000
 
 [transition Attack_Light_01->Run_Forward_Start]
 blend=0.200000
-cond=speed>0.100000 && isAttack==false
+cond=speed>0.100000 && isAttack==false && isStrongAttack==false
 exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
@@ -422,7 +447,7 @@ transitionOffset=0.000000
 
 [transition Attack_Light_02->Run_Forward_Start]
 blend=0.200000
-cond=speed>0.100000 && isAttack==false
+cond=speed>0.100000 && isAttack==false && isStrongAttack==false
 exitTime=0.150000
 fixedDuration=false
 transitionDuration=0.150000
@@ -430,7 +455,7 @@ transitionOffset=0.000000
 
 [transition Attack_Light_03->Run_Forward_Start]
 blend=0.200000
-cond=speed>0.100000 && comboContinue==false
+cond=speed>0.100000 && isStrongAttack==false && isAttack==false
 exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
@@ -522,7 +547,7 @@ transitionOffset=0.000000
 
 [transition Attack_Light_01->Idle]
 blend=0.150000
-cond=speed==0.000000 && isAttack==false
+cond=speed==0.000000 && isAttack==false && isStrongAttack==false
 exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
@@ -530,7 +555,7 @@ transitionOffset=0.000000
 
 [transition Attack_Light_02->Idle]
 blend=0.150000
-cond=speed==0.000000 && isAttack==false
+cond=speed==0.000000 && isAttack==false && isStrongAttack==false
 exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
@@ -538,7 +563,7 @@ transitionOffset=0.000000
 
 [transition Attack_Light_03->Idle]
 blend=0.150000
-cond=comboContinue==false && speed==0.000000
+cond=speed==0.000000 && isStrongAttack==false && isAttack==false
 exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
@@ -773,7 +798,7 @@ transitionOffset=0.000000
 
 [transition Attack_Light_04->Run_Forward_Start]
 blend=0.150000
-cond=comboContinue==false && isAttack==false
+cond=comboContinue==false && isAttack==false && isStrongAttack==false
 exitTime=0.300000
 fixedDuration=false
 transitionDuration=0.150000
@@ -1022,6 +1047,117 @@ transitionOffset=0.000000
 blend=0.150000
 cond=speed==0.000000 && isAttack==false && isStrongAttack==false
 exitTime=0.250000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_Light_02->Eve_Attack_LLS23]
+blend=0.150000
+cond=comboContinue==true && isStrongAttack==true
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_LLS23->Idle]
+blend=0.150000
+cond=speed==0.000000 && isAttack==false && isStrongAttack==false
+exitTime=0.200000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_LLS23->Run_Forward_Start]
+blend=0.150000
+cond=speed>0.100000 && isAttack==false && isStrongAttack==false
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_SL23->Eve_Attack_LSLS_34]
+blend=0.150000
+cond=comboContinue==true && isStrongAttack==true
+exitTime=0.200000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_LSLS_34->Run_Forward_Start]
+blend=0.150000
+cond=speed>0.100000 && isAttack==false && isStrongAttack==false
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_LSLS_34->Idle]
+blend=0.150000
+cond=speed==0.000000 && isAttack==false && isStrongAttack==false
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_LLS23->Eve_Attack_ST34]
+blend=0.150000
+cond=isStrongAttack==true && comboContinue==true
+exitTime=0.125000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_ST34->Idle]
+blend=0.150000
+cond=speed==0.000000 && isAttack==false && isStrongAttack==false
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Eve_Attack_ST34->Run_Forward_Start]
+blend=0.150000
+cond=speed>0.100000 && isAttack==true && isStrongAttack==false
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_ST34->Idle]
+blend=0.150000
+cond=speed==0.000000 && isAttack==false && isStrongAttack==false
+exitTime=0.125000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_ST34->Run_Forward_Start]
+blend=0.150000
+cond=speed>0.100000 && isAttack==false && isStrongAttack==false
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_Light_03->Attack_LLLS34]
+blend=0.150000
+cond=comboContinue==true && isStrongAttack==true
+exitTime=0.125000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_LLLS34->Attack_ST34]
+blend=0.150000
+cond=comboContinue==true && isStrongAttack==true
+exitTime=0.150000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_LLLS34->Idle]
+blend=0.150000
+cond=speed==0.000000 && isAttack==false && isStrongAttack==false
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Attack_LLLS34->Run_Forward_Start]
+blend=0.150000
+cond=speed>0.100000 && isAttack==false && isStrongAttack==false
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
