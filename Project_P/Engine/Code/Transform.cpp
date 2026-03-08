@@ -266,6 +266,32 @@ void CTransform::SetParent(CTransform* _parent)
     m_bIsRootParent = (m_pParent == nullptr);
 }
 
+void CTransform::InsertChildBefore(CTransform* _child, CTransform* _beforeChild)
+{
+    if (!_child || _child->m_pParent != this)
+        return;
+
+    if (_beforeChild && _beforeChild->m_pParent != this)
+        return;
+
+    if (_child == _beforeChild)
+        return;
+
+    m_lChildList.remove(_child);
+
+    if (!_beforeChild)
+    {
+        m_lChildList.push_back(_child);
+        return;
+    }
+
+    auto it = find(m_lChildList.begin(), m_lChildList.end(), _beforeChild);
+    if (it != m_lChildList.end())
+        m_lChildList.insert(it, _child);
+    else
+        m_lChildList.push_back(_child);
+}
+
 const _bool CTransform::Is_Root() const
 {
     return m_bIsRootParent;

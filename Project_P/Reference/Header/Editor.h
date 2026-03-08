@@ -53,12 +53,15 @@ public:
 public:
 	void OpenAsset(const fs::path& path);
 	void OpenAnimatorController(const fs::path& path);
+	const _bool IsAnimatorControllerEditorFocused() const;
 
 	void OpenAssetExternal(const fs::path& path);
 	void Set_SelectedAssetPath(const fs::path& path);
 	const fs::path& Get_SelectedAssetPath() const { return m_selectedAssetPath; }
 	const _bool IsColliderGizmoVisible() const;
 	void SetColliderGizmoVisible(const _bool visible);
+	const _bool IsMeshColliderGizmoVisible() const;
+	void SetMeshColliderGizmoVisible(const _bool visible);
 
 	static string ToLowerCopy(string s)
 	{
@@ -102,6 +105,7 @@ private:
 	CGameObject* m_pMoveTargetGameObject;
 	_bool m_bOpenSelectedInHierarchyRequested;
 	_bool m_bShowColliderGizmo;
+	_bool m_bShowMeshColliderGizmo;
 	fs::path m_selectedAssetPath;
 
 private:
@@ -109,3 +113,4 @@ private:
 };
 
 NS_END
+

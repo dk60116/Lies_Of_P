@@ -116,7 +116,8 @@ void CBoxCollider::Render_Editor()
 void CBoxCollider::Render_Gizmo()
 {
 #ifndef _CLIENT_BUILD
-    if (!CEditor::GetInstance().IsColliderGizmoVisible())
+    CEditor& editor = CEditor::GetInstance();
+    if (!editor.IsColliderGizmoVisible() && editor.Get_SelectedGameObject() != m_pGameObject)
         return;
 
     if (!m_pLineMesh || !m_pLineMaterial)
@@ -258,3 +259,4 @@ void CBoxCollider::BuildShapeIfNeeded()
 
     m_bShapeDirty = false;
 }
+

@@ -220,7 +220,8 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
     if (hasQuery)
         ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
-    _bool opened = ImGui::TreeNode(folderLabel.c_str());
+    const ImGuiTreeNodeFlags folderNodeFlags = ImGuiTreeNodeFlags_OpenOnArrow;
+    _bool opened = ImGui::TreeNodeEx(folderLabel.c_str(), folderNodeFlags);
 
     if (ImGui::BeginPopupContextItem(("FolderCtx##" + _dirPath.string()).c_str()))
     {

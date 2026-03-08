@@ -29,6 +29,22 @@ trigger jump
 bool isGround=false
 bool isStrongAttack=false
 
+[state Attack_Light_04]
+motion=Eve_Attack_Light_04
+speedMul=1.000000
+pos=-888,978
+
+[state Run_Forward_Start]
+blendTree=2d
+paramX=isBattle
+paramY=speed
+child=Eve_SprintForward_Start,0.000000,2.000000
+child=Eve_BattleRun_Start,1.000000,1.000000
+child=Eve_Run_Forward_Start,0.000000,1.000000
+child=Eve_BattleSprint_Start,1.000000,2.000000
+speedMul=1.000000
+pos=578,145
+
 [state Eve_Attack_LLS23]
 motion=Eve_Attack_LLS23
 speedMul=1.000000
@@ -54,21 +70,19 @@ child=Eve_BattleIdle,1.000000
 speedMul=1.000000
 pos=116,236
 
-[state Attack_Light_04]
-motion=Eve_Attack_Light_04
+[state Attack_Light_01]
+motion=Eve_Attack_Light_01
 speedMul=1.000000
-pos=-888,978
+pos=-885,534
 
-[state Run_Forward_Start]
+[state Run_End]
 blendTree=2d
 paramX=isBattle
 paramY=speed
-child=Eve_SprintForward_Start,0.000000,2.000000
-child=Eve_BattleRun_Start,1.000000,1.000000
-child=Eve_Run_Forward_Start,0.000000,1.000000
-child=Eve_BattleSprint_Start,1.000000,2.000000
+child=Eve_Run_Forward_End,0.000000,1.000000
+child=Eve_BattleRun_End,1.000000,1.000000
 speedMul=1.000000
-pos=578,145
+pos=407,373
 
 [state Run_Forward]
 blendTree=2d
@@ -81,20 +95,6 @@ child=Eve_BattleSprintForward_During,1.000000,2.000000
 speedMul=1.000000
 pos=662,414
 
-[state Run_End]
-blendTree=2d
-paramX=isBattle
-paramY=speed
-child=Eve_Run_Forward_End,0.000000,1.000000
-child=Eve_BattleRun_End,1.000000,1.000000
-speedMul=1.000000
-pos=407,373
-
-[state Attack_Light_01]
-motion=Eve_Attack_Light_01
-speedMul=1.000000
-pos=-885,534
-
 [state Run_TurnL]
 blendTree=2d
 paramX=isBattle
@@ -105,14 +105,6 @@ child=Eve_SprintTurn_L,0.000000,2.000000
 child=Eve_BattleSprintTurn_L,1.000000,2.000000
 speedMul=1.000000
 pos=305,-292
-
-[state SprintEnd]
-blendTree=direct
-param=isBattle
-child=Eve_Sprint_End,0.000000
-child=Eve_BattleSprint_End,1.000000
-speedMul=1.000000
-pos=870,359
 
 [state Run_TurnR]
 blendTree=2d
@@ -125,6 +117,14 @@ child=Eve_BattleSprintTurn_R,1.000000,2.000000
 speedMul=1.000000
 pos=655,-169
 
+[state SprintEnd]
+blendTree=direct
+param=isBattle
+child=Eve_Sprint_End,0.000000
+child=Eve_BattleSprint_End,1.000000
+speedMul=1.000000
+pos=870,359
+
 [state Attack_Light_02]
 motion=Eve_Attack_Light_02
 speedMul=1.000000
@@ -135,6 +135,11 @@ motion=Eve_Attack_Light_03
 speedMul=1.000000
 pos=-873,829
 
+[state Guard_Start]
+motion=Eve_Guard_Start
+speedMul=1.000000
+pos=-102,-180
+
 [state SprintToRun]
 blendTree=direct
 param=isBattle
@@ -142,11 +147,6 @@ child=Eve_SprintToRun,0.000000
 child=Eve_BattleSprintToRun,1.000000
 speedMul=1.000000
 pos=873,494
-
-[state Guard_Start]
-motion=Eve_Guard_Start
-speedMul=1.000000
-pos=-102,-180
 
 [state Guard_Idle]
 motion=Eve_Guard_Idle
@@ -158,15 +158,15 @@ motion=Eve_Guard_End
 speedMul=1.000000
 pos=-275,-41
 
-[state Guard_Walk_Start]
-motion=Eve_Guard_Walk_Forward_Start
-speedMul=1.000000
-pos=-725,-251
-
 [state Eve_Attack_LS45]
 motion=Eve_Attack_LS45
 speedMul=1.000000
 pos=825,708
+
+[state Guard_Walk_Start]
+motion=Eve_Guard_Walk_Forward_Start
+speedMul=1.000000
+pos=-725,-251
 
 [state Guard_Walk_During]
 motion=Eve_Guard_Walk_Forward_During
@@ -178,6 +178,11 @@ motion=Eve_Guard_Walk_Forward_End
 speedMul=1.000000
 pos=-722,77
 
+[state Attack_ST34]
+motion=Eve_Attack_Strong_02
+speedMul=1.000000
+pos=-1359,866
+
 [state Evade]
 blendTree=direct
 param=isInputDir
@@ -185,11 +190,6 @@ child=Eve_Evade_Forward,1.000000
 child=Eve_Evade_Backward,0.000000
 speedMul=1.000000
 pos=-767,269
-
-[state Attack_ST34]
-motion=Eve_Attack_Strong_02
-speedMul=1.000000
-pos=-1359,866
 
 [state IdleToBattle_End]
 blendTree=direct
@@ -260,20 +260,20 @@ motion=Eve_Attack_SL34
 speedMul=1.000000
 pos=611,707
 
-[state Eve_Attack_ST34]
-motion=Eve_Attack_Thrust
-speedMul=1.000000
-pos=-1259,578
-
 [state Eve_Attack_LSLS_34]
 motion=Eve_Attack_Strong_02
 speedMul=1.000000
 pos=-98,1002
 
+[state Eve_Attack_ST34]
+motion=Eve_Attack_Thrust
+speedMul=1.000000
+pos=-1259,578
+
 [state Attack_LLLS34]
 motion=Eve_Attack_LLLS34
 speedMul=1.000000
-pos=-1146,950
+pos=-1142,971
 
 [entry]
 to=Idle

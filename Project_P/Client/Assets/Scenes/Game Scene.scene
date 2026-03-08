@@ -1,4 +1,8 @@
 SceneName : Game Scene
+SceneSkyBox : DefaultSky (SkyBox)
+SceneAmbient : 0.200000
+SceneDirectionalLightShadowDist : 200.000000
+SceneShadowBias : 0.000000
 // Eve Model
 EveBody_Model : Player/Eve/EveBody.fbx :  [Skinned Mesh] [Root : Root]
 EveHead_Model : Player/Eve/EveHead.fbx :  [Skinned Mesh]

@@ -121,6 +121,7 @@ public:
 
     const EnviromentSettings& Get_EnviromentSetting();
 
+    void Set_Ambient(const _float _value);
     void Set_DirectionalLightShadowDist(const _float _value);
     void Set_ShadwoBias(const _float _value);
 
@@ -202,3 +203,4 @@ protected:
 };
 
 NS_END
+

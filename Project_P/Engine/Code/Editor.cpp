@@ -17,6 +17,7 @@ CEditor::CEditor()
 	, m_pMoveTargetGameObject(nullptr)
 	, m_bOpenSelectedInHierarchyRequested(false)
 	, m_bShowColliderGizmo(true)
+	, m_bShowMeshColliderGizmo(true)
 	, m_vCameraPos({})
 	, m_vCameraQuat({})
 	, m_bDoubleClicked(false)
@@ -261,6 +262,16 @@ void CEditor::SetColliderGizmoVisible(const _bool visible)
 	m_bShowColliderGizmo = visible;
 }
 
+const _bool CEditor::IsMeshColliderGizmoVisible() const
+{
+	return m_bShowMeshColliderGizmo;
+}
+
+void CEditor::SetMeshColliderGizmoVisible(const _bool visible)
+{
+	m_bShowMeshColliderGizmo = visible;
+}
+
 const vector2Int CEditor::Get_WindowResolution() const
 {
 	return vector2Int(m_sOptions.windowWidth, m_sOptions.windowHeight);
@@ -387,6 +398,18 @@ void CEditor::OpenAsset(const fs::path& path)
 	OpenAssetExternal(path);
 }
 
+const _bool CEditor::IsAnimatorControllerEditorFocused() const
+{
+	for (const auto& [key, boxBase] : m_mBoxList)
+	{
+		auto* box = dynamic_cast<CAnimatorControllerEditorBox*>(boxBase);
+		if (box && box->IsShortcutFocused())
+			return true;
+	}
+
+	return false;
+}
+
 void CEditor::OpenAnimatorController(const fs::path& path)
 {
 #ifdef _CLIENT_BUILD
@@ -451,3 +474,4 @@ void CEditor::OpenAssetExternal(const fs::path& path)
 	CDebug::LogError(L"OpenAssetExternal is not implemented on this platform.");
 #endif
 }
+

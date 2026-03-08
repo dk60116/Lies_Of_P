@@ -44,7 +44,6 @@ protected:
 
 protected:
 	wstring m_strMonsterName;
-	wstring m_strSkinnedMeshBufferName;
 	vector<_bool> m_vMaterialTransparent;
 	vector<CSkinnedMeshRenderer*> m_vMeshRenderers;
 	CAnimator* m_pAnimator;

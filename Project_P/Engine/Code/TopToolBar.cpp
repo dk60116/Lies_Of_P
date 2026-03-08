@@ -7,6 +7,7 @@ CTopToolBar::CTopToolBar()
 	, m_fPendingFixedTimeStep(0.02f)
 	, m_fPendingTimeScale(1.f)
 	, m_iPendingShadowQuality(0)
+	, m_bSceneSettingsWindowOpen(false)
 	, m_bGameStatusWindowOpen(false)
 {
 }
@@ -68,6 +69,7 @@ void CTopToolBar::Render()
 	);
 
 	ShowSelectSceneButton();
+	ShowSceneMenu();
 	ShowEditMenu();
 	ShowViewMenu();
 	Show2DButton();
@@ -77,6 +79,7 @@ void CTopToolBar::Render()
 	ImGui::End();
 
 	ShowProjectSettingsWindow();
+	ShowSceneSettingsWindow();
 	ShowGameStatusWindow();
 
 	ImGui::PopStyleVar();
@@ -135,6 +138,21 @@ void CTopToolBar::ShowEditMenu()
 	}
 }
 
+void CTopToolBar::ShowSceneMenu()
+{
+	ImGui::SameLine();
+
+	if (ImGui::Button("Scene"))
+		ImGui::OpenPopup("SceneMenuPopup");
+
+	if (ImGui::BeginPopup("SceneMenuPopup"))
+	{
+		if (ImGui::MenuItem("Scene Setting"))
+			m_bSceneSettingsWindowOpen = true;
+
+		ImGui::EndPopup();
+	}
+}
 void CTopToolBar::ShowViewMenu()
 {
 	ImGui::SameLine();
@@ -148,6 +166,10 @@ void CTopToolBar::ShowViewMenu()
 		if (ImGui::MenuItem("Collider", nullptr, showCollider))
 			CEditor::GetInstance().SetColliderGizmoVisible(!showCollider);
 
+		_bool showMeshCollider = CEditor::GetInstance().IsMeshColliderGizmoVisible();
+		if (ImGui::MenuItem("Mesh Collider", nullptr, showMeshCollider))
+			CEditor::GetInstance().SetMeshColliderGizmoVisible(!showMeshCollider);
+
 		if (ImGui::MenuItem("Game Status", nullptr, m_bGameStatusWindowOpen))
 			m_bGameStatusWindowOpen = !m_bGameStatusWindowOpen;
 
@@ -155,6 +177,51 @@ void CTopToolBar::ShowViewMenu()
 	}
 }
 
+void CTopToolBar::ShowSceneSettingsWindow()
+{
+	if (!m_bSceneSettingsWindowOpen)
+		return;
+
+	CScene* currentScene = CSceneManager::GetInstance().Get_CrtScene();
+	if (!currentScene)
+	{
+		m_bSceneSettingsWindowOpen = false;
+		return;
+	}
+
+	ImGui::SetNextWindowSize(ImVec2(420.f, 220.f), ImGuiCond_FirstUseEver);
+
+	if (ImGui::Begin("Scene Settings", &m_bSceneSettingsWindowOpen))
+	{
+		const CScene::EnviromentSettings& setting = currentScene->Get_EnviromentSetting();
+		_float ambient = setting.ambient;
+		_float shadowDist = setting.directionalLightShadowDist;
+		_float shadowBias = setting.shadowBias;
+
+		ImGui::Text("Scene");
+		ImGui::Separator();
+		ImGui::Text("%s", CEngineString::WStringToString(currentScene->Get_SceneName()).c_str());
+		ImGui::Spacing();
+
+		if (ImGui::DragFloat("Ambient", &ambient, 0.01f, 0.f, 1.f, "%.2f"))
+			currentScene->Set_Ambient(ambient);
+
+		if (ImGui::DragFloat("Directional Light Shadow Dist", &shadowDist, 1.f, 0.f, 10000.f, "%.1f"))
+			currentScene->Set_DirectionalLightShadowDist(shadowDist);
+
+		if (ImGui::DragFloat("Shadow Bias", &shadowBias, 0.0001f, 0.f, 1.f, "%.4f"))
+			currentScene->Set_ShadwoBias(shadowBias);
+
+		ImGui::Spacing();
+		if (ImGui::Button("Save"))
+		{
+			wstring scenePath = L"../Assets/Scenes/" + currentScene->Get_SceneName() + L".scene";
+			currentScene->SaveScene(scenePath);
+		}
+	}
+
+	ImGui::End();
+}
 void CTopToolBar::ShowProjectSettingsWindow()
 {
 	if (!m_bProjectSettingsWindowOpen)
@@ -393,6 +460,10 @@ void CTopToolBar::ShowFPS()
 	ImGui::SetCursorPosX(ImGui::GetCursorPosX() + availableWidth - textWidth);
 	ImGui::TextUnformatted(fpsText);
 }
+
+
+
+
 
 
 

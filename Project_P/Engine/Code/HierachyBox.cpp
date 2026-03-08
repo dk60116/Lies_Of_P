@@ -168,13 +168,51 @@ void CHierachyBox::Render()
 
 		if (ImGui::BeginChild("HierarchyScrollRegion", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar))
 		{
-			for (auto& obj : currentScene->Get_RootObjects())
-				RenderObjectHierarchy(obj, filterLower);
+			vector<CGameObject*> rootObjects = currentScene->Get_RootObjects();
+			for (auto* obj : rootObjects)
+			{
+				if (!filterLower.empty())
+				{
+					RenderObjectHierarchy(obj, filterLower);
+					continue;
+				}
 
-			if (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows) && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered())
+				RenderInsertionDropZone(nullptr, obj);
+				RenderObjectHierarchy(obj, filterLower);
+			}
+
+			if (filterLower.empty())
+				RenderInsertionDropZone(nullptr, nullptr);
+
+			ImVec2 blankDropZoneSize = ImGui::GetContentRegionAvail();
+			if (blankDropZoneSize.x < 1.f)
+				blankDropZoneSize.x = 1.f;
+			if (blankDropZoneSize.y < 1.f)
+				blankDropZoneSize.y = 1.f;
+
+			ImGui::InvisibleButton("##HierarchyDetachParentDropZone", blankDropZoneSize);
+
+			if (ImGui::BeginDragDropTarget())
+			{
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HierarchyGameObject"))
+				{
+					if (payload->DataSize == sizeof(CGameObject*))
+					{
+						CGameObject* droppedObject = *reinterpret_cast<CGameObject* const*>(payload->Data);
+						if (droppedObject)
+						{
+							if (CTransform* droppedTransform = droppedObject->Get_Transform())
+								droppedTransform->SetParent(nullptr);
+						}
+					}
+				}
+				ImGui::EndDragDropTarget();
+			}
+
+			if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGui::GetDragDropPayload())
 				editor.Set_SelectedGameObject(nullptr);
 
-			if (ImGui::BeginPopupContextWindow("HierarchyScrollContextMenu", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+			if (ImGui::BeginPopupContextItem("HierarchyBlankContextMenu"))
 			{
 				if (ImGui::MenuItem("Create Empty"))
 				{
@@ -236,6 +274,96 @@ bool CHierachyBox::IsAncestorOfSelected(CGameObject* _obj, CGameObject* selected
 	}
 
 	return false;
+}
+
+void CHierachyBox::RenderInsertionDropZone(CTransform* _targetParent, CGameObject* _beforeObject)
+{
+	ImVec2 size(ImGui::GetContentRegionAvail().x, 3.f);
+	if (size.x < 1.f)
+		size.x = 1.f;
+
+	const string zoneId = "##HierarchyInsert_" + to_string(reinterpret_cast<size_t>(_targetParent)) + "_" + to_string(reinterpret_cast<size_t>(_beforeObject));
+	ImGui::InvisibleButton(zoneId.c_str(), size);
+
+	const ImGuiPayload* activePayload = ImGui::GetDragDropPayload();
+	const bool isHierarchyPayload = activePayload && activePayload->IsDataType("HierarchyGameObject");
+	if (isHierarchyPayload && ImGui::IsItemHovered())
+	{
+		ImDrawList* drawList = ImGui::GetWindowDrawList();
+		const ImVec2 min = ImGui::GetItemRectMin();
+		const ImVec2 max = ImGui::GetItemRectMax();
+		const float lineY = (min.y + max.y) * 0.5f;
+		drawList->AddLine(ImVec2(min.x, lineY), ImVec2(max.x, lineY), ImGui::GetColorU32(ImGuiCol_DragDropTarget), 2.f);
+	}
+
+	if (ImGui::BeginDragDropTarget())
+	{
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HierarchyGameObject"))
+		{
+			if (payload->DataSize == sizeof(CGameObject*))
+			{
+				CGameObject* droppedObject = *reinterpret_cast<CGameObject* const*>(payload->Data);
+				TryInsertObject(droppedObject, _targetParent, _beforeObject);
+			}
+		}
+		ImGui::EndDragDropTarget();
+	}
+}
+
+bool CHierachyBox::TryInsertObject(CGameObject* _droppedObject, CTransform* _targetParent, CGameObject* _beforeObject)
+{
+	if (!_droppedObject)
+		return false;
+
+	if (_beforeObject == _droppedObject)
+		return false;
+
+	CTransform* droppedTransform = _droppedObject->Get_Transform();
+	if (!droppedTransform)
+		return false;
+
+	CTransform* beforeTransform = _beforeObject ? _beforeObject->Get_Transform() : nullptr;
+
+	if (_targetParent)
+	{
+		if (_targetParent == droppedTransform || IsAncestorTransform(droppedTransform, _targetParent))
+			return false;
+
+		if (beforeTransform && beforeTransform->Get_Parent() != _targetParent)
+			return false;
+
+		if (droppedTransform->Get_Parent() != _targetParent)
+			droppedTransform->SetParent(_targetParent);
+
+		_targetParent->InsertChildBefore(droppedTransform, beforeTransform);
+		return true;
+	}
+
+	if (beforeTransform && !beforeTransform->Is_Root())
+		return false;
+
+	if (droppedTransform->Get_Parent())
+		droppedTransform->SetParent(nullptr);
+
+	CScene* scene = _droppedObject->Get_Scene();
+	if (!scene)
+		return false;
+
+	auto& objectList = scene->Get_ObjectList();
+	objectList.remove(_droppedObject);
+
+	if (_beforeObject)
+	{
+		auto it = find(objectList.begin(), objectList.end(), _beforeObject);
+		if (it != objectList.end())
+		{
+			objectList.insert(it, _droppedObject);
+			return true;
+		}
+	}
+
+	objectList.push_back(_droppedObject);
+	return true;
 }
 
 void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filterLower)
@@ -341,8 +469,19 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filte
 	if (hasChildren && nodeOpen)
 	{
 		for (auto* child : _obj->Get_Transform()->Get_ChldList())
+		{
+			if (!filterActive)
+				RenderInsertionDropZone(_obj->Get_Transform(), child->Get_GameObject());
+
 			RenderObjectHierarchy(child->Get_GameObject(), _filterLower);
+		}
+
+		if (!filterActive)
+			RenderInsertionDropZone(_obj->Get_Transform(), nullptr);
 
 		ImGui::TreePop();
 	}
 }
+
+
+

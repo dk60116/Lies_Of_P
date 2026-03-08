@@ -37,6 +37,7 @@ public:
 
 public:
     void Open(const fs::path& path);
+    const _bool IsShortcutFocused() const { return m_bShortcutFocusedLastFrame; }
 
 private:
     struct Param
@@ -90,6 +91,8 @@ private:
     _bool ParseText(const string& text);
     string SerializeText() const;
     _bool SaveToFile();
+    void BuildBinary();
+    void HandleShortcuts();
 
 private:
     void RenderToolbar();
@@ -212,6 +215,10 @@ private:
     string m_pendingTransitionFrom;
     EPendingSource m_pendingSourceType = EPendingSource::None;
     _int m_selectedBlendChildIndex = -1;
+    _bool m_bShortcutFocusedLastFrame = false;
 };
 
 NS_END
+
+
+

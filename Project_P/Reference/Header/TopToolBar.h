@@ -20,8 +20,10 @@ public:
 
 private:
 	void ShowSelectSceneButton();
+	void ShowSceneMenu();
 	void ShowEditMenu();
 	void ShowViewMenu();
+	void ShowSceneSettingsWindow();
 	void ShowProjectSettingsWindow();
 	void ShowProjectSettingsTime();
 	void ShowProjectSettingsLight();
@@ -36,10 +38,13 @@ private:
 	_float m_fPendingFixedTimeStep;
 	_float m_fPendingTimeScale;
 	_int m_iPendingShadowQuality;
+	_bool m_bSceneSettingsWindowOpen;
 	_bool m_bGameStatusWindowOpen;
 };
 
 NS_END
+
+
 
 
 

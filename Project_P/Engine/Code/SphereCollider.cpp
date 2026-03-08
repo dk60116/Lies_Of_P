@@ -117,7 +117,8 @@ void CSphereCollider::Render_Editor()
 void CSphereCollider::Render_Gizmo()
 {
 #ifndef _CLIENT_BUILD
-    if (!CEditor::GetInstance().IsColliderGizmoVisible())
+    CEditor& editor = CEditor::GetInstance();
+    if (!editor.IsColliderGizmoVisible() && editor.Get_SelectedGameObject() != m_pGameObject)
         return;
 
     if (!m_pLineMesh || !m_pLineMaterial)
@@ -262,3 +263,4 @@ void CSphereCollider::BuildShapeIfNeeded()
 
     m_bShapeDirty = false;
 }
+

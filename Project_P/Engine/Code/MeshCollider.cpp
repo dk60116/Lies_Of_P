@@ -256,7 +256,11 @@ void CMeshCollider::Render_Editor()
 void CMeshCollider::Render_Gizmo()
 {
 #ifndef _CLIENT_BUILD
-    if (!CEditor::GetInstance().IsColliderGizmoVisible())
+    CEditor& editor = CEditor::GetInstance();
+    if (!editor.IsMeshColliderGizmoVisible())
+        return;
+
+    if (!editor.IsColliderGizmoVisible() && editor.Get_SelectedGameObject() != m_pGameObject)
         return;
 
     if (!m_bShowGizmo)
@@ -401,3 +405,5 @@ void CMeshCollider::BuildShapeIfNeeded()
 
     m_bShapeDirty = false;
 }
+
+

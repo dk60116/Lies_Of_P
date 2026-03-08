@@ -24,6 +24,8 @@ private:
 
 private:
 	void RenderObjectHierarchy(CGameObject* _obj, const string& _filterLower);
+	void RenderInsertionDropZone(CTransform* _targetParent, CGameObject* _beforeObject);
+	bool TryInsertObject(CGameObject* _droppedObject, CTransform* _targetParent, CGameObject* _beforeObject);
 	bool ObjectMatchesFilter(CGameObject* _obj, const string& _filterLower) const;
 	bool IsAncestorOfSelected(CGameObject* _obj, CGameObject* _selected) const;
 
@@ -35,3 +37,4 @@ private:
 };
 
 NS_END
+

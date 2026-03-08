@@ -185,23 +185,20 @@ void CRectTransform::Render_Gizmo()
 
         if (m_pParent)
         {
-            // 부모의 월드 행렬의 역행렬
+            // Convert world to local using the parent's inverse matrix.
             _matrix parentInv = XMMatrixInverse(nullptr, m_pParent->Get_WorldMatrix());
-            // 로컬 행렬 구하기
+            // Build the local matrix under the parent.
             _matrix localMatrix = newWorldMatrix * parentInv;
-
-            // 로컬 위치/회전/스케일 추출
+            // Decompose local transform components.
             _vector S, R, T;
             XMMatrixDecompose(&S, &R, &T, localMatrix);
 
-            // 저장
             XMStoreFloat3(reinterpret_cast<_float3*>(&m_vScale), S);
             XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), R);
             XMStoreFloat3(reinterpret_cast<_float3*>(&m_vPosition), T);
         }
         else
         {
-            // 부모 없으면 그냥 월드 == 로컬
             _vector S, R, T;
             XMMatrixDecompose(&S, &R, &T, newWorldMatrix);
 
@@ -229,6 +226,13 @@ void CRectTransform::SetParent(CTransform* _parent)
 {
     __super::SetParent(_parent);
 
+    Safe_Release(m_pParentRect);
+    m_pParentRect = nullptr;
+    m_bIsRootRect = true;
+
+    if (!_parent)
+        return;
+
     CCanvas* canvas = _parent->Find_ComponentParentRecursive<CCanvas>();
 
     if (canvas)
@@ -236,17 +240,10 @@ void CRectTransform::SetParent(CTransform* _parent)
         m_pUI->Set_Canvas(canvas);
         canvas->Add_UIObject(m_pUI);
 
-        Safe_Release(m_pParentRect);
-
-        if (m_pParent)
+        if (m_pParent && !m_pParent->Get_GameObject()->GetComponent<CCanvas>())
         {
-            if (!m_pParent->Get_GameObject()->GetComponent<CCanvas>())
-            {
-                m_pParentRect = dynamic_cast<CRectTransform*>(_parent);
-                m_bIsRootRect = false;
-            }
-            else
-                m_bIsRootRect = true;
+            m_pParentRect = dynamic_cast<CRectTransform*>(_parent);
+            m_bIsRootRect = (m_pParentRect == nullptr);
 
             if (m_pParentRect)
                 m_pParentRect->AddRef();
@@ -255,8 +252,6 @@ void CRectTransform::SetParent(CTransform* _parent)
         Set_WidthHeight(100.f, 100.f);
         Set_AnchoredPosition(0.f, 0.f);
     }
-
-    return;
 }
 
 const vector2 CRectTransform::Get_AnchoredPosition() const

@@ -119,7 +119,8 @@ void CCapsuleCollider::Render_Editor()
 void CCapsuleCollider::Render_Gizmo()
 {
 #ifndef _CLIENT_BUILD
-    if (!CEditor::GetInstance().IsColliderGizmoVisible())
+    CEditor& editor = CEditor::GetInstance();
+    if (!editor.IsColliderGizmoVisible() && editor.Get_SelectedGameObject() != m_pGameObject)
         return;
 
     if (!m_pLineMesh || !m_pLineMaterial)
@@ -202,11 +203,11 @@ void CCapsuleCollider::Render_Gizmo()
         drawSegment(p0, p1);
     }
 
-    const _uint hemiSegments = 18u;
+    const _uint hemiSegments = 36u;
     for (_uint i = 0; i < hemiSegments; ++i)
     {
-        const _float t0 = (XM_PIDIV2 * static_cast<_float>(i)) / static_cast<_float>(hemiSegments);
-        const _float t1 = (XM_PIDIV2 * static_cast<_float>(i + 1)) / static_cast<_float>(hemiSegments);
+        const _float t0 = (XM_PI * static_cast<_float>(i)) / static_cast<_float>(hemiSegments);
+        const _float t1 = (XM_PI * static_cast<_float>(i + 1)) / static_cast<_float>(hemiSegments);
 
         _vector pxTop0 = XMVectorSet(cosf(t0) * radius, halfHeight + sinf(t0) * radius, 0.f, 1.f);
         _vector pxTop1 = XMVectorSet(cosf(t1) * radius, halfHeight + sinf(t1) * radius, 0.f, 1.f);
@@ -315,3 +316,5 @@ void CCapsuleCollider::BuildShapeIfNeeded()
 
     m_bShapeDirty = false;
 }
+
+

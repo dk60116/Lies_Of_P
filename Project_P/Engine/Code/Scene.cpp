@@ -527,7 +527,9 @@ void CScene::Update_Editor()
 
 	CPhysics::RAYCASTHIT firstHit = {};
 
-	if (!CSceneManager::GetInstance().IsPlayMode() && CInput::GetInstance().GetKey_Editor(CONTROL))
+	if (!CSceneManager::GetInstance().IsPlayMode() &&
+		!CEditor::GetInstance().IsAnimatorControllerEditorFocused() &&
+		CInput::GetInstance().GetKey_Editor(CONTROL))
 	{
 		if (CInput::GetInstance().GetKeyDown_Editor(S))
 		{
@@ -1957,6 +1959,11 @@ const CScene::EnviromentSettings& CScene::Get_EnviromentSetting()
 	return m_sEnviromentSettings;
 }
 
+void CScene::Set_Ambient(const _float _value)
+{
+	m_sEnviromentSettings.ambient = _value;
+}
+
 void CScene::Set_DirectionalLightShadowDist(const _float _value)
 {
 	m_sEnviromentSettings.directionalLightShadowDist = _value;
@@ -2126,6 +2133,10 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 	};
 
 	string sceneNameLine = "SceneName : " + CEngineString::WStringToString(m_strSceneName);
+	string sceneSkyBoxLine = "SceneSkyBox : " + CEngineString::WStringToString(m_sEnviromentSettings.skyBox);
+	string sceneAmbientLine = "SceneAmbient : " + to_string(m_sEnviromentSettings.ambient);
+	string sceneDirectionalLightShadowDistLine = "SceneDirectionalLightShadowDist : " + to_string(m_sEnviromentSettings.directionalLightShadowDist);
+	string sceneShadowBiasLine = "SceneShadowBias : " + to_string(m_sEnviromentSettings.shadowBias);
 	vector<string> preservedManualLines;
 	unordered_map<wstring, SceneResourceEntry> previousEntries;
 	unordered_set<wstring> previousNonEditorClipPaths;
@@ -2150,10 +2161,14 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 			const string key = split[0];
 			if (key == "SceneName" || key == "Scene name")
 			{
-				sceneNameLine = line;
 				continue;
 			}
 
+
+			if (key == "SceneSkyBox" || key == "SceneAmbient" || key == "SceneDirectionalLightShadowDist" || key == "SceneShadowBias")
+			{
+				continue;
+			}
 			if (split.size() < 3)
 			{
 				preservedManualLines.push_back(line);
@@ -2327,6 +2342,10 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 	}
 
 	out << sceneNameLine << "\n";
+	out << sceneSkyBoxLine << "\n";
+	out << sceneAmbientLine << "\n";
+	out << sceneDirectionalLightShadowDistLine << "\n";
+	out << sceneShadowBiasLine << "\n";
 	for (const auto& preservedLine : preservedManualLines)
 		out << preservedLine << "\n";
 	for (const auto& entry : sortedEntries)
@@ -2393,6 +2412,8 @@ HRESULT CScene::PreLoadResources()
 		return string(begin, end);
 	};
 
+
+	m_sEnviromentSettings = EnviromentSettings{};
 	auto reuseEditorTaggedResource = [&](const string& name, const string& format)
 	{
 		if (!containsToken(format, "[Editor]"))
@@ -2508,6 +2529,33 @@ HRESULT CScene::PreLoadResources()
 			if (split.size() >= 3)
 				format = split[2];
 
+			if (name == "SceneName" || name == "Scene name")
+				continue;
+
+			if (name == "SceneSkyBox")
+			{
+				m_sEnviromentSettings.skyBox = CEngineString::StringToWString(filepath);
+				continue;
+			}
+
+			if (name == "SceneAmbient")
+			{
+				try { m_sEnviromentSettings.ambient = stof(filepath); } catch (...) {}
+				continue;
+			}
+
+			if (name == "SceneDirectionalLightShadowDist")
+			{
+				try { m_sEnviromentSettings.directionalLightShadowDist = stof(filepath); } catch (...) {}
+				continue;
+			}
+
+			if (name == "SceneShadowBias")
+			{
+				try { m_sEnviromentSettings.shadowBias = stof(filepath); } catch (...) {}
+				continue;
+			}
+
 			if (reuseEditorTaggedResource(name, format))
 				continue;
 
@@ -2584,5 +2632,7 @@ ID3D11BlendState* CScene::Get_NoneBlendingState() const
 {
 	return m_pNoneBlendingState;
 }
+
+
 
 

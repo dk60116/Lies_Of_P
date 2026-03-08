@@ -186,6 +186,7 @@ void CAnimatorControllerEditorBox::OnDestroy()
 
     m_pendingTransitionFrom.clear();
     m_pendingSourceType = EPendingSource::None;
+    m_bShortcutFocusedLastFrame = false;
 }
 
 void CAnimatorControllerEditorBox::Open(const fs::path& path)
@@ -248,6 +249,8 @@ void CAnimatorControllerEditorBox::Render()
         return;
     }
 
+    m_bShortcutFocusedLastFrame = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+    HandleShortcuts();
     RenderToolbar();
 
     ImGui::Separator();
@@ -289,24 +292,7 @@ void CAnimatorControllerEditorBox::RenderToolbar()
 
     ImGui::SameLine();
     if (ImGui::Button("Build Binary"))
-    {
-        if (!SaveToFile())
-        {
-            CDebug::LogError(L"AnimatorController build failed - save failed: " + m_path.wstring());
-        }
-        else
-        {
-            const wstring relPath = MakeAssetsRelativePath(m_path);
-            if (relPath.empty())
-            {
-                CDebug::LogError(L"AnimatorController build failed - not under Assets: " + m_path.wstring());
-            }
-            else
-            {
-                CResources::GetInstance().ConvertAnimatorControllerToBinary(relPath);
-            }
-        }
-    }
+        BuildBinary();
 
     ImGui::SameLine();
     if (ImGui::Button("Close"))
@@ -1469,6 +1455,40 @@ bool CAnimatorControllerEditorBox::SaveToFile()
 
     string out = SerializeText();
     return WriteAllText(m_path, out);
+}
+
+void CAnimatorControllerEditorBox::BuildBinary()
+{
+    if (!SaveToFile())
+    {
+        CDebug::LogError(L"AnimatorController build failed - save failed: " + m_path.wstring());
+        return;
+    }
+
+    const wstring relPath = MakeAssetsRelativePath(m_path);
+    if (relPath.empty())
+    {
+        CDebug::LogError(L"AnimatorController build failed - not under Assets: " + m_path.wstring());
+        return;
+    }
+
+    CResources::GetInstance().ConvertAnimatorControllerToBinary(relPath);
+}
+
+void CAnimatorControllerEditorBox::HandleShortcuts()
+{
+    if (!m_bShortcutFocusedLastFrame)
+        return;
+
+    const ImGuiIO& io = ImGui::GetIO();
+    if (!io.KeyCtrl)
+        return;
+
+    if (ImGui::IsKeyPressed(ImGuiKey_S, false))
+        SaveToFile();
+
+    if (ImGui::IsKeyPressed(ImGuiKey_B, false))
+        BuildBinary();
 }
 
 string CAnimatorControllerEditorBox::Trim(const string& s)

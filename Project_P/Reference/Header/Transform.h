@@ -41,6 +41,7 @@ public:
 public:
 	CTransform* Get_Parent() const;
 	virtual void SetParent(CTransform* _parent);
+	void InsertChildBefore(CTransform* _child, CTransform* _beforeChild);
 	const _bool Is_Root() const;
 	CTransform* Get_Child();
 	CTransform* Get_Child(const _int _index);
