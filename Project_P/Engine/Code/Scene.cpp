@@ -779,7 +779,10 @@ void CScene::Render_Game()
 		camera->RenderMesh();
 		camera->RenderShadowDepthPass(vp);
 		camera->RenderObjectIDPass(vp);
-		camera->RenderLightingCombined(vp);
+		camera->RenderLightingPass_ToDiffuse(vp);
+		camera->RenderLightingPass_ToSpecular(vp);
+		camera->RenderShadowMaskPass(vp);
+		camera->RenderCombine(vp);
 
 		CGraphicDevice::GetInstance().Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
 		if (camera->GetClearFlags() == CCamera::ClearFlags::Skybox || camera->GetClearFlags() == CCamera::ClearFlags::SolidColor)
@@ -2632,6 +2635,7 @@ ID3D11BlendState* CScene::Get_NoneBlendingState() const
 {
 	return m_pNoneBlendingState;
 }
+
 
 
 

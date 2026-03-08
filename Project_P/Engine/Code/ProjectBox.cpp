@@ -138,6 +138,24 @@ void CProjectBox::Render()
     ImGui::InputTextWithHint("##ProjectSearch", "Type to filter...", m_searchBuffer.data(), m_searchBuffer.size());
     ImGui::Separator();
 
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
+        ImGui::IsKeyPressed(ImGuiKey_Delete, false) &&
+        !m_strCurrentSelectedFilePath.empty())
+    {
+        error_code deleteTargetEc;
+        if (fs::exists(m_strCurrentSelectedFilePath, deleteTargetEc) && !deleteTargetEc)
+        {
+            m_strPendingDeletePath = m_strCurrentSelectedFilePath;
+            m_bPendingDeleteIsDirectory = fs::is_directory(m_strCurrentSelectedFilePath, deleteTargetEc);
+            m_bRequestDelete = true;
+        }
+        else
+        {
+            m_strCurrentSelectedFilePath.clear();
+            CEditor::GetInstance().Set_SelectedAssetPath(fs::path());
+        }
+    }
+
 	RenderAssetFoldersHierarchy();
 	RenderBinaryFoldersHierarchy();
 
@@ -157,14 +175,21 @@ void CProjectBox::Render()
 		ImGui::Separator();
 
 		if (ImGui::Button("Yes", ImVec2(120, 0)))
-		{
+        {
             error_code ec;
             if (m_bPendingDeleteIsDirectory)
                 fs::remove_all(m_strPendingDeletePath, ec);
             else
                 fs::remove(m_strPendingDeletePath, ec);
+
+            const fs::path deletedPath = m_strPendingDeletePath;
             if (ec)
-                CDebug::LogError(L"Delete failed: " + m_strPendingDeletePath.wstring());
+                CDebug::LogError(L"Delete failed: " + deletedPath.wstring());
+            else if (m_strCurrentSelectedFilePath == deletedPath)
+            {
+                m_strCurrentSelectedFilePath.clear();
+                CEditor::GetInstance().Set_SelectedAssetPath(fs::path());
+            }
 
             m_strPendingDeletePath.clear();
 			m_bPendingDeleteIsDirectory = false;
