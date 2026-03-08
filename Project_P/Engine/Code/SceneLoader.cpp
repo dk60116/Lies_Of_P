@@ -211,11 +211,13 @@ void CSceneLoader::ThreadLoadingLoop()
 
 					auto acInfo = CResources::GetInstance().ReadAnimatorControllerBufferInfos(acDataPath);
 
-					auto acResource = CResources::GetInstance().LoadResourceComplete_Scene<CAnimatorController>(acDataName + L" (Animator Controller)", acDataPath, nullptr, true);
+					auto acResource = CResources::GetInstance().LoadResourceComplete_Scene<CAnimatorController>(wName + L" (Animator Controller)", acDataPath, nullptr, true);
 
-					acResource->Initiailize_Custom(acInfo);
-
-					CResources::AddSceneResource(acDataName, acResource, true);
+					if (acResource)
+					{
+						acResource->Initiailize_Custom(acInfo);
+						CResources::AddSceneResource(wName, acResource, true);
+					}
 				}
 			}
 			else if (CEngineString::Contains(wFile, L".mp3") || CEngineString::Contains(wFile, L".wav") || CEngineString::Contains(wFile, L".ogg"))
@@ -329,3 +331,4 @@ CMeshBuffer::TERRAINBUFFERDESC CSceneLoader::FormatToTerrainDesc(const wstring& 
 
 	return terrainDesc;
 }
+

@@ -3,7 +3,6 @@
 
 CMonster::CMonster()
 	: m_strMonsterName(L"")
-	, m_strSkinnedMeshBufferName(L"")
 	, m_vMaterialTransparent({})
 	, m_vMeshRenderers({})
 	, m_pAnimator(nullptr)
@@ -96,7 +95,6 @@ void CMonster::CreateAnimator()
 	m_pAnimator = m_pGameObject->AddComponent<CAnimator>();
 
 	const wstring path = L"Mon_" + m_strMonsterName + L"_AnimatorController (Animator Controller)";
-
 	CAnimatorController* animCon = CResources::GetInstance().LoadOnScene<CAnimatorController>(path);
 	m_pAnimator->Set_Controller(animCon);
 }
