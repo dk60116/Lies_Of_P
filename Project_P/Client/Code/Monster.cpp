@@ -1,10 +1,13 @@
 #include "cpch.h"
 #include "Monster.h"
+#include "MonsterController.h"
 
 CMonster::CMonster()
 	: m_strMonsterName(L"")
 	, m_vMaterialTransparent({})
 	, m_vMeshRenderers({})
+	, m_pBodyCollider(nullptr)
+	, m_pRigidBody(nullptr)
 	, m_pAnimator(nullptr)
 	, m_pController(nullptr)
 {
@@ -23,6 +26,7 @@ HRESULT CMonster::Initialize()
 	CreateBody();
 	PaintTexture();
 	CreateAnimator();
+	CreateAI();
 
 	return S_OK;
 }
@@ -67,6 +71,13 @@ void CMonster::CreateBody()
 	const wstring path = L"Mon_" + m_strMonsterName + L"_Body_Model (MeshBuffer)";
 
 	m_vMeshRenderers = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(path), CResources::GetInstance().LoadSkinnedBonesOnScene(path), 0.01f, vector3::up() * 270.f);
+
+	m_pBodyCollider = m_pGameObject->AddComponent<CCapsuleCollider>();
+	m_pRigidBody = m_pGameObject->AddComponent<CRigidBody>();
+	m_pRigidBody->SetUseGravity(true);
+	m_pRigidBody->SetConstRotationX(true);
+	m_pRigidBody->SetConstRotationY(true);
+	m_pRigidBody->SetConstRotationZ(true);
 }
 
 void CMonster::PaintTexture()
@@ -97,4 +108,9 @@ void CMonster::CreateAnimator()
 	const wstring path = L"Mon_" + m_strMonsterName + L"_AnimatorController (Animator Controller)";
 	CAnimatorController* animCon = CResources::GetInstance().LoadOnScene<CAnimatorController>(path);
 	m_pAnimator->Set_Controller(animCon);
+}
+
+void CMonster::CreateAI()
+{
+	m_pController = m_pGameObject->AddComponent<CMonsterController>();
 }

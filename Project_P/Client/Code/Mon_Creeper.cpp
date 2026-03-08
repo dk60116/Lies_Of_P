@@ -29,6 +29,9 @@ HRESULT CMon_Creeper::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
+	m_pBodyCollider->SetCenter(vector3(0.f, 0.9f, 0.f));
+	m_pBodyCollider->SetHeight(0.8f);
+
 	return S_OK;
 }
 

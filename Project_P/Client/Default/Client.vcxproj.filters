@@ -126,6 +126,9 @@
     <ClInclude Include="..\Header\Mon_Creeper.h">
       <Filter>Scripts\Object\Monster</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\MonsterController.h">
+      <Filter>Scripts\Object\Monster</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Code\MainScene.cpp">
@@ -201,6 +204,9 @@
       <Filter>Scripts\Object\Map</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\Mon_Creeper.cpp">
+      <Filter>Scripts\Object\Monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\MonsterController.cpp">
       <Filter>Scripts\Object\Monster</Filter>
     </ClCompile>
   </ItemGroup>

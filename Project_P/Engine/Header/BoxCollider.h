@@ -5,11 +5,13 @@ NS_BEGIN(Engine)
 
 class ENGINE_DLL CBoxCollider : public CCollider
 {
+	friend class CGameObject;
+
 protected:
 	explicit CBoxCollider();
 	~CBoxCollider();
 
-public:
+private:
 	static CBoxCollider* Create();
 	CComponent* Clone() const override;
 

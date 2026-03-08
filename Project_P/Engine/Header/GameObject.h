@@ -15,7 +15,7 @@ class ENGINE_DLL CGameObject final : public UObject
 	friend class CTransform;
 
 public:
-	enum class STATIC_METHOD { TransformStatic };
+	enum class STATIC_METHOD { TransformStatic, NavigationStatic };
 
 private:
 	explicit CGameObject(const wstring _name, ID3D11Device* _pDevice, ID3D11DeviceContext* _pContext);

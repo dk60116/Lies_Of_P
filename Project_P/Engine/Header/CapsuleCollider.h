@@ -11,7 +11,7 @@ protected:
     explicit CCapsuleCollider();
     ~CCapsuleCollider();
 
-private:
+protected:
     static CCapsuleCollider* Create();
     CComponent* Clone() const override;
 

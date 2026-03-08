@@ -211,6 +211,9 @@
     <ClInclude Include="..\Header\MeshCollider.h">
       <Filter>Components\Physics\Collider</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\NaviMeshAgent.h">
+      <Filter>Components\AI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Engine">
@@ -326,6 +329,9 @@
     </Filter>
     <Filter Include="Components\Physics\Collider">
       <UniqueIdentifier>{4057fe5d-c1af-49f4-a1f7-986a9b2ca3a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\AI">
+      <UniqueIdentifier>{3fa20bac-c88b-48a2-8cb8-178c4d3ec4d7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -553,6 +559,9 @@
     </ClCompile>
     <ClCompile Include="..\Code\MeshCollider.cpp">
       <Filter>Components\Physics\Collider</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\NaviMeshAgent.cpp">
+      <Filter>Components\AI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

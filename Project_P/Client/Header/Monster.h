@@ -41,11 +41,14 @@ protected:
 	void CreateBody();
 	void PaintTexture();
 	void CreateAnimator();
+	void CreateAI();
 
 protected:
 	wstring m_strMonsterName;
 	vector<_bool> m_vMaterialTransparent;
 	vector<CSkinnedMeshRenderer*> m_vMeshRenderers;
+	CCapsuleCollider* m_pBodyCollider;
+	CRigidBody* m_pRigidBody;
 	CAnimator* m_pAnimator;
 	CMonsterController* m_pController;
 
