@@ -39,7 +39,6 @@ cbuffer PerCustomValue : register(b10)
 };
 
 #define MAX_LIGHTS 64
-
 #define LIGHT_TYPE_DIRECTIONAL 0
 #define LIGHT_TYPE_POINT 1
 #define LIGHT_TYPE_SPOT 2
@@ -107,10 +106,8 @@ VSOut VSMain(VSIn v)
     }
 
     float4 posW4 = mul(skinnedPos, world);
-
     float3 N = normalize(mul(skinnedN, (float3x3)world));
     float3 T = normalize(mul(skinnedT, (float3x3)world));
-
     T = normalize(T - N * dot(T, N));
     float3 B = normalize(cross(N, T));
 
@@ -121,7 +118,6 @@ VSOut VSMain(VSIn v)
     o.normalW = N;
     o.tangentW = T;
     o.bitanW = B;
-
     return o;
 }
 
@@ -165,11 +161,11 @@ PSOut PSMain(VSOut input)
     float3 ambientSum = float3(0, 0, 0);
     float3 specularSum = float3(0, 0, 0);
 
-    int lightCount = (int)gLight[0][3][3];
+    int lightCount = clamp((int)gLight[0][3][3], 0, MAX_LIGHTS - 1);
     float specularPower = lerp(8.0f, 128.0f, 1.0f - saturate(roughness));
     float specularStrength = 1.0f - saturate(roughness);
 
-    for (int i = 0; i < lightCount; ++i)
+    for (int i = 1; i <= lightCount; ++i)
     {
         if (gLight[i][3][2] < 0.5f)
             continue;
@@ -182,6 +178,7 @@ PSOut PSMain(VSOut input)
         float range = gLight[i][0][3];
         float attenuationK = gLight[i][3][1];
         float ambientK = gLight[i][2][3];
+        float spotCos = gLight[i][3][3];
 
         float3 L;
         float attenuation = 1.0f;
@@ -190,15 +187,30 @@ PSOut PSMain(VSOut input)
         {
             L = normalize(-lightDir);
         }
-        else if (lightType == LIGHT_TYPE_POINT)
+        else if (lightType == LIGHT_TYPE_POINT || lightType == LIGHT_TYPE_SPOT)
         {
             float3 toLight = lightPos - input.posW;
             float dist = length(toLight);
+            if (range <= 0.0001f || dist >= range)
+                continue;
+
             L = toLight / max(dist, 0.0001f);
             attenuation = saturate(1.0f - dist / max(range, 0.0001f)) * attenuationK;
+
+            if (lightType == LIGHT_TYPE_SPOT)
+            {
+                float coneCos = dot(normalize(-L), normalize(lightDir));
+                if (coneCos <= spotCos)
+                    continue;
+
+                float coneAtt = saturate((coneCos - spotCos) / max(1.0f - spotCos, 1e-4f));
+                attenuation *= coneAtt * coneAtt;
+            }
         }
         else
+        {
             continue;
+        }
 
         float NdotL = saturate(dot(N, L));
         float3 diffuse = lightColor * NdotL * intensity * attenuation;

@@ -1547,6 +1547,223 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 break;
             }
 
+            if (CCamera* camera = dynamic_cast<CCamera*>(component))
+            {
+                static const char* clearFlagLabels[] = { "Skybox", "SolidColor", "DepthOnly", "DontClear" };
+                static const char* viewModeLabels[] = { "Perspective", "Orthographic" };
+
+                CSceneManager& sceneManager = CSceneManager::GetInstance();
+                const auto& layerList = sceneManager.Get_LayerList();
+
+                _int clearFlagIndex = static_cast<_int>(camera->GetClearFlags());
+                if (ImGui::Combo(("Clear Flags##" + to_string(reinterpret_cast<uintptr_t>(camera))).c_str(), &clearFlagIndex, clearFlagLabels, IM_ARRAYSIZE(clearFlagLabels)))
+                    camera->SetClearFlags(static_cast<CCamera::ClearFlags>(clearFlagIndex));
+
+                _int viewModeIndex = static_cast<_int>(camera->GetViewMode());
+                if (ImGui::Combo(("View Mode##" + to_string(reinterpret_cast<uintptr_t>(camera))).c_str(), &viewModeIndex, viewModeLabels, IM_ARRAYSIZE(viewModeLabels)))
+                    camera->SetViewMode(static_cast<CCamera::ViewMode>(viewModeIndex));
+
+                _float nearValue = camera->GetNear();
+                if (ImGui::InputFloat(("Near##" + to_string(reinterpret_cast<uintptr_t>(camera))).c_str(), &nearValue, 0.01f, 0.1f, "%.3f"))
+                    camera->SetNear(nearValue);
+
+                _float farValue = camera->GetFar();
+                if (ImGui::InputFloat(("Far##" + to_string(reinterpret_cast<uintptr_t>(camera))).c_str(), &farValue, 1.f, 10.f, "%.3f"))
+                    camera->SetFar(farValue);
+
+                if (camera->GetViewMode() == CCamera::ViewMode::Perspective)
+                {
+                    _float fovValue = camera->GetFieldOfView();
+                    const string fovSliderLabel = "Field Of View##Slider" + to_string(reinterpret_cast<uintptr_t>(camera));
+                    const string fovInputLabel = "FOV Input##" + to_string(reinterpret_cast<uintptr_t>(camera));
+                    ImGui::Text("Field Of View");
+                    ImGui::SetNextItemWidth(220.f);
+                    _bool changed = ImGui::SliderFloat(("##" + fovSliderLabel).c_str(), &fovValue, 1.f, 179.f, "%.1f deg");
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(90.f);
+                    changed |= ImGui::InputFloat(fovInputLabel.c_str(), &fovValue, 1.f, 5.f, "%.1f");
+                    if (changed)
+                        camera->SetFieldOfView(fovValue);
+                }
+                else
+                {
+                    _float orthoSize = camera->GetOrthographicSize();
+                    if (ImGui::InputFloat(("Orthographic Size##" + to_string(reinterpret_cast<uintptr_t>(camera))).c_str(), &orthoSize, 0.1f, 1.f, "%.3f"))
+                        camera->SetOrthographicSize(orthoSize);
+                }
+
+                const _float aspectValue = camera->GetAspect();
+                ImGui::Text("Aspect: %.4f", aspectValue);
+
+                ColorValue bgColor = camera->Get_BackgroundColor();
+                _float color[4] = { bgColor.r / 255.f, bgColor.g / 255.f, bgColor.b / 255.f, bgColor.a / 255.f };
+                if (ImGui::ColorEdit4(("Background Color##" + to_string(reinterpret_cast<uintptr_t>(camera))).c_str(), color))
+                {
+                    camera->SetBackgroundColor(ColorValue(
+                        static_cast<BYTE>(std::clamp(color[0], 0.f, 1.f) * 255.f),
+                        static_cast<BYTE>(std::clamp(color[1], 0.f, 1.f) * 255.f),
+                        static_cast<BYTE>(std::clamp(color[2], 0.f, 1.f) * 255.f),
+                        static_cast<BYTE>(std::clamp(color[3], 0.f, 1.f) * 255.f)));
+                }
+
+                _uint cullingMask = camera->GetCullingMask();
+                vector<string> selectedLayers;
+                for (_uint i = 0u; i < 32u; ++i)
+                {
+                    const _uint layerValue = (i == 0u) ? 0u : (1u << i);
+                    auto layerIt = layerList.find(layerValue);
+                    if (layerIt == layerList.end())
+                        continue;
+
+                    if (sceneManager.ContainLayerMask(layerValue, cullingMask))
+                        selectedLayers.push_back(CEngineString::WStringToString(layerIt->second));
+                }
+
+                string cullingPreview = "None";
+                if (cullingMask == ~0u)
+                    cullingPreview = "Everything";
+                else if (!selectedLayers.empty())
+                {
+                    cullingPreview.clear();
+                    const size_t previewCount = min<size_t>(selectedLayers.size(), 3u);
+                    for (size_t i = 0; i < previewCount; ++i)
+                    {
+                        if (!cullingPreview.empty())
+                            cullingPreview += ", ";
+                        cullingPreview += selectedLayers[i];
+                    }
+                    if (selectedLayers.size() > previewCount)
+                        cullingPreview += " ...";
+                }
+
+                ImGui::Separator();
+                const string cullingComboLabel = "Culling Mask##" + to_string(reinterpret_cast<uintptr_t>(camera));
+                if (ImGui::BeginCombo(cullingComboLabel.c_str(), cullingPreview.c_str()))
+                {
+                    if (ImGui::Selectable("Everything", cullingMask == ~0u))
+                        cullingMask = ~0u;
+
+                    if (ImGui::Selectable("Nothing", cullingMask == 0u))
+                        cullingMask = 0u;
+
+                    ImGui::Separator();
+
+                    for (_uint i = 0u; i < 32u; ++i)
+                    {
+                        const _uint layerValue = (i == 0u) ? 0u : (1u << i);
+                        auto layerIt = layerList.find(layerValue);
+                        if (layerIt == layerList.end())
+                            continue;
+
+                        _bool enabled = sceneManager.ContainLayerMask(layerValue, cullingMask);
+                        const string layerLabel = to_string(i) + ": " + CEngineString::WStringToString(layerIt->second) + "##CameraLayer" + to_string(reinterpret_cast<uintptr_t>(camera)) + "_" + to_string(i);
+                        if (ImGui::Checkbox(layerLabel.c_str(), &enabled))
+                        {
+                            const _uint layerBit = (layerValue == 0u) ? 1u : layerValue;
+                            if (enabled)
+                                cullingMask |= layerBit;
+                            else
+                                cullingMask &= ~layerBit;
+                        }
+                    }
+
+                    ImGui::EndCombo();
+                }
+                camera->SetCullingMask(cullingMask);
+
+                if (ImGui::TreeNode(("Matrix Preview##" + to_string(reinterpret_cast<uintptr_t>(camera))).c_str()))
+                {
+                    _float4x4 viewMatrix = {};
+                    _float4x4 projMatrix = {};
+                    XMStoreFloat4x4(&viewMatrix, camera->GetViewMatrix());
+                    XMStoreFloat4x4(&projMatrix, camera->GetProjectionMatrix());
+
+                    const _float viewRows[4][4] =
+                    {
+                        { viewMatrix._11, viewMatrix._12, viewMatrix._13, viewMatrix._14 },
+                        { viewMatrix._21, viewMatrix._22, viewMatrix._23, viewMatrix._24 },
+                        { viewMatrix._31, viewMatrix._32, viewMatrix._33, viewMatrix._34 },
+                        { viewMatrix._41, viewMatrix._42, viewMatrix._43, viewMatrix._44 }
+                    };
+
+                    const _float projRows[4][4] =
+                    {
+                        { projMatrix._11, projMatrix._12, projMatrix._13, projMatrix._14 },
+                        { projMatrix._21, projMatrix._22, projMatrix._23, projMatrix._24 },
+                        { projMatrix._31, projMatrix._32, projMatrix._33, projMatrix._34 },
+                        { projMatrix._41, projMatrix._42, projMatrix._43, projMatrix._44 }
+                    };
+
+                    ImGui::TextUnformatted("View Matrix");
+                    for (_int row = 0; row < 4; ++row)
+                        ImGui::Text("[%.3f %.3f %.3f %.3f]", viewRows[row][0], viewRows[row][1], viewRows[row][2], viewRows[row][3]);
+
+                    ImGui::Separator();
+                    ImGui::TextUnformatted("Projection Matrix");
+                    for (_int row = 0; row < 4; ++row)
+                        ImGui::Text("[%.3f %.3f %.3f %.3f]", projRows[row][0], projRows[row][1], projRows[row][2], projRows[row][3]);
+
+                    ImGui::TreePop();
+                }
+            }
+
+            if (CLight* light = dynamic_cast<CLight*>(component))
+            {
+                static const char* lightTypeLabels[] = { "Directional", "Point", "Spot" };
+
+                const string lightId = to_string(reinterpret_cast<uintptr_t>(light));
+                _int lightTypeIndex = static_cast<_int>(light->Get_Type());
+                if (ImGui::Combo(("Type##" + lightId).c_str(), &lightTypeIndex, lightTypeLabels, IM_ARRAYSIZE(lightTypeLabels)))
+                    light->Set_Type(static_cast<CLight::Type>(lightTypeIndex));
+
+                _float intensity = light->Get_Intensity();
+                if (ImGui::DragFloat(("Intensity##" + lightId).c_str(), &intensity, 0.05f, 0.f, 100.f, "%.2f"))
+                    light->Set_Intensity(intensity);
+
+                if (light->Get_Type() != CLight::Type::Directional)
+                {
+                    _float range = light->Get_Range();
+                    if (ImGui::DragFloat(("Range##" + lightId).c_str(), &range, 0.1f, 0.f, 10000.f, "%.2f"))
+                        light->Set_Range(range);
+
+                    _float attenuation = light->Get_Attenuation();
+                    if (ImGui::DragFloat(("Attenuation##" + lightId).c_str(), &attenuation, 0.01f, 0.f, 100.f, "%.3f"))
+                        light->Set_Attenuation(attenuation);
+                }
+
+                if (light->Get_Type() == CLight::Type::spot)
+                {
+                    _float spotAngle = light->Get_SpotAngle();
+                    if (ImGui::SliderFloat(("Spot Angle##" + lightId).c_str(), &spotAngle, 1.f, 179.f, "%.1f deg"))
+                        light->Set_SpotAngle(spotAngle);
+                }
+
+                ColorValue diffuseColor = light->Get_DiffuseColor();
+                _float diffuse[4] = { diffuseColor.r / 255.f, diffuseColor.g / 255.f, diffuseColor.b / 255.f, diffuseColor.a / 255.f };
+                if (ImGui::ColorEdit4(("Diffuse Color##" + lightId).c_str(), diffuse))
+                {
+                    light->Set_Color(ColorValue(
+                        static_cast<BYTE>(std::clamp(diffuse[0], 0.f, 1.f) * 255.f),
+                        static_cast<BYTE>(std::clamp(diffuse[1], 0.f, 1.f) * 255.f),
+                        static_cast<BYTE>(std::clamp(diffuse[2], 0.f, 1.f) * 255.f),
+                        static_cast<BYTE>(std::clamp(diffuse[3], 0.f, 1.f) * 255.f)));
+                }
+
+                ColorValue specularColor = light->Get_SpecularColor();
+                _float specular[4] = { specularColor.r / 255.f, specularColor.g / 255.f, specularColor.b / 255.f, specularColor.a / 255.f };
+                if (ImGui::ColorEdit4(("Specular Color##" + lightId).c_str(), specular))
+                {
+                    light->Set_SpecularColor(ColorValue(
+                        static_cast<BYTE>(std::clamp(specular[0], 0.f, 1.f) * 255.f),
+                        static_cast<BYTE>(std::clamp(specular[1], 0.f, 1.f) * 255.f),
+                        static_cast<BYTE>(std::clamp(specular[2], 0.f, 1.f) * 255.f),
+                        static_cast<BYTE>(std::clamp(specular[3], 0.f, 1.f) * 255.f)));
+                }
+
+                _bool castShadow = light->IsCastShadow();
+                if (ImGui::Checkbox(("Cast Shadow##" + lightId).c_str(), &castShadow))
+                    light->SetCastShadow(castShadow);
+            }
             if (CMeshRenderer* meshRenderer = dynamic_cast<CMeshRenderer*>(component))
                 RenderMeshRendererComponent(meshRenderer);
 
@@ -2321,28 +2538,54 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
 static _bool IsPreviewImageExtension(const fs::path& path)
 {
     string ext = CEditor::ToLowerCopy(path.extension().string());
-    return ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tif" || ext == ".tiff" || ext == ".gif";
+    return ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".dds" || ext == ".tif" || ext == ".tiff" || ext == ".gif";
 }
 
 static _bool TryGetAssetsRelativePath(const fs::path& path, wstring& outRel)
 {
     const fs::path assetsRoot = fs::path(L"../Assets");
+    const fs::path binaryRoot = fs::path(L"BinaryAssets");
     error_code ec;
-    fs::path absolutePath = fs::weakly_canonical(path, ec);
-    fs::path absoluteRoot = fs::weakly_canonical(assetsRoot, ec);
-    if (ec)
-    {
-        absolutePath = fs::absolute(path, ec);
-        absoluteRoot = fs::absolute(assetsRoot, ec);
-    }
 
-    fs::path relative = absolutePath.lexically_relative(absoluteRoot);
-    if (relative.empty() || relative.native().rfind(L"..", 0) == 0)
+    auto makeCanonical = [&](const fs::path& value)
+    {
+        fs::path result = fs::weakly_canonical(value, ec);
+        if (ec)
+        {
+            ec.clear();
+            result = fs::absolute(value, ec);
+        }
+        return result;
+    };
+
+    const fs::path absolutePath = makeCanonical(path);
+    if (ec)
         return false;
 
-    outRel = relative.wstring();
-    outRel = CEngineString::Replace(outRel, L"\\", L"/");
-    return true;
+    const fs::path absoluteAssetsRoot = makeCanonical(assetsRoot);
+    if (!ec)
+    {
+        fs::path relative = absolutePath.lexically_relative(absoluteAssetsRoot);
+        if (!relative.empty() && relative.native().find(L"..") != 0)
+        {
+            outRel = relative.generic_wstring();
+            return true;
+        }
+    }
+
+    ec.clear();
+    const fs::path absoluteBinaryRoot = makeCanonical(binaryRoot);
+    if (ec)
+        return false;
+
+    fs::path relativeBinary = absolutePath.lexically_relative(absoluteBinaryRoot);
+    if (!relativeBinary.empty() && relativeBinary.native().find(L"..") != 0)
+    {
+        outRel = L"BinaryAssets/" + relativeBinary.generic_wstring();
+        return true;
+    }
+
+    return false;
 }
 
 static string FormatFileSize(uintmax_t bytes)
@@ -2501,3 +2744,6 @@ void CInspectorBox::RenderSelectedAssetPreview(const fs::path& path)
     ImTextureID texId = (ImTextureID)(intptr_t)m_pPreviewTexture->Get_SRV();
     ImGui::Image(ImTextureRef(texId), size);
 }
+
+
+

@@ -68,13 +68,25 @@ void CSkyBox::RenderSky(CCamera* _camera)
 	viewFloat4x4._43 = 0.0f;
 
 	_matrix viewNoTrans = XMLoadFloat4x4(&viewFloat4x4);
+	_matrix skyProj = _camera->GetProjectionMatrix();
+
+	if (_camera->GetViewMode() == CCamera::ViewMode::Orthographic)
+	{
+		skyProj = XMMatrixPerspectiveFovLH
+		(
+			XMConvertToRadians(max(_camera->GetFieldOfView(), 1.f)),
+			max(_camera->GetAspect(), 0.001f),
+			max(_camera->GetNear(), 0.001f),
+			max(_camera->GetFar(), _camera->GetNear() + 0.001f)
+		);
+	}
 
 	m_pMaterial->Bind_Matrix(XMMatrixIdentity());
 	m_pMaterial->Bind_Camera
 	(
 		_camera->Get_Transform()->Get_Position(),
 		viewNoTrans,
-		_camera->GetProjectionMatrix()
+		skyProj
 	);
 
 	__super::Render(); 

@@ -7,6 +7,7 @@ class CPlayerState;
 
 class CPlayerController final : public CComponent
 {
+    friend class CGameObject;
     friend class CPlayerControllerContext;
 
 public:
@@ -18,7 +19,7 @@ protected:
     CPlayerController();
     ~CPlayerController();
 
-public:
+protected:
     static CPlayerController* Create();
     CComponent* Clone() const override;
 

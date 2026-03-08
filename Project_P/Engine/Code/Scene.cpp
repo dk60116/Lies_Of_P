@@ -594,7 +594,7 @@ void CScene::Render_Editor()
 		return;
 
 	m_vLightData.clear();
-	const _uint maxLightCount = 64u;
+	const _uint maxLightCount = 63u;
 	vector<_float4x4> lightInfos = {};
 	lightInfos.reserve(min<_uint>(static_cast<_uint>(m_lLightList.size()), maxLightCount));
 
@@ -609,12 +609,12 @@ void CScene::Render_Editor()
 		lightInfos.push_back((*it)->To_LightInfo());
 	}
 
-	const _float lightCount = static_cast<_float>(lightInfos.size());
+	_float4x4 lightMeta = {};
+	lightMeta._44 = static_cast<_float>(lightInfos.size());
+	m_vLightData.push_back(XMLoadFloat4x4(&lightMeta));
+
 	for (auto& lightInfo : lightInfos)
-	{
-		lightInfo._44 = lightCount;
 		m_vLightData.push_back(XMLoadFloat4x4(&lightInfo));
-	}
 
 	ID3D11DeviceContext* ctx = m_pContext;
 
@@ -695,7 +695,7 @@ void CScene::Render_Editor()
 void CScene::Render_Game()
 {
 	m_vLightData.clear();
-	const _uint maxLightCount = 64u;
+	const _uint maxLightCount = 63u;
 	vector<_float4x4> lightInfos = {};
 	lightInfos.reserve(min<_uint>(static_cast<_uint>(m_lLightList.size()), maxLightCount));
 
@@ -710,18 +710,17 @@ void CScene::Render_Game()
 		lightInfos.push_back((*it)->To_LightInfo());
 	}
 
-	const _float lightCount = static_cast<_float>(lightInfos.size());
+	_float4x4 lightMeta = {};
+	lightMeta._44 = static_cast<_float>(lightInfos.size());
+	m_vLightData.push_back(XMLoadFloat4x4(&lightMeta));
+
 	for (auto& lightInfo : lightInfos)
-	{
-		lightInfo._44 = lightCount;
 		m_vLightData.push_back(XMLoadFloat4x4(&lightInfo));
-	}
 
 	CGraphicDevice::GetInstance().Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
-
-	ColorValue backgroudColor = ColorValue::black();
-	if (Get_Camera())
-		backgroudColor = Get_Camera()->Get_BackgroundColor();
+	ColorValue initialBackgroundColor = ColorValue::black();
+	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&initialBackgroundColor);
+	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		if ((*it)->IsActive())
@@ -739,48 +738,57 @@ void CScene::Render_Game()
 
 	auto& trm = CRenderTargetManager::GetInstance();
 
-	trm.Bind_GBuffer(ctx, vp);
-	trm.Clear_GBuffer();
-
-	if (m_pSkyBox && !m_lCameraList.empty())
-	{
-		m_pContext->RSSetState(m_pSkyBoxResterizerState);
-		m_pContext->OMSetDepthStencilState(m_pSkyBoxDepthStencillState, 0);
-		RenderSkyBox(m_lCameraList.back());
-	}
-
-	m_pContext->RSSetState(m_pMeshResterizerState);
-	m_pContext->OMSetDepthStencilState(m_pMeshDepthStencilState, 0);
-
 	for (TRAVERSAL_ITER(m_lCameraList, it))
 	{
-		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
-			(*it)->RenderMesh();
-	}
+		CCamera* camera = *it;
+		if (!camera || !camera->Get_GameObject() || !camera->Get_GameObject()->IsRecursiveActive() || !camera->Get_Enable())
+			continue;
 
-	for (TRAVERSAL_ITER(m_lCameraList, it))
-	{
-		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
-			(*it)->RenderShadowDepthPass(vp);
-	}
+		trm.Bind_GBuffer(ctx, vp);
 
-	for (TRAVERSAL_ITER(m_lCameraList, it))
-	{
-		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
+		switch (camera->GetClearFlags())
 		{
-			(*it)->RenderObjectIDPass(vp);
-			(*it)->RenderLightingCombined(vp);
+		case CCamera::ClearFlags::Skybox:
+			trm.Clear_GBuffer();
+			if (m_pSkyBox)
+			{
+				m_pContext->RSSetState(m_pSkyBoxResterizerState);
+				m_pContext->OMSetDepthStencilState(m_pSkyBoxDepthStencillState, 0);
+				RenderSkyBox(camera);
+			}
+			break;
+
+		case CCamera::ClearFlags::SolidColor:
+			trm.Clear_GBuffer();
+			break;
+
+		case CCamera::ClearFlags::DepthOnly:
+			trm.Clear_GBuffer();
+			break;
+
+		case CCamera::ClearFlags::DontClear:
+		default:
+			break;
 		}
-	}
 
-	CGraphicDevice::GetInstance().Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
-	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&backgroudColor);
-	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
+		m_pContext->RSSetState(m_pMeshResterizerState);
+		m_pContext->OMSetDepthStencilState(m_pMeshDepthStencilState, 0);
 
-	for (TRAVERSAL_ITER(m_lCameraList, it))
-	{
-		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
-			(*it)->RenderDisplay();
+		camera->RenderMesh();
+		camera->RenderShadowDepthPass(vp);
+		camera->RenderObjectIDPass(vp);
+		camera->RenderLightingCombined(vp);
+
+		CGraphicDevice::GetInstance().Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
+		if (camera->GetClearFlags() == CCamera::ClearFlags::Skybox || camera->GetClearFlags() == CCamera::ClearFlags::SolidColor)
+		{
+			ColorValue backgroudColor = camera->Get_BackgroundColor();
+			CGraphicDevice::GetInstance().Clear_BackBuffer_View(&backgroudColor);
+		}
+		if (camera->GetClearFlags() != CCamera::ClearFlags::DontClear)
+			CGraphicDevice::GetInstance().Clear_DepthStencil_View();
+
+		camera->RenderDisplay();
 	}
 
 	m_pContext->RSSetState(m_pUIResterizerState);
@@ -873,8 +881,13 @@ void CScene::EndFrame()
 
 void CScene::RenderSkyBox(CCamera* _camera)
 {
-	if (m_pSkyBox)
-		m_pSkyBox->RenderSky(_camera);
+	if (!m_pSkyBox || !_camera)
+		return;
+
+	if (_camera->GetClearFlags() != CCamera::ClearFlags::Skybox)
+		return;
+
+	m_pSkyBox->RenderSky(_camera);
 }
 
 void CScene::Set_SceneName(const wstring _name)
@@ -2571,4 +2584,5 @@ ID3D11BlendState* CScene::Get_NoneBlendingState() const
 {
 	return m_pNoneBlendingState;
 }
+
 

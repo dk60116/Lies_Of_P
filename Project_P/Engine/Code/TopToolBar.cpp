@@ -7,6 +7,7 @@ CTopToolBar::CTopToolBar()
 	, m_fPendingFixedTimeStep(0.02f)
 	, m_fPendingTimeScale(1.f)
 	, m_iPendingShadowQuality(0)
+	, m_bGameStatusWindowOpen(false)
 {
 }
 
@@ -76,6 +77,7 @@ void CTopToolBar::Render()
 	ImGui::End();
 
 	ShowProjectSettingsWindow();
+	ShowGameStatusWindow();
 
 	ImGui::PopStyleVar();
 }
@@ -145,6 +147,9 @@ void CTopToolBar::ShowViewMenu()
 		_bool showCollider = CEditor::GetInstance().IsColliderGizmoVisible();
 		if (ImGui::MenuItem("Collider", nullptr, showCollider))
 			CEditor::GetInstance().SetColliderGizmoVisible(!showCollider);
+
+		if (ImGui::MenuItem("Game Status", nullptr, m_bGameStatusWindowOpen))
+			m_bGameStatusWindowOpen = !m_bGameStatusWindowOpen;
 
 		ImGui::EndPopup();
 	}
@@ -324,6 +329,42 @@ void CTopToolBar::Show2DButton()
 	}
 }
 
+void CTopToolBar::ShowGameStatusWindow()
+{
+	if (!m_bGameStatusWindowOpen)
+		return;
+
+	ImGui::SetNextWindowSize(ImVec2(320.f, 180.f), ImGuiCond_FirstUseEver);
+	if (!ImGui::Begin("Game Status", &m_bGameStatusWindowOpen, ImGuiWindowFlags_NoCollapse))
+	{
+		ImGui::End();
+		return;
+	}
+
+	CScene* scene = CSceneManager::GetInstance().Get_CrtScene();
+	CCamera* camera = scene ? scene->Get_Camera() : nullptr;
+	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_GameViewport();
+	const _uint screenWidth = vp ? static_cast<_uint>(vp->Width) : 0u;
+	const _uint screenHeight = vp ? static_cast<_uint>(vp->Height) : 0u;
+
+	if (!camera)
+	{
+		ImGui::TextUnformatted("No active game camera.");
+		ImGui::End();
+		return;
+	}
+
+	const CCamera::RenderStats& stats = camera->GetRenderStats();
+	ImGui::Text("FPS: %d", CTime::GetInstance().Get_FPS());
+	ImGui::Text("Batches: %u", stats.batches);
+	ImGui::Text("Tris: %u", stats.tris);
+	ImGui::Text("Verts: %u", stats.verts);
+	ImGui::Text("Screen: %u x %u", screenWidth, screenHeight);
+	ImGui::Text("VisibleSkinnedMeshes: %u", stats.visibleSkinnedMeshes);
+
+	ImGui::End();
+}
+
 void CTopToolBar::ShowFPS()
 {
 	static float timeAccumulator = 0.0f;
@@ -352,3 +393,10 @@ void CTopToolBar::ShowFPS()
 	ImGui::SetCursorPosX(ImGui::GetCursorPosX() + availableWidth - textWidth);
 	ImGui::TextUnformatted(fpsText);
 }
+
+
+
+
+
+
+

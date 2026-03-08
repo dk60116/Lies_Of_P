@@ -31,15 +31,22 @@ public:
 	void OnDestroy() override;
 
 public:
+	const wstring& GetMonsterName() const;
+
 	CAnimator* Get_Animator();
 	void Change_State(const _uint _state);
 	const MonsterStatus& Get_Status();
 
 protected:
+	void CreateBody();
+	void PaintTexture();
+	void CreateAnimator();
+
+protected:
+	wstring m_strMonsterName;
 	wstring m_strSkinnedMeshBufferName;
-	_float m_fSkinnedMeshScaleFactor;
+	vector<_bool> m_vMaterialTransparent;
 	vector<CSkinnedMeshRenderer*> m_vMeshRenderers;
-	CTexture* m_pBaseMap;
 	CAnimator* m_pAnimator;
 	CMonsterController* m_pController;
 

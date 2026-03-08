@@ -28,6 +28,7 @@ private:
 	void ShowPlayButtons();
 	void Show2DButton();
 	void ShowFPS();
+	void ShowGameStatusWindow();
 
 private:
 	_bool m_bProjectSettingsWindowOpen;
@@ -35,6 +36,11 @@ private:
 	_float m_fPendingFixedTimeStep;
 	_float m_fPendingTimeScale;
 	_int m_iPendingShadowQuality;
+	_bool m_bGameStatusWindowOpen;
 };
 
 NS_END
+
+
+
+

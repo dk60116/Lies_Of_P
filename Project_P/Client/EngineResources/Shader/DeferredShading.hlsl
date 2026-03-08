@@ -1,6 +1,6 @@
 // DeferredLighting_DiffuseOnly.hlsl
 
-// ¶óÀÌÆ® Á¤ÀÇ
+// ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
 #define MAX_LIGHTS 64
 
 #define LIGHT_TYPE_DIRECTIONAL 0
@@ -9,7 +9,7 @@
 
 cbuffer PerObject : register(b0)
 {
-    float4x4 world; // fullscreen quad¿ë (±×´ë·Î À¯Áö)
+    float4x4 world; // fullscreen quadï¿½ï¿½ (ï¿½×´ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
 };
 
 cbuffer PerCamera : register(b1)
@@ -64,12 +64,12 @@ float3 DecodeNormal(float3 enc01)
 
 float3 ReconstructWorldPos(float2 uv, float depth01)
 {
-    // uv´Â ÀÌ¹Ì y-flip µÈ »óÅÂ¶ó°í °¡Á¤ (uv.y = 1-uv.y Àû¿ë ÈÄ)
+    // uvï¿½ï¿½ ï¿½Ì¹ï¿½ y-flip ï¿½ï¿½ ï¿½ï¿½ï¿½Â¶ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (uv.y = 1-uv.y ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½)
     float2 ndc;
     ndc.x = uv.x * 2.0f - 1.0f;
     ndc.y = uv.y * 2.0f - 1.0f;
 
-    // D3D NDC z´Â 0..1 ÀÌ¹Ç·Î depth01 ±×´ë·Î »ç¿ë
+    // D3D NDC zï¿½ï¿½ 0..1 ï¿½Ì¹Ç·ï¿½ depth01 ï¿½×´ï¿½ï¿½ ï¿½ï¿½ï¿½
     float4 clip = float4(ndc, depth01, 1.0f);
 
     float4 world = mul(clip, gInvViewProj);
@@ -101,10 +101,10 @@ float4 PSMain(VSOut i) : SV_Target
     float3 ambientSum = 0;
     float3 specularSum = 0;
 
-    int lightCount = (int) gLight[0][3][3];
+    int lightCount = clamp((int) gLight[0][3][3], 0, MAX_LIGHTS - 1);
 
     [loop]
-    for (int li = 0; li < lightCount; ++li)
+    for (int li = 1; li <= lightCount; ++li)
     {
         if (gLight[li][3][2] < 0.5f)
             continue;
@@ -117,7 +117,10 @@ float4 PSMain(VSOut i) : SV_Target
         float intensity = gLight[li][1][3];
         float range = gLight[li][0][3];
         float attenK = gLight[li][3][1];
+        float spotCos = gLight[li][3][3];
+        float attenK = gLight[li][3][1];
         float ambientK = gLight[li][2][3];
+        float spotCos = gLight[li][3][3];
 
         float3 L = 0;
         float att = 1.0f;
@@ -127,7 +130,7 @@ float4 PSMain(VSOut i) : SV_Target
             L = normalize(-lightDir);
             att = 1.0f;
         }
-        else if (lightType == LIGHT_TYPE_POINT)
+        else if (lightType == LIGHT_TYPE_POINT || lightType == LIGHT_TYPE_SPOT)
         {
             float3 toL = lightPos - posW;
             float distSq = dot(toL, toL);
@@ -158,7 +161,8 @@ float4 PSMain(VSOut i) : SV_Target
 
     float3 globalAmbient = 0.2f;
 
-    // "¾Ëº£µµ´Â »©°í ¸í¾Ï¸¸" ÀÌ¹Ç·Î Á¶¸í °á°ú¸¸ Ãâ·Â
+    // "ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï¸ï¿½" ï¿½Ì¹Ç·ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
     float3 lit = saturate(globalAmbient + ambientSum + diffuseSum + specularSum);
     return float4(lit, 1);
 }
+

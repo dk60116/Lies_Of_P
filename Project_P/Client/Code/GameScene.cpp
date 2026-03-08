@@ -4,6 +4,7 @@
 #include "PlayerCamera.h"
 #include "PlayerHUD.h"
 #include "Map_01_SilentStreet.h"
+#include "Mon_Creeper.h"
 
 CGameScene::CGameScene()
 	: m_pPlayerCamera(nullptr)
@@ -41,6 +42,9 @@ HRESULT CGameScene::Initialize()
 
 	CGameObject* playerObj = Add_GameObject(L"Player");
 	m_pPlayer = playerObj->AddComponent<CPlayer>();
+
+	CGameObject* creeperObj = Add_GameObject(L"Creeper");
+	CMon_Creeper* creeper = creeperObj->AddComponent<CMon_Creeper>();
 
 	return S_OK;
 }

@@ -143,6 +143,7 @@ void CPlayerControllerContext::SetPlayerYaw(const _float _y)
 		return;
 
 	auto tr = m_pPlayer->Get_Transform();
+
 	const _float curYaw = tr->Get_EulerAngles().y;
 	const _float deltaYaw = DeltaAngleDeg(curYaw, WrapDeg(_y));
 	tr->Rotate(vector3(0.f, deltaYaw, 0.f));
@@ -308,6 +309,8 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float _stopEpsDeg)
 		m_Cv_Move.m_bBigTurnLatched = false;
 		m_Cv_Move.m_turnDir = 0.f;
 	}
+
+	m_Cv_Move.m_vCharacterDir = tr->Get_Directions().forward;
 }
 
 CAnimator* CPlayerControllerContext::Animator()
@@ -360,6 +363,11 @@ void CPlayerControllerContext::SetAnimTurn(const _float _value)
 		return;
 
 	anim->SetFloat(L"turnDir", _value);
+}
+
+const vector3& CPlayerControllerContext::GetCharacterDir() const
+{
+	return m_Cv_Move.m_vCharacterDir;
 }
 
 const vector3& CPlayerControllerContext::GetMoveLocalDir() const

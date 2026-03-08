@@ -271,7 +271,7 @@ void CPlayerState_Attack::Update()
 
     if (m_bThrust)
     {
-        m_pCtx->AddPosition(m_pCtx->GetMoveWorldDir() * 10.f * DELTA_TIME);
+        m_pCtx->AddPosition(m_pCtx->GetCharacterDir() * 10.f * DELTA_TIME);
     }
 
     if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move) && !m_bUnderLimit)

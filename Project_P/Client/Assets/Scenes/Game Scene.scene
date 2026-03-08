@@ -98,6 +98,20 @@ Eve_Sword_TN : Player/Weapon/Textures/CH_W_Sword_02_N.png : [Texture]
 Eve_Sword_TM : Player/Weapon/Textures/CH_W_Sword_02_M.png : [Texture]
 // Eve Animator Controller
 Eve_AnimatorController : Player/Eve/AnimatorController/Eve_AnimatorController.animatorcontroller : [Animator Controller]
+// Monster
+// Creeper
+Mon_Creeper_Body_Model : Monster/Creeper/Creeper.fbx : [Skinned Mesh]
+// Texture
+Tex_Mon_Creeper_0_TD : Monster/Creeper/Textures/CH_M_NA_Antlion_Body_A.png : [Texture]
+Tex_Mon_Creeper_0_TN : Monster/Creeper/Textures/CH_M_NA_Antlion_Body_N.png : [Texture]
+Tex_Mon_Creeper_0_TORM : Monster/Creeper/Textures/CH_M_NA_Antlion_Body_ORM.png : [Texture]
+Tex_Mon_Creeper_1_TD : Monster/Creeper/Textures/CH_M_NA_Antlion_Fur_A.png : [Texture]
+Tex_Mon_Creeper_1_TN : Monster/Creeper/Textures/CH_M_NA_Antlion_Fur_N.png : [Texture]
+Tex_Mon_Creeper_1_TORM : Monster/Creeper/Textures/CH_M_NA_Antlion_Fur_ORM.png : [Texture]
+//  Animator Controller
+Mon_Creeper_AnimatorController : Monster/Creeper/AnimatorController/Mon_Creeper_AC.animatorcontroller : [Animator Controller]
+// Animation
+Anim_Mon_Creeper_Idle : Monster/Creeper/Animations/Mon_Creeper_Idle.fbx : [Animation Clip] [Loop]
 // UI
 HeartBar : UI/HUDUI/HeartBar.png : [Texture]Building_0_Stage01_Building_00_Auto_1770860177475 : Map/Map01/Building_0/Stage01_Building_00.fbx : [Mesh]
 Building_0_Stage01_Building_00_Auto_1770865212651 : Map/Map01/Building_0/Stage01_Building_00.fbx : [Mesh]

@@ -1,0 +1,24 @@
+# AnimatorController v1
+name=Mon_Creeper_AC
+entry=Idle
+
+EntryStateTranslation=10,60
+Any_stateTranslation=10,10
+
+[parameters]
+float speed=0
+trigger attack
+bool isDead=false
+
+[state Idle]
+motion=Anim_Mon_Creeper_Idle
+speedMul=1.000000
+pos=246,82
+
+[entry]
+to=Idle
+blend=0.150000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+

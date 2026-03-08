@@ -106,6 +106,7 @@ CCamera::CCamera()
 	, m_vProjMatrix()
 	, m_vVPInverseMatrix()
 	, m_vBackgroundColor(s_vDefaultCameraColor)
+	, m_iCullingMask(~0u)
 	, m_fAspect(1.f)
 	, m_fNear(0.1f)
 	, m_fFar(600.f)
@@ -117,6 +118,8 @@ CCamera::CCamera()
 	, m_vVisibleDynamicMeshList({})
 	, m_vUIList({})
 	, m_sWorldFrustum()
+	, m_sWorldOrthoBounds()
+	, m_bUseOrthographicCulling(false)
 	, m_mRTDebugDisplays({})
 	, m_pRectBuffer(nullptr)
 	, m_mRectMats({})
@@ -156,6 +159,7 @@ CComponent* CCamera::Clone() const
 	clone->m_eClearFlag = this->m_eClearFlag;
 	clone->m_eCamViewMode = this->m_eCamViewMode;
 	clone->m_vBackgroundColor = s_vDefaultCameraColor;
+	clone->m_iCullingMask = this->m_iCullingMask;
 	clone->m_fAspect = this->m_fAspect;
 	clone->m_fNear = this->m_fNear;
 	clone->m_fFar = this->m_fFar;
@@ -394,14 +398,61 @@ void CCamera::SetViewMode(const ViewMode _mode)
 	m_eCamViewMode = _mode;
 }
 
+const _uint CCamera::GetCullingMask() const
+{
+	return m_iCullingMask;
+}
+
+void CCamera::SetCullingMask(const _uint _mask)
+{
+	m_iCullingMask = _mask;
+}
+
+const _float CCamera::GetAspect() const
+{
+	return m_fAspect;
+}
+
+const _float CCamera::GetNear() const
+{
+	return m_fNear;
+}
+
 void CCamera::SetNear(const _float _value)
 {
-	m_fNear = _value;
+	m_fNear = max(0.001f, _value);
+	if (m_fFar <= m_fNear)
+		m_fFar = m_fNear + 0.001f;
+}
+
+const _float CCamera::GetFar() const
+{
+	return m_fFar;
 }
 
 void CCamera::SetFar(const _float _value)
 {
-	m_fFar = _value;
+	m_fFar = max(m_fNear + 0.001f, _value);
+}
+
+const _float CCamera::GetFieldOfView() const
+{
+	return m_fFieldOfView;
+}
+
+void CCamera::SetFieldOfView(const _float _value)
+{
+	m_fFieldOfView = clamp(_value, 1.f, 179.f);
+}
+
+const _float CCamera::GetOrthographicSize() const
+{
+	return m_fSize;
+}
+
+void CCamera::SetOrthographicSize(const _float _value)
+{
+	m_fSize = max(0.001f, _value);
 }
 
 const ColorValue& CCamera::Get_BackgroundColor() const
@@ -414,9 +465,42 @@ void CCamera::SetBackgroundColor(const ColorValue& _color)
 	m_vBackgroundColor = _color;
 }
 
+const CCamera::RenderStats& CCamera::GetRenderStats() const
+{
+	return m_sRenderStats;
+}
+
+void CCamera::ResetRenderStats()
+{
+	m_sRenderStats = {};
+}
+
+void CCamera::AccumulateRenderStats(CRenderer* _renderer, _uint _instanceCount)
+{
+	if (!_renderer || _instanceCount == 0u)
+		return;
+
+	CMeshBuffer* meshBuffer = _renderer->Get_MeshBuffer();
+	if (!meshBuffer)
+		return;
+
+	const CMeshBuffer::MESHBUFFERDESC& info = meshBuffer->Get_Info();
+	const _uint trisPerInstance = (info.indexCount > 0u) ? (info.indexCount / 3u) : (info.vertextCount / 3u);
+
+	m_sRenderStats.batches += 1u;
+	m_sRenderStats.tris += trisPerInstance * _instanceCount;
+	m_sRenderStats.verts += info.vertextCount * _instanceCount;
+
+	if (dynamic_cast<CSkinnedMeshRenderer*>(_renderer))
+		m_sRenderStats.visibleSkinnedMeshes += _instanceCount;
+}
+
 void CCamera::Add_RenderTarget_Mesh(CRenderer* _mesh)
 {
 	if (!_mesh || !_mesh->Get_GameObject())
+		return;
+
+	if (!CSceneManager::GetInstance().ContainLayerMask(_mesh->Get_GameObject()->GetLayer(), m_iCullingMask))
 		return;
 
 	if (_mesh->Get_GameObject()->IsStatic(CGameObject::STATIC_METHOD::TransformStatic))
@@ -427,6 +511,12 @@ void CCamera::Add_RenderTarget_Mesh(CRenderer* _mesh)
 
 void CCamera::Add_RenderTarget_UI(CUI* _ui)
 {
+	if (!_ui || !_ui->Get_GameObject())
+		return;
+
+	if (!CSceneManager::GetInstance().ContainLayerMask(_ui->Get_GameObject()->GetLayer(), m_iCullingMask))
+		return;
+
 	m_vUIList.push_back(_ui);
 }
 
@@ -480,6 +570,7 @@ void CCamera::Bind_ProjectionMatrix()
 void CCamera::RenderMesh()
 {
 	Collect_VisibleRenderers();
+	ResetRenderStats();
 
 	if (!m_bIsEditor)
 	{
@@ -510,7 +601,10 @@ void CCamera::RenderMesh()
 		}
 
 		for (auto* renderer : nonBatchedStatic)
+		{
 			renderer->Render_WithCamera(this);
+			AccumulateRenderStats(renderer);
+		}
 
 		for (auto& kv : staticBatches)
 		{
@@ -525,6 +619,7 @@ void CCamera::RenderMesh()
 			if (batch.size() == 1)
 			{
 				leader->Render_WithCamera(this);
+				AccumulateRenderStats(leader);
 				continue;
 			}
 
@@ -534,7 +629,9 @@ void CCamera::RenderMesh()
 				if (!PrepareInstancingChunk(leader, batch, offset, maxInstanceCount))
 					continue;
 
+				const _uint instanceCount = static_cast<_uint>(min<size_t>(batch.size() - offset, maxInstanceCount));
 				leader->Render_WithCamera(this);
+				AccumulateRenderStats(leader, instanceCount);
 				leader->CreateMeshInstancing(0);
 			}
 		}
@@ -544,14 +641,20 @@ void CCamera::RenderMesh()
 		for (TRAVERSAL_ITER(m_vVisibleStaticMeshList, it))
 		{
 			if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
+			{
 				(*it)->Render_WithCamera(this);
+				AccumulateRenderStats(*it);
+			}
 		}
 	}
 
 	for (TRAVERSAL_ITER(m_vVisibleDynamicMeshList, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
+		{
 			(*it)->Render_WithCamera(this);
+			AccumulateRenderStats(*it);
+		}
 	}
 
 	SortTransparentRenderersByCameraDistance(m_vVisibleStaticMeshList_Transparent);
@@ -578,13 +681,19 @@ void CCamera::RenderMesh()
 	for (TRAVERSAL_ITER(m_vVisibleStaticMeshList_Transparent, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
+		{
 			(*it)->Render_WithCamera(this);
+			AccumulateRenderStats(*it);
+		}
 	}
 
 	for (TRAVERSAL_ITER(m_vVisibleDynamicMeshList_Transparent, it))
 	{
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
+		{
 			(*it)->Render_WithCamera(this);
+			AccumulateRenderStats(*it);
+		}
 	}
 
 	context->OMSetBlendState(prevBS, prevBlendFactor, prevSampleMask);
@@ -592,12 +701,15 @@ void CCamera::RenderMesh()
 	Safe_Release(prevBS);
 	Safe_Release(prevDS);
 }
-
-
 void CCamera::Update_WorldFrustum()
 {
 	_matrix cullingView = GetViewMatrix();
 	_matrix cullingProj = GetProjectionMatrix();
+	ViewMode cullingViewMode = m_eCamViewMode;
+	_float cullingAspect = m_fAspect;
+	_float cullingNear = m_fNear;
+	_float cullingFar = m_fFar;
+	_float cullingSize = m_fSize;
 
 	if (m_bIsEditor)
 	{
@@ -607,16 +719,39 @@ void CCamera::Update_WorldFrustum()
 			{
 				cullingView = selectedCamera->GetViewMatrix();
 				cullingProj = selectedCamera->GetProjectionMatrix();
+				cullingViewMode = selectedCamera->GetViewMode();
+				cullingAspect = selectedCamera->GetAspect();
+				cullingNear = selectedCamera->GetNear();
+				cullingFar = selectedCamera->GetFar();
+				cullingSize = selectedCamera->GetOrthographicSize();
 			}
 		}
 	}
 
+	_matrix invView = XMMatrixInverse(nullptr, cullingView);
+	if (cullingViewMode == ViewMode::Orthographic)
+	{
+		const _float halfHeight = max(cullingSize * 0.5f, 0.001f);
+		const _float halfWidth = max(halfHeight * cullingAspect, 0.001f);
+		const _float halfDepth = max((cullingFar - cullingNear) * 0.5f, 0.001f);
+		const _float centerZ = cullingNear + halfDepth;
+
+		BoundingOrientedBox localBounds = {};
+		localBounds.Center = XMFLOAT3(0.f, 0.f, centerZ);
+		localBounds.Extents = XMFLOAT3(halfWidth, halfHeight, halfDepth);
+		localBounds.Orientation = XMFLOAT4(0.f, 0.f, 0.f, 1.f);
+
+		m_sWorldOrthoBounds = localBounds;
+		m_sWorldOrthoBounds.Transform(m_sWorldOrthoBounds, invView);
+		m_bUseOrthographicCulling = true;
+		return;
+	}
+
 	BoundingFrustum localFrustum = {};
 	BoundingFrustum::CreateFromMatrix(localFrustum, cullingProj);
-
-	_matrix invView = XMMatrixInverse(nullptr, cullingView);
 	m_sWorldFrustum = localFrustum;
 	m_sWorldFrustum.Transform(m_sWorldFrustum, invView);
+	m_bUseOrthographicCulling = false;
 }
 
 _bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, BoundingBox& _outAABB, _bool* _outChanged) const
@@ -701,7 +836,9 @@ _bool CCamera::IsRendererVisible(CRenderer* _renderer) const
 	if (!TryBuildRendererWorldAABB(_renderer, worldAABB))
 		return false;
 
-	ContainmentType contain = m_sWorldFrustum.Contains(worldAABB);
+	ContainmentType contain = m_bUseOrthographicCulling
+		? m_sWorldOrthoBounds.Contains(worldAABB)
+		: m_sWorldFrustum.Contains(worldAABB);
 	return contain != ContainmentType::DISJOINT;
 }
 
@@ -816,6 +953,9 @@ void CCamera::BuildStaticOctree()
 		if (!renderer->Get_GameObject()->IsRecursiveActive() || !renderer->Get_Enable())
 			continue;
 
+		if (!CSceneManager::GetInstance().ContainLayerMask(renderer->Get_GameObject()->GetLayer(), m_iCullingMask))
+			continue;
+
 		currentStaticRenderers.push_back(renderer);
 
 		BoundingBox worldAABB = {};
@@ -863,7 +1003,9 @@ void CCamera::QueryStaticOctree(const OctreeNode* _node, vector<CRenderer*>& _ou
 	if (!_node)
 		return;
 
-	ContainmentType contain = m_sWorldFrustum.Contains(_node->bounds);
+	ContainmentType contain = m_bUseOrthographicCulling
+		? m_sWorldOrthoBounds.Contains(_node->bounds)
+		: m_sWorldFrustum.Contains(_node->bounds);
 	if (contain == ContainmentType::DISJOINT)
 		return;
 
@@ -883,7 +1025,9 @@ void CCamera::QueryStaticOctree(const OctreeNode* _node, vector<CRenderer*>& _ou
 
 	for (const auto& entry : _node->entries)
 	{
-		ContainmentType entryContain = m_sWorldFrustum.Contains(entry.worldAABB);
+		ContainmentType entryContain = m_bUseOrthographicCulling
+			? m_sWorldOrthoBounds.Contains(entry.worldAABB)
+			: m_sWorldFrustum.Contains(entry.worldAABB);
 		if (entryContain != ContainmentType::DISJOINT)
 			_outVisible.push_back(entry.renderer);
 	}
@@ -935,7 +1079,10 @@ void CCamera::Collect_VisibleRenderers()
 
 	for (auto* renderer : m_vVisibleStaticMeshList)
 	{
-		if (!renderer || !renderer->Get_Material())
+		if (!renderer || !renderer->Get_GameObject() || !renderer->Get_Material())
+			continue;
+
+		if (!CSceneManager::GetInstance().ContainLayerMask(renderer->Get_GameObject()->GetLayer(), m_iCullingMask))
 			continue;
 
 		if (!renderer->Get_Material()->IsTransparnet())
@@ -952,6 +1099,9 @@ void CCamera::Collect_VisibleRenderers()
 			continue;
 
 		if (!renderer->Get_GameObject()->IsRecursiveActive() || !renderer->Get_Enable())
+			continue;
+
+		if (!CSceneManager::GetInstance().ContainLayerMask(renderer->Get_GameObject()->GetLayer(), m_iCullingMask))
 			continue;
 
 		if (!renderer->Get_Material())
@@ -1147,8 +1297,17 @@ void CCamera::RenderRTDebugDisplay(const _bool _renderingEditorPass)
 
 	vector2Int res = m_bIsEditor ? CEditor::GetInstance().Get_ScreenResolution() : CDisplay::GetInstance().Get_ScreenResolution();
 
-	_float screenW = (_float)res.x;
-	_float screenH = (_float)res.y;
+	const D3D11_VIEWPORT* areaVP = ResolveViewport();
+	if (!areaVP)
+		areaVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
+
+	const _float areaX = areaVP ? areaVP->TopLeftX : 0.f;
+	const _float areaY = areaVP ? areaVP->TopLeftY : 0.f;
+	const _float areaW = areaVP ? areaVP->Width : (_float)res.x;
+	const _float areaH = areaVP ? areaVP->Height : (_float)res.y;
+
+	const _float screenW = max((_float)res.x, areaX + areaW);
+	const _float screenH = max((_float)res.y, areaY + areaH);
 
 	D3D11_VIEWPORT vp = {};
 	vp.TopLeftX = 0.f;
@@ -1162,23 +1321,6 @@ void CCamera::RenderRTDebugDisplay(const _bool _renderingEditorPass)
 	_matrix view = XMMatrixIdentity();
 	_matrix proj = XMMatrixOrthographicOffCenterLH(0.f, screenW, screenH, 0.f, 0.f, 1.f);
 	_float3 camPos = { 0.f, 0.f, -1.f };
-
-	const D3D11_VIEWPORT* areaVP = ResolveViewport();
-	if (!areaVP)
-		areaVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
-
-	const _float areaX = areaVP ? areaVP->TopLeftX : 0.f;
-	const _float areaY = areaVP ? areaVP->TopLeftY : 0.f;
-	const _float areaW = areaVP ? areaVP->Width : screenW;
-	const _float areaH = areaVP ? areaVP->Height : screenH;
-
-	const D3D11_VIEWPORT* srcVP = ResolveViewport();
-	if (!srcVP)
-		srcVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
-
-	_float srcW = srcVP ? srcVP->Width : areaW;
-	_float srcH = srcVP ? srcVP->Height : areaH;
-	_float srcAspect = (srcH > 0.f) ? (srcW / srcH) : 1.f;
 
 	CRenderTarget::RTType types[] =
 	{
@@ -1203,16 +1345,16 @@ void CCamera::RenderRTDebugDisplay(const _bool _renderingEditorPass)
 	const _float margin = 12.f;
 	const _float gap = 10.f;
 
-	_float rectH = 0.f;
+	_float slotH = 0.f;
 	if (maxRows > 0)
-		rectH = (areaH - margin * 2.f - (_float)(maxRows - 1) * gap) / (_float)maxRows;
+		slotH = (areaH - margin * 2.f - (_float)(maxRows - 1) * gap) / (_float)maxRows;
 
-	if (rectH < 1.f)
-		rectH = 1.f;
+	if (slotH < 1.f)
+		slotH = 1.f;
 
-	_float rectW = rectH * srcAspect;
-
-	const _float baseY = (areaY + areaH - margin - rectH * 0.5f);
+	const _float previewInset = 4.f;
+	const _float debugRectH = max(slotH - previewInset * 2.f, 1.f);
+	const _float baseY = areaY + areaH - margin - previewInset - debugRectH * 0.5f;
 
 	for (_int i = 0; i < kCount; ++i)
 	{
@@ -1226,19 +1368,23 @@ void CCamera::RenderRTDebugDisplay(const _bool _renderingEditorPass)
 
 		const _bool bRightColumn = (i < kMaxPerColumn);
 		const _int row = bRightColumn ? i : (i - kMaxPerColumn);
+		const _bool useEditorRT = (types[i] == CRenderTarget::RTType::ShadowDepth) ? false : m_bIsEditor;
+		const _float srcW = static_cast<_float>(CRenderTargetManager::GetInstance().GetWidth(useEditorRT));
+		const _float srcH = static_cast<_float>(CRenderTargetManager::GetInstance().GetHeight(useEditorRT));
+		const _float srcAspect = (srcH > 0.f) ? (srcW / srcH) : 1.f;
+		const _float debugRectW = debugRectH * srcAspect;
 
 		_float cx = bRightColumn
-			? (areaX + areaW - margin - rectW * 0.5f)
-			: (areaX + margin + rectW * 0.5f);
+			? (areaX + areaW - margin - debugRectW * 0.5f)
+			: (areaX + margin + debugRectW * 0.5f);
 
-		_float cy = baseY - (_float)row * (rectH + gap);
+		const _float cy = baseY - (_float)row * (slotH + gap);
 
-		_matrix world = XMMatrixScaling(rectW, rectH, 1.f) * XMMatrixTranslation(cx, cy, 0.f);
+		_matrix world = XMMatrixScaling(debugRectW, debugRectH, 1.f) * XMMatrixTranslation(cx, cy, 0.f);
 
 		disp.material->Bind_Matrix(world);
 		disp.material->Bind_Camera(camPos, view, proj, 0);
 
-		const _bool useEditorRT = (types[i] == CRenderTarget::RTType::ShadowDepth) ? false : m_bIsEditor;
 		ID3D11ShaderResourceView* srv = CRenderTargetManager::GetInstance().GetSRV(types[i], useEditorRT);
 
 		context->PSSetShaderResources(0, 1, &srv);
@@ -1318,8 +1464,12 @@ void CCamera::RenderLightingCombined(const D3D11_VIEWPORT* vp)
 	if (useVP)
 		ctx->RSSetViewports(1, useVP);
 
-	const _float clear[4] = { (_float)m_vBackgroundColor.r, (_float)m_vBackgroundColor.g, (_float)m_vBackgroundColor.b, 1.f };
-	ctx->ClearRenderTargetView(rtvCombine, clear);
+	if (m_eClearFlag == ClearFlags::Skybox || m_eClearFlag == ClearFlags::SolidColor)
+	{
+		const _float4 clearColor = m_vBackgroundColor.f4Color();
+		const _float clear[4] = { clearColor.x, clearColor.y, clearColor.z, clearColor.w };
+		ctx->ClearRenderTargetView(rtvCombine, clear);
+	}
 
 	if (m_pRTDebugDS)
 		ctx->OMSetDepthStencilState(m_pRTDebugDS, 0);
@@ -2059,8 +2209,12 @@ void CCamera::RenderCombine(const D3D11_VIEWPORT* vp)
 	if (useVP)
 		ctx->RSSetViewports(1, useVP);
 
-	const _float clear[4] = { (_float)m_vBackgroundColor.r, (_float)m_vBackgroundColor.g, (_float)m_vBackgroundColor.b, 1.f };
-	ctx->ClearRenderTargetView(rtvCombine, clear);
+	if (m_eClearFlag == ClearFlags::Skybox || m_eClearFlag == ClearFlags::SolidColor)
+	{
+		const _float4 clearColor = m_vBackgroundColor.f4Color();
+		const _float clear[4] = { clearColor.x, clearColor.y, clearColor.z, clearColor.w };
+		ctx->ClearRenderTargetView(rtvCombine, clear);
+	}
 
 	if (m_pRTDebugDS)
 		ctx->OMSetDepthStencilState(m_pRTDebugDS, 0);
@@ -2299,3 +2453,10 @@ void CCamera::Find_MainLight()
 		}
 	}
 }
+
+
+
+
+
+
+

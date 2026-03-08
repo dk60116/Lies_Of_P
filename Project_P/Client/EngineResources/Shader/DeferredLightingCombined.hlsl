@@ -170,11 +170,11 @@ float4 PSMain(VSOut i) : SV_Target
     float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallic);
 
     float3 Lo = 0.0f;
-    int lightCount = clamp((int)gLight[0][3][3], 0, MAX_LIGHTS);
+    int lightCount = clamp((int)gLight[0][3][3], 0, MAX_LIGHTS - 1);
     int dirLightCount = 0;
 
     [loop]
-    for (int li = 0; li < lightCount; ++li)
+    for (int li = 1; li <= lightCount; ++li)
     {
         if (gLight[li][3][2] < 0.5f)
             continue;
@@ -186,6 +186,8 @@ float4 PSMain(VSOut i) : SV_Target
 
         float intensity = gLight[li][1][3];
         float range = gLight[li][0][3];
+        float attenK = gLight[li][3][1];
+        float spotCos = gLight[li][3][3];
 
         float3 L = 0.0f;
         float att = 1.0f;
@@ -195,7 +197,7 @@ float4 PSMain(VSOut i) : SV_Target
             L = normalize(-lightDir);
             ++dirLightCount;
         }
-        else if (lightType == LIGHT_TYPE_POINT)
+        else if (lightType == LIGHT_TYPE_POINT || lightType == LIGHT_TYPE_SPOT)
         {
             float3 toL = lightPos - posW;
             float distSq = dot(toL, toL);
@@ -212,7 +214,17 @@ float4 PSMain(VSOut i) : SV_Target
 
             float invSqNorm = rangeSq / max(distSq, 1e-3f);
             invSqNorm = min(invSqNorm, 16.0f);
-            att = falloff * invSqNorm;
+            att = falloff * invSqNorm * max(attenK, 0.0f);
+
+            if (lightType == LIGHT_TYPE_SPOT)
+            {
+                float coneCos = dot(normalize(-L), normalize(lightDir));
+                if (coneCos <= spotCos)
+                    continue;
+
+                float coneAtt = saturate((coneCos - spotCos) / max(1.0f - spotCos, 1e-4f));
+                att *= coneAtt * coneAtt;
+            }
         }
         else
         {
@@ -256,3 +268,5 @@ float4 PSMain(VSOut i) : SV_Target
 
     return float4(saturate(color), 1.0f);
 }
+
+

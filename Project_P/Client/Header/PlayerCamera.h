@@ -4,6 +4,8 @@
 
 class CPlayerCamera final : public CComponent
 {
+    friend class CGameObject;
+
 public:
     struct PlayerCameraOptions
     {
@@ -22,7 +24,7 @@ protected:
     CPlayerCamera();
     ~CPlayerCamera();
 
-public:
+protected:
     static CPlayerCamera* Create();
     CComponent* Clone() const override;
 

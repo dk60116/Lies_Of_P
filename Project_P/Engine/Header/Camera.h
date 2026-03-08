@@ -38,6 +38,13 @@ class ENGINE_DLL CCamera : public CComponent
 public:
 	enum class ClearFlags { Skybox, SolidColor, DepthOnly, DontClear };
 	enum class ViewMode { Perspective, Orthographic };
+	struct RenderStats
+	{
+		_uint batches = 0u;
+		_uint tris = 0u;
+		_uint verts = 0u;
+		_uint visibleSkinnedMeshes = 0u;
+	};
 
 protected:
 	struct OctreeEntry;
@@ -65,10 +72,20 @@ public:
 	void SetClearFlags(const ClearFlags _flag);
 	const ViewMode GetViewMode() const;
 	void SetViewMode(const ViewMode _mode);
+	const _uint GetCullingMask() const;
+	void SetCullingMask(const _uint _mask);
+	const _float GetAspect() const;
+	const _float GetNear() const;
 	void SetNear(const _float _value);
+	const _float GetFar() const;
 	void SetFar(const _float _value);
+	const _float GetFieldOfView() const;
+	void SetFieldOfView(const _float _value);
+	const _float GetOrthographicSize() const;
+	void SetOrthographicSize(const _float _value);
 	const ColorValue& Get_BackgroundColor() const;
 	void SetBackgroundColor(const ColorValue& _color);
+	const RenderStats& GetRenderStats() const;
 
 	void Add_RenderTarget_Mesh(class CRenderer* _mesh);
 	void Add_RenderTarget_UI(class CUI* _ui);
@@ -118,6 +135,8 @@ private:
 
 protected:
 	void Find_MainLight();
+	void ResetRenderStats();
+	void AccumulateRenderStats(class CRenderer* _renderer, _uint _instanceCount = 1u);
 
 protected:
 	ClearFlags m_eClearFlag;
@@ -126,6 +145,7 @@ protected:
 
 	_float m_fAspect;
 	ColorValue m_vBackgroundColor;
+	_uint m_iCullingMask;
 	_float m_fNear, m_fFar;
 	_float m_fFieldOfView;
 	_float m_fSize;
@@ -138,6 +158,8 @@ protected:
 	vector<CRenderer*> m_vVisibleDynamicMeshList_Transparent;
 	vector<CUI*> m_vUIList;
 	BoundingFrustum m_sWorldFrustum;
+	BoundingOrientedBox m_sWorldOrthoBounds;
+	_bool m_bUseOrthographicCulling;
 
 	struct OctreeEntry
 	{
@@ -189,8 +211,14 @@ private:
 	mutable unordered_map<CRenderer*, RendererBoundsCache> m_mRendererBoundsCache;
 	_int m_iOctreeMaxDepth;
 	_int m_iOctreeMaxEntriesPerNode;
+	RenderStats m_sRenderStats;
 
 	_bool m_bIsEditor;
 };
 
 NS_END
+
+
+
+
+

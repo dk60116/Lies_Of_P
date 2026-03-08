@@ -4,6 +4,8 @@
 
 class CPlayer : public CComponent
 {
+	friend class CGameObject;
+
 public:
 	enum PlayerAnimationStatus { Idle, Run, CombatIdle };
 
@@ -34,7 +36,7 @@ protected:
 	CPlayer();
 	~CPlayer();
 
-public:
+protected:
 	static CPlayer* Create();
 	CComponent* Clone() const override;
 

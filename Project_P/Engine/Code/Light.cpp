@@ -11,6 +11,7 @@ CLight::CLight()
 	, m_vSpecularColor(ColorValue::white())
 	, m_bCastShadow(true)
 {
+	m_strName = L"Light";
 }
 
 CLight::~CLight()
@@ -78,17 +79,57 @@ const _float CLight::Get_Intensity() const
 
 void CLight::Set_Intensity(const _float _value)
 {
-	m_fIntensity = _value;
+	m_fIntensity = max(0.f, _value);
+}
+
+const _float CLight::Get_Range() const
+{
+	return m_fRange;
 }
 
 void CLight::Set_Range(const _float _value)
 {
-	m_fRange = _value;
+	m_fRange = max(0.f, _value);
+}
+
+const _float CLight::Get_SpotAngle() const
+{
+	return m_fSpotAngle;
+}
+
+void CLight::Set_SpotAngle(const _float _value)
+{
+	m_fSpotAngle = clamp(_value, 1.f, 179.f);
+}
+
+const _float CLight::Get_Attenuation() const
+{
+	return m_fAttenuation;
+}
+
+void CLight::Set_Attenuation(const _float _value)
+{
+	m_fAttenuation = max(0.f, _value);
+}
+
+const ColorValue& CLight::Get_DiffuseColor() const
+{
+	return m_vDiffuseColor;
 }
 
 void CLight::Set_Color(const ColorValue _color)
 {
 	m_vDiffuseColor = _color;
+}
+
+const ColorValue& CLight::Get_SpecularColor() const
+{
+	return m_vSpecularColor;
+}
+
+void CLight::Set_SpecularColor(const ColorValue _color)
+{
+	m_vSpecularColor = _color;
 }
 
 const _float4x4 CLight::To_LightInfo()
@@ -169,3 +210,5 @@ void CLight::BuildDirectionalShadow(CCamera* _cam, _float _shadowDistance, Shado
 	XMStoreFloat4x4(reinterpret_cast<_float4x4*>(&_outShadowMatix.view), V);
 	XMStoreFloat4x4(reinterpret_cast<_float4x4*>(&_outShadowMatix.proj), P);
 }
+
+

@@ -39,8 +39,16 @@ public:
 	void Set_Type(const Type _type);
 	const _float Get_Intensity() const;
 	void Set_Intensity(const _float _value);
-	void Set_Range(const _float _value);
+	const _float Get_Range() const;
+	const _float Get_SpotAngle() const;
+	void Set_SpotAngle(const _float _value);
+	const _float Get_Attenuation() const;
+	void Set_Attenuation(const _float _value);
+	const ColorValue& Get_DiffuseColor() const;
 	void Set_Color(const ColorValue _color);
+	const ColorValue& Get_SpecularColor() const;
+	void Set_SpecularColor(const ColorValue _color);
+	void Set_Range(const _float _value);
 
 	const _float4x4 To_LightInfo();
 
@@ -61,4 +69,5 @@ private:
 };
 
 NS_END
+
 

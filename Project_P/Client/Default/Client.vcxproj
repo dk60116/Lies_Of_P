@@ -143,6 +143,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\Header\Map_01_SilentStreet.h" />
+    <ClInclude Include="..\Header\Mon_Creeper.h" />
     <ClInclude Include="..\Header\PlayerState_Attack.h" />
     <ClInclude Include="..\Header\PlayerState_Evade.h" />
     <ClInclude Include="..\Header\PlayerState_Guard.h" />
@@ -176,6 +177,7 @@
     <ClCompile Include="..\Code\MainScene.cpp" />
     <ClCompile Include="..\Code\Map_01_SilentStreet.cpp" />
     <ClCompile Include="..\Code\Monster.cpp" />
+    <ClCompile Include="..\Code\Mon_Creeper.cpp" />
     <ClCompile Include="..\Code\Player.cpp" />
     <ClCompile Include="..\Code\PlayerCamera.cpp" />
     <ClCompile Include="..\Code\PlayerController.cpp" />
