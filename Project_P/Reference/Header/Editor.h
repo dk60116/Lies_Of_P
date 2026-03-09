@@ -62,6 +62,12 @@ public:
 	void SetColliderGizmoVisible(const _bool visible);
 	const _bool IsMeshColliderGizmoVisible() const;
 	void SetMeshColliderGizmoVisible(const _bool visible);
+	const _bool IsNavigationGizmoVisible() const;
+	void SetNavigationGizmoVisible(const _bool visible);
+	void SetNavigationPreviewTriangles(const vector<vector3>& triangles);
+	void ClearNavigationPreviewTriangles();
+	class CMeshBuffer* GetNavigationPreviewMesh() const;
+	class CMaterial* GetNavigationPreviewMaterial() const;
 
 	static string ToLowerCopy(string s)
 	{
@@ -106,6 +112,9 @@ private:
 	_bool m_bOpenSelectedInHierarchyRequested;
 	_bool m_bShowColliderGizmo;
 	_bool m_bShowMeshColliderGizmo;
+	_bool m_bShowNavigationGizmo;
+	class CMeshBuffer* m_pNavigationPreviewMesh;
+	class CMaterial* m_pNavigationPreviewMaterial;
 	fs::path m_selectedAssetPath;
 
 private:
@@ -113,4 +122,9 @@ private:
 };
 
 NS_END
+
+
+
+
+
 

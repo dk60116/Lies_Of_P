@@ -187,6 +187,22 @@ HRESULT CMeshBuffer::Initialize_Custom(MeshBufferInitiaizeInfo _info, void* _des
     return hr;
 }
 
+CMeshBuffer* CMeshBuffer::CreateCustomMesh(const MeshBufferInitiaizeInfo& _info, void* _desc)
+{
+    CMeshBuffer* newBuffer = CMeshBuffer::Create();
+    if (!newBuffer)
+        return nullptr;
+
+    if (FAILED(newBuffer->Initialize_Custom(_info, _desc)))
+    {
+        delete newBuffer;
+        return nullptr;
+    }
+
+    newBuffer->AddRef();
+    return newBuffer;
+}
+
 wstring CMeshBuffer::FindMeshName(const aiScene* scene, _uint meshIndex, aiNode* node)
 {
     if (!node)

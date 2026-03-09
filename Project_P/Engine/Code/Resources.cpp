@@ -701,7 +701,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 11;
+	const _uint version = 13;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -734,6 +734,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 		out.write(reinterpret_cast<const char*>(&info.isActive), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.objLayer), sizeof(_uint));
 		out.write(reinterpret_cast<const char*>(&info.isTransformStatic), sizeof(_bool));
+		out.write(reinterpret_cast<const char*>(&info.isNavigationStatic), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyKinematic), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyUseGravity), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyMass), sizeof(_float));
@@ -809,6 +810,15 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 		writeMaterialValueList(info.materialVector3Values);
 		writeMaterialValueList(info.materialVector4Values);
 		writeMaterialValueList(info.materialMatrixValues);
+		out.write(reinterpret_cast<const char*>(&info.navAgentRadius), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&info.navAgentHeight), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&info.navAgentSpeed), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&info.navAgentAcceleration), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&info.navAgentAngularSpeed), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&info.navAgentStoppingDistance), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&info.navAgentAutoBraking), sizeof(_bool));
+		out.write(reinterpret_cast<const char*>(&info.navAgentUpdateRotation), sizeof(_bool));
+		out.write(reinterpret_cast<const char*>(&info.navAgentStopped), sizeof(_bool));
 	}
 
 	out.close();
@@ -905,6 +915,9 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 
 		if (version >= 10)
 			in.read(reinterpret_cast<char*>(&info.isTransformStatic), sizeof(_bool));
+
+		if (version >= 12)
+			in.read(reinterpret_cast<char*>(&info.isNavigationStatic), sizeof(_bool));
 
 		if (version >= 8)
 		{
@@ -1036,12 +1049,85 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 			readMaterialValueList(info.materialMatrixValues);
 		}
 
+		if (version >= 13)
+		{
+			in.read(reinterpret_cast<char*>(&info.navAgentRadius), sizeof(_float));
+			in.read(reinterpret_cast<char*>(&info.navAgentHeight), sizeof(_float));
+			in.read(reinterpret_cast<char*>(&info.navAgentSpeed), sizeof(_float));
+			in.read(reinterpret_cast<char*>(&info.navAgentAcceleration), sizeof(_float));
+			in.read(reinterpret_cast<char*>(&info.navAgentAngularSpeed), sizeof(_float));
+			in.read(reinterpret_cast<char*>(&info.navAgentStoppingDistance), sizeof(_float));
+			in.read(reinterpret_cast<char*>(&info.navAgentAutoBraking), sizeof(_bool));
+			in.read(reinterpret_cast<char*>(&info.navAgentUpdateRotation), sizeof(_bool));
+			in.read(reinterpret_cast<char*>(&info.navAgentStopped), sizeof(_bool));
+		}
+
 		resultInfo.push_back(info);
 	}
 
 	in.close();
 
 	return resultInfo;
+}
+
+HRESULT CResources::SaveSceneNavigationTriangles(const wstring _filePath, const vector<vector3>& triangles)
+{
+	using namespace std;
+
+	ofstream out(_filePath, ios::binary);
+	if (!out.is_open())
+	{
+		CDebug::LogError(L"SaveSceneNavigationTriangles failed - can not open: " + _filePath);
+		return E_FAIL;
+	}
+
+	const _uint magic = 0x4E415630;
+	const _uint version = 1;
+	const _uint count = static_cast<_uint>(triangles.size());
+	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
+	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
+	out.write(reinterpret_cast<const char*>(&count), sizeof(_uint));
+
+	for (const vector3& triangleVertex : triangles)
+	{
+		const _float3 value = triangleVertex;
+		out.write(reinterpret_cast<const char*>(&value), sizeof(_float3));
+	}
+
+	out.close();
+	return S_OK;
+}
+
+vector<vector3> CResources::ReadSceneNavigationTriangles(const wstring _binFileName)
+{
+	using namespace std;
+
+	vector<vector3> triangles = {};
+	ifstream in(L"BinaryAssets/SceneData/" + _binFileName, ios::binary);
+	if (!in.is_open())
+		return triangles;
+
+	_uint magic = 0;
+	_uint version = 0;
+	_uint count = 0;
+	in.read(reinterpret_cast<char*>(&magic), sizeof(_uint));
+	if (magic != 0x4E415630)
+		return triangles;
+
+	in.read(reinterpret_cast<char*>(&version), sizeof(_uint));
+	in.read(reinterpret_cast<char*>(&count), sizeof(_uint));
+	if (version != 1)
+		return triangles;
+
+	triangles.reserve(count);
+	for (_uint index = 0; index < count; ++index)
+	{
+		_float3 value = {};
+		in.read(reinterpret_cast<char*>(&value), sizeof(_float3));
+		triangles.push_back(vector3(value));
+	}
+
+	return triangles;
 }
 
 HRESULT CResources::SaveMeshBufferInfos(const wstring _filePath, vector<CMeshBuffer::MeshBufferInitiaizeInfo> _infoList)

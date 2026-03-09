@@ -43,6 +43,8 @@ public:
 public:
     HRESULT SaveSceneObjectTransformInfos(const wstring _filePath, vector<CScene::ObjectsTransformInfo> _infoList);
     vector<CScene::ObjectsTransformInfo> ReadSceneObjectTransformInfos(const wstring _binFileName);
+    HRESULT SaveSceneNavigationTriangles(const wstring _filePath, const vector<vector3>& triangles);
+    vector<vector3> ReadSceneNavigationTriangles(const wstring _binFileName);
 
     HRESULT SaveMeshBufferInfos(const wstring _filePath, vector<CMeshBuffer::MeshBufferInitiaizeInfo> _infoList);
     vector<CMeshBuffer::MeshBufferInitiaizeInfo> ReadMeshBufferInfos(const wstring _binFileName);

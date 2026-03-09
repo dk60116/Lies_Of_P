@@ -201,6 +201,16 @@ void CSceneManager::LoadComplete()
 	auto sceneTransformInfo = CResources::GetInstance().ReadSceneObjectTransformInfos(file);
 	m_pCrtScene->Bind_ObjectsTransform(sceneTransformInfo);
 
+	const wstring navFile = m_pCrtScene->Get_SceneName() + L".navmeshdata";
+	const vector<vector3> navTriangles = CResources::GetInstance().ReadSceneNavigationTriangles(navFile);
+	m_pCrtScene->SetNavigationTriangles(navTriangles);
+#ifndef _CLIENT_BUILD
+	if (navTriangles.empty())
+		CEditor::GetInstance().ClearNavigationPreviewTriangles();
+	else
+		CEditor::GetInstance().SetNavigationPreviewTriangles(navTriangles);
+#endif
+
 	if (prevPlayState != PlayState::Stopped)
 	{
 		m_pCrtScene->Set_SaveRegistrationEnabled(false);

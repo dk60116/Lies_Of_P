@@ -19,6 +19,7 @@
 #include "CapsuleCollider.h"
 #include "MeshCollider.h"
 #include "RigidBody.h"
+#include "NaviMeshAgent.h"
 
 #include <algorithm>
 #include <chrono>
@@ -959,7 +960,8 @@ void CInspectorBox::Render()
 
         StaticOption staticOptions[] =
         {
-            { "TransformStatic", CGameObject::STATIC_METHOD::TransformStatic }
+            { "TransformStatic", CGameObject::STATIC_METHOD::TransformStatic },
+            { "NavigationStatic", CGameObject::STATIC_METHOD::NavigationStatic }
         };
 
         string staticPreview = "None";
@@ -1540,9 +1542,11 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
         const string headerLabel = componentName + "##" + to_string(reinterpret_cast<uintptr_t>(component));
         if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
         {
+            ImGui::PushID(component);
             const string removeButtonLabel = "Remove Component##" + to_string(reinterpret_cast<uintptr_t>(component));
             if (ImGui::Button(removeButtonLabel.c_str()))
             {
+                ImGui::PopID();
                 _obj->RemoveComponent(component);
                 break;
             }
@@ -1773,6 +1777,67 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
             if (CMeshFilter* meshFilter = dynamic_cast<CMeshFilter*>(component))
                 RenderMeshFilterComponent(_obj, meshFilter);
 
+            if (CNaviMeshAgent* navAgent = dynamic_cast<CNaviMeshAgent*>(component))
+            {
+                _float radius = navAgent->GetRadius();
+                if (ImGui::DragFloat("Radius", &radius, 0.01f, 0.01f, 100.f, "%.2f"))
+                    navAgent->SetRadius(radius);
+
+                _float height = navAgent->GetHeight();
+                if (ImGui::DragFloat("Height", &height, 0.01f, 0.01f, 100.f, "%.2f"))
+                    navAgent->SetHeight(height);
+
+                _float speed = navAgent->GetSpeed();
+                if (ImGui::DragFloat("Speed", &speed, 0.01f, 0.f, 100.f, "%.2f"))
+                    navAgent->SetSpeed(speed);
+
+                _float acceleration = navAgent->GetAcceleration();
+                if (ImGui::DragFloat("Acceleration", &acceleration, 0.01f, 0.f, 100.f, "%.2f"))
+                    navAgent->SetAcceleration(acceleration);
+
+                _float angularSpeed = navAgent->GetAngularSpeed();
+                if (ImGui::DragFloat("Angular Speed", &angularSpeed, 0.1f, 0.f, 2000.f, "%.1f"))
+                    navAgent->SetAngularSpeed(angularSpeed);
+
+                _float stoppingDistance = navAgent->GetStoppingDistance();
+                if (ImGui::DragFloat("Stopping Distance", &stoppingDistance, 0.01f, 0.f, 100.f, "%.2f"))
+                    navAgent->SetStoppingDistance(stoppingDistance);
+
+                _bool autoBraking = navAgent->GetAutoBraking();
+                if (ImGui::Checkbox("Auto Braking", &autoBraking))
+                    navAgent->SetAutoBraking(autoBraking);
+
+                _bool updateRotation = navAgent->GetUpdateRotation();
+                if (ImGui::Checkbox("Update Rotation", &updateRotation))
+                    navAgent->SetUpdateRotation(updateRotation);
+
+                _bool stopped = navAgent->IsStopped();
+                if (ImGui::Checkbox("Stopped", &stopped))
+                    navAgent->SetStopped(stopped);
+
+                static unordered_map<uintptr_t, _float3> pendingDestinations;
+                auto [destIt, inserted] = pendingDestinations.try_emplace(reinterpret_cast<uintptr_t>(navAgent), navAgent->GetDestination());
+                _float3& pendingDestination = destIt->second;
+                if (inserted)
+                    pendingDestination = navAgent->GetDestination();
+
+                _float destinationValues[3] = { pendingDestination.x, pendingDestination.y, pendingDestination.z };
+                if (ImGui::InputFloat3("Destination", destinationValues))
+                    pendingDestination = _float3(destinationValues[0], destinationValues[1], destinationValues[2]);
+
+                if (ImGui::Button("Set Destination"))
+                    navAgent->SetDestination(vector3(pendingDestination));
+                ImGui::SameLine();
+                if (ImGui::Button("Reset Path"))
+                    navAgent->ResetPath();
+
+                const vector3 velocity = navAgent->GetVelocity();
+                ImGui::Separator();
+                ImGui::Text("Has Path: %s", navAgent->HasPath() ? "True" : "False");
+                ImGui::Text("Remaining Distance: %.2f", navAgent->GetRemainingDistance());
+                ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", velocity.x, velocity.y, velocity.z);
+            }
+
             if (CCloth* cloth = dynamic_cast<CCloth*>(component))
             {
                 _bool useGravity = cloth->GetUseGravity();
@@ -1920,6 +1985,8 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 if (ImGui::Checkbox("Z##FreezeRotZ", &constRotZ))
                     rigidBody->SetConstRotationZ(constRotZ);
             }
+
+            ImGui::PopID();
         }
     }
 
@@ -2524,6 +2591,12 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
     {
         if (!_obj->GetComponent<CRigidBody>())
             _obj->AddComponent<CRigidBody>();
+    }
+
+    if (ImGui::MenuItem("NaviMeshAgent"))
+    {
+        if (!_obj->GetComponent<CNaviMeshAgent>())
+            _obj->AddComponent<CNaviMeshAgent>();
     }
 
     if (ImGui::MenuItem("Cloth"))

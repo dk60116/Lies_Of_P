@@ -6,6 +6,11 @@
 
 NS_BEGIN(Engine)
 
+namespace EngineAI
+{
+    class CNaviMesh;
+}
+
 class ENGINE_DLL CScene abstract : public UObject
 {
     friend class CSceneManager;
@@ -39,6 +44,7 @@ public:
         _bool isActive = true;
         _uint objLayer = 0u;
         _bool isTransformStatic = false;
+        _bool isNavigationStatic = false;
         _bool rigidBodyKinematic = false;
         _bool rigidBodyUseGravity = true;
         _float rigidBodyMass = 1.f;
@@ -48,6 +54,15 @@ public:
         _bool rigidBodyConstRotationX = false;
         _bool rigidBodyConstRotationY = false;
         _bool rigidBodyConstRotationZ = false;
+        _float navAgentRadius = 0.5f;
+        _float navAgentHeight = 2.f;
+        _float navAgentSpeed = 3.5f;
+        _float navAgentAcceleration = 8.f;
+        _float navAgentAngularSpeed = 360.f;
+        _float navAgentStoppingDistance = 0.1f;
+        _bool navAgentAutoBraking = true;
+        _bool navAgentUpdateRotation = true;
+        _bool navAgentStopped = false;
         _bool isRect = false;
         SCENERECTINFO rectInfo = {};
         vector<wstring> componentNames = {};
@@ -99,6 +114,9 @@ public:
 public:
     vector<SCENETRANSFORMINFO> Convert_ObjectsTransformInfo() const;
     void Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList);
+    void SetNavigationTriangles(const vector<vector3>& triangles);
+    const vector<vector3>& GetNavigationTriangles() const;
+    EngineAI::CNaviMesh* GetNavigationMesh() const;
 
 public:
     class CEngineResource* Add_Resource(const wstring& _name, CEngineResource* _resource);
@@ -185,13 +203,15 @@ protected:
     unordered_map<wstring, vector<SkinnedMeshBundle>> m_mSkinnedBundleList, m_mTempSkinnedBundleList;
     unordered_map<wstring, vector<CSkinnedMeshBuffer::SKINNEDSKELETAL>> m_mSkinnedBoneList, m_mTempSkinnedBoneList;
     vector<CEngineResource*> m_vCloneResourceList;
+    vector<vector3> m_vNavigationTriangles;
+    EngineAI::CNaviMesh* m_pNavigationMesh;
 
 protected:
     _uint m_iUniqueObjectCount;
     unordered_map<_uint, CGameObject*> m_mObjectOfId;
 
     ID3D11DepthStencilState* m_pSkyBoxDepthStencillState, * m_pMeshDepthStencilState, * m_pUIDepthStencilState, * m_pTransparentDepthStencilState;
-    ID3D11RasterizerState* m_pSkyBoxResterizerState, * m_pMeshResterizerState, * m_pUIResterizerState;
+    ID3D11RasterizerState* m_pSkyBoxResterizerState, * m_pMeshResterizerState, * m_pTransparentResterizerState, * m_pUIResterizerState;
     ID3D11BlendState* m_pBlendingState, * m_pNoneBlendingState;
 
     vector<_matrix> m_vLightData;

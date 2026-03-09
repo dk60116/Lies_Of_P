@@ -22,6 +22,8 @@
 #include "BoxCollider.h"
 #include "MeshCollider.h"
 #include "RigidBody.h"
+#include "NaviMesh.h"
+#include "NaviMeshAgent.h"
 #include "Physics.h"
 #include <filesystem>
 #include <unordered_map>
@@ -246,6 +248,24 @@ namespace
 	}
 }
 
+
+	void DrawNavigationPreview(CCamera* camera)
+	{
+		CEditor& editor = CEditor::GetInstance();
+		if (!editor.IsNavigationGizmoVisible() || !camera)
+			return;
+
+		CMeshBuffer* previewMesh = editor.GetNavigationPreviewMesh();
+		CMaterial* previewMaterial = editor.GetNavigationPreviewMaterial();
+		if (!previewMesh || !previewMaterial)
+			return;
+
+		_float3 camPos = {};
+		XMStoreFloat3(&camPos, camera->Get_Transform()->Get_Position().toXMVector());
+		previewMaterial->Bind_Matrix(XMMatrixIdentity());
+		previewMaterial->Bind_Camera(camPos, camera->GetViewMatrix(), camera->GetProjectionMatrix(), 0);
+		previewMesh->Render();
+	}
 CScene::CScene()
 	: m_iSceneIndex(0)
 	, m_pDevice(nullptr)
@@ -268,12 +288,15 @@ CScene::CScene()
 	, m_pEditorCamera(nullptr)
 	, m_iUniqueObjectCount(0)
 	, m_mObjectOfId({})
+	, m_vNavigationTriangles({})
+	, m_pNavigationMesh(nullptr)
 	, m_pSkyBoxDepthStencillState(nullptr)
 	, m_pMeshDepthStencilState(nullptr)
 	, m_pUIDepthStencilState(nullptr)
 	, m_pTransparentDepthStencilState(nullptr)
 	, m_pSkyBoxResterizerState(nullptr)
 	, m_pMeshResterizerState(nullptr)
+	, m_pTransparentResterizerState(nullptr)
 	, m_pUIResterizerState(nullptr)
 	, m_pBlendingState(nullptr)
 	, m_pNoneBlendingState(nullptr)
@@ -398,6 +421,9 @@ HRESULT CScene::Initialize()
 		depthTransparentDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 		depthTransparentDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 		depthTransparentDesc.StencilEnable = FALSE;
+
+		if (FAILED(m_pDevice->CreateRasterizerState(&resterBlendDesc, &m_pTransparentResterizerState)))
+			return E_FAIL;
 
 		if (FAILED(m_pDevice->CreateDepthStencilState(&depthTransparentDesc, &m_pTransparentDepthStencilState)))
 			return E_FAIL;
@@ -665,7 +691,15 @@ void CScene::Render_Editor()
 
 	DrawSelectedMeshBoundingBox(m_pEditorCamera);
 	DrawSelectedCameraFrustum(m_pEditorCamera);
+	_float blendFactor[4] = { 1.f, 1.f, 1.f, 1.f };
 	m_pEditorCamera->RenderMesh();
+	ctx->RSSetState(m_pTransparentResterizerState);
+	ctx->OMSetBlendState(m_pBlendingState, blendFactor, 0xFFFFFFFF);
+	ctx->OMSetDepthStencilState(m_pTransparentDepthStencilState, 0);
+	DrawNavigationPreview(m_pEditorCamera);
+	ctx->RSSetState(m_pMeshResterizerState);
+	ctx->OMSetBlendState(m_pNoneBlendingState, blendFactor, 0xFFFFFFFF);
+	ctx->OMSetDepthStencilState(m_pMeshDepthStencilState, 0);
 
 	m_pEditorCamera->RenderShadowDepthPass(rtVP);
 	m_pEditorCamera->RenderObjectIDPass(rtVP);
@@ -860,6 +894,8 @@ void CScene::SceneRelease()
 	m_mSkinnedBundleList.clear();
 	m_mSkinnedBoneList.clear();
 	m_vCloneResourceList.clear();
+	m_vNavigationTriangles.clear();
+	Safe_Release(m_pNavigationMesh);
 
 	Safe_Release(m_pDevice);
 	Safe_Release(m_pContext);
@@ -903,6 +939,46 @@ void CScene::Set_SceneName(const wstring _name)
 const wstring& CScene::Get_SceneName() const
 {
 	return m_strSceneName;
+}
+
+void CScene::SetNavigationTriangles(const vector<vector3>& triangles)
+{
+	m_vNavigationTriangles = triangles;
+	Safe_Release(m_pNavigationMesh);
+	m_pNavigationMesh = nullptr;
+
+	if (m_vNavigationTriangles.size() < 3)
+	{
+		m_vNavigationTriangles.clear();
+		return;
+	}
+
+	EngineAI::CNaviMesh* navMesh = EngineAI::CNaviMesh::Create();
+	if (!navMesh)
+	{
+		m_vNavigationTriangles.clear();
+		return;
+	}
+
+	navMesh->AddRef();
+	if (FAILED(navMesh->BuildFromTriangles(m_vNavigationTriangles)))
+	{
+		Safe_Release(navMesh);
+		m_vNavigationTriangles.clear();
+		return;
+	}
+
+	m_pNavigationMesh = navMesh;
+}
+
+const vector<vector3>& CScene::GetNavigationTriangles() const
+{
+	return m_vNavigationTriangles;
+}
+
+EngineAI::CNaviMesh* CScene::GetNavigationMesh() const
+{
+	return m_pNavigationMesh;
 }
 
 vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
@@ -971,6 +1047,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		if (dynamic_cast<CSphereCollider*>(component)) return L"SphereCollider";
 		if (dynamic_cast<CCapsuleCollider*>(component)) return L"CapsuleCollider";
 		if (dynamic_cast<CMeshCollider*>(component)) return L"MeshCollider";
+		if (dynamic_cast<CNaviMeshAgent*>(component)) return L"NaviMeshAgent";
 		return L"";
 	};
 
@@ -998,6 +1075,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		info.isActive = (*it)->IsActive_Origin();
 		info.objLayer = (*it)->GetLayer();
 		info.isTransformStatic = (*it)->IsStatic(CGameObject::STATIC_METHOD::TransformStatic);
+		info.isNavigationStatic = (*it)->IsStatic(CGameObject::STATIC_METHOD::NavigationStatic);
 
 		if (CRigidBody* rigidBody = (*it)->GetComponent<CRigidBody>())
 		{
@@ -1010,6 +1088,19 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			info.rigidBodyConstRotationX = rigidBody->IsConstRotationX();
 			info.rigidBodyConstRotationY = rigidBody->IsConstRotationY();
 			info.rigidBodyConstRotationZ = rigidBody->IsConstRotationZ();
+		}
+
+		if (CNaviMeshAgent* navAgent = (*it)->GetComponent<CNaviMeshAgent>())
+		{
+			info.navAgentRadius = navAgent->GetRadius();
+			info.navAgentHeight = navAgent->GetHeight();
+			info.navAgentSpeed = navAgent->GetSpeed();
+			info.navAgentAcceleration = navAgent->GetAcceleration();
+			info.navAgentAngularSpeed = navAgent->GetAngularSpeed();
+			info.navAgentStoppingDistance = navAgent->GetStoppingDistance();
+			info.navAgentAutoBraking = navAgent->GetAutoBraking();
+			info.navAgentUpdateRotation = navAgent->GetUpdateRotation();
+			info.navAgentStopped = navAgent->IsStopped();
 		}
 
 		CRectTransform* rect = (*it)->GetComponent<CRectTransform>();
@@ -1155,6 +1246,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			if (componentName == L"SphereCollider" && dynamic_cast<CSphereCollider*>(component)) return true;
 			if (componentName == L"CapsuleCollider" && dynamic_cast<CCapsuleCollider*>(component)) return true;
 			if (componentName == L"MeshCollider" && dynamic_cast<CMeshCollider*>(component)) return true;
+			if (componentName == L"NaviMeshAgent" && dynamic_cast<CNaviMeshAgent*>(component)) return true;
 		}
 
 		return false;
@@ -1182,6 +1274,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		else if (componentName == L"SphereCollider") obj->AddComponent<CSphereCollider>();
 		else if (componentName == L"CapsuleCollider") obj->AddComponent<CCapsuleCollider>();
 		else if (componentName == L"MeshCollider") obj->AddComponent<CMeshCollider>();
+		else if (componentName == L"NaviMeshAgent") obj->AddComponent<CNaviMeshAgent>();
 	};
 
 	unordered_map<wstring, size_t> infoIndexByGuid;
@@ -1233,6 +1326,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		obj->SetActive(info.isActive);
 		obj->SetLayer(info.objLayer);
 		obj->SetStatic(CGameObject::STATIC_METHOD::TransformStatic, info.isTransformStatic, false);
+		obj->SetStatic(CGameObject::STATIC_METHOD::NavigationStatic, info.isNavigationStatic, false);
 
 		if (!info.isRect)
 			tf->Set_LocalScale(info.localScale);
@@ -1272,6 +1366,19 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			rigidBody->SetConstRotationX(info.rigidBodyConstRotationX);
 			rigidBody->SetConstRotationY(info.rigidBodyConstRotationY);
 			rigidBody->SetConstRotationZ(info.rigidBodyConstRotationZ);
+		}
+
+		if (CNaviMeshAgent* navAgent = obj->GetComponent<CNaviMeshAgent>())
+		{
+			navAgent->SetRadius(info.navAgentRadius);
+			navAgent->SetHeight(info.navAgentHeight);
+			navAgent->SetSpeed(info.navAgentSpeed);
+			navAgent->SetAcceleration(info.navAgentAcceleration);
+			navAgent->SetAngularSpeed(info.navAgentAngularSpeed);
+			navAgent->SetStoppingDistance(info.navAgentStoppingDistance);
+			navAgent->SetAutoBraking(info.navAgentAutoBraking);
+			navAgent->SetUpdateRotation(info.navAgentUpdateRotation);
+			navAgent->SetStopped(info.navAgentStopped);
 		}
 
 		if (!info.meshBufferName.empty())
@@ -2635,6 +2742,8 @@ ID3D11BlendState* CScene::Get_NoneBlendingState() const
 {
 	return m_pNoneBlendingState;
 }
+
+
 
 
 

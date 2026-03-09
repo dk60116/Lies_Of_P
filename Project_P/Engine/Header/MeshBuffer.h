@@ -54,6 +54,7 @@ protected:
 
 public:
 	HRESULT Initialize_Custom(MeshBufferInitiaizeInfo _info, void* _desc);
+	static CMeshBuffer* CreateCustomMesh(const MeshBufferInitiaizeInfo& _info, void* _desc = nullptr);
 
 public:
 	static wstring FindMeshName(const aiScene* scene, _uint meshIndex, aiNode* node = nullptr);

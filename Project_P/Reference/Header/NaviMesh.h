@@ -3,47 +3,38 @@
 #include "MeshBuffer.h"
 
 NS_BEGIN(Engine)
-
 NS_BEGIN(EngineAI)
 
 class ENGINE_DLL CNaviMesh final : public CMeshBuffer
 {
-	friend class CResources;
-
-	struct NavBakeOptions
-	{
-		
-	};
-
 public:
 	struct NaviPolygon
 	{
-		_uint index;
-		vector<_uint> neighbors;
-		vector<vector3> vertices;
+		_uint index = 0;
+		vector<_uint> neighbors = {};
+		vector<vector3> vertices = {};
+		vector3 center = {};
 	};
 
-	struct PathNode
-	{
-		_uint polygonIndex;
-		float gCost, hCost;
-		PathNode* parent;
-	};
-
-private:
+protected:
 	CNaviMesh();
 	~CNaviMesh();
 
 public:
 	HRESULT BuildFromMesh(CMeshBuffer* _sourceMesh, vector<CMeshBuffer*> _obstacleMeshes);
-	bool FindPath(const vector3& _start, const vector3& _end, vector<vector3>& _outPath);
-	int FindContainingPolygon(const vector3& _position);
+	HRESULT BuildFromTriangles(const vector<vector3>& triangles);
+	bool FindPath(const vector3& _start, const vector3& _end, vector<vector3>& _outPath) const;
+	int FindContainingPolygon(const vector3& _position) const;
+	bool SamplePosition(const vector3& _position, vector3& _outPosition) const;
+	const vector<NaviPolygon>& GetPolygons() const;
+	const _bool IsEmpty() const;
+
+public:
+	static CNaviMesh* Create();
 
 private:
-	static CNaviMesh* Create();
+	vector<NaviPolygon> m_vPolygons;
 };
 
 NS_END
-
 NS_END
-

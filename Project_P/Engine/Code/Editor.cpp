@@ -18,6 +18,9 @@ CEditor::CEditor()
 	, m_bOpenSelectedInHierarchyRequested(false)
 	, m_bShowColliderGizmo(true)
 	, m_bShowMeshColliderGizmo(true)
+	, m_bShowNavigationGizmo(true)
+	, m_pNavigationPreviewMesh(nullptr)
+	, m_pNavigationPreviewMaterial(nullptr)
 	, m_vCameraPos({})
 	, m_vCameraQuat({})
 	, m_bDoubleClicked(false)
@@ -105,6 +108,8 @@ void CEditor::Release()
 		Safe_Release((*it).second);
 
 	m_mBoxList.clear();
+	Safe_Release(m_pNavigationPreviewMesh);
+	Safe_Release(m_pNavigationPreviewMaterial);
 }
 
 HWND CEditor::Get_EditorWindow()
@@ -270,6 +275,123 @@ const _bool CEditor::IsMeshColliderGizmoVisible() const
 void CEditor::SetMeshColliderGizmoVisible(const _bool visible)
 {
 	m_bShowMeshColliderGizmo = visible;
+}
+
+const _bool CEditor::IsNavigationGizmoVisible() const
+{
+	return m_bShowNavigationGizmo;
+}
+
+void CEditor::SetNavigationGizmoVisible(const _bool visible)
+{
+	m_bShowNavigationGizmo = visible;
+}
+
+void CEditor::SetNavigationPreviewTriangles(const vector<vector3>& triangles)
+{
+	Safe_Release(m_pNavigationPreviewMesh);
+
+	if (triangles.size() < 3)
+		return;
+
+	if (!m_pNavigationPreviewMaterial)
+	{
+		m_pNavigationPreviewMaterial = CResources::GetInstance().CloneOnGame<CMaterial>(L"DefaultLineMaterial (Material)");
+		if (m_pNavigationPreviewMaterial)
+		{
+			m_pNavigationPreviewMaterial->Set_BaseColor(_float4(0.1f, 0.45f, 1.f, 0.35f));
+			m_pNavigationPreviewMaterial->AddRef();
+		}
+	}
+
+	if (!m_pNavigationPreviewMaterial)
+		return;
+
+	vector<VertexTexNormalTangentBuffer> fillVertices;
+	fillVertices.reserve(triangles.size());
+
+	constexpr _float navigationPreviewOffset = 0.02f;
+
+	_float3 minPos = _float3(triangles[0].x, triangles[0].y, triangles[0].z);
+	_float3 maxPos = _float3(triangles[0].x, triangles[0].y, triangles[0].z);
+	auto appendFillVertex = [&](const vector3& point, const vector3& normal)
+	{
+		const vector3 liftedPoint = point + normal * navigationPreviewOffset;
+		const vector3 tangent = (vector3::Cross(vector3::up(), normal).lengthSq() > 0.0001f)
+			? vector3::Cross(vector3::up(), normal).normalized()
+			: vector3::right();
+		const _float3 pos = _float3(liftedPoint.x, liftedPoint.y, liftedPoint.z);
+		VertexTexNormalTangentBuffer vertex = {};
+		vertex.position = pos;
+		vertex.normal = _float3(normal.x, normal.y, normal.z);
+		vertex.uv = _float2(0.f, 0.f);
+		vertex.tangent = _float3(tangent.x, tangent.y, tangent.z);
+		fillVertices.push_back(vertex);
+		minPos.x = min(minPos.x, pos.x);
+		minPos.y = min(minPos.y, pos.y);
+		minPos.z = min(minPos.z, pos.z);
+		maxPos.x = max(maxPos.x, pos.x);
+		maxPos.y = max(maxPos.y, pos.y);
+		maxPos.z = max(maxPos.z, pos.z);
+	};
+
+	for (size_t i = 0; i + 2 < triangles.size(); i += 3)
+	{
+		const vector3 a = triangles[i];
+		const vector3 b = triangles[i + 1];
+		const vector3 c = triangles[i + 2];
+
+		vector3 normal = vector3::Cross(b - a, c - a);
+		if (normal.lengthSq() <= 0.000001f)
+			normal = vector3::up();
+		else
+			normal = normal.normalized();
+
+		if (normal.y < 0.f)
+			normal *= -1.f;
+
+		appendFillVertex(a, normal);
+		appendFillVertex(b, normal);
+		appendFillVertex(c, normal);
+	}
+
+	if (fillVertices.empty())
+		return;
+
+	CMeshBuffer::MeshBufferInitiaizeInfo info = {};
+	info.meshName = L"NavigationPreview (Mesh Buffer)";
+	info.buffer.assign(
+		reinterpret_cast<const uint8_t*>(fillVertices.data()),
+		reinterpret_cast<const uint8_t*>(fillVertices.data()) + sizeof(VertexTexNormalTangentBuffer) * fillVertices.size());
+	info.desc.topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	info.desc.vertexSize = sizeof(VertexTexNormalTangentBuffer);
+	info.desc.vertextCount = static_cast<_uint>(fillVertices.size());
+	info.desc.indexCount = 0;
+	info.desc.boundingBox.Center = _float3(
+		(minPos.x + maxPos.x) * 0.5f,
+		(minPos.y + maxPos.y) * 0.5f,
+		(minPos.z + maxPos.z) * 0.5f);
+	info.desc.boundingBox.Extents = _float3(
+		(maxPos.x - minPos.x) * 0.5f,
+		(maxPos.y - minPos.y) * 0.5f,
+		(maxPos.z - minPos.z) * 0.5f);
+
+	m_pNavigationPreviewMesh = CMeshBuffer::CreateCustomMesh(info, nullptr);
+}
+
+void CEditor::ClearNavigationPreviewTriangles()
+{
+	Safe_Release(m_pNavigationPreviewMesh);
+}
+
+CMeshBuffer* CEditor::GetNavigationPreviewMesh() const
+{
+	return m_pNavigationPreviewMesh;
+}
+
+CMaterial* CEditor::GetNavigationPreviewMaterial() const
+{
+	return m_pNavigationPreviewMaterial;
 }
 
 const vector2Int CEditor::Get_WindowResolution() const
@@ -474,4 +596,14 @@ void CEditor::OpenAssetExternal(const fs::path& path)
 	CDebug::LogError(L"OpenAssetExternal is not implemented on this platform.");
 #endif
 }
+
+
+
+
+
+
+
+
+
+
 
