@@ -49,7 +49,7 @@ void CMonster::OnDestroy()
 
 const wstring& CMonster::GetMonsterName() const
 {
-	m_strMonsterName;
+	return m_strMonsterName;
 }
 
 CAnimator* CMonster::Get_Animator()
