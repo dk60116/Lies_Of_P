@@ -51,6 +51,7 @@ protected:
 	CRigidBody* m_pRigidBody;
 	CAnimator* m_pAnimator;
 	CMonsterController* m_pController;
+	CNaviMeshAgent* m_pNavAgent;
 
 	MonsterStatus m_sStatus;
 };

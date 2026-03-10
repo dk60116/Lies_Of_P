@@ -10,6 +10,7 @@ CMonster::CMonster()
 	, m_pRigidBody(nullptr)
 	, m_pAnimator(nullptr)
 	, m_pController(nullptr)
+	, m_pNavAgent(nullptr)
 {
 	m_strName = L"Monster";
 }
@@ -41,6 +42,7 @@ void CMonster::Start()
 
 void CMonster::Update()
 {
+	m_pNavAgent->SetDestination(CGameManager::GetInstance().Get_Player()->Get_Transform()->Get_Position());
 }
 
 void CMonster::OnDestroy()
@@ -112,5 +114,8 @@ void CMonster::CreateAnimator()
 
 void CMonster::CreateAI()
 {
+	m_pNavAgent = m_pGameObject->AddComponent<CNaviMeshAgent>();
 	m_pController = m_pGameObject->AddComponent<CMonsterController>();
+
+	m_pNavAgent->SetStoppingDistance(2.f);
 }

@@ -18,6 +18,7 @@ CEditor::CEditor()
 	, m_bOpenSelectedInHierarchyRequested(false)
 	, m_bShowColliderGizmo(true)
 	, m_bShowMeshColliderGizmo(true)
+	, m_bShowNavigationMesh(true)
 	, m_vCameraPos({})
 	, m_vCameraQuat({})
 	, m_bDoubleClicked(false)
@@ -270,6 +271,16 @@ const _bool CEditor::IsMeshColliderGizmoVisible() const
 void CEditor::SetMeshColliderGizmoVisible(const _bool visible)
 {
 	m_bShowMeshColliderGizmo = visible;
+}
+
+const _bool CEditor::IsNavigationMeshVisible() const
+{
+	return m_bShowNavigationMesh;
+}
+
+void CEditor::SetNavigationMeshVisible(const _bool visible)
+{
+	m_bShowNavigationMesh = visible;
 }
 
 const vector2Int CEditor::Get_WindowResolution() const

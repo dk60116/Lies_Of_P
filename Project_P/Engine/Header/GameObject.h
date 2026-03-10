@@ -154,6 +154,7 @@ private:
 
 private:
 	_bool m_bTransformStatic;
+	_bool m_bNavigationStatic;
 
 private:
 	_uint m_iLayer;

@@ -1,5 +1,7 @@
 #pragma once
 #include "EditorBox.h"
+#include "NaviMesh.h"
+#include <string>
 
 NS_BEGIN(Engine)
 
@@ -23,6 +25,7 @@ private:
 	void ShowSceneMenu();
 	void ShowEditMenu();
 	void ShowViewMenu();
+	void ShowAIMenu();
 	void ShowSceneSettingsWindow();
 	void ShowProjectSettingsWindow();
 	void ShowProjectSettingsTime();
@@ -31,6 +34,7 @@ private:
 	void Show2DButton();
 	void ShowFPS();
 	void ShowGameStatusWindow();
+	void ShowNavigationWindow();
 
 private:
 	_bool m_bProjectSettingsWindowOpen;
@@ -40,12 +44,12 @@ private:
 	_int m_iPendingShadowQuality;
 	_bool m_bSceneSettingsWindowOpen;
 	_bool m_bGameStatusWindowOpen;
+	_bool m_bNavigationWindowOpen;
+	_bool m_bNavigationBuildSucceeded;
+	_int m_iNavigationPolygonCount;
+	string m_strNavigationResourceName;
+	string m_strNavigationBuildStatus;
+	EngineAI::CNaviMesh::NavBakeOptions m_sNavigationBakeOptions;
 };
 
 NS_END
-
-
-
-
-
-

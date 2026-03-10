@@ -53,3 +53,5 @@
 #include "Image.h"
 #include "Text.h"
 #include "Font.h"
+#include "NaviMeshAgent.h"
+#include "BehaviourTree.h"

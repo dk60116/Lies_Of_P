@@ -19,6 +19,7 @@
 #include "CapsuleCollider.h"
 #include "MeshCollider.h"
 #include "RigidBody.h"
+#include "NaviMeshAgent.h"
 
 #include <algorithm>
 #include <chrono>
@@ -959,7 +960,8 @@ void CInspectorBox::Render()
 
         StaticOption staticOptions[] =
         {
-            { "TransformStatic", CGameObject::STATIC_METHOD::TransformStatic }
+            { "TransformStatic", CGameObject::STATIC_METHOD::TransformStatic },
+            { "NavigationStatic", CGameObject::STATIC_METHOD::NavigationStatic }
         };
 
         string staticPreview = "None";
@@ -1780,6 +1782,73 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                     cloth->SetUseGravity(useGravity);
             }
 
+            if (CNaviMeshAgent* navMeshAgent = dynamic_cast<CNaviMeshAgent*>(component))
+            {
+                const string navId = to_string(reinterpret_cast<uintptr_t>(navMeshAgent));
+
+                string navigationResourceName = CEngineString::WStringToString(navMeshAgent->GetNavigationMeshResourceName());
+                if (ImGui::InputText(("Navigation Mesh##" + navId).c_str(), &navigationResourceName))
+                    navMeshAgent->SetNavigationMeshResourceName(CEngineString::StringToWString(navigationResourceName));
+
+                ImGui::SameLine();
+                if (ImGui::Button(("Use Scene Default##" + navId).c_str()))
+                    navMeshAgent->SetNavigationMeshResourceName(L"");
+
+                if (navigationResourceName.empty())
+                    ImGui::TextDisabled("Empty value uses the scene default NavigationMesh resource.");
+
+                _float agentRadius = navMeshAgent->GetAgentRadius();
+                if (ImGui::DragFloat(("Radius##" + navId).c_str(), &agentRadius, 0.01f, 0.01f, 100.f, "%.2f"))
+                    navMeshAgent->SetAgentRadius(agentRadius);
+
+                _float agentHeight = navMeshAgent->GetAgentHeight();
+                if (ImGui::DragFloat(("Height##" + navId).c_str(), &agentHeight, 0.01f, 0.01f, 100.f, "%.2f"))
+                    navMeshAgent->SetAgentHeight(agentHeight);
+
+                vector3 agentCenter = navMeshAgent->GetAgentCenter();
+                _float centerValues[3] = { agentCenter.x, agentCenter.y, agentCenter.z };
+                if (ImGui::InputFloat3(("Center##" + navId).c_str(), centerValues))
+                    navMeshAgent->SetAgentCenter(vector3(centerValues[0], centerValues[1], centerValues[2]));
+
+                _float moveSpeed = navMeshAgent->GetMoveSpeed();
+                if (ImGui::DragFloat(("Move Speed##" + navId).c_str(), &moveSpeed, 0.05f, 0.f, 100.f, "%.2f"))
+                    navMeshAgent->SetMoveSpeed(moveSpeed);
+
+                _float angularSpeed = navMeshAgent->GetAngularSpeed();
+                if (ImGui::DragFloat(("Angular Speed##" + navId).c_str(), &angularSpeed, 1.f, 0.f, 1440.f, "%.1f"))
+                    navMeshAgent->SetAngularSpeed(angularSpeed);
+
+                _float stoppingDistance = navMeshAgent->GetStoppingDistance();
+                if (ImGui::DragFloat(("Stopping Distance##" + navId).c_str(), &stoppingDistance, 0.01f, 0.f, 20.f, "%.2f"))
+                    navMeshAgent->SetStoppingDistance(stoppingDistance);
+
+                _float waypointTolerance = navMeshAgent->GetWaypointTolerance();
+                if (ImGui::DragFloat(("Waypoint Tolerance##" + navId).c_str(), &waypointTolerance, 0.01f, 0.001f, 20.f, "%.3f"))
+                    navMeshAgent->SetWaypointTolerance(waypointTolerance);
+
+                _float groundSnapOffset = navMeshAgent->GetGroundSnapOffset();
+                if (ImGui::DragFloat(("Ground Snap Offset##" + navId).c_str(), &groundSnapOffset, 0.001f, 0.f, 1.f, "%.3f"))
+                    navMeshAgent->SetGroundSnapOffset(groundSnapOffset);
+
+                vector3 destination = navMeshAgent->GetDestination();
+                _float destinationValues[3] = { destination.x, destination.y, destination.z };
+                if (ImGui::InputFloat3(("Destination##" + navId).c_str(), destinationValues))
+                    navMeshAgent->SetDestination(vector3(destinationValues[0], destinationValues[1], destinationValues[2]));
+
+                if (ImGui::Button(("Reset Path##" + navId).c_str()))
+                    navMeshAgent->ResetPath();
+
+                const vector3 resolvedDestination = navMeshAgent->GetResolvedDestination();
+                ImGui::Separator();
+                ImGui::TextUnformatted("Runtime");
+                ImGui::Text("On Navigation: %s", navMeshAgent->IsOnNavigation() ? "True" : "False");
+                ImGui::Text("Has Destination: %s", navMeshAgent->HasDestination() ? "True" : "False");
+                ImGui::Text("Has Path: %s", navMeshAgent->HasPath() ? "True" : "False");
+                ImGui::Text("Current Polygon: %d", navMeshAgent->GetCurrentPolygonIndex());
+                ImGui::Text("Path Points: %d", navMeshAgent->GetPathPointCount());
+                ImGui::Text("Resolved Destination: (%.2f, %.2f, %.2f)", resolvedDestination.x, resolvedDestination.y, resolvedDestination.z);
+            }
+
             if (CBoxCollider* boxCollider = dynamic_cast<CBoxCollider*>(component))
             {
                 _bool isTrigger = boxCollider->IsTrigger();
@@ -2526,6 +2595,12 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
             _obj->AddComponent<CRigidBody>();
     }
 
+    if (ImGui::MenuItem("NaviMeshAgent"))
+    {
+        if (!_obj->GetComponent<CNaviMeshAgent>())
+            _obj->AddComponent<CNaviMeshAgent>();
+    }
+
     if (ImGui::MenuItem("Cloth"))
     {
         if (!_obj->GetComponent<CCloth>())
@@ -2744,6 +2819,11 @@ void CInspectorBox::RenderSelectedAssetPreview(const fs::path& path)
     ImTextureID texId = (ImTextureID)(intptr_t)m_pPreviewTexture->Get_SRV();
     ImGui::Image(ImTextureRef(texId), size);
 }
+
+
+
+
+
 
 
 

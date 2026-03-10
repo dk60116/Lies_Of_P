@@ -211,8 +211,23 @@
     <ClInclude Include="..\Header\MeshCollider.h">
       <Filter>Components\Physics\Collider</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\BehaviourTree.h">
+      <Filter>Components\AI\BT</Filter>
+    </ClInclude>
     <ClInclude Include="..\Header\NaviMeshAgent.h">
-      <Filter>Components\AI</Filter>
+      <Filter>Components\AI\Navigation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\BTNode.h">
+      <Filter>AI\BT</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\BTComposite.h">
+      <Filter>AI\BT</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\BTSequence.h">
+      <Filter>AI\BT</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\BTSelector.h">
+      <Filter>AI\BT</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -332,6 +347,21 @@
     </Filter>
     <Filter Include="Components\AI">
       <UniqueIdentifier>{3fa20bac-c88b-48a2-8cb8-178c4d3ec4d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\AI\BT">
+      <UniqueIdentifier>{9fd3c49e-e542-4b38-889d-0b1551ac42ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\AI\Navigation">
+      <UniqueIdentifier>{0f7059ae-9ea4-4d04-a85e-13b9043effd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AI">
+      <UniqueIdentifier>{f6d46009-8a72-42bc-8668-2316c7b0b7c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AI\DetourRecaster">
+      <UniqueIdentifier>{f0596bd8-b139-4748-9f73-24346b6966d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AI\BT">
+      <UniqueIdentifier>{7ebd3bbc-7ac6-483c-b581-746b2f591a07}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -560,8 +590,77 @@
     <ClCompile Include="..\Code\MeshCollider.cpp">
       <Filter>Components\Physics\Collider</Filter>
     </ClCompile>
+    <ClCompile Include="..\Code\BehaviourTree.cpp">
+      <Filter>Components\AI\BT</Filter>
+    </ClCompile>
     <ClCompile Include="..\Code\NaviMeshAgent.cpp">
-      <Filter>Components\AI</Filter>
+      <Filter>Components\AI\Navigation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\DetourAlloc.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\DetourAssert.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\DetourCommon.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\DetourNavMesh.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\DetourNavMeshBuilder.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\DetourNavMeshQuery.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\DetourNode.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\Recast.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\RecastAlloc.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\RecastArea.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\RecastAssert.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\RecastContour.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\RecastFilter.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\RecastLayers.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\RecastMesh.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\RecastMeshDetail.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\RecastRasterization.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\RecastRegion.cpp">
+      <Filter>AI\DetourRecaster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\BTNode.cpp">
+      <Filter>AI\BT</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\BTComposite.cpp">
+      <Filter>AI\BT</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\BTSequence.cpp">
+      <Filter>AI\BT</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\BTSelector.cpp">
+      <Filter>AI\BT</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

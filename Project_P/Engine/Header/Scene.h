@@ -3,6 +3,7 @@
 #include "Object.h"
 #include "Renderer.h"
 #include "SkinnedMeshBuffer.h"
+#include "NaviMesh.h"
 
 NS_BEGIN(Engine)
 
@@ -39,6 +40,7 @@ public:
         _bool isActive = true;
         _uint objLayer = 0u;
         _bool isTransformStatic = false;
+        _bool isNavigationStatic = false;
         _bool rigidBodyKinematic = false;
         _bool rigidBodyUseGravity = true;
         _float rigidBodyMass = 1.f;
@@ -48,6 +50,16 @@ public:
         _bool rigidBodyConstRotationX = false;
         _bool rigidBodyConstRotationY = false;
         _bool rigidBodyConstRotationZ = false;
+        _bool hasNaviMeshAgent = false;
+        wstring navAgentNavigationMeshResourceName = L"";
+        _float navAgentMoveSpeed = 3.5f;
+        _float navAgentAngularSpeed = 720.f;
+        _float navAgentStoppingDistance = 0.15f;
+        _float navAgentWaypointTolerance = 0.1f;
+        _float navAgentRadius = 0.35f;
+        _float navAgentHeight = 2.f;
+        _float3 navAgentCenter = { 0.f, 1.f, 0.f };
+        _float navAgentGroundSnapOffset = 0.02f;
         _bool isRect = false;
         SCENERECTINFO rectInfo = {};
         vector<wstring> componentNames = {};
@@ -61,6 +73,12 @@ public:
         vector<pair<wstring, _float4>> materialVector4Values = {};
         vector<pair<wstring, _float4x4>> materialMatrixValues = {};
     }SCENETRANSFORMINFO;
+
+    typedef struct SceneNavigationInfo
+    {
+        wstring resourceName = L"";
+        EngineAI::CNaviMesh::NavBakeOptions bakeOptions = {};
+    }SCENENAVIGATIONINFO;
 
 public:
     struct EnviromentSettings
@@ -99,9 +117,12 @@ public:
 public:
     vector<SCENETRANSFORMINFO> Convert_ObjectsTransformInfo() const;
     void Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList);
+    vector<SCENENAVIGATIONINFO> Convert_NavigationInfos() const;
+    void Bind_NavigationInfos(const vector<SCENENAVIGATIONINFO>& _infoList);
 
 public:
     class CEngineResource* Add_Resource(const wstring& _name, CEngineResource* _resource);
+    _bool Remove_Resource(const wstring& _name);
     class CEngineResource* Find_Resource(const wstring& _name);
     vector<MeshBundle> Find_MeshInfoResource(const wstring& _name);
     vector<SkinnedMeshBundle> Find_SkinnedMeshInfoResource(const wstring& _name);

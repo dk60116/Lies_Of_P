@@ -1,6 +1,192 @@
 #include "epch.h"
 #include "TopToolBar.h"
 
+#include "Editor.h"
+#include "MeshFilter.h"
+#include "MeshRenderer.h"
+#include "SkinnedMeshRenderer.h"
+
+namespace
+{
+	string BuildDefaultNavigationResourceName(CScene* scene)
+	{
+		if (!scene)
+			return "NavigationMesh";
+
+		string sceneName = CEngineString::WStringToString(scene->Get_SceneName());
+		if (sceneName.empty())
+			sceneName = "Scene";
+
+		return sceneName + " (NavigationMesh)";
+	}
+
+	CMeshBuffer* ResolveNavigationMeshBuffer(CGameObject* object)
+	{
+		if (!object)
+			return nullptr;
+
+		if (CMeshRenderer* meshRenderer = object->GetComponent<CMeshRenderer>())
+			return meshRenderer->Get_MeshBuffer();
+
+		if (CSkinnedMeshRenderer* skinnedMeshRenderer = object->GetComponent<CSkinnedMeshRenderer>())
+			return skinnedMeshRenderer->Get_MeshBuffer();
+
+		if (CMeshFilter* meshFilter = object->GetComponent<CMeshFilter>())
+			return meshFilter->Get_MeshBuffer();
+
+		return nullptr;
+	}
+
+	vector<EngineAI::CNaviMesh::MeshSource> GatherNavigationStaticMeshSources(CScene* scene)
+	{
+		vector<EngineAI::CNaviMesh::MeshSource> sources = {};
+		if (!scene)
+			return sources;
+
+		for (CGameObject* object : scene->Get_ObjectList())
+		{
+			if (!object || !object->IsActive())
+				continue;
+
+			if (!object->IsStatic(CGameObject::STATIC_METHOD::NavigationStatic))
+				continue;
+
+			CMeshBuffer* meshBuffer = ResolveNavigationMeshBuffer(object);
+			if (!meshBuffer)
+				continue;
+
+			EngineAI::CNaviMesh::MeshSource source = {};
+			source.meshBuffer = meshBuffer;
+			source.label = object->Get_ObjectNameID();
+			source.walkable = true;
+			_matrix worldMatrix = XMMatrixIdentity();
+			if (CTransform* transform = object->Get_Transform())
+				worldMatrix = transform->Get_WorldMatrix();
+			XMStoreFloat4x4(&source.worldMatrix, worldMatrix);
+			sources.push_back(source);
+		}
+
+		return sources;
+	}
+
+	bool BuildNavigationMeshResource(
+		CScene* scene,
+		const wstring& resourceName,
+		const vector<EngineAI::CNaviMesh::MeshSource>& meshSources,
+		const EngineAI::CNaviMesh::NavBakeOptions& bakeOptions,
+		string& outStatus,
+		int& outPolygonCount)
+	{
+		outPolygonCount = 0;
+
+		if (!scene)
+		{
+			outStatus = "No active scene.";
+			return false;
+		}
+
+		if (meshSources.empty())
+		{
+			outStatus = "No NavigationStatic meshes were found in the current scene.";
+			return false;
+		}
+
+		if (resourceName.empty())
+		{
+			outStatus = "Enter a NavigationMesh resource name.";
+			return false;
+		}
+
+		CEngineResource* existingResource = scene->Find_Resource(resourceName);
+		EngineAI::CNaviMesh* navMesh = nullptr;
+		_bool createdNew = false;
+
+		if (existingResource)
+		{
+			navMesh = dynamic_cast<EngineAI::CNaviMesh*>(existingResource);
+			if (!navMesh)
+			{
+				outStatus = "The resource name is already used by another resource type.";
+				return false;
+			}
+		}
+		else
+		{
+			navMesh = EngineAI::CNaviMesh::CreateRuntime(resourceName);
+			if (!navMesh)
+			{
+				outStatus = "Failed to create the NavigationMesh resource.";
+				return false;
+			}
+
+			createdNew = true;
+		}
+
+		navMesh->SetBakeOptions(bakeOptions);
+		if (FAILED(navMesh->BuildFromSources(meshSources)))
+		{
+			if (createdNew)
+				Safe_Release(navMesh);
+
+			outStatus = "NavigationMesh build failed. Check the debug log for details.";
+			return false;
+		}
+
+		if (createdNew)
+		{
+			if (!scene->Add_Resource(resourceName, navMesh))
+			{
+				Safe_Release(navMesh);
+				outStatus = "Build succeeded, but scene registration failed.";
+				return false;
+			}
+
+			Safe_Release(navMesh);
+		}
+
+		outPolygonCount = static_cast<int>(navMesh->GetPolygons().size());
+		outStatus = "NavigationMesh built successfully.";
+		return true;
+	}
+
+	bool ClearNavigationMeshResource(CScene* scene, const wstring& resourceName, string& outStatus)
+	{
+		if (!scene)
+		{
+			outStatus = "No active scene.";
+			return false;
+		}
+
+		if (resourceName.empty())
+		{
+			outStatus = "Enter a NavigationMesh resource name.";
+			return false;
+		}
+
+		CEngineResource* existingResource = scene->Find_Resource(resourceName);
+		if (!existingResource)
+		{
+			outStatus = "No NavigationMesh resource with that name exists in the scene.";
+			return false;
+		}
+
+		if (!dynamic_cast<EngineAI::CNaviMesh*>(existingResource))
+		{
+			outStatus = "The resource name is already used by another resource type.";
+			return false;
+		}
+
+		if (!scene->Remove_Resource(resourceName))
+		{
+			outStatus = "NavigationMesh clear failed.";
+			return false;
+		}
+
+		outStatus = "NavigationMesh cleared.";
+		return true;
+	}
+}
+
 CTopToolBar::CTopToolBar()
 	: m_bProjectSettingsWindowOpen(false)
 	, m_iProjectSettingsSelection(0)
@@ -9,6 +195,9 @@ CTopToolBar::CTopToolBar()
 	, m_iPendingShadowQuality(0)
 	, m_bSceneSettingsWindowOpen(false)
 	, m_bGameStatusWindowOpen(false)
+	, m_bNavigationWindowOpen(false)
+	, m_bNavigationBuildSucceeded(false)
+	, m_iNavigationPolygonCount(0)
 {
 }
 
@@ -36,7 +225,6 @@ void CTopToolBar::Render()
 {
 	CEditor& editor = CEditor::GetInstance();
 	const CEditor::EDITORWINOPTION& editorOption = editor.Get_Options();
-	CScene* currentScene = CSceneManager::GetInstance().Get_CrtScene();
 
 	ImGuiViewport* viewport = ImGui::GetMainViewport();
 
@@ -72,6 +260,7 @@ void CTopToolBar::Render()
 	ShowSceneMenu();
 	ShowEditMenu();
 	ShowViewMenu();
+	ShowAIMenu();
 	Show2DButton();
 	ShowPlayButtons();
 	ShowFPS();
@@ -81,6 +270,7 @@ void CTopToolBar::Render()
 	ShowProjectSettingsWindow();
 	ShowSceneSettingsWindow();
 	ShowGameStatusWindow();
+	ShowNavigationWindow();
 
 	ImGui::PopStyleVar();
 }
@@ -112,7 +302,6 @@ void CTopToolBar::ShowSelectSceneButton()
 		ImGui::EndPopup();
 	}
 }
-
 
 void CTopToolBar::ShowEditMenu()
 {
@@ -153,6 +342,7 @@ void CTopToolBar::ShowSceneMenu()
 		ImGui::EndPopup();
 	}
 }
+
 void CTopToolBar::ShowViewMenu()
 {
 	ImGui::SameLine();
@@ -170,8 +360,32 @@ void CTopToolBar::ShowViewMenu()
 		if (ImGui::MenuItem("Mesh Collider", nullptr, showMeshCollider))
 			CEditor::GetInstance().SetMeshColliderGizmoVisible(!showMeshCollider);
 
+		_bool showNavigationMesh = CEditor::GetInstance().IsNavigationMeshVisible();
+		if (ImGui::MenuItem("NaviMesh", nullptr, showNavigationMesh))
+			CEditor::GetInstance().SetNavigationMeshVisible(!showNavigationMesh);
+
 		if (ImGui::MenuItem("Game Status", nullptr, m_bGameStatusWindowOpen))
 			m_bGameStatusWindowOpen = !m_bGameStatusWindowOpen;
+
+		ImGui::EndPopup();
+	}
+}
+
+void CTopToolBar::ShowAIMenu()
+{
+	ImGui::SameLine();
+
+	if (ImGui::Button("AI"))
+		ImGui::OpenPopup("AIMenuPopup");
+
+	if (ImGui::BeginPopup("AIMenuPopup"))
+	{
+		if (ImGui::MenuItem("Navigation"))
+		{
+			m_bNavigationWindowOpen = true;
+			if (m_strNavigationResourceName.empty())
+				m_strNavigationResourceName = BuildDefaultNavigationResourceName(CSceneManager::GetInstance().Get_CrtScene());
+		}
 
 		ImGui::EndPopup();
 	}
@@ -222,6 +436,7 @@ void CTopToolBar::ShowSceneSettingsWindow()
 
 	ImGui::End();
 }
+
 void CTopToolBar::ShowProjectSettingsWindow()
 {
 	if (!m_bProjectSettingsWindowOpen)
@@ -280,7 +495,6 @@ void CTopToolBar::ShowProjectSettingsTime()
 			m_fPendingTimeScale = 0.f;
 	}
 }
-
 
 void CTopToolBar::ShowProjectSettingsLight()
 {
@@ -432,6 +646,116 @@ void CTopToolBar::ShowGameStatusWindow()
 	ImGui::End();
 }
 
+void CTopToolBar::ShowNavigationWindow()
+{
+	if (!m_bNavigationWindowOpen)
+		return;
+
+	ImGui::SetNextWindowSize(ImVec2(460.f, 520.f), ImGuiCond_FirstUseEver);
+	if (!ImGui::Begin("Navigation", &m_bNavigationWindowOpen, ImGuiWindowFlags_NoCollapse))
+	{
+		ImGui::End();
+		return;
+	}
+
+	CScene* scene = CSceneManager::GetInstance().Get_CrtScene();
+	if (m_strNavigationResourceName.empty())
+		m_strNavigationResourceName = BuildDefaultNavigationResourceName(scene);
+
+	const vector<EngineAI::CNaviMesh::MeshSource> meshSources = GatherNavigationStaticMeshSources(scene);
+	const string sceneName = scene ? CEngineString::WStringToString(scene->Get_SceneName()) : "None";
+
+	ImGui::Text("Scene: %s", sceneName.c_str());
+	ImGui::Separator();
+	ImGui::Text("NavigationStatic Meshes: %d", static_cast<int>(meshSources.size()));
+	ImGui::TextWrapped("Enable NavigationStatic in the Inspector for the meshes you want to include in the NavigationMesh build.");
+	ImGui::Spacing();
+
+	ImGui::InputText("Resource Name", &m_strNavigationResourceName);
+	ImGui::SameLine();
+	if (ImGui::Button("Use Scene Name"))
+		m_strNavigationResourceName = BuildDefaultNavigationResourceName(scene);
+
+	if (ImGui::CollapsingHeader("Bake Options", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::DragFloat("Cell Size", &m_sNavigationBakeOptions.cellSize, 0.01f, 0.01f, 10.f, "%.2f");
+		ImGui::DragFloat("Cell Height", &m_sNavigationBakeOptions.cellHeight, 0.01f, 0.01f, 10.f, "%.2f");
+		ImGui::DragFloat("Agent Height", &m_sNavigationBakeOptions.agentHeight, 0.05f, 0.1f, 20.f, "%.2f");
+		ImGui::DragFloat("Agent Radius", &m_sNavigationBakeOptions.agentRadius, 0.05f, 0.f, 10.f, "%.2f");
+		ImGui::DragFloat("Step Height (Agent Max Climb)", &m_sNavigationBakeOptions.agentMaxClimb, 0.05f, 0.f, 10.f, "%.2f");
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+			ImGui::SetTooltip("Maximum step or ledge height the agent can traverse. This is converted to Recast walkableClimb using Cell Height.");
+		ImGui::DragFloat("Agent Max Slope", &m_sNavigationBakeOptions.agentMaxSlope, 0.5f, 0.f, 89.9f, "%.1f");
+		ImGui::DragInt("Region Min Size", &m_sNavigationBakeOptions.regionMinSize, 1.f, 0, 256);
+		ImGui::DragInt("Region Merge Size", &m_sNavigationBakeOptions.regionMergeSize, 1.f, 0, 256);
+		ImGui::DragFloat("Edge Max Len", &m_sNavigationBakeOptions.edgeMaxLen, 0.1f, 0.f, 256.f, "%.2f");
+		ImGui::DragFloat("Edge Max Error", &m_sNavigationBakeOptions.edgeMaxError, 0.05f, 0.1f, 10.f, "%.2f");
+		ImGui::DragInt("Verts Per Poly", &m_sNavigationBakeOptions.vertsPerPoly, 1.f, 3, DT_VERTS_PER_POLYGON);
+		ImGui::DragFloat("Detail Sample Dist", &m_sNavigationBakeOptions.detailSampleDist, 0.1f, 0.f, 32.f, "%.2f");
+		ImGui::DragFloat("Detail Sample Max Error", &m_sNavigationBakeOptions.detailSampleMaxError, 0.05f, 0.f, 16.f, "%.2f");
+		ImGui::DragFloat3("Query Half Extents", &m_sNavigationBakeOptions.queryHalfExtents.x, 0.1f, 0.1f, 100.f, "%.2f");
+	}
+
+	const _bool canBuild = scene != nullptr && !meshSources.empty() && !m_strNavigationResourceName.empty();
+	const _bool canClear = scene != nullptr && !m_strNavigationResourceName.empty();
+	const float buttonSpacing = ImGui::GetStyle().ItemSpacing.x;
+	const float buttonWidth = (ImGui::GetContentRegionAvail().x - buttonSpacing) * 0.5f;
+
+	if (!canBuild)
+		ImGui::BeginDisabled();
+
+	if (ImGui::Button("Build NavigationMesh", ImVec2(buttonWidth, 0.f)))
+	{
+		const wstring resourceName = CEngineString::StringToWString(m_strNavigationResourceName);
+		m_bNavigationBuildSucceeded = BuildNavigationMeshResource(
+			scene,
+			resourceName,
+			meshSources,
+			m_sNavigationBakeOptions,
+			m_strNavigationBuildStatus,
+			m_iNavigationPolygonCount);
+	}
+
+	if (!canBuild)
+		ImGui::EndDisabled();
+
+	ImGui::SameLine();
+
+	if (!canClear)
+		ImGui::BeginDisabled();
+
+	if (ImGui::Button("Clear", ImVec2(buttonWidth, 0.f)))
+	{
+		const wstring resourceName = CEngineString::StringToWString(m_strNavigationResourceName);
+		m_bNavigationBuildSucceeded = ClearNavigationMeshResource(scene, resourceName, m_strNavigationBuildStatus);
+		if (m_bNavigationBuildSucceeded)
+			m_iNavigationPolygonCount = 0;
+	}
+
+	if (!canClear)
+		ImGui::EndDisabled();
+
+	if (!scene)
+		ImGui::TextUnformatted("No active scene.");
+	else if (meshSources.empty())
+		ImGui::TextUnformatted("No active NavigationStatic meshes were found in the current scene.");
+	else if (m_strNavigationResourceName.empty())
+		ImGui::TextUnformatted("Enter a resource name before building.");
+
+	if (!m_strNavigationBuildStatus.empty())
+	{
+		const ImVec4 color = m_bNavigationBuildSucceeded
+			? ImVec4(0.25f, 0.85f, 0.35f, 1.f)
+			: ImVec4(0.95f, 0.35f, 0.35f, 1.f);
+		ImGui::Spacing();
+		ImGui::TextColored(color, "%s", m_strNavigationBuildStatus.c_str());
+		if (m_bNavigationBuildSucceeded)
+			ImGui::Text("Polygons: %d", m_iNavigationPolygonCount);
+	}
+
+	ImGui::End();
+}
+
 void CTopToolBar::ShowFPS()
 {
 	static float timeAccumulator = 0.0f;
@@ -447,27 +771,14 @@ void CTopToolBar::ShowFPS()
 		timeAccumulator = 0.0f;
 	}
 
-	// ÅØ½ºÆ® Å©±â
 	ImVec2 textSize = ImGui::CalcTextSize(fpsText);
 
 	_float rightMargin = 8.0f;
 	ImGui::SetCursorPosX(ImGui::GetWindowWidth() - textSize.x - rightMargin);
 
-	// ÅØ½ºÆ® Ãâ·Â
 	ImGui::SameLine();
 	_float textWidth = ImGui::CalcTextSize(fpsText).x;
 	_float availableWidth = ImGui::GetContentRegionAvail().x;
 	ImGui::SetCursorPosX(ImGui::GetCursorPosX() + availableWidth - textWidth);
 	ImGui::TextUnformatted(fpsText);
 }
-
-
-
-
-
-
-
-
-
-
-

@@ -184,9 +184,6 @@ void CPlayerCamera::Update()
         m_fBackOffset = std::clamp(m_fBackOffset, m_sOptions.zoomMin, m_sOptions.zoomMax);
     }
 
-    if (!CGameManager::GetInstance().Get_Player())
-        return;
-
     CTransform* tf = Get_Transform();
     CTransform* playerTf = CGameManager::GetInstance().Get_Player()->Get_Transform();
 
@@ -221,14 +218,8 @@ void CPlayerCamera::Update()
 
 void CPlayerCamera::LateUpdate()
 {
-    if (CGameManager::GetInstance().Get_Player())
+    if (!CGameManager::GetInstance().Get_Player())
         return;
-
-    CTransform* tf = Get_Transform();
-    CTransform* playerTf = CGameManager::GetInstance().Get_Player()->Get_Transform();
-
-    const vector3 playerPos = playerTf->Get_Position();
-    const vector3 pivot = playerPos + vector3::up() * m_sOptions.lookHeightOffset;
 }
 
 void CPlayerCamera::OnDestroy()
@@ -268,3 +259,6 @@ const float CPlayerCamera::Get_ForwardAngle()
 
     return yawDeg;
 }
+
+
+

@@ -36,6 +36,7 @@ CGameObject::CGameObject(const wstring _name, ID3D11Device* _pDevice, ID3D11Devi
 	, m_bSaveTarget(true)
 	, m_bKill(false)
 	, m_bTransformStatic(false)
+	, m_bNavigationStatic(false)
 	, m_iLayer(0)
 {
 	m_strName = L"Game Object";
@@ -60,6 +61,7 @@ CGameObject::CGameObject(const CGameObject& _rhs)
 	, m_bSaveTarget(_rhs.m_bSaveTarget)
 	, m_bKill(false)
 	, m_bTransformStatic(_rhs.m_bTransformStatic)
+	, m_bNavigationStatic(_rhs.m_bNavigationStatic)
 	, m_iLayer(_rhs.m_iLayer)
 {
 	m_iUniqueID = CSceneManager::GetInstance().Get_CrtScene()->Get_UniqueObjectCount();
@@ -657,6 +659,8 @@ const _bool CGameObject::IsStatic(STATIC_METHOD _method) const
 	{
 	case STATIC_METHOD::TransformStatic:
 		return m_bTransformStatic;
+	case STATIC_METHOD::NavigationStatic:
+		return m_bNavigationStatic;
 	}
 
 	return false;
@@ -668,6 +672,9 @@ void CGameObject::SetStatic(STATIC_METHOD _method, const _bool _value, const _bo
 	{
 	case STATIC_METHOD::TransformStatic:
 		m_bTransformStatic = _value;
+		break;
+	case STATIC_METHOD::NavigationStatic:
+		m_bNavigationStatic = _value;
 		break;
 	}
 

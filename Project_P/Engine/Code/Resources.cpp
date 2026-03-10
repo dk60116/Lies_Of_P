@@ -9,6 +9,71 @@
 
 #pragma comment(lib, "Shlwapi.lib")
 
+namespace
+{
+	void WriteBinaryWString(ofstream& out, const wstring& value)
+	{
+		_uint size = static_cast<_uint>(value.size());
+		out.write(reinterpret_cast<const char*>(&size), sizeof(_uint));
+		if (size > 0)
+			out.write(reinterpret_cast<const char*>(value.data()), sizeof(wchar_t) * size);
+	}
+
+	wstring ReadBinaryWString(ifstream& in)
+	{
+		_uint size = 0;
+		in.read(reinterpret_cast<char*>(&size), sizeof(_uint));
+		if (size == 0)
+			return L"";
+
+		wstring value(size, L'\0');
+		in.read(reinterpret_cast<char*>(&value[0]), sizeof(wchar_t) * size);
+		return value;
+	}
+
+	void WriteSceneNavBakeOptions(ofstream& out, const EngineAI::CNaviMesh::NavBakeOptions& options)
+	{
+		out.write(reinterpret_cast<const char*>(&options.cellSize), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&options.cellHeight), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&options.agentHeight), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&options.agentRadius), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&options.agentMaxClimb), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&options.agentMaxSlope), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&options.regionMinSize), sizeof(_int));
+		out.write(reinterpret_cast<const char*>(&options.regionMergeSize), sizeof(_int));
+		out.write(reinterpret_cast<const char*>(&options.edgeMaxLen), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&options.edgeMaxError), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&options.vertsPerPoly), sizeof(_int));
+		out.write(reinterpret_cast<const char*>(&options.detailSampleDist), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&options.detailSampleMaxError), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&options.queryHalfExtents.x), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&options.queryHalfExtents.y), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&options.queryHalfExtents.z), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&options.rasterizeObstacleMeshes), sizeof(_bool));
+	}
+
+	void ReadSceneNavBakeOptions(ifstream& in, EngineAI::CNaviMesh::NavBakeOptions& options)
+	{
+		in.read(reinterpret_cast<char*>(&options.cellSize), sizeof(_float));
+		in.read(reinterpret_cast<char*>(&options.cellHeight), sizeof(_float));
+		in.read(reinterpret_cast<char*>(&options.agentHeight), sizeof(_float));
+		in.read(reinterpret_cast<char*>(&options.agentRadius), sizeof(_float));
+		in.read(reinterpret_cast<char*>(&options.agentMaxClimb), sizeof(_float));
+		in.read(reinterpret_cast<char*>(&options.agentMaxSlope), sizeof(_float));
+		in.read(reinterpret_cast<char*>(&options.regionMinSize), sizeof(_int));
+		in.read(reinterpret_cast<char*>(&options.regionMergeSize), sizeof(_int));
+		in.read(reinterpret_cast<char*>(&options.edgeMaxLen), sizeof(_float));
+		in.read(reinterpret_cast<char*>(&options.edgeMaxError), sizeof(_float));
+		in.read(reinterpret_cast<char*>(&options.vertsPerPoly), sizeof(_int));
+		in.read(reinterpret_cast<char*>(&options.detailSampleDist), sizeof(_float));
+		in.read(reinterpret_cast<char*>(&options.detailSampleMaxError), sizeof(_float));
+		in.read(reinterpret_cast<char*>(&options.queryHalfExtents.x), sizeof(_float));
+		in.read(reinterpret_cast<char*>(&options.queryHalfExtents.y), sizeof(_float));
+		in.read(reinterpret_cast<char*>(&options.queryHalfExtents.z), sizeof(_float));
+		in.read(reinterpret_cast<char*>(&options.rasterizeObstacleMeshes), sizeof(_bool));
+	}
+}
+
 CResources::CResources()
 	: m_strDefaultAssetPath(L"../Assets/")
 	, m_strEngineFilePath(L"../EngineResources/")
@@ -701,7 +766,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 11;
+	const _uint version = 15;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -734,6 +799,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 		out.write(reinterpret_cast<const char*>(&info.isActive), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.objLayer), sizeof(_uint));
 		out.write(reinterpret_cast<const char*>(&info.isTransformStatic), sizeof(_bool));
+		out.write(reinterpret_cast<const char*>(&info.isNavigationStatic), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyKinematic), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyUseGravity), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyMass), sizeof(_float));
@@ -809,6 +875,20 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 		writeMaterialValueList(info.materialVector3Values);
 		writeMaterialValueList(info.materialVector4Values);
 		writeMaterialValueList(info.materialMatrixValues);
+
+        out.write(reinterpret_cast<const char*>(&info.hasNaviMeshAgent), sizeof(_bool));
+        if (info.hasNaviMeshAgent)
+        {
+            WriteBinaryWString(out, info.navAgentNavigationMeshResourceName);
+            out.write(reinterpret_cast<const char*>(&info.navAgentMoveSpeed), sizeof(_float));
+            out.write(reinterpret_cast<const char*>(&info.navAgentAngularSpeed), sizeof(_float));
+            out.write(reinterpret_cast<const char*>(&info.navAgentStoppingDistance), sizeof(_float));
+            out.write(reinterpret_cast<const char*>(&info.navAgentWaypointTolerance), sizeof(_float));
+            out.write(reinterpret_cast<const char*>(&info.navAgentRadius), sizeof(_float));
+            out.write(reinterpret_cast<const char*>(&info.navAgentHeight), sizeof(_float));
+            out.write(reinterpret_cast<const char*>(&info.navAgentCenter), sizeof(_float3));
+            out.write(reinterpret_cast<const char*>(&info.navAgentGroundSnapOffset), sizeof(_float));
+        }
 	}
 
 	out.close();
@@ -905,6 +985,9 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 
 		if (version >= 10)
 			in.read(reinterpret_cast<char*>(&info.isTransformStatic), sizeof(_bool));
+
+		if (version >= 12)
+			in.read(reinterpret_cast<char*>(&info.isNavigationStatic), sizeof(_bool));
 
 		if (version >= 8)
 		{
@@ -1034,12 +1117,99 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 			readMaterialValueList(info.materialVector3Values);
 			readMaterialValueList(info.materialVector4Values);
 			readMaterialValueList(info.materialMatrixValues);
+
+        if (version >= 13)
+        {
+            in.read(reinterpret_cast<char*>(&info.hasNaviMeshAgent), sizeof(_bool));
+            if (info.hasNaviMeshAgent)
+            {
+                info.navAgentNavigationMeshResourceName = ReadBinaryWString(in);
+                in.read(reinterpret_cast<char*>(&info.navAgentMoveSpeed), sizeof(_float));
+                if (version >= 15)
+                    in.read(reinterpret_cast<char*>(&info.navAgentAngularSpeed), sizeof(_float));
+                else
+                    info.navAgentAngularSpeed = 720.f;
+                in.read(reinterpret_cast<char*>(&info.navAgentStoppingDistance), sizeof(_float));
+                in.read(reinterpret_cast<char*>(&info.navAgentWaypointTolerance), sizeof(_float));
+                in.read(reinterpret_cast<char*>(&info.navAgentRadius), sizeof(_float));
+                in.read(reinterpret_cast<char*>(&info.navAgentHeight), sizeof(_float));
+                if (version >= 14)
+                    in.read(reinterpret_cast<char*>(&info.navAgentCenter), sizeof(_float3));
+                else
+                    info.navAgentCenter = _float3(0.f, info.navAgentHeight * 0.5f, 0.f);
+                in.read(reinterpret_cast<char*>(&info.navAgentGroundSnapOffset), sizeof(_float));
+            }
+        }
 		}
 
 		resultInfo.push_back(info);
 	}
 
 	in.close();
+
+	return resultInfo;
+}
+
+HRESULT CResources::SaveSceneNavigationInfos(const wstring _filePath, const vector<CScene::SCENENAVIGATIONINFO>& _infoList)
+{
+	using namespace std;
+
+	ofstream out(_filePath, ios::binary);
+	if (!out.is_open())
+	{
+		CDebug::LogError(L"SaveSceneNavigationInfos failed - can not open: " + _filePath);
+		return E_FAIL;
+	}
+
+	const _uint magic = 0x4E415631;
+	const _uint version = 1;
+	const _uint count = static_cast<_uint>(_infoList.size());
+	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
+	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
+	out.write(reinterpret_cast<const char*>(&count), sizeof(_uint));
+
+	for (const CScene::SCENENAVIGATIONINFO& info : _infoList)
+	{
+		WriteBinaryWString(out, info.resourceName);
+		WriteSceneNavBakeOptions(out, info.bakeOptions);
+	}
+
+	out.close();
+	CDebug::Log(L"Save complete navdata: " + _filePath);
+	return S_OK;
+}
+
+vector<CScene::SCENENAVIGATIONINFO> CResources::ReadSceneNavigationInfos(const wstring _binFileName)
+{
+	using namespace std;
+
+	vector<CScene::SCENENAVIGATIONINFO> resultInfo = {};
+	ifstream in(L"BinaryAssets/SceneData/" + _binFileName, ios::binary);
+	if (!in.is_open())
+		return {};
+
+	_uint magic = 0;
+	_uint version = 0;
+	_uint count = 0;
+	in.read(reinterpret_cast<char*>(&magic), sizeof(_uint));
+	in.read(reinterpret_cast<char*>(&version), sizeof(_uint));
+	in.read(reinterpret_cast<char*>(&count), sizeof(_uint));
+
+	if (!in || magic != 0x4E415631 || version != 1)
+		return {};
+
+	resultInfo.reserve(count);
+	for (_uint i = 0; i < count; ++i)
+	{
+		CScene::SCENENAVIGATIONINFO info = {};
+		info.resourceName = ReadBinaryWString(in);
+		ReadSceneNavBakeOptions(in, info.bakeOptions);
+		if (!in)
+			return {};
+
+		if (!info.resourceName.empty())
+			resultInfo.push_back(info);
+	}
 
 	return resultInfo;
 }
@@ -1913,6 +2083,11 @@ void CResources::Ready_GameResources()
 	CMaterial::MATERIALDESC dlMatDesc = { dlShader, false, false };
 	LoadResourceComplete_Game<CMaterial>(L"DefaultLineMaterial (Material)", L"", &dlMatDesc);
 
+	CMaterial::MATERIALDESC navOutlineMatDesc = { dlShader, false, false };
+	CMaterial* navOutlineMat = LoadResourceComplete_Game<CMaterial>(L"NavigationOutlineMaterial (Material)", L"", &navOutlineMatDesc);
+	if (navOutlineMat)
+		navOutlineMat->Set_BaseColor(_float4(0.05f, 0.72f, 1.f, 1.f));
+
 	CShader::SHADERDESC litShaderDesc = { L"../EngineResources/Shader/Lit.hlsl", L"", VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
 	LoadResourceComplete_Game<CShader>(L"Lit (Shader)", L"", &litShaderDesc);
 
@@ -2081,6 +2256,12 @@ void CResources::Ready_GameResources()
 		CMaterial::MATERIALDESC ulcMatDesc = { ulcShader, false, false };
 		LoadResourceComplete_Game<CMaterial>(L"UnlitMaterial (Material)", L"", &ulcMatDesc);
 	}
+
+	CShader* navOverlayShader = LoadOnGame<CShader>(L"UnlitColor (Shader)");
+	CMaterial::MATERIALDESC navOverlayMatDesc = { navOverlayShader, false, false };
+	CMaterial* navOverlayMat = LoadResourceComplete_Game<CMaterial>(L"NavigationOverlayMaterial (Material)", L"", &navOverlayMatDesc);
+	if (navOverlayMat)
+		navOverlayMat->Set_BaseColor(_float4(0.0f, 0.68f, 1.f, 0.30f));
 
 	CShader::SHADERDESC outlineShaderDesc = { L"../EngineResources/Shader/Outline.hlsl", L"",  VertexSkinnedOutlineBuffer::numElements, VertexSkinnedOutlineBuffer::elementDesc };
 	LoadResourceComplete_Game<CShader>(L"Outline (Shader)", L"", &outlineShaderDesc);

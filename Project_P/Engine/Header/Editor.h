@@ -62,6 +62,8 @@ public:
 	void SetColliderGizmoVisible(const _bool visible);
 	const _bool IsMeshColliderGizmoVisible() const;
 	void SetMeshColliderGizmoVisible(const _bool visible);
+	const _bool IsNavigationMeshVisible() const;
+	void SetNavigationMeshVisible(const _bool visible);
 
 	static string ToLowerCopy(string s)
 	{
@@ -106,6 +108,7 @@ private:
 	_bool m_bOpenSelectedInHierarchyRequested;
 	_bool m_bShowColliderGizmo;
 	_bool m_bShowMeshColliderGizmo;
+	_bool m_bShowNavigationMesh;
 	fs::path m_selectedAssetPath;
 
 private:

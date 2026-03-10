@@ -93,7 +93,12 @@ void CSceneManager::Release()
 
 CScene* CSceneManager::CreateScene(CScene* _newScene, const wstring& _sceneName)
 {
-	CScene* newScene = dynamic_cast<CScene*>(_newScene);
+	CScene* newScene = _newScene;
+	if (!newScene)
+	{
+        CDebug::LogError(L"Create Scene Fail: Scene instance is null: " + _sceneName);
+		return nullptr;
+	}
 	newScene->Set_SceneName(_sceneName);
 
 	m_mSceneList.emplace(_sceneName, newScene);
@@ -200,6 +205,10 @@ void CSceneManager::LoadComplete()
 	wstring file = m_pCrtScene->Get_SceneName() + L".scenedata";
 	auto sceneTransformInfo = CResources::GetInstance().ReadSceneObjectTransformInfos(file);
 	m_pCrtScene->Bind_ObjectsTransform(sceneTransformInfo);
+
+	wstring navFile = m_pCrtScene->Get_SceneName() + L".navdata";
+	auto sceneNavigationInfo = CResources::GetInstance().ReadSceneNavigationInfos(navFile);
+	m_pCrtScene->Bind_NavigationInfos(sceneNavigationInfo);
 
 	if (prevPlayState != PlayState::Stopped)
 	{
@@ -597,3 +606,4 @@ const _bool CSceneManager::ContainLayerMask(const _uint _layer, const LayerMask 
 
 	return (_layer & _mask) != 0u;
 }
+

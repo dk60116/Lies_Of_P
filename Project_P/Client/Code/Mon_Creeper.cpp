@@ -46,6 +46,7 @@ void CMon_Creeper::Start()
 
 void CMon_Creeper::Update()
 {
+	__super::Update();
 }
 
 void CMon_Creeper::FixedUpdate()

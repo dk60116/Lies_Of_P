@@ -4,6 +4,8 @@
 #include "MeshFilter.h"
 #include "Renderer.h"
 #include "Material.h"
+#include "NaviMesh.h"
+#include "NaviMeshAgent.h"
 #include "Texture.h"
 #include "Animator.h"
 #include "AnimationClip.h"
@@ -63,13 +65,172 @@ namespace
 		return true;
 	}
 
-	_bool BuildLineResources(CCamera* camera, CMeshBuffer*& outLineMesh, CMaterial*& outLineMat, _float3& outCamPos, _matrix& outView, _matrix& outProj)
+	CMeshBuffer* ResolveNavigationMeshBuffer(CGameObject* object)
+	{
+		if (!object)
+			return nullptr;
+
+		if (CMeshRenderer* meshRenderer = object->GetComponent<CMeshRenderer>())
+			return meshRenderer->Get_MeshBuffer();
+
+		if (CSkinnedMeshRenderer* skinnedMeshRenderer = object->GetComponent<CSkinnedMeshRenderer>())
+			return skinnedMeshRenderer->Get_MeshBuffer();
+
+		if (CMeshFilter* meshFilter = object->GetComponent<CMeshFilter>())
+			return meshFilter->Get_MeshBuffer();
+
+		return nullptr;
+	}
+
+	vector<EngineAI::CNaviMesh::MeshSource> GatherNavigationStaticMeshSources(CScene* scene)
+	{
+		vector<EngineAI::CNaviMesh::MeshSource> sources = {};
+		if (!scene)
+			return sources;
+
+		for (CGameObject* object : scene->Get_ObjectList())
+		{
+			if (!object || !object->IsActive())
+				continue;
+
+			if (!object->IsStatic(CGameObject::STATIC_METHOD::NavigationStatic))
+				continue;
+
+			CMeshBuffer* meshBuffer = ResolveNavigationMeshBuffer(object);
+			if (!meshBuffer)
+				continue;
+
+			EngineAI::CNaviMesh::MeshSource source = {};
+			source.meshBuffer = meshBuffer;
+			source.label = object->Get_ObjectNameID();
+			source.walkable = true;
+			_matrix worldMatrix = XMMatrixIdentity();
+			if (CTransform* transform = object->Get_Transform())
+				worldMatrix = transform->Get_WorldMatrix();
+			XMStoreFloat4x4(&source.worldMatrix, worldMatrix);
+			sources.push_back(source);
+		}
+
+		return sources;
+	}
+
+	struct NavigationBoundaryVertexKey
+	{
+		_int x = 0;
+		_int y = 0;
+		_int z = 0;
+
+		_bool operator==(const NavigationBoundaryVertexKey& _rhs) const
+		{
+			return x == _rhs.x && y == _rhs.y && z == _rhs.z;
+		}
+	};
+
+	struct NavigationBoundaryEdgeKey
+	{
+		NavigationBoundaryVertexKey start = {};
+		NavigationBoundaryVertexKey end = {};
+
+		_bool operator==(const NavigationBoundaryEdgeKey& _rhs) const
+		{
+			return start == _rhs.start && end == _rhs.end;
+		}
+	};
+
+	struct NavigationBoundaryEdgeKeyHasher
+	{
+		size_t operator()(const NavigationBoundaryEdgeKey& _key) const
+		{
+			const size_t h0 = hash<_int>()(_key.start.x);
+			const size_t h1 = hash<_int>()(_key.start.y);
+			const size_t h2 = hash<_int>()(_key.start.z);
+			const size_t h3 = hash<_int>()(_key.end.x);
+			const size_t h4 = hash<_int>()(_key.end.y);
+			const size_t h5 = hash<_int>()(_key.end.z);
+
+			size_t hashValue = h0;
+			hashValue ^= h1 + 0x9e3779b9 + (hashValue << 6) + (hashValue >> 2);
+			hashValue ^= h2 + 0x9e3779b9 + (hashValue << 6) + (hashValue >> 2);
+			hashValue ^= h3 + 0x9e3779b9 + (hashValue << 6) + (hashValue >> 2);
+			hashValue ^= h4 + 0x9e3779b9 + (hashValue << 6) + (hashValue >> 2);
+			hashValue ^= h5 + 0x9e3779b9 + (hashValue << 6) + (hashValue >> 2);
+			return hashValue;
+		}
+	};
+
+	struct NavigationBoundaryEdge
+	{
+		vector3 start = vector3::zero();
+		vector3 end = vector3::zero();
+	};
+
+	struct NavigationBoundaryRecord
+	{
+		vector3 start = vector3::zero();
+		vector3 end = vector3::zero();
+		_uint count = 0;
+	};
+
+	constexpr _float kNavigationOutlineQuantizeScale = 1000.f;
+	constexpr _float kNavigationOutlineOffset = 0.005f;
+
+	_int QuantizeNavigationCoord(const _float _value)
+	{
+		return static_cast<_int>(roundf(_value * kNavigationOutlineQuantizeScale));
+	}
+
+	NavigationBoundaryVertexKey MakeNavigationBoundaryVertexKey(const vector3& _point)
+	{
+		NavigationBoundaryVertexKey key = {};
+		key.x = QuantizeNavigationCoord(_point.x);
+		key.y = QuantizeNavigationCoord(_point.y);
+		key.z = QuantizeNavigationCoord(_point.z);
+		return key;
+	}
+
+	_bool IsLessNavigationBoundaryVertexKey(const NavigationBoundaryVertexKey& _lhs, const NavigationBoundaryVertexKey& _rhs)
+	{
+		if (_lhs.x != _rhs.x)
+			return _lhs.x < _rhs.x;
+		if (_lhs.y != _rhs.y)
+			return _lhs.y < _rhs.y;
+		return _lhs.z < _rhs.z;
+	}
+
+	NavigationBoundaryEdgeKey MakeNavigationBoundaryEdgeKey(const vector3& _start, const vector3& _end)
+	{
+		NavigationBoundaryEdgeKey key = {};
+		key.start = MakeNavigationBoundaryVertexKey(_start);
+		key.end = MakeNavigationBoundaryVertexKey(_end);
+		if (IsLessNavigationBoundaryVertexKey(key.end, key.start))
+			swap(key.start, key.end);
+		return key;
+	}
+
+	vector<NavigationBoundaryEdge> CollectNavigationBoundaryEdges(const EngineAI::CNaviMesh& _navMesh)
+	{
+		vector<NavigationBoundaryEdge> boundaryEdges = {};
+		const auto& sourceEdges = _navMesh.GetBoundaryEdges();
+		boundaryEdges.reserve(sourceEdges.size());
+
+		for (const auto& sourceEdge : sourceEdges)
+		{
+			NavigationBoundaryEdge edge = {};
+			edge.start = vector3(sourceEdge.start.x, sourceEdge.start.y + kNavigationOutlineOffset, sourceEdge.start.z);
+			edge.end = vector3(sourceEdge.end.x, sourceEdge.end.y + kNavigationOutlineOffset, sourceEdge.end.z);
+			boundaryEdges.push_back(edge);
+		}
+
+		return boundaryEdges;
+	}
+
+	_bool BuildLineResources(CCamera* camera, const wstring& materialName, CMeshBuffer*& outLineMesh, CMaterial*& outLineMat, _float3& outCamPos, _matrix& outView, _matrix& outProj)
 	{
 		if (!camera)
 			return false;
 
 		outLineMesh = CResources::GetInstance().LoadOnGame<CMeshBuffer>(L"Line (Mesh Buffer)");
-		outLineMat = CResources::GetInstance().LoadOnGame<CMaterial>(L"DefaultLineMaterial (Material)");
+		outLineMat = CResources::GetInstance().LoadOnGame<CMaterial>(materialName);
 
 		if (!outLineMesh || !outLineMat)
 			return false;
@@ -92,6 +253,82 @@ namespace
 		lineMesh->Render();
 	}
 
+	void DrawNavigationMeshOutline(CMeshBuffer* lineMesh, CMaterial* lineMat, const _float3& camPos, const _matrix& view, const _matrix& proj, const EngineAI::CNaviMesh& navMesh)
+	{
+		if (!lineMesh || !lineMat)
+			return;
+
+		const vector<NavigationBoundaryEdge> boundaryEdges = CollectNavigationBoundaryEdges(navMesh);
+		for (const NavigationBoundaryEdge& edge : boundaryEdges)
+		{
+			const _vector start = XMVectorSet(edge.start.x, edge.start.y, edge.start.z, 1.f);
+			const _vector end = XMVectorSet(edge.end.x, edge.end.y, edge.end.z, 1.f);
+			DrawLineSegment(lineMesh, lineMat, camPos, view, proj, start, end);
+		}
+	}
+
+	void DrawNavigationMeshOverlays(
+		CCamera* camera,
+		const unordered_map<wstring, CEngineResource*>& resourceList,
+		ID3D11RasterizerState* meshRasterizerState,
+		ID3D11DepthStencilState* overlayDepthState,
+		ID3D11BlendState* overlayBlendState)
+	{
+		if (!camera || !meshRasterizerState || !overlayDepthState || !overlayBlendState)
+			return;
+
+		if (!CEditor::GetInstance().IsNavigationMeshVisible())
+			return;
+
+		CMaterial* overlayMaterial = CResources::GetInstance().LoadOnGame<CMaterial>(L"NavigationOverlayMaterial (Material)");
+		CMeshBuffer* outlineMesh = nullptr;
+		CMaterial* outlineMaterial = nullptr;
+		_float3 outlineCamPos = {};
+		_matrix outlineView = XMMatrixIdentity();
+		_matrix outlineProj = XMMatrixIdentity();
+		const _bool canDrawOutline = BuildLineResources(camera, L"NavigationOutlineMaterial (Material)", outlineMesh, outlineMaterial, outlineCamPos, outlineView, outlineProj);
+		ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
+		if (!overlayMaterial || !context)
+			return;
+
+		overlayMaterial->Set_BaseColor(_float4(0.0f, 0.68f, 1.f, 0.30f));
+
+		ID3D11BlendState* previousBlendState = nullptr;
+		_float previousBlendFactor[4] = {};
+		_uint previousSampleMask = 0;
+		context->OMGetBlendState(&previousBlendState, previousBlendFactor, &previousSampleMask);
+
+		ID3D11DepthStencilState* previousDepthState = nullptr;
+		_uint previousStencilRef = 0;
+		context->OMGetDepthStencilState(&previousDepthState, &previousStencilRef);
+
+		ID3D11RasterizerState* previousRasterizerState = nullptr;
+		context->RSGetState(&previousRasterizerState);
+
+		const _float blendFactor[4] = { 0.f, 0.f, 0.f, 0.f };
+		context->OMSetBlendState(overlayBlendState, blendFactor, 0xFFFFFFFF);
+		context->OMSetDepthStencilState(overlayDepthState, previousStencilRef);
+		context->RSSetState(meshRasterizerState);
+
+		for (const auto& resourcePair : resourceList)
+		{
+			EngineAI::CNaviMesh* navMesh = dynamic_cast<EngineAI::CNaviMesh*>(resourcePair.second);
+			if (!navMesh || !navMesh->IsBuilt() || !navMesh->HasRenderMesh())
+				continue;
+
+			navMesh->RenderOverlay(camera, overlayMaterial);
+			if (canDrawOutline)
+				DrawNavigationMeshOutline(outlineMesh, outlineMaterial, outlineCamPos, outlineView, outlineProj, *navMesh);
+		}
+
+		context->OMSetBlendState(previousBlendState, previousBlendFactor, previousSampleMask);
+		context->OMSetDepthStencilState(previousDepthState, previousStencilRef);
+		context->RSSetState(previousRasterizerState);
+		Safe_Release(previousBlendState);
+		Safe_Release(previousDepthState);
+		Safe_Release(previousRasterizerState);
+	}
+
 	void DrawSelectedMeshBoundingBox(CCamera* camera)
 	{
 		CMeshBuffer* lineMesh = nullptr;
@@ -99,7 +336,7 @@ namespace
 		_float3 camPos = {};
 		_matrix view = XMMatrixIdentity();
 		_matrix proj = XMMatrixIdentity();
-		if (!BuildLineResources(camera, lineMesh, lineMat, camPos, view, proj))
+		if (!BuildLineResources(camera, L"DefaultLineMaterial (Material)", lineMesh, lineMat, camPos, view, proj))
 			return;
 
 		CGameObject* selected = CEditor::GetInstance().Get_SelectedGameObject();
@@ -199,7 +436,7 @@ namespace
 		_float3 camPos = {};
 		_matrix view = XMMatrixIdentity();
 		_matrix proj = XMMatrixIdentity();
-		if (!BuildLineResources(camera, lineMesh, lineMat, camPos, view, proj))
+		if (!BuildLineResources(camera, L"DefaultLineMaterial (Material)", lineMesh, lineMat, camPos, view, proj))
 			return;
 
 		CGameObject* selected = CEditor::GetInstance().Get_SelectedGameObject();
@@ -245,7 +482,6 @@ namespace
 			DrawLineSegment(lineMesh, lineMat, camPos, view, proj, worldCorners[edge[0]], worldCorners[edge[1]]);
 	}
 }
-
 CScene::CScene()
 	: m_iSceneIndex(0)
 	, m_pDevice(nullptr)
@@ -681,6 +917,7 @@ void CScene::Render_Editor()
 	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
 	m_pEditorCamera->RenderDisplay();
+	DrawNavigationMeshOverlays(m_pEditorCamera, m_mResourceList, m_pMeshResterizerState, m_pUIDepthStencilState, m_pBlendingState);
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->Render_Gizmo();
@@ -971,6 +1208,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		if (dynamic_cast<CSphereCollider*>(component)) return L"SphereCollider";
 		if (dynamic_cast<CCapsuleCollider*>(component)) return L"CapsuleCollider";
 		if (dynamic_cast<CMeshCollider*>(component)) return L"MeshCollider";
+        if (dynamic_cast<CNaviMeshAgent*>(component)) return L"NaviMeshAgent";
 		return L"";
 	};
 
@@ -998,6 +1236,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		info.isActive = (*it)->IsActive_Origin();
 		info.objLayer = (*it)->GetLayer();
 		info.isTransformStatic = (*it)->IsStatic(CGameObject::STATIC_METHOD::TransformStatic);
+		info.isNavigationStatic = (*it)->IsStatic(CGameObject::STATIC_METHOD::NavigationStatic);
 
 		if (CRigidBody* rigidBody = (*it)->GetComponent<CRigidBody>())
 		{
@@ -1011,6 +1250,20 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			info.rigidBodyConstRotationY = rigidBody->IsConstRotationY();
 			info.rigidBodyConstRotationZ = rigidBody->IsConstRotationZ();
 		}
+
+        if (CNaviMeshAgent* navMeshAgent = (*it)->GetComponent<CNaviMeshAgent>())
+        {
+            info.hasNaviMeshAgent = true;
+            info.navAgentNavigationMeshResourceName = navMeshAgent->GetNavigationMeshResourceName();
+            info.navAgentMoveSpeed = navMeshAgent->GetMoveSpeed();
+            info.navAgentAngularSpeed = navMeshAgent->GetAngularSpeed();
+            info.navAgentStoppingDistance = navMeshAgent->GetStoppingDistance();
+            info.navAgentWaypointTolerance = navMeshAgent->GetWaypointTolerance();
+            info.navAgentRadius = navMeshAgent->GetAgentRadius();
+            info.navAgentHeight = navMeshAgent->GetAgentHeight();
+            info.navAgentCenter = navMeshAgent->GetAgentCenter();
+            info.navAgentGroundSnapOffset = navMeshAgent->GetGroundSnapOffset();
+        }
 
 		CRectTransform* rect = (*it)->GetComponent<CRectTransform>();
 
@@ -1155,6 +1408,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			if (componentName == L"SphereCollider" && dynamic_cast<CSphereCollider*>(component)) return true;
 			if (componentName == L"CapsuleCollider" && dynamic_cast<CCapsuleCollider*>(component)) return true;
 			if (componentName == L"MeshCollider" && dynamic_cast<CMeshCollider*>(component)) return true;
+            if (componentName == L"NaviMeshAgent" && dynamic_cast<CNaviMeshAgent*>(component)) return true;
 		}
 
 		return false;
@@ -1182,6 +1436,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		else if (componentName == L"SphereCollider") obj->AddComponent<CSphereCollider>();
 		else if (componentName == L"CapsuleCollider") obj->AddComponent<CCapsuleCollider>();
 		else if (componentName == L"MeshCollider") obj->AddComponent<CMeshCollider>();
+        else if (componentName == L"NaviMeshAgent") obj->AddComponent<CNaviMeshAgent>();
 	};
 
 	unordered_map<wstring, size_t> infoIndexByGuid;
@@ -1233,6 +1488,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		obj->SetActive(info.isActive);
 		obj->SetLayer(info.objLayer);
 		obj->SetStatic(CGameObject::STATIC_METHOD::TransformStatic, info.isTransformStatic, false);
+		obj->SetStatic(CGameObject::STATIC_METHOD::NavigationStatic, info.isNavigationStatic, false);
 
 		if (!info.isRect)
 			tf->Set_LocalScale(info.localScale);
@@ -1273,6 +1529,22 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			rigidBody->SetConstRotationY(info.rigidBodyConstRotationY);
 			rigidBody->SetConstRotationZ(info.rigidBodyConstRotationZ);
 		}
+
+        if (info.hasNaviMeshAgent)
+        {
+            if (CNaviMeshAgent* navMeshAgent = obj->GetComponent<CNaviMeshAgent>())
+            {
+                navMeshAgent->SetNavigationMeshResourceName(info.navAgentNavigationMeshResourceName);
+                navMeshAgent->SetMoveSpeed(info.navAgentMoveSpeed);
+                navMeshAgent->SetAngularSpeed(info.navAgentAngularSpeed);
+                navMeshAgent->SetStoppingDistance(info.navAgentStoppingDistance);
+                navMeshAgent->SetWaypointTolerance(info.navAgentWaypointTolerance);
+                navMeshAgent->SetAgentRadius(info.navAgentRadius);
+                navMeshAgent->SetAgentHeight(info.navAgentHeight);
+                navMeshAgent->SetAgentCenter(vector3(info.navAgentCenter.x, info.navAgentCenter.y, info.navAgentCenter.z));
+                navMeshAgent->SetGroundSnapOffset(info.navAgentGroundSnapOffset);
+            }
+        }
 
 		if (!info.meshBufferName.empty())
 		{
@@ -1724,6 +1996,95 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 	}
 }
 
+vector<CScene::SCENENAVIGATIONINFO> CScene::Convert_NavigationInfos() const
+{
+	vector<SCENENAVIGATIONINFO> result = {};
+	result.reserve(m_mResourceList.size());
+
+	for (const auto& [name, resource] : m_mResourceList)
+	{
+		EngineAI::CNaviMesh* navMesh = dynamic_cast<EngineAI::CNaviMesh*>(resource);
+		if (!navMesh || !navMesh->IsBuilt())
+			continue;
+
+		SCENENAVIGATIONINFO info = {};
+		info.resourceName = name;
+		info.bakeOptions = navMesh->GetBakeOptions();
+		result.push_back(info);
+	}
+
+	sort(result.begin(), result.end(), [](const SCENENAVIGATIONINFO& lhs, const SCENENAVIGATIONINFO& rhs)
+		{
+			return lhs.resourceName < rhs.resourceName;
+		});
+	return result;
+}
+
+void CScene::Bind_NavigationInfos(const vector<SCENENAVIGATIONINFO>& _infoList)
+{
+	if (_infoList.empty())
+		return;
+
+	const vector<EngineAI::CNaviMesh::MeshSource> meshSources = GatherNavigationStaticMeshSources(this);
+	if (meshSources.empty())
+	{
+		CDebug::LogError(L"Navigation mesh restore skipped - no NavigationStatic meshes were found in the scene.");
+		return;
+	}
+
+	for (const SCENENAVIGATIONINFO& info : _infoList)
+	{
+		if (info.resourceName.empty())
+			continue;
+
+		CEngineResource* existingResource = Find_Resource(info.resourceName);
+		EngineAI::CNaviMesh* navMesh = nullptr;
+		_bool createdNew = false;
+
+		if (existingResource)
+		{
+			navMesh = dynamic_cast<EngineAI::CNaviMesh*>(existingResource);
+			if (!navMesh)
+			{
+				CDebug::LogError(L"Navigation mesh restore skipped - scene resource name is already used by another type: " + info.resourceName);
+				continue;
+			}
+		}
+		else
+		{
+			navMesh = EngineAI::CNaviMesh::CreateRuntime(info.resourceName);
+			if (!navMesh)
+			{
+				CDebug::LogError(L"Navigation mesh restore failed - could not create runtime resource: " + info.resourceName);
+				continue;
+			}
+
+			createdNew = true;
+		}
+
+		navMesh->SetBakeOptions(info.bakeOptions);
+		if (FAILED(navMesh->BuildFromSources(meshSources)))
+		{
+			CDebug::LogError(L"Navigation mesh restore failed: " + info.resourceName);
+			if (createdNew)
+				Safe_Release(navMesh);
+			continue;
+		}
+
+		if (createdNew)
+		{
+			if (!Add_Resource(info.resourceName, navMesh))
+			{
+				CDebug::LogError(L"Navigation mesh restore failed - scene registration failed: " + info.resourceName);
+				Safe_Release(navMesh);
+				continue;
+			}
+
+			Safe_Release(navMesh);
+		}
+	}
+}
+
 CEngineResource* CScene::Add_Resource(const wstring& _name, CEngineResource* _resource)
 {
 	if (!_resource)
@@ -1741,6 +2102,27 @@ CEngineResource* CScene::Add_Resource(const wstring& _name, CEngineResource* _re
 		Safe_Release(_resource);
 		return it->second;
 	}
+}
+
+_bool CScene::Remove_Resource(const wstring& _name)
+{
+	_bool removed = false;
+
+	auto removeFromMap = [&](auto& resourceMap)
+	{
+		auto iter = resourceMap.find(_name);
+		if (iter == resourceMap.end())
+			return;
+
+		CEngineResource* resource = iter->second;
+		resourceMap.erase(iter);
+		Safe_Release(resource);
+		removed = true;
+	};
+
+	removeFromMap(m_mTempResourceList);
+	removeFromMap(m_mResourceList);
+	return removed;
 }
 
 CEngineResource* CScene::Find_Resource(const wstring& _name)
@@ -2111,6 +2493,10 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 
 	wstring sceneDataPath = L"BinaryAssets/SceneData/" + m_strSceneName + L".scenedata";
 	if (FAILED(CResources::GetInstance().SaveSceneObjectTransformInfos(sceneDataPath, Convert_ObjectsTransformInfo())))
+		return E_FAIL;
+
+	wstring sceneNavigationPath = L"BinaryAssets/SceneData/" + m_strSceneName + L".navdata";
+	if (FAILED(CResources::GetInstance().SaveSceneNavigationInfos(sceneNavigationPath, Convert_NavigationInfos())))
 		return E_FAIL;
 
 	auto normalizePath = [](wstring path)
@@ -2635,6 +3021,9 @@ ID3D11BlendState* CScene::Get_NoneBlendingState() const
 {
 	return m_pNoneBlendingState;
 }
+
+
+
 
 
 

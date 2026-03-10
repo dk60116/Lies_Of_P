@@ -184,6 +184,7 @@ HRESULT CPlayer::Initialize()
 
 	m_iGroundMask = CSceneManager::GetInstance().MakeLayerMask(true, ignore);
 
+	//m_pGameObject->AddComponent<CNaviMeshAgent>();
 
 	return S_OK;
 }
