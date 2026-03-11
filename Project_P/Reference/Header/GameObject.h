@@ -41,12 +41,12 @@ public:
 	virtual void OnMouseDrag();
 	virtual void OnMouseUp();
 
-	//virtual void OnCollisionEnter();
-	//virtual void OnCollisionStay();
-	//virtual void OnCollisionExit();
-	//virtual void OnTriggerEnter();
-	//virtual void OnTriggerStay();
-	//virtual void OnTriggerExit();
+	virtual void OnCollisionEnter(CCollider* _other);
+	virtual void OnCollisionStay(CCollider* _other);
+	virtual void OnCollisionExit(CCollider* _other);
+	virtual void OnTriggerEnter(CCollider* _other);
+	virtual void OnTriggerStay(CCollider* _other);
+	virtual void OnTriggerExit(CCollider* _other);
 
 	//virtual void OnCollisionEnter2D();
 	//virtual void OnCollisionStay2D();

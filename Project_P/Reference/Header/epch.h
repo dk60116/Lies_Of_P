@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <SDKDDKVer.h>
 #include "EngineDefine.h"
@@ -55,3 +55,6 @@
 #include "Font.h"
 #include "NaviMeshAgent.h"
 #include "BehaviourTree.h"
+#include "BTAction.h"
+#include "BTCondition.h"
+

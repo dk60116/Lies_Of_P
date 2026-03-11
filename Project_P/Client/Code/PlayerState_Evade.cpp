@@ -33,6 +33,7 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Forward_Stop", [this]()
 				{
+					m_pCtx->StopMoveImmediate();
 					m_pCtx->SetCanTurn(false);
 
 					m_bIsDash = false;
@@ -72,6 +73,7 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 			startClip->Add_ActionTrigger(at);
 			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Backward_Stop", [this]()
 				{
+					m_pCtx->StopMoveImmediate();
 					m_pCtx->SetCanTurn(false);
 
 					m_bIsDash = false;

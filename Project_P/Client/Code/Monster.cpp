@@ -4,11 +4,9 @@
 
 CMonster::CMonster()
 	: m_strMonsterName(L"")
+	, m_iCurrentState(0)
 	, m_vMaterialTransparent({})
 	, m_vMeshRenderers({})
-	, m_pBodyCollider(nullptr)
-	, m_pRigidBody(nullptr)
-	, m_pAnimator(nullptr)
 	, m_pController(nullptr)
 	, m_pNavAgent(nullptr)
 {
@@ -28,25 +26,29 @@ HRESULT CMonster::Initialize()
 	PaintTexture();
 	CreateAnimator();
 	CreateAI();
+	CreateHurtBox();
 
 	return S_OK;
 }
 
 void CMonster::Awake()
 {
+	__super::Awake();
 }
 
 void CMonster::Start()
 {
+	__super::Start();
 }
 
 void CMonster::Update()
 {
-	m_pNavAgent->SetDestination(CGameManager::GetInstance().Get_Player()->Get_Transform()->Get_Position());
+	__super::Update();
 }
 
 void CMonster::OnDestroy()
 {
+	__super::OnDestroy();
 }
 
 const wstring& CMonster::GetMonsterName() const
@@ -54,18 +56,19 @@ const wstring& CMonster::GetMonsterName() const
 	return m_strMonsterName;
 }
 
-CAnimator* CMonster::Get_Animator()
-{
-	return m_pAnimator;
-}
-
 void CMonster::Change_State(const _uint _state)
 {
+	m_iCurrentState = _state;
 }
 
-const CMonster::MonsterStatus& CMonster::Get_Status()
+const CMonster::MonsterStatus& CMonster::GetStatus()
 {
 	return m_sStatus;
+}
+
+const _float CMonster::GetRadius() const
+{
+	return m_pBodyCollider->GetRadius();
 }
 
 void CMonster::CreateBody()
@@ -73,10 +76,11 @@ void CMonster::CreateBody()
 	const wstring path = L"Mon_" + m_strMonsterName + L"_Body_Model (MeshBuffer)";
 
 	m_vMeshRenderers = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(path), CResources::GetInstance().LoadSkinnedBonesOnScene(path), 0.01f, vector3::up() * 270.f);
-
 	m_pBodyCollider = m_pGameObject->AddComponent<CCapsuleCollider>();
 	m_pRigidBody = m_pGameObject->AddComponent<CRigidBody>();
-	m_pRigidBody->SetUseGravity(true);
+
+	m_pRigidBody->SetKinematic(true);
+	m_pRigidBody->SetUseGravity(false);
 	m_pRigidBody->SetConstRotationX(true);
 	m_pRigidBody->SetConstRotationY(true);
 	m_pRigidBody->SetConstRotationZ(true);
@@ -117,5 +121,12 @@ void CMonster::CreateAI()
 	m_pNavAgent = m_pGameObject->AddComponent<CNaviMeshAgent>();
 	m_pController = m_pGameObject->AddComponent<CMonsterController>();
 
-	m_pNavAgent->SetStoppingDistance(2.f);
+	m_pNavAgent->SetMoveSpeed(m_sStatus.moveSpeed);
+	m_pNavAgent->SetStoppingDistance(m_sStatus.attackRange);
+	m_pNavAgent->SetAngularSpeed(m_sStatus.turnSpeed);
+}
+
+CNaviMeshAgent* CMonster::GetNaviAgent()
+{
+	return m_pNavAgent;
 }

@@ -8,8 +8,6 @@ CPlayer::CPlayer()
 	, m_pHeadObj(nullptr)
 	, m_pHairObj(nullptr)
 	, m_pPonyTailObj(nullptr)
-	, m_pSkinnedMeshRenderer(nullptr)
-	, m_pAnimator(nullptr)
 	, m_pEquipWeapon(nullptr)
 	, m_sPlayerStatus({})
 	, m_vBodySuits({})
@@ -18,10 +16,6 @@ CPlayer::CPlayer()
 	, m_vPonyTailas({})
 	, m_iLightAttackComboCount(0)
 	, m_pWeaponHolder(nullptr)
-	, m_pBodyCollider(nullptr)
-	, m_pRigidBody(nullptr)
-	, m_bIsGround(false)
-	, m_iGroundMask(0)
 {
 	m_strName = L"Player";
 }
@@ -180,27 +174,27 @@ HRESULT CPlayer::Initialize()
 	m_pRigidBody->SetConstRotationZ(true);
 	m_pRigidBody->SetUseGravity(true);
 
-	vector<_uint> ignore = { CSceneManager::GetInstance().NameToLayer(L"Player") };
-
-	m_iGroundMask = CSceneManager::GetInstance().MakeLayerMask(true, ignore);
-
-	//m_pGameObject->AddComponent<CNaviMeshAgent>();
-
 	return S_OK;
 }
 
 void CPlayer::Awake()
 {
+	__super::Awake();
+
 	Get_Transform()->Set_PositionZ(6.f);
 }
 
 void CPlayer::Start()
 {
+	__super::Start();
+
 	CGameManager::GetInstance().Get_PlayerHUD()->Update_Heart(m_sPlayerStatus.crtHp, m_sPlayerStatus.maxHp);
 }
 
 void CPlayer::Update()
 {
+	__super::Update();
+
 	if (CInput::GetInstance().GetKeyDown(Y))
 	{
 		GetDamage(1);
@@ -219,27 +213,19 @@ void CPlayer::Update()
 
 void CPlayer::FixedUpdate()
 {
-	Ground();
+	__super::FixedUpdate();
 }
 
 void CPlayer::OnDestroy()
 {
+	__super::OnDestroy();
+
 	CGameManager::GetInstance().Remove_Player(this);
 }
 
 CPlayerController* CPlayer::Get_Controller()
 {
 	return m_pController;
-}
-
-CAnimator* CPlayer::Get_Animator()
-{
-	return m_pAnimator;
-}
-
-CRigidBody* CPlayer::Get_RigidBody()
-{
-	return m_pRigidBody;
 }
 
 const CPlayer::PlayerStatus& CPlayer::Get_PlayerStatus()
@@ -261,6 +247,11 @@ void CPlayer::GetDamage(const _uint _damage)
 	CGameManager::GetInstance().Get_PlayerHUD()->Update_Heart(m_sPlayerStatus.crtHp, m_sPlayerStatus.maxHp);
 }
 
+const _float CPlayer::GetRadius() const
+{
+	return m_pBodyCollider->GetRadius();
+}
+
 const _uint CPlayer::GetLightAttackComboCount() const
 {
 	return m_iLightAttackComboCount;
@@ -271,29 +262,6 @@ void CPlayer::SetLightAttakComboCount(const _uint _count)
 	m_iLightAttackComboCount = _count;
 }
 
-void CPlayer::Ground()
+void CPlayer::SetAnimationAction()
 {
-	CPhysics::RAYCASTHIT hit = {};
-	CPhysics::SphereRay ray = {};
-	ray.center = Get_Transform()->Get_Position() + vector3::up() * 1.f;
-	ray.radius = 0.5f;
-	ray.dir = vector3::down();
-	ray.maxDist = 0.75f;
-
-	auto hits = CPhysics::GetInstance().SphereRaycast(ray, m_iGroundMask);
-
-	m_bIsGround = hits.size() > 0;
-
-	m_pAnimator->SetBool(L"isGround", m_bIsGround);
-
-	if (CInput::GetInstance().GetKeyDown(KEY_CODE::V))
-	{
-		CPhysics::RAYCASTHIT ehit = {};
-		CPhysics::Ray eray = {};
-		eray.origin = Get_Transform()->Get_Position() + vector3::up() * 0.5f;
-		eray.dir = vector3::up();
-		eray.maxDist = 1.f;
-
-		auto hits = CPhysics::GetInstance().Raycast(eray, m_iGroundMask);
-	}
 }

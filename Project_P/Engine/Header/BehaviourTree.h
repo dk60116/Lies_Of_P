@@ -3,6 +3,8 @@
 
 NS_BEGIN(Engine)
 
+class CBTNode;
+
 enum class BTState
 {
 	Success,
@@ -20,7 +22,7 @@ struct AIContext
 	_float distanceToTarget = 0.f;
 };
 
-class ENGINE_DLL CBehaviourTree final : public CComponent
+class ENGINE_DLL CBehaviourTree : public CComponent
 {
 	friend class CGameObject;
 
@@ -40,7 +42,27 @@ public:
 	void Update() override;
 	void Render_Gizmo() override;
 	void OnDestroy() override;
+
+public:
+	void SetRoot(CBTNode* _root);
+	CBTNode* GetRoot();
+	const CBTNode* GetRoot() const;
+
+	AIContext& GetContext();
+	const AIContext& GetContext() const;
+
+	void SetTarget(class CGameObject* _target);
+	void ClearTarget();
+	BTState GetLastState() const;
+
+private:
+	void ClearTree();
+	void RefreshContext();
+
+private:
+	CBTNode* m_pRoot;
+	AIContext m_tContext;
+	BTState m_eLastState;
 };
 
 NS_END
-

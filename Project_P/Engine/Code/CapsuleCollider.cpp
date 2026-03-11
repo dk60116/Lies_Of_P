@@ -130,10 +130,7 @@ void CCapsuleCollider::Render_Gizmo()
     if (!cam)
         return;
 
-    if (IsContacting())
-        m_pLineMaterial->Set_BaseColor(_float4(1.f, 0.f, 0.f, 1.f));
-    else
-        m_pLineMaterial->Set_BaseColor(_float4(0.f, 1.f, 0.f, 1.f));
+    m_pLineMaterial->Set_BaseColor(GetGizmoColor());
 
     const vector3 scale = Get_Transform()->Get_LocalScale();
     const _float radialScale = max(fabsf(scale.x), fabsf(scale.z));
@@ -316,5 +313,6 @@ void CCapsuleCollider::BuildShapeIfNeeded()
 
     m_bShapeDirty = false;
 }
+
 
 

@@ -197,6 +197,30 @@ void CGameObject::OnMouseUp()
 	}
 }
 
+void CGameObject::OnCollisionEnter(CCollider* _other)
+{
+}
+
+void CGameObject::OnCollisionStay(CCollider* _other)
+{
+}
+
+void CGameObject::OnCollisionExit(CCollider* _other)
+{
+}
+
+void CGameObject::OnTriggerEnter(CCollider* _other)
+{
+}
+
+void CGameObject::OnTriggerStay(CCollider* _other)
+{
+}
+
+void CGameObject::OnTriggerExit(CCollider* _other)
+{
+}
+
 void CGameObject::OnPreCull_Editor()
 {
 	for (TRAVERSAL_ITER(m_lComponentList, it))

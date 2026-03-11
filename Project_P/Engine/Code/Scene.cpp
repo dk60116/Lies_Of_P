@@ -1258,6 +1258,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
             info.navAgentMoveSpeed = navMeshAgent->GetMoveSpeed();
             info.navAgentAngularSpeed = navMeshAgent->GetAngularSpeed();
             info.navAgentStoppingDistance = navMeshAgent->GetStoppingDistance();
+            info.navAgentAlwaysLookAt = navMeshAgent->GetAlwaysLookAt();
             info.navAgentWaypointTolerance = navMeshAgent->GetWaypointTolerance();
             info.navAgentRadius = navMeshAgent->GetAgentRadius();
             info.navAgentHeight = navMeshAgent->GetAgentHeight();
@@ -1293,7 +1294,12 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			if (dynamic_cast<CTransform*>(component) || dynamic_cast<CRectTransform*>(component))
 				continue;
 
-			{ const wstring compName = getComponentPersistName(component); if (!compName.empty()) info.componentNames.push_back(compName); }
+						const wstring compName = getComponentPersistName(component);
+			if (compName.empty())
+				continue;
+
+			info.componentNames.push_back(compName);
+			info.componentEnabledStates.push_back(component->Get_Enable());
 		}
 
 		if (CMeshFilter* meshFilter = (*it)->GetComponent<CMeshFilter>())
@@ -1538,6 +1544,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
                 navMeshAgent->SetMoveSpeed(info.navAgentMoveSpeed);
                 navMeshAgent->SetAngularSpeed(info.navAgentAngularSpeed);
                 navMeshAgent->SetStoppingDistance(info.navAgentStoppingDistance);
+                navMeshAgent->SetAlwaysLookAt(info.navAgentAlwaysLookAt);
                 navMeshAgent->SetWaypointTolerance(info.navAgentWaypointTolerance);
                 navMeshAgent->SetAgentRadius(info.navAgentRadius);
                 navMeshAgent->SetAgentHeight(info.navAgentHeight);
@@ -1545,6 +1552,49 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
                 navMeshAgent->SetGroundSnapOffset(info.navAgentGroundSnapOffset);
             }
         }
+
+		auto getComponentPersistName = [](CComponent* component) -> wstring
+		{
+			if (!component)
+				return L"";
+
+			if (dynamic_cast<CCamera*>(component)) return L"Camera";
+			if (dynamic_cast<CLight*>(component)) return L"Light";
+			if (dynamic_cast<CMeshFilter*>(component)) return L"Mesh Filter";
+			if (dynamic_cast<CMeshRenderer*>(component)) return L"Mesh Renderer";
+			if (dynamic_cast<CSkinnedMeshRenderer*>(component)) return L"Skinned Mesh Renderer";
+			if (dynamic_cast<CAnimator*>(component)) return L"Animator";
+			if (dynamic_cast<CCanvas*>(component)) return L"Canvas";
+			if (dynamic_cast<CImage*>(component)) return L"Image";
+			if (dynamic_cast<CText*>(component)) return L"Text";
+			if (dynamic_cast<CTerrain*>(component)) return L"Terrain";
+			if (dynamic_cast<CUI*>(component)) return L"UI";
+			if (dynamic_cast<CRigidBody*>(component)) return L"RigidBody";
+			if (dynamic_cast<CCloth*>(component)) return L"Cloth";
+			if (dynamic_cast<CBoxCollider*>(component)) return L"BoxCollider";
+			if (dynamic_cast<CSphereCollider*>(component)) return L"SphereCollider";
+			if (dynamic_cast<CCapsuleCollider*>(component)) return L"CapsuleCollider";
+			if (dynamic_cast<CMeshCollider*>(component)) return L"MeshCollider";
+			if (dynamic_cast<CNaviMeshAgent*>(component)) return L"NaviMeshAgent";
+			return L"";
+		};
+
+		const size_t componentStateCount = min(info.componentNames.size(), info.componentEnabledStates.size());
+		for (size_t componentIndex = 0; componentIndex < componentStateCount; ++componentIndex)
+		{
+			const wstring& savedComponentName = info.componentNames[componentIndex];
+			for (CComponent* component : obj->Get_ComponentList())
+			{
+				if (!component)
+					continue;
+
+				if (getComponentPersistName(component) != savedComponentName)
+					continue;
+
+				component->Set_Enable(info.componentEnabledStates[componentIndex]);
+				break;
+			}
+		}
 
 		if (!info.meshBufferName.empty())
 		{
@@ -3021,6 +3071,11 @@ ID3D11BlendState* CScene::Get_NoneBlendingState() const
 {
 	return m_pNoneBlendingState;
 }
+
+
+
+
+
 
 
 

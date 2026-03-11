@@ -72,6 +72,7 @@ CNaviMeshAgent::CNaviMeshAgent()
 	, m_bHasPath(false)
 	, m_bPathDirty(true)
 	, m_bOnNavigation(false)
+	, m_bAlwaysLookAt(false)
 	, m_pLineMesh(nullptr)
 	, m_pLineMaterial(nullptr)
 {
@@ -102,6 +103,7 @@ CComponent* CNaviMeshAgent::Clone() const
 	clone->m_fAgentHeight = m_fAgentHeight;
 	clone->m_fGroundSnapOffset = m_fGroundSnapOffset;
 	clone->m_bHasDestination = m_bHasDestination;
+	clone->m_bAlwaysLookAt = m_bAlwaysLookAt;
 	clone->m_bPathDirty = true;
 	return clone;
 }
@@ -237,8 +239,11 @@ void CNaviMeshAgent::Update()
 	if (vector3::Distance(currentNavigationPosition, destinationOnNavigation) <= stoppingDistance)
 	{
 		m_vResolvedDestination = destinationOnNavigation;
-		const vector3 destinationWorldPosition = destinationOnNavigation + worldGroundingOffset;
-		rotateTowardsHorizontal(destinationWorldPosition - currentPosition, currentPosition);
+		if (m_bAlwaysLookAt)
+		{
+			const vector3 destinationWorldPosition = destinationOnNavigation + worldGroundingOffset;
+			rotateTowardsHorizontal(destinationWorldPosition - currentPosition, currentPosition);
+		}
 		ClearRuntimePath();
 		return;
 	}
@@ -293,7 +298,8 @@ void CNaviMeshAgent::Update()
 	if (moveDistance <= kAgentPositionEpsilon)
 	{
 		m_vResolvedDestination = destinationOnNavigation;
-		rotateTowardsHorizontal((destinationOnNavigation + worldGroundingOffset) - currentPosition, currentPosition);
+		if (m_bAlwaysLookAt)
+			rotateTowardsHorizontal((destinationOnNavigation + worldGroundingOffset) - currentPosition, currentPosition);
 		ClearRuntimePath();
 		return;
 	}
@@ -559,6 +565,16 @@ const _float CNaviMeshAgent::GetGroundSnapOffset() const
 	return m_fGroundSnapOffset;
 }
 
+void CNaviMeshAgent::SetAlwaysLookAt(const _bool _alwaysLookAt)
+{
+	m_bAlwaysLookAt = _alwaysLookAt;
+}
+
+const _bool CNaviMeshAgent::GetAlwaysLookAt() const
+{
+	return m_bAlwaysLookAt;
+}
+
 void CNaviMeshAgent::SetNavigationMeshResourceName(const wstring& _resourceName)
 {
 	if (m_strNavigationMeshResourceName == _resourceName)
@@ -713,3 +729,4 @@ void CNaviMeshAgent::ClearRuntimePath()
 	m_iPathIndex = 0;
 	m_bHasPath = false;
 }
+

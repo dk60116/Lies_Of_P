@@ -51,6 +51,8 @@ public:
 	const vector3& GetAgentCenter() const;
 	void SetGroundSnapOffset(const _float _offset);
 	const _float GetGroundSnapOffset() const;
+	void SetAlwaysLookAt(const _bool _alwaysLookAt);
+	const _bool GetAlwaysLookAt() const;
 	void SetNavigationMeshResourceName(const wstring& _resourceName);
 	const wstring& GetNavigationMeshResourceName() const;
 	const vector3& GetResolvedDestination() const;
@@ -86,8 +88,10 @@ private:
 	_bool m_bHasPath;
 	_bool m_bPathDirty;
 	_bool m_bOnNavigation;
+	_bool m_bAlwaysLookAt;
 	class CMeshBuffer* m_pLineMesh;
 	class CMaterial* m_pLineMaterial;
 };
 
 NS_END
+

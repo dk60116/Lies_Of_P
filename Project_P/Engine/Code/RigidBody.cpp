@@ -1,6 +1,7 @@
 #include "epch.h"
 #include "RigidBody.h"
 #include "Collider.h"
+#include "GameObject.h"
 #include "Physics.h"
 #ifndef _CLIENT_BUILD
 #include "Editor.h"
@@ -262,13 +263,16 @@ void CRigidBody::BuildCompoundShapes(const list<CCollider*>& _colliders, RefCons
 
     for (CCollider* col : _colliders)
     {
-        if (!col)
+        if (!col || !col->Get_Enable())
+            continue;
+
+        CGameObject* colliderObject = col->Get_GameObject();
+        if (!colliderObject || !colliderObject->IsRecursiveActive())
             continue;
 
         const Shape* childShape = col->GetShape();
         if (!childShape)
             continue;
-
         const Vec3 localCenter = Vec3::sZero();
         const Quat localRot = Quat::sIdentity();
 
@@ -858,8 +862,14 @@ void CRigidBody::RebuildBodiesIfDirty()
     if (!m_bBodyDirty)
         return;
 
-    DestroyBodies();
+    if (!m_pGameObject || !m_pGameObject->IsRecursiveActive() || !Get_Enable())
+    {
+        DestroyBodies();
+        m_bBodyDirty = false;
+        return;
+    }
 
+    DestroyBodies();
     RefConst<Shape> bodyCompound;
     RefConst<Shape> sensorCompound;
     BuildCompoundShapes(m_lColliderList, bodyCompound, sensorCompound);
@@ -1156,3 +1166,5 @@ void CRigidBody::CacheLastSyncedTransform(const vector3& _pos, const quaternion&
     m_vLastSyncedRotation = _rot;
     m_bHasLastSyncedTransform = true;
 }
+
+

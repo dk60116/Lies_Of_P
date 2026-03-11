@@ -55,6 +55,7 @@ public:
         _float navAgentMoveSpeed = 3.5f;
         _float navAgentAngularSpeed = 720.f;
         _float navAgentStoppingDistance = 0.15f;
+        _bool navAgentAlwaysLookAt = false;
         _float navAgentWaypointTolerance = 0.1f;
         _float navAgentRadius = 0.35f;
         _float navAgentHeight = 2.f;
@@ -63,6 +64,7 @@ public:
         _bool isRect = false;
         SCENERECTINFO rectInfo = {};
         vector<wstring> componentNames = {};
+        vector<_bool> componentEnabledStates = {};
         wstring meshBufferName = L"";
         wstring materialName = L"";
         vector<MATERIALTEXTUREINFO> materialTextures = {};
@@ -224,4 +226,6 @@ protected:
 };
 
 NS_END
+
+
 

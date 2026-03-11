@@ -25,23 +25,35 @@
     <Filter Include="Scripts\Object\Weapons\Swords">
       <UniqueIdentifier>{4875964f-b372-481b-85e5-a697977c75c2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Scripts\Object\Player">
-      <UniqueIdentifier>{12fd9748-fc20-4537-829c-7897701f5c7b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Scripts\Object\UI">
       <UniqueIdentifier>{ae3f04d2-af05-4951-98b8-0cf5b06cd86a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Scripts\Object\Monster">
-      <UniqueIdentifier>{b429eb31-5b1a-4116-925e-90de21a678c5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scripts\Object\Player\FSM">
-      <UniqueIdentifier>{dd9702fa-5a14-46b1-88dd-d0e3fd657784}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scripts\Object\Player\FSM\PlayerState">
-      <UniqueIdentifier>{8427fb53-39a6-4782-a2ef-a82be4d2a2b1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Scripts\Object\Map">
       <UniqueIdentifier>{b71280a1-9ac2-4980-af1a-3a1756cb5a34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\Character">
+      <UniqueIdentifier>{c0aec857-e3ad-4a99-9059-ada25e6d2bd6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\Character\Monster">
+      <UniqueIdentifier>{b429eb31-5b1a-4116-925e-90de21a678c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\Character\Monster\BehaviourTree">
+      <UniqueIdentifier>{b7c92f9f-f2ce-4e66-8433-4757896ac31b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\Character\Monster\BehaviourTree\Creeper">
+      <UniqueIdentifier>{a1b3f381-7b14-45d2-af14-487972fa8b20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\Character\Player">
+      <UniqueIdentifier>{12fd9748-fc20-4537-829c-7897701f5c7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\Character\Player\FSM">
+      <UniqueIdentifier>{dd9702fa-5a14-46b1-88dd-d0e3fd657784}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\Character\Player\FSM\PlayerState">
+      <UniqueIdentifier>{8427fb53-39a6-4782-a2ef-a82be4d2a2b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\Character\Collider">
+      <UniqueIdentifier>{b6ebf21b-b967-44e5-882c-ff3f20a10fad}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -76,46 +88,46 @@
       <Filter>Scripts\Object\Weapons\Swords</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\Monster.h">
-      <Filter>Scripts\Object\Monster</Filter>
+      <Filter>Scripts\Object\Character\Monster</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\Player.h">
-      <Filter>Scripts\Object\Player</Filter>
+      <Filter>Scripts\Object\Character\Player</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerHUD.h">
       <Filter>Scripts\Object\UI</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerCamera.h">
-      <Filter>Scripts\Object\Player</Filter>
+      <Filter>Scripts\Object\Character\Player</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerController.h">
-      <Filter>Scripts\Object\Player</Filter>
+      <Filter>Scripts\Object\Character\Player</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerControllerContext.h">
-      <Filter>Scripts\Object\Player\FSM</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerState_Idle.h">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerState_Locomotion.h">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerState_Move.h">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerState_Attack.h">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerState.h">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerState_Guard.h">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerState_Evade.h">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerState_Jump.h">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\SceneMap.h">
       <Filter>Scripts\Object\Map</Filter>
@@ -124,10 +136,25 @@
       <Filter>Scripts\Object\Map</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\Mon_Creeper.h">
-      <Filter>Scripts\Object\Monster</Filter>
+      <Filter>Scripts\Object\Character\Monster</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\MonsterController.h">
-      <Filter>Scripts\Object\Monster</Filter>
+      <Filter>Scripts\Object\Character\Monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\BT_Creeper.h">
+      <Filter>Scripts\Object\Character\Monster\BehaviourTree\Creeper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\BT_Monster.h">
+      <Filter>Scripts\Object\Character\Monster\BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\ColliderBox.h">
+      <Filter>Scripts\Object\Character\Collider</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\Character.h">
+      <Filter>Scripts\Object\Character</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\HurtBox.h">
+      <Filter>Scripts\Object\Character\Collider</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -156,46 +183,46 @@
       <Filter>Scripts\Object\Weapons\Swords</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\Monster.cpp">
-      <Filter>Scripts\Object\Monster</Filter>
+      <Filter>Scripts\Object\Character\Monster</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerCamera.cpp">
-      <Filter>Scripts\Object\Player</Filter>
+      <Filter>Scripts\Object\Character\Player</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\Player.cpp">
-      <Filter>Scripts\Object\Player</Filter>
+      <Filter>Scripts\Object\Character\Player</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerHUD.cpp">
       <Filter>Scripts\Object\UI</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerController.cpp">
-      <Filter>Scripts\Object\Player</Filter>
+      <Filter>Scripts\Object\Character\Player</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerControllerContext.cpp">
-      <Filter>Scripts\Object\Player\FSM</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerState_Idle.cpp">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerState_Locomotion.cpp">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerState_Move.cpp">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerState_Attack.cpp">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerState.cpp">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerState_Guard.cpp">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerState_Evade.cpp">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerState_Jump.cpp">
-      <Filter>Scripts\Object\Player\FSM\PlayerState</Filter>
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\SceneMap.cpp">
       <Filter>Scripts\Object\Map</Filter>
@@ -204,10 +231,25 @@
       <Filter>Scripts\Object\Map</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\Mon_Creeper.cpp">
-      <Filter>Scripts\Object\Monster</Filter>
+      <Filter>Scripts\Object\Character\Monster</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\MonsterController.cpp">
-      <Filter>Scripts\Object\Monster</Filter>
+      <Filter>Scripts\Object\Character\Monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\BT_Creeper.cpp">
+      <Filter>Scripts\Object\Character\Monster\BehaviourTree\Creeper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\BT_Monster.cpp">
+      <Filter>Scripts\Object\Character\Monster\BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\ColliderBox.cpp">
+      <Filter>Scripts\Object\Character\Collider</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\Character.cpp">
+      <Filter>Scripts\Object\Character</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\HurtBox.cpp">
+      <Filter>Scripts\Object\Character\Collider</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

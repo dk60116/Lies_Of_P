@@ -4,6 +4,8 @@
 #include "Player.h"
 #include "PlayerCamera.h"
 #include "PlayerHUD.h"
+#include "Monster.h"
+#include "MonsterController.h"
 
 class CGameManager final
 {

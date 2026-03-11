@@ -127,10 +127,7 @@ void CBoxCollider::Render_Gizmo()
     if (!cam)
         return;
 
-    if (IsContacting())
-        m_pLineMaterial->Set_BaseColor(_float4(1.f, 0.f, 0.f, 1.f));
-    else
-        m_pLineMaterial->Set_BaseColor(_float4(0.f, 1.f, 0.f, 1.f));
+    m_pLineMaterial->Set_BaseColor(GetGizmoColor());
 
     const _float hx = m_vSize.x * 0.5f;
     const _float hy = m_vSize.y * 0.5f;
@@ -259,4 +256,5 @@ void CBoxCollider::BuildShapeIfNeeded()
 
     m_bShapeDirty = false;
 }
+
 

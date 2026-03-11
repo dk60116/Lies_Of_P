@@ -281,10 +281,7 @@ void CMeshCollider::Render_Gizmo()
     if (!meshBuffer)
         return;
 
-    if (IsContacting())
-        m_pLineMaterial->Set_BaseColor(_float4(1.f, 0.f, 0.f, 1.f));
-    else
-        m_pLineMaterial->Set_BaseColor(_float4(0.f, 1.f, 0.f, 1.f));
+    m_pLineMaterial->Set_BaseColor(GetGizmoColor());
 
     const vector3 scale = ExtractWorldScale(Get_Transform());
     const _float meshScale = renderer->GetScaleFactor();
@@ -405,5 +402,6 @@ void CMeshCollider::BuildShapeIfNeeded()
 
     m_bShapeDirty = false;
 }
+
 
 

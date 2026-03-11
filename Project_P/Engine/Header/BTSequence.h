@@ -5,7 +5,7 @@ NS_BEGIN(Engine)
 
 class ENGINE_DLL CBTSequence : public CBTComposite
 {
-protected:
+public:
 	CBTSequence();
 	~CBTSequence();
 
@@ -18,4 +18,3 @@ private:
 };
 
 NS_END
-

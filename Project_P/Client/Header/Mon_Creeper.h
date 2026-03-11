@@ -21,5 +21,8 @@ public:
 	void Update() override;
 	void FixedUpdate() override;
 	void OnDestroy() override;
+
+protected:
+	void SetAnimationAction() override;
 };
 

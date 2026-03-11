@@ -1,8 +1,8 @@
 #pragma once
 
-#include "epch.h"
+#include "Character.h"
 
-class CPlayer : public CComponent
+class CPlayer : public CCharacter
 {
 	friend class CGameObject;
 
@@ -28,7 +28,7 @@ public:
 		_float bigTurnStopSec = 0.28f;
 		_float focusTurnRatio = 8.f;
 		_int attackPower = 1;
-		_float evadeLength = 3.5f;
+		_float evadeLength = 5.f;
 		_float jumpPower = 340.f;
 	};
 
@@ -42,7 +42,6 @@ protected:
 
 public:
 	HRESULT Initialize() override;
-
 	void Awake() override;
 	void Start() override;
 	void Update() override;
@@ -51,27 +50,24 @@ public:
 
 public:
 	class CPlayerController* Get_Controller();
-	CAnimator* Get_Animator();
-	CRigidBody* Get_RigidBody();
 
 public:
 	const PlayerStatus& Get_PlayerStatus();
 	void RecoverHp(const _uint _value);
 	void GetDamage(const _uint _damage);
 
+	const _float GetRadius() const;
+
 public:
 	const _uint GetLightAttackComboCount() const;
 	void SetLightAttakComboCount(const _uint _count);
 
-private:
-	void Ground();
+protected:
+	void SetAnimationAction() override;
 
 private:
 	class CPlayerController* m_pController;
 	CGameObject* m_pHeadObj, *m_pHairObj, *m_pPonyTailObj;
-
-	CSkinnedMeshRenderer* m_pSkinnedMeshRenderer;
-	CAnimator* m_pAnimator;
 
 	class CWeapon* m_pEquipWeapon;
 
@@ -80,12 +76,6 @@ private:
 	vector<CSkinnedMeshRenderer*> m_vBodySuits, m_vFaces, m_vHairs, m_vPonyTailas;
 
 	CTransform* m_pWeaponHolder;
-
-	CCapsuleCollider* m_pBodyCollider;
-	CRigidBody* m_pRigidBody;
-
-	_bool m_bIsGround;
-	CSceneManager::LayerMask m_iGroundMask;
 
 public:
 	_uint m_iLightAttackComboCount;

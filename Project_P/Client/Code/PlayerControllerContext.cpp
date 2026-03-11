@@ -154,7 +154,7 @@ void CPlayerControllerContext::AddPosition(const vector3& delta)
 	if (!m_pPlayer) 
 		return;
 
-	if (CRigidBody* rigidBody = m_pPlayer->Get_RigidBody())
+	if (CRigidBody* rigidBody = m_pPlayer->GetRigidBody())
 	{
 		rigidBody->Translate(delta);
 		return;
@@ -277,14 +277,14 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float _stopEpsDeg)
 	if (m_Cv_Move.m_turnDir == 0.f && absDelta >= _stopEpsDeg)
 		m_Cv_Move.m_turnDir = (delta > 0.f) ? 1.f : -1.f;
 
-	m_pPlayer->Get_Animator()->ResetTrigger(L"turn");
+	m_pPlayer->GetAnimator()->ResetTrigger(L"turn");
 
 	m_bBigTurn = false;
 
 	if (!m_Cv_Move.m_bBigTurnLatched && absDelta >= m_Cv_Move.m_fBigTurnDeg && IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
 	{  
 		SetAnimTurn(m_Cv_Move.m_turnDir);
-		m_pPlayer->Get_Animator()->SetTrigger(L"turn");
+		m_pPlayer->GetAnimator()->SetTrigger(L"turn");
 		m_bBigTurn = true;
 
 		StartMoveLock(PlayerStatus().bigTurnStopSec);
@@ -315,12 +315,12 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float _stopEpsDeg)
 
 CAnimator* CPlayerControllerContext::Animator()
 {
-	return m_pPlayer->Get_Animator();
+	return m_pPlayer->GetAnimator();
 }
 
 CRigidBody* CPlayerControllerContext::RigidBody()
 {
-	return m_pPlayer->Get_RigidBody();
+	return m_pPlayer->GetRigidBody();
 }
 
 const CPlayer::PlayerStatus& CPlayerControllerContext::PlayerStatus()
@@ -332,7 +332,7 @@ void CPlayerControllerContext::SetAnimMoveSpeed(_float _v)
 {
 	if (!m_pPlayer)
 		return;
-	auto anim = m_pPlayer->Get_Animator();
+	auto anim = m_pPlayer->GetAnimator();
 	if (!anim)
 		return;
 
@@ -358,7 +358,7 @@ void CPlayerControllerContext::SetAnimTurn(const _float _value)
 {
 	if (!m_pPlayer)
 		return;
-	auto anim = m_pPlayer->Get_Animator();
+	auto anim = m_pPlayer->GetAnimator();
 	if (!anim)
 		return;
 
@@ -432,7 +432,7 @@ const _bool CPlayerControllerContext::IsBattle() const
 void CPlayerControllerContext::SetBattle(const _bool _value)
 {
 	m_pController->SetBattle(_value);
-	m_pPlayer->Get_Animator()->SetTrigger(L"BattleEnd");
+	m_pPlayer->GetAnimator()->SetTrigger(L"BattleEnd");
 }
 
 void CPlayerControllerContext::BufferAction(PlayerState state)

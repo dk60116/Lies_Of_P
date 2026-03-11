@@ -1539,15 +1539,45 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
         if (componentName.empty())
             continue;
 
-        const string headerLabel = componentName + "##" + to_string(reinterpret_cast<uintptr_t>(component));
-        if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+        ImGui::PushID(component);
+        const ImGuiTreeNodeFlags headerFlags =
+            ImGuiTreeNodeFlags_Framed |
+            ImGuiTreeNodeFlags_SpanAvailWidth |
+            ImGuiTreeNodeFlags_DefaultOpen |
+            ImGuiTreeNodeFlags_AllowItemOverlap;
+        const _bool headerOpen = ImGui::TreeNodeEx("ComponentHeader", headerFlags, "");
+        const ImVec2 nextCursor = ImGui::GetCursorScreenPos();
+        const ImVec2 headerMin = ImGui::GetItemRectMin();
+        const ImVec2 headerMax = ImGui::GetItemRectMax();
+        const ImGuiStyle& style = ImGui::GetStyle();
+        const _float smallFramePaddingX = max(1.f, style.FramePadding.x - 1.f);
+        const _float smallFramePaddingY = max(1.f, style.FramePadding.y - 1.f);
+        const _float arrowWidth = ImGui::GetFontSize() + style.FramePadding.x * 2.f;
+        const _float checkboxSize = ImGui::GetFontSize() + smallFramePaddingY * 2.f;
+        const _float checkboxX = headerMin.x + arrowWidth;
+        const _float checkboxY = headerMin.y + max(0.f, ((headerMax.y - headerMin.y) - checkboxSize) * 0.5f - 1.f);
+
+        ImGui::SetCursorScreenPos(ImVec2(checkboxX, checkboxY));
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(smallFramePaddingX, smallFramePaddingY));
+        _bool componentEnabled = component->Get_Enable();
+        if (ImGui::Checkbox("##ComponentEnabled", &componentEnabled))
+            component->Set_Enable(componentEnabled);
+        ImGui::PopStyleVar();
+
+        ImGui::SameLine(0.f, style.ItemInnerSpacing.x);
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(componentName.c_str());
+        ImGui::SetCursorScreenPos(nextCursor);
+        _bool removeComponent = false;
+
+        if (headerOpen)
         {
             const string removeButtonLabel = "Remove Component##" + to_string(reinterpret_cast<uintptr_t>(component));
             if (ImGui::Button(removeButtonLabel.c_str()))
+                removeComponent = true;
+
+            if (!removeComponent)
             {
-                _obj->RemoveComponent(component);
-                break;
-            }
 
             if (CCamera* camera = dynamic_cast<CCamera*>(component))
             {
@@ -1822,6 +1852,10 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 if (ImGui::DragFloat(("Stopping Distance##" + navId).c_str(), &stoppingDistance, 0.01f, 0.f, 20.f, "%.2f"))
                     navMeshAgent->SetStoppingDistance(stoppingDistance);
 
+                _bool alwaysLookAt = navMeshAgent->GetAlwaysLookAt();
+                if (ImGui::Checkbox(("Always Look At##" + navId).c_str(), &alwaysLookAt))
+                    navMeshAgent->SetAlwaysLookAt(alwaysLookAt);
+
                 _float waypointTolerance = navMeshAgent->GetWaypointTolerance();
                 if (ImGui::DragFloat(("Waypoint Tolerance##" + navId).c_str(), &waypointTolerance, 0.01f, 0.001f, 20.f, "%.3f"))
                     navMeshAgent->SetWaypointTolerance(waypointTolerance);
@@ -1989,6 +2023,16 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 if (ImGui::Checkbox("Z##FreezeRotZ", &constRotZ))
                     rigidBody->SetConstRotationZ(constRotZ);
             }
+            }
+
+            ImGui::TreePop();
+        }
+        ImGui::PopID();
+
+        if (removeComponent)
+        {
+            _obj->RemoveComponent(component);
+            break;
         }
     }
 
@@ -2819,6 +2863,13 @@ void CInspectorBox::RenderSelectedAssetPreview(const fs::path& path)
     ImTextureID texId = (ImTextureID)(intptr_t)m_pPreviewTexture->Get_SRV();
     ImGui::Image(ImTextureRef(texId), size);
 }
+
+
+
+
+
+
+
 
 
 

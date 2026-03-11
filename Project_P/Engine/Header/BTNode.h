@@ -1,4 +1,5 @@
 #pragma once
+#include "BehaviourTree.h"
 #include "Object.h"
 
 NS_BEGIN(Engine)
@@ -15,4 +16,3 @@ public:
 };
 
 NS_END
-

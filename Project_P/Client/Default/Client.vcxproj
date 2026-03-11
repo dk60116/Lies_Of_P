@@ -142,6 +142,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\Header\BT_Creeper.h" />
+    <ClInclude Include="..\Header\BT_Monster.h" />
+    <ClInclude Include="..\Header\Character.h" />
+    <ClInclude Include="..\Header\ColliderBox.h" />
+    <ClInclude Include="..\Header\HurtBox.h" />
     <ClInclude Include="..\Header\Map_01_SilentStreet.h" />
     <ClInclude Include="..\Header\MonsterController.h" />
     <ClInclude Include="..\Header\Mon_Creeper.h" />
@@ -172,8 +177,13 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Code\BT_Creeper.cpp" />
+    <ClCompile Include="..\Code\BT_Monster.cpp" />
+    <ClCompile Include="..\Code\Character.cpp" />
+    <ClCompile Include="..\Code\ColliderBox.cpp" />
     <ClCompile Include="..\Code\GameManager.cpp" />
     <ClCompile Include="..\Code\GameScene.cpp" />
+    <ClCompile Include="..\Code\HurtBox.cpp" />
     <ClCompile Include="..\Code\LoadingScene.cpp" />
     <ClCompile Include="..\Code\MainScene.cpp" />
     <ClCompile Include="..\Code\Map_01_SilentStreet.cpp" />

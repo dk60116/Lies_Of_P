@@ -165,7 +165,9 @@ call copy.bat</Command>
     <ClInclude Include="..\Header\BehaviourTree.h" />
     <ClInclude Include="..\Header\BoxCollider.h" />
     <ClInclude Include="..\Header\BTComposite.h" />
+    <ClInclude Include="..\Header\BTCondition.h" />
     <ClInclude Include="..\Header\BTNode.h" />
+    <ClInclude Include="..\Header\BTAction.h" />
     <ClInclude Include="..\Header\BTSelector.h" />
     <ClInclude Include="..\Header\BTSequence.h" />
     <ClInclude Include="..\Header\CColliderManager.h" />
@@ -247,6 +249,7 @@ call copy.bat</Command>
     <ClCompile Include="..\Code\BoxCollider.cpp" />
     <ClCompile Include="..\Code\BTComposite.cpp" />
     <ClCompile Include="..\Code\BTNode.cpp" />
+    <ClCompile Include="..\Code\BTAction.cpp" />
     <ClCompile Include="..\Code\BTSelector.cpp" />
     <ClCompile Include="..\Code\BTSequence.cpp" />
     <ClCompile Include="..\Code\CColliderManager.cpp" />
@@ -457,3 +460,5 @@ call copy.bat</Command>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+
+

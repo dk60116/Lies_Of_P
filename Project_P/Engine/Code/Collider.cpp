@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "Collider.h"
+#include "GameObject.h"
 #include "RigidBody.h"
 #include "Physics.h"
 
@@ -71,11 +72,15 @@ void CCollider::Awake()
 void CCollider::OnEnable()
 {
 	m_bStandaloneBodyDirty = true;
+	if (m_pRigidBody)
+		m_pRigidBody->MarkBodyDirty();
 	RefreshStandaloneBody();
 }
 
 void CCollider::OnDisable()
 {
+	if (m_pRigidBody)
+		m_pRigidBody->MarkBodyDirty();
 	DestroyStandaloneBody();
 }
 
@@ -186,6 +191,21 @@ void CCollider::SetCenter(const vector3& center)
 	NotifyShapeChanged();
 }
 
+_float4 CCollider::GetGizmoColor() const
+{
+	_float4 color = IsContacting() ? _float4(1.f, 0.f, 0.f, 1.f) : _float4(0.f, 1.f, 0.f, 1.f);
+
+	if (!Get_Enable())
+	{
+		constexpr _float disabledBrightness = 0.45f;
+		color.x *= disabledBrightness;
+		color.y *= disabledBrightness;
+		color.z *= disabledBrightness;
+	}
+
+	return color;
+}
+
 const Shape* CCollider::GetShape()
 {
 	BuildShapeIfNeeded();
@@ -212,6 +232,12 @@ void CCollider::RefreshStandaloneBody()
 {
 	if (m_pRigidBody)
 		return;
+
+	if (!m_pGameObject || !m_pGameObject->IsRecursiveActive() || !Get_Enable())
+	{
+		DestroyStandaloneBody();
+		return;
+	}
 
 	if (m_bStandaloneBodyDirty)
 	{
@@ -298,3 +324,7 @@ void CCollider::SyncStandaloneBodyTransform()
 	BodyInterface& bodyInterface = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
 	bodyInterface.SetPositionAndRotation(m_iStandaloneBodyID, RVec3(pos), rot, EActivation::Activate);
 }
+
+
+
+

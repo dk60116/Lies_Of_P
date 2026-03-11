@@ -128,10 +128,7 @@ void CSphereCollider::Render_Gizmo()
     if (!cam)
         return;
 
-    if (IsContacting())
-        m_pLineMaterial->Set_BaseColor(_float4(1.f, 0.f, 0.f, 1.f));
-    else
-        m_pLineMaterial->Set_BaseColor(_float4(0.f, 1.f, 0.f, 1.f));
+    m_pLineMaterial->Set_BaseColor(GetGizmoColor());
 
     const vector3 scale = Get_Transform()->Get_LocalScale();
     const _float maxScale = max(fabsf(scale.x), max(fabsf(scale.y), fabsf(scale.z)));
@@ -263,4 +260,5 @@ void CSphereCollider::BuildShapeIfNeeded()
 
     m_bShapeDirty = false;
 }
+
 

@@ -34,4 +34,8 @@ BTState CBTSelector::Update(AIContext& _ctx)
 
 void CBTSelector::Reset()
 {
+    for (auto& child : m_vChildren)
+        child->Reset();
+
+    m_iCurrentIndex = 0;
 }

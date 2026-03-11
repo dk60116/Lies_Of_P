@@ -14,7 +14,7 @@ NS_BEGIN(Engine)
 class ENGINE_DLL CCollider abstract : public CComponent
 {
 public:
-	enum class ColliderType { Cube, Sphere, Capsule, Mesh };
+	enum class ColliderType { Box, Sphere, Capsule, Mesh };
 
 protected:
 	explicit CCollider();
@@ -53,6 +53,7 @@ private:
 
 protected:
     void NotifyShapeChanged();
+    _float4 GetGizmoColor() const;
 
 protected:
     class CRigidBody* m_pRigidBody;

@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "Component.h"
+#include "GameObject.h"
 
 CComponent::CComponent()
 	: m_pDevice(nullptr)
@@ -164,7 +165,19 @@ const _bool CComponent::Get_Enable() const
 
 void CComponent::Set_Enable(const _bool _enable)
 {
+	if (m_bEnable == _enable)
+		return;
+
+	const _bool wasEnabled = m_bEnable;
 	m_bEnable = _enable;
+
+	if (!m_pGameObject || !m_pGameObject->IsRecursiveActive())
+		return;
+
+	if (wasEnabled)
+		OnDisable();
+	else
+		OnEnable();
 }
 
 
@@ -197,4 +210,6 @@ const _bool CComponent::Is_SaveTarget() const
 {
 	return m_bSaveTarget;
 }
+
+
 

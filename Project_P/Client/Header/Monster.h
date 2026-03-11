@@ -1,8 +1,8 @@
 #pragma once
 
-#include "epch.h"
+#include "Character.h"
 
-class CMonster abstract : public CComponent
+class CMonster abstract : public CCharacter
 {
 	friend class CMonsterController;
 
@@ -11,10 +11,11 @@ public:
 	{
 		_int maxHp = 3;
 		_int crtHp = 0;
-		_float moveSpeed = 3.f;
-		_float rotateSpeed = 5.f;
-		_float detectionRange = 10.f;
-		_float attackRange = 3.f;
+		_float moveSpeed = 5.f;
+		_float detectionRange = 30.f;
+		_float turnSpeed = 180.f;
+		_float attackRange = 1.f;
+		_float attackSpeed = 0.2f;
 	};
 
 protected:
@@ -33,9 +34,10 @@ public:
 public:
 	const wstring& GetMonsterName() const;
 
-	CAnimator* Get_Animator();
 	void Change_State(const _uint _state);
-	const MonsterStatus& Get_Status();
+	const MonsterStatus& GetStatus();
+
+	const _float GetRadius() const;
 
 protected:
 	void CreateBody();
@@ -43,16 +45,16 @@ protected:
 	void CreateAnimator();
 	void CreateAI();
 
+public:
+	CNaviMeshAgent* GetNaviAgent();
+
 protected:
 	wstring m_strMonsterName;
+	_uint m_iCurrentState;
 	vector<_bool> m_vMaterialTransparent;
 	vector<CSkinnedMeshRenderer*> m_vMeshRenderers;
-	CCapsuleCollider* m_pBodyCollider;
-	CRigidBody* m_pRigidBody;
-	CAnimator* m_pAnimator;
 	CMonsterController* m_pController;
 	CNaviMeshAgent* m_pNavAgent;
 
 	MonsterStatus m_sStatus;
 };
-
