@@ -153,6 +153,7 @@
     <ClInclude Include="..\Header\PlayerState_Attack.h" />
     <ClInclude Include="..\Header\PlayerState_Evade.h" />
     <ClInclude Include="..\Header\PlayerState_Guard.h" />
+    <ClInclude Include="..\Header\PlayerState_Hit.h" />
     <ClInclude Include="..\Header\PlayerState_Jump.h" />
     <ClInclude Include="..\Header\PlayerState_Locomotion.h" />
     <ClInclude Include="..\Header\PlayerState_Move.h" />
@@ -199,6 +200,7 @@
     <ClCompile Include="..\Code\PlayerState_Attack.cpp" />
     <ClCompile Include="..\Code\PlayerState_Evade.cpp" />
     <ClCompile Include="..\Code\PlayerState_Guard.cpp" />
+    <ClCompile Include="..\Code\PlayerState_Hit.cpp" />
     <ClCompile Include="..\Code\PlayerState_Idle.cpp" />
     <ClCompile Include="..\Code\PlayerState_Jump.cpp" />
     <ClCompile Include="..\Code\PlayerState_Locomotion.cpp" />

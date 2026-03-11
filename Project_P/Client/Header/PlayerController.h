@@ -11,7 +11,7 @@ class CPlayerController final : public CComponent
     friend class CPlayerControllerContext;
 
 public:
-    enum KeyMapping { Forward, Back, Left, Right, Attack, Attack_S, Guard, Evade, Jump };
+    enum KeyMapping { Forward, Back, Left, Right, Attack, Attack_S, Guard, Evade, Jump, Hit };
 
     using PlayerState = ::PlayerState;
 
@@ -34,6 +34,7 @@ public:
 
 public:
     CPlayerState* Get_PlayerState(PlayerState _state);
+    void RequestAction(PlayerState _state);
 
 public:
     void Set_Player(CPlayer* _player);

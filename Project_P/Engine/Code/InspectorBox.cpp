@@ -950,6 +950,104 @@ void CInspectorBox::Render()
             selectedObj->Set_ObjectName(targetName);
         }
 
+        static CGameObject* s_TagTarget = nullptr;
+        static string s_NewTagName;
+        if (s_TagTarget != selectedObj)
+        {
+            s_TagTarget = selectedObj;
+            s_NewTagName.clear();
+        }
+
+        string selectedTagName = CEngineString::WStringToString(selectedObj->GetTag());
+        if (selectedTagName.empty())
+            selectedTagName = "Untagged";
+
+        ImGui::Text("Tag");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(200.0f);
+        const string tagComboId = "##ObjTag" + to_string(selectedObj->Get_UniqueID());
+        const string addTagPopupId = "AddTagPopup##" + to_string(selectedObj->Get_UniqueID());
+        _bool openAddTagPopup = false;
+        if (ImGui::BeginCombo(tagComboId.c_str(), selectedTagName.c_str()))
+        {
+            const auto& tagList = CSceneManager::GetInstance().Get_TagList();
+            for (const wstring& tag : tagList)
+            {
+                const string tagName = CEngineString::WStringToString(tag);
+                const _bool isSelected = selectedObj->GetTag() == tag;
+                if (ImGui::Selectable(tagName.c_str(), isSelected))
+                    selectedObj->SetTag(tag);
+
+                if (isSelected)
+                    ImGui::SetItemDefaultFocus();
+            }
+
+            ImGui::Separator();
+            if (ImGui::Selectable("Add Tag..."))
+            {
+                s_NewTagName.clear();
+                openAddTagPopup = true;
+            }
+
+            ImGui::EndCombo();
+        }
+
+        if (openAddTagPopup)
+            ImGui::OpenPopup(addTagPopupId.c_str());
+
+        if (ImGui::BeginPopupModal(addTagPopupId.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::SetNextItemWidth(220.f);
+            ImGui::InputText("Tag Name", &s_NewTagName, ImGuiInputTextFlags_AutoSelectAll);
+
+            if (ImGui::Button("Add"))
+            {
+                const string trimmedTagName = CEngineString::Trim(s_NewTagName);
+                if (!trimmedTagName.empty())
+                {
+                    const wstring newTag = CEngineString::StringToWString(trimmedTagName);
+                    CSceneManager::GetInstance().AddTag(newTag);
+                    selectedObj->SetTag(newTag);
+                    s_NewTagName.clear();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button("Close"))
+                ImGui::CloseCurrentPopup();
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::TextUnformatted("Registered Tags");
+
+            wstring removeTargetTag = L"";
+            const auto& tagList = CSceneManager::GetInstance().Get_TagList();
+            for (const wstring& tag : tagList)
+            {
+                const string tagName = CEngineString::WStringToString(tag);
+                ImGui::TextUnformatted(tagName.c_str());
+
+                if (tag != L"Untagged")
+                {
+                    ImGui::SameLine(220.f);
+                    ImGui::PushID(tagName.c_str());
+                    if (ImGui::Button("Remove"))
+                        removeTargetTag = tag;
+                    ImGui::PopID();
+                }
+            }
+
+            if (!removeTargetTag.empty())
+            {
+                CSceneManager::GetInstance().RemoveTag(removeTargetTag);
+                if (selectedObj->GetTag() == removeTargetTag)
+                    selectedObj->SetTag(L"Untagged");
+            }
+
+            ImGui::EndPopup();
+        }
+
         Toggle_End();
 
         struct StaticOption
@@ -1057,7 +1155,7 @@ void CInspectorBox::Render()
 
         string selectedLayerName = CEngineString::WStringToString(sceneManager.LayerToName(selectedLayerMask));
         if (selectedLayerName.empty())
-            selectedLayerName = "No Layer";
+            selectedLayerName = selectedLayerMask == 0u ? "Default" : "No Layer";
 
         const string layerComboId = "Layer##" + to_string(selectedObj->Get_UniqueID());
         if (ImGui::BeginCombo(layerComboId.c_str(), selectedLayerName.c_str()))
@@ -1070,6 +1168,9 @@ void CInspectorBox::Render()
                     continue;
 
                 const string layerName = CEngineString::WStringToString(it->second);
+                if (layerMask != 0u && CEngineString::Trim(layerName).empty())
+                    continue;
+
                 const string optionLabel = to_string(i) + ": " + layerName;
                 const bool isSelected = (selectedLayerMask == layerMask);
                 if (ImGui::Selectable(optionLabel.c_str(), isSelected))
@@ -1085,7 +1186,7 @@ void CInspectorBox::Render()
         ImGui::SameLine();
         const string addLayerPopupId = "AddLayerPopup##" + to_string(selectedObj->Get_UniqueID());
         static _int selectedLayerIndexForEdit = 1;
-        static string editLayerName = "Layer_1";
+        static string editLayerName = "";
 
         if (ImGui::Button("AddLayer"))
         {
@@ -1094,7 +1195,7 @@ void CInspectorBox::Render()
             if (it != layerList.end())
                 editLayerName = CEngineString::WStringToString(it->second);
             else
-                editLayerName = "Layer_" + to_string(selectedLayerIndexForEdit);
+                editLayerName.clear();
 
             ImGui::OpenPopup(addLayerPopupId.c_str());
         }
@@ -1105,17 +1206,19 @@ void CInspectorBox::Render()
             ImGui::SliderInt("Layer Index", &selectedLayerIndexForEdit, 1, 31);
 
             const _uint editingMask = (_uint)1u << selectedLayerIndexForEdit;
-            const string currentLayerName = CEngineString::WStringToString(sceneManager.LayerToName(editingMask));
+            string currentLayerName = CEngineString::WStringToString(sceneManager.LayerToName(editingMask));
+            if (currentLayerName.empty())
+                currentLayerName = "<Empty>";
             ImGui::Text("Current: %s", currentLayerName.c_str());
 
             ImGui::SetNextItemWidth(220.f);
             ImGui::InputText("Layer Name", &editLayerName, ImGuiInputTextFlags_AutoSelectAll);
+            ImGui::TextUnformatted("Leave empty to clear this layer.");
 
             if (ImGui::Button("Apply"))
             {
                 const string trimmedName = CEngineString::Trim(editLayerName);
-                if (!trimmedName.empty())
-                    sceneManager.AddLayer((_uint)selectedLayerIndexForEdit, CEngineString::StringToWString(trimmedName));
+                sceneManager.AddLayer((_uint)selectedLayerIndexForEdit, CEngineString::StringToWString(trimmedName));
                 ImGui::CloseCurrentPopup();
             }
 

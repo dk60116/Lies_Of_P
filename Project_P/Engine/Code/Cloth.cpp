@@ -345,7 +345,11 @@ void CCloth::CreateSoftBody()
 
 	const vector3 pos = m_pGameObject->Get_Transform()->Get_Position();
 	const quaternion rot = m_pGameObject->Get_Transform()->Get_Quaternion();
-	SoftBodyCreationSettings softBodySettings(settings, RVec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), Layers::MOVING);
+	SoftBodyCreationSettings softBodySettings(
+		settings,
+		RVec3(pos.x, pos.y, pos.z),
+		Quat(rot.x, rot.y, rot.z, rot.w),
+		CPhysics::MakeObjectLayer(m_pGameObject ? m_pGameObject->GetLayer() : 0u, CPhysics::CollisionObjectType::Moving));
 	softBodySettings.mLinearDamping = m_fDamping;
 	softBodySettings.mPressure = 0.0f;
 	softBodySettings.mGravityFactor = m_bUseGravity ? 1.0f : 0.0f;

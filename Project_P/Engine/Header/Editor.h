@@ -64,6 +64,8 @@ public:
 	void SetMeshColliderGizmoVisible(const _bool visible);
 	const _bool IsNavigationMeshVisible() const;
 	void SetNavigationMeshVisible(const _bool visible);
+	const _bool IsGameStatusWindowVisible() const;
+	void SetGameStatusWindowVisible(const _bool visible);
 
 	static string ToLowerCopy(string s)
 	{
@@ -83,6 +85,8 @@ private:
 	static LRESULT CALLBACK EditorWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 	void ChangeControleTool();
+	void LoadViewSettings();
+	void SaveViewSettings() const;
 
 	_bool m_bDoubleClicked;
 
@@ -109,6 +113,7 @@ private:
 	_bool m_bShowColliderGizmo;
 	_bool m_bShowMeshColliderGizmo;
 	_bool m_bShowNavigationMesh;
+	_bool m_bShowGameStatusWindow;
 	fs::path m_selectedAssetPath;
 
 private:
@@ -116,4 +121,3 @@ private:
 };
 
 NS_END
-

@@ -1,5 +1,8 @@
 #pragma once
+#include "cpch.h"
 #include "Component.h"
+
+struct HurtDescription;
 
 class CCharacter abstract : public CComponent
 {
@@ -28,6 +31,12 @@ public:
 
 	void AddHurtBox(const wstring& _name, class CHurtBox* _box);
 
+public:
+	const wstring& GetCharacterName() const;
+
+public:
+	virtual void GetHitHandler(const HurtDescription& _hurtDesc) PURE;
+
 protected:
 	virtual void SetAnimationAction() PURE;
 	void CreateHurtBox();
@@ -36,6 +45,8 @@ private:
 	void Ground();
 
 protected:
+	wstring m_strCharacterName;
+
 	CSkinnedMeshRenderer* m_pSkinnedMeshRenderer;
 
 	CCapsuleCollider* m_pBodyCollider;

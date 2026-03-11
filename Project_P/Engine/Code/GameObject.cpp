@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "GameObject.h"
+#include "Collider.h"
 #include <objbase.h>
 
 namespace
@@ -23,6 +24,7 @@ CGameObject::CGameObject(const wstring _name, ID3D11Device* _pDevice, ID3D11Devi
 	: m_iUniqueID(999999)
 	, m_strGuid(GenerateGuidString())
 	, m_strGameObjectName(L"")
+	, m_strTag(L"Untagged")
 	, m_bActive(true)
 	, m_bActive_Origin(true)
 	, m_bPrevActive(true)
@@ -48,6 +50,7 @@ CGameObject::CGameObject(const CGameObject& _rhs)
 	: m_iUniqueID(999999)
 	, m_strGuid(GenerateGuidString())
 	, m_strGameObjectName(_rhs.m_strGameObjectName + L" (Clone)")
+	, m_strTag(_rhs.m_strTag)
 	, m_bActive(_rhs.m_bActive)
 	, m_bActive_Origin(_rhs.m_bActive_Origin)
 	, m_bPrevActive(_rhs.m_bPrevActive)
@@ -631,6 +634,33 @@ void CGameObject::Set_ObjectName(wstring& _name)
 	m_strGameObjectName = _name;
 }
 
+const wstring& CGameObject::GetTag() const
+{
+	return m_strTag;
+}
+
+const _bool CGameObject::CompareTag(const wstring& _tag) const
+{
+	const wstring trimmedTag = CEngineString::Trim(_tag);
+	if (trimmedTag.empty())
+		return false;
+
+	return m_strTag == trimmedTag;
+}
+
+void CGameObject::SetTag(const wstring& tag)
+{
+	const wstring trimmedTag = CEngineString::Trim(tag);
+	if (trimmedTag.empty())
+	{
+		m_strTag = L"Untagged";
+		return;
+	}
+
+	m_strTag = trimmedTag;
+	CSceneManager::GetInstance().AddTag(m_strTag);
+}
+
 void CGameObject::Set_Scene(CScene* _scene)
 {
 	m_pScene = _scene;
@@ -662,6 +692,7 @@ CGameObject* CGameObject::Instantiate(const CGameObject* _rhs)
 		}
 	}
 
+	newGameObj->SetTag(_rhs->GetTag());
 	newGameObj->Get_Transform()->SetTransformForMatrix(_rhs->Get_Transform()->Get_WorldMatrix());
 
 	return newGameObj;
@@ -727,12 +758,21 @@ const wstring& CGameObject::GetLayerName()
 
 void CGameObject::SetLayer(const _uint _layer)
 {
+	if (m_iLayer == _layer)
+		return;
+
 	m_iLayer = _layer;
+
+	for (CComponent* component : m_lComponentList)
+	{
+		if (CCollider* collider = dynamic_cast<CCollider*>(component))
+			collider->MarkPhysicsLayerDirty();
+	}
 }
 
 void CGameObject::SetLayer(const wstring& _layerName)
 {
-	m_iLayer = CSceneManager::GetInstance().NameToLayer(_layerName);
+	SetLayer(CSceneManager::GetInstance().NameToLayer(_layerName));
 }
 
 void CGameObject::Set_RecursiveActive(const _bool _active)

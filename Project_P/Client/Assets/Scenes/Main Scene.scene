@@ -1,2 +1,6 @@
 SceneName : Main Scene
+SceneSkyBox : DefaultSky (SkyBox)
+SceneAmbient : 0.200000
+SceneDirectionalLightShadowDist : 200.000000
+SceneShadowBias : 0.000000
 Building_0_Stage01_Building_00_Auto_1770860081845 : Map/Map01/Building_0/Stage01_Building_00.fbx : [Mesh]

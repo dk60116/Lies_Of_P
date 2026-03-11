@@ -766,7 +766,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 15;
+	const _uint version = 16;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -787,6 +787,8 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 		out.write(reinterpret_cast<const char*>(&nameSize), sizeof(_uint));
 		if (nameSize > 0)
 			out.write(reinterpret_cast<const char*>(info.objName.data()), sizeof(wchar_t) * nameSize);
+
+		WriteBinaryWString(out, info.objTag);
 
 		_uint pathSize = static_cast<_uint>(info.objPath.size());
 		out.write(reinterpret_cast<const char*>(&pathSize), sizeof(_uint));
@@ -954,6 +956,11 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 		}
 		else
 			info.objName = L"";
+
+		if (version >= 16)
+			info.objTag = ReadBinaryWString(in);
+		else
+			info.objTag = L"";
 
 		if (version >= 3)
 		{

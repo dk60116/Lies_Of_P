@@ -18,5 +18,11 @@ private:
 
 public:
 	void Awake() override;
+
+private:
+	void OnHitEvent(CCharacter* _target);
+
+private:
+	HurtDescription m_sHurtDesc;
 };
 

@@ -156,6 +156,9 @@
     <ClInclude Include="..\Header\HurtBox.h">
       <Filter>Scripts\Object\Character\Collider</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\PlayerState_Hit.h">
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Code\MainScene.cpp">
@@ -250,6 +253,9 @@
     </ClCompile>
     <ClCompile Include="..\Code\HurtBox.cpp">
       <Filter>Scripts\Object\Character\Collider</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerState_Hit.cpp">
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

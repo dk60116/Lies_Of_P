@@ -1,6 +1,7 @@
 #pragma once
 #include "EditorBox.h"
 #include "NaviMesh.h"
+#include <array>
 #include <string>
 
 NS_BEGIN(Engine)
@@ -29,6 +30,7 @@ private:
 	void ShowSceneSettingsWindow();
 	void ShowProjectSettingsWindow();
 	void ShowProjectSettingsTime();
+	void ShowProjectSettingsPhysics();
 	void ShowProjectSettingsLight();
 	void ShowPlayButtons();
 	void Show2DButton();
@@ -41,9 +43,10 @@ private:
 	_int m_iProjectSettingsSelection;
 	_float m_fPendingFixedTimeStep;
 	_float m_fPendingTimeScale;
+	vector3 m_vPendingGravity;
+	array<_uint, 32> m_arrPendingPhysicsLayerCollisionMasks;
 	_int m_iPendingShadowQuality;
 	_bool m_bSceneSettingsWindowOpen;
-	_bool m_bGameStatusWindowOpen;
 	_bool m_bNavigationWindowOpen;
 	_bool m_bNavigationBuildSucceeded;
 	_int m_iNavigationPolygonCount;

@@ -6,6 +6,31 @@
 #include "AnimatorControllerEditorBox.h"
 #include "Physics.h"
 
+namespace
+{
+	static fs::path ResolveEditorSettingsPath(const _bool forSave)
+	{
+		const fs::path candidates[] =
+		{
+			"../Engine/Default/EditorSettings.setting",
+			"Engine/Default/EditorSettings.setting",
+			"../Project_P/Engine/Default/EditorSettings.setting",
+			"Project_P/Engine/Default/EditorSettings.setting"
+		};
+
+		for (const fs::path& path : candidates)
+		{
+			if (fs::exists(path))
+				return path;
+		}
+
+		if (forSave)
+			return candidates[3];
+
+		return candidates[0];
+	}
+}
+
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 CEditor::CEditor()
@@ -19,6 +44,7 @@ CEditor::CEditor()
 	, m_bShowColliderGizmo(true)
 	, m_bShowMeshColliderGizmo(true)
 	, m_bShowNavigationMesh(true)
+	, m_bShowGameStatusWindow(false)
 	, m_vCameraPos({})
 	, m_vCameraQuat({})
 	, m_bDoubleClicked(false)
@@ -60,6 +86,9 @@ HRESULT CEditor::Initialize()
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\malgun.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesKorean());
+
+
+	LoadViewSettings();
 
 	CTopToolBar* toolbar = CTopToolBar::Create();
 	if (toolbar)
@@ -248,6 +277,82 @@ void CEditor::ChangeControleTool()
 	}
 }
 
+void CEditor::LoadViewSettings()
+{
+	const fs::path settingsPath = ResolveEditorSettingsPath(false);
+	ifstream inFile(settingsPath);
+	if (!inFile.is_open())
+		return;
+
+	string line;
+	while (getline(inFile, line))
+	{
+		line = CEngineString::Trim(line);
+		if (line.empty())
+			continue;
+
+		size_t delim = line.find('=');
+		if (delim == string::npos)
+			continue;
+
+		const string key = CEngineString::Trim(line.substr(0, delim));
+		const string value = CEngineString::Trim(line.substr(delim + 1));
+		if (key.empty() || value.empty())
+			continue;
+
+		auto parseBool = [](const string& text, _bool& outValue) -> _bool
+		{
+			string lower = CEditor::ToLowerCopy(text);
+			if (lower == "1" || lower == "true")
+			{
+				outValue = true;
+				return true;
+			}
+			if (lower == "0" || lower == "false")
+			{
+				outValue = false;
+				return true;
+			}
+			return false;
+		};
+
+		if (key == "ShowCollider")
+		{
+			parseBool(value, m_bShowColliderGizmo);
+			continue;
+		}
+
+		if (key == "ShowMeshCollider")
+		{
+			parseBool(value, m_bShowMeshColliderGizmo);
+			continue;
+		}
+
+		if (key == "ShowNavigationMesh")
+		{
+			parseBool(value, m_bShowNavigationMesh);
+			continue;
+		}
+
+		if (key == "ShowGameStatus")
+			parseBool(value, m_bShowGameStatusWindow);
+	}
+}
+
+void CEditor::SaveViewSettings() const
+{
+	const fs::path settingsPath = ResolveEditorSettingsPath(true);
+	fs::create_directories(settingsPath.parent_path());
+	ofstream outFile(settingsPath, ios::trunc);
+	if (!outFile.is_open())
+		return;
+
+	outFile << "ShowCollider=" << (m_bShowColliderGizmo ? 1 : 0) << "\n";
+	outFile << "ShowMeshCollider=" << (m_bShowMeshColliderGizmo ? 1 : 0) << "\n";
+	outFile << "ShowNavigationMesh=" << (m_bShowNavigationMesh ? 1 : 0) << "\n";
+	outFile << "ShowGameStatus=" << (m_bShowGameStatusWindow ? 1 : 0) << "\n";
+}
+
 CEditor::EDITORWINOPTION CEditor::Get_Options() const
 {
 	return m_sOptions;
@@ -260,7 +365,11 @@ const _bool CEditor::IsColliderGizmoVisible() const
 
 void CEditor::SetColliderGizmoVisible(const _bool visible)
 {
+	if (m_bShowColliderGizmo == visible)
+		return;
+
 	m_bShowColliderGizmo = visible;
+	SaveViewSettings();
 }
 
 const _bool CEditor::IsMeshColliderGizmoVisible() const
@@ -270,7 +379,11 @@ const _bool CEditor::IsMeshColliderGizmoVisible() const
 
 void CEditor::SetMeshColliderGizmoVisible(const _bool visible)
 {
+	if (m_bShowMeshColliderGizmo == visible)
+		return;
+
 	m_bShowMeshColliderGizmo = visible;
+	SaveViewSettings();
 }
 
 const _bool CEditor::IsNavigationMeshVisible() const
@@ -280,7 +393,25 @@ const _bool CEditor::IsNavigationMeshVisible() const
 
 void CEditor::SetNavigationMeshVisible(const _bool visible)
 {
+	if (m_bShowNavigationMesh == visible)
+		return;
+
 	m_bShowNavigationMesh = visible;
+	SaveViewSettings();
+}
+
+const _bool CEditor::IsGameStatusWindowVisible() const
+{
+	return m_bShowGameStatusWindow;
+}
+
+void CEditor::SetGameStatusWindowVisible(const _bool visible)
+{
+	if (m_bShowGameStatusWindow == visible)
+		return;
+
+	m_bShowGameStatusWindow = visible;
+	SaveViewSettings();
 }
 
 const vector2Int CEditor::Get_WindowResolution() const

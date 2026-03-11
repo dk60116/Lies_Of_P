@@ -40,6 +40,7 @@ public:
     void EndContact();
 
     void SetRigidBody(class CRigidBody* rigidBody);
+    void MarkPhysicsLayerDirty();
 
 public:
     virtual void BuildShapeIfNeeded() PURE;

@@ -3,8 +3,7 @@
 #include "MonsterController.h"
 
 CMonster::CMonster()
-	: m_strMonsterName(L"")
-	, m_iCurrentState(0)
+	: m_iCurrentState(0)
 	, m_vMaterialTransparent({})
 	, m_vMeshRenderers({})
 	, m_pController(nullptr)
@@ -26,7 +25,6 @@ HRESULT CMonster::Initialize()
 	PaintTexture();
 	CreateAnimator();
 	CreateAI();
-	CreateHurtBox();
 
 	return S_OK;
 }
@@ -51,11 +49,6 @@ void CMonster::OnDestroy()
 	__super::OnDestroy();
 }
 
-const wstring& CMonster::GetMonsterName() const
-{
-	return m_strMonsterName;
-}
-
 void CMonster::Change_State(const _uint _state)
 {
 	m_iCurrentState = _state;
@@ -73,7 +66,7 @@ const _float CMonster::GetRadius() const
 
 void CMonster::CreateBody()
 {
-	const wstring path = L"Mon_" + m_strMonsterName + L"_Body_Model (MeshBuffer)";
+	const wstring path = L"Mon_" + m_strCharacterName + L"_Body_Model (MeshBuffer)";
 
 	m_vMeshRenderers = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(path), CResources::GetInstance().LoadSkinnedBonesOnScene(path), 0.01f, vector3::up() * 270.f);
 	m_pBodyCollider = m_pGameObject->AddComponent<CCapsuleCollider>();
@@ -90,9 +83,9 @@ void CMonster::PaintTexture()
 {
 	for (size_t i = 0; i < m_vMeshRenderers.size(); ++i)
 	{
-		const wstring tdPath = L"Tex_Mon_" + m_strMonsterName + L'_' + to_wstring(i) + L"_TD (Texture)";
-		const wstring tnPath = L"Tex_Mon_" + m_strMonsterName + L'_' + to_wstring(i) + L"_TN (Texture)";
-		const wstring tormPath = L"Tex_Mon_" + m_strMonsterName + L'_' + to_wstring(i) + L"_TORM (Texture)";
+		const wstring tdPath = L"Tex_Mon_" + m_strCharacterName + L'_' + to_wstring(i) + L"_TD (Texture)";
+		const wstring tnPath = L"Tex_Mon_" + m_strCharacterName + L'_' + to_wstring(i) + L"_TN (Texture)";
+		const wstring tormPath = L"Tex_Mon_" + m_strCharacterName + L'_' + to_wstring(i) + L"_TORM (Texture)";
 
 		CTexture* td = CResources::GetInstance().LoadOnScene<CTexture>(tdPath);
 		CTexture* tn = CResources::GetInstance().LoadOnScene<CTexture>(tnPath);
@@ -111,7 +104,7 @@ void CMonster::CreateAnimator()
 {
 	m_pAnimator = m_pGameObject->AddComponent<CAnimator>();
 
-	const wstring path = L"Mon_" + m_strMonsterName + L"_AnimatorController (Animator Controller)";
+	const wstring path = L"Mon_" + m_strCharacterName + L"_AnimatorController (Animator Controller)";
 	CAnimatorController* animCon = CResources::GetInstance().LoadOnScene<CAnimatorController>(path);
 	m_pAnimator->Set_Controller(animCon);
 }
@@ -129,4 +122,8 @@ void CMonster::CreateAI()
 CNaviMeshAgent* CMonster::GetNaviAgent()
 {
 	return m_pNavAgent;
+}
+
+void CMonster::GetHitHandler(const HurtDescription& _hurtDesc)
+{
 }

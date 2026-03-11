@@ -48,8 +48,10 @@ protected:
 public:
 	CNaviMeshAgent* GetNaviAgent();
 
+public:
+	void GetHitHandler(const HurtDescription& _hurtDesc) override;
+
 protected:
-	wstring m_strMonsterName;
 	_uint m_iCurrentState;
 	vector<_bool> m_vMaterialTransparent;
 	vector<CSkinnedMeshRenderer*> m_vMeshRenderers;

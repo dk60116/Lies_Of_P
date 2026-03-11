@@ -3,7 +3,10 @@
 
 CColliderBox::CColliderBox()
 	: m_pCharacter(nullptr)
+	, m_eOwner(ColliderOwner::Player)
 	, m_pCollider(nullptr)
+	, m_bPendingDisable(false)
+	, m_bColliderBootstrapped(false)
 	, m_strCBName(L"")
 {
 }
@@ -14,7 +17,18 @@ CColliderBox::~CColliderBox()
 
 HRESULT CColliderBox::Initialize()
 {
+	m_pGameObject->SetLayer(CSceneManager::GetInstance().NameToLayer(L"ColliderBox"));
+
 	return S_OK;
+}
+
+void CColliderBox::LateUpdate()
+{
+	if (!m_bPendingDisable || !m_pCollider)
+		return;
+
+	m_bPendingDisable = false;
+	m_pCollider->Set_Enable(false);
 }
 
 void CColliderBox::OnDestroy()
@@ -25,6 +39,13 @@ void CColliderBox::OnDestroy()
 void CColliderBox::CreateHurtBox(CCharacter* _character, const wstring& _name, const CCollider::ColliderType _type, const vector3 _size)
 {
 	m_pCharacter = _character;
+
+	if (dynamic_cast<CPlayer*>(m_pCharacter))
+		m_eOwner = ColliderOwner::Player;
+	else if (dynamic_cast<CMonster*>(m_pCharacter))
+		m_eOwner = ColliderOwner::Enemy;
+	else
+		m_eOwner = ColliderOwner::Npc;
 
 	m_strCBName = _name;
 
@@ -52,15 +73,32 @@ void CColliderBox::CreateHurtBox(CCharacter* _character, const wstring& _name, c
 	}
 
 	m_pCollider->SetTrigger(true);
+	m_bPendingDisable = false;
 	m_pCollider->Set_Enable(false);
 }
 
 void CColliderBox::EnableBox()
 {
+	if (!m_pCollider)
+		return;
+
+	m_bPendingDisable = false;
 	m_pCollider->Set_Enable(true);
 }
 
 void CColliderBox::DisableBox()
 {
+	if (!m_pCollider)
+		return;
+
+	m_bPendingDisable = false;
 	m_pCollider->Set_Enable(false);
+}
+
+void CColliderBox::RequestDisableBox()
+{
+	if (!m_pCollider)
+		return;
+
+	m_bPendingDisable = true;
 }

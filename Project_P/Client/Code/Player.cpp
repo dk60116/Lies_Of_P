@@ -18,6 +18,7 @@ CPlayer::CPlayer()
 	, m_pWeaponHolder(nullptr)
 {
 	m_strName = L"Player";
+	m_strCharacterName = L"Eve";
 }
 
 CPlayer::~CPlayer()
@@ -42,6 +43,7 @@ HRESULT CPlayer::Initialize()
 		return E_FAIL;
 
 	m_pGameObject->SetLayer(L"Player");
+	m_pGameObject->SetTag(L"PlayerBody");
 
 	m_pController = m_pGameObject->AddComponent<CPlayerController>();
 	m_pController->Set_Player(this);
@@ -260,6 +262,15 @@ const _uint CPlayer::GetLightAttackComboCount() const
 void CPlayer::SetLightAttakComboCount(const _uint _count)
 {
 	m_iLightAttackComboCount = _count;
+}
+
+void CPlayer::GetHitHandler(const HurtDescription& _hurtDesc)
+{
+	if (_hurtDesc.damage > 0)
+		GetDamage(static_cast<_uint>(_hurtDesc.damage));
+
+	if (m_pController)
+		m_pController->RequestAction(CPlayerController::PlayerState::Hit);
 }
 
 void CPlayer::SetAnimationAction()

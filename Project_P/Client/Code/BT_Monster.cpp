@@ -213,7 +213,7 @@ BTState CBT_Monster::RunChase(AIContext& _ctx)
 		return BTState::Failure;
 
 	const CMonster::MonsterStatus& status = monster->GetStatus();
-	const _float baseStopDistance = 2.f + monster->GetRadius() + status.attackRange;
+	const _float baseStopDistance = 1.f + monster->GetRadius() + status.attackRange;
 	const _float stopBuffer = max(0.5f, monster->GetRadius());
 	const _float animStopDistance = baseStopDistance + stopBuffer;
 	const _float animResumeDistance = animStopDistance + stopBuffer * 2.f;

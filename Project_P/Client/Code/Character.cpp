@@ -3,7 +3,8 @@
 #include "HurtBox.h"
 
 CCharacter::CCharacter()
-	: m_pSkinnedMeshRenderer()
+	: m_strCharacterName(L"")
+	, m_pSkinnedMeshRenderer()
 	, m_pBodyCollider(nullptr)
 	, m_pRigidBody(nullptr)
 	, m_pAnimator(nullptr)
@@ -23,13 +24,12 @@ HRESULT CCharacter::Initialize()
 	vector<_uint> ignore = { CSceneManager::GetInstance().NameToLayer(L"Player") };
 	m_iGroundMask = CSceneManager::GetInstance().MakeLayerMask(true, ignore);
 
-	CreateHurtBox();
-
 	return S_OK;
 }
 
 void CCharacter::Awake()
 {
+	CreateHurtBox();
 	SetAnimationAction();
 }
 
@@ -72,11 +72,16 @@ void CCharacter::AddHurtBox(const wstring& _name, CHurtBox* _box)
 	_box->AddRef();
 }
 
+const wstring& CCharacter::GetCharacterName() const
+{
+	return m_strCharacterName;
+}
+
 void CCharacter::CreateHurtBox()
 {
 	for (size_t i = 0; i < m_vHurtBoxInfoList.size(); ++i)
 	{
-		CGameObject* go = m_pGameObject->Get_Scene()->Add_GameObject(L"ColliderBox");
+		CGameObject* go = m_pGameObject->Get_Scene()->Add_GameObject(L"ColliderBox_" + m_vHurtBoxInfoList[i].boneName);
 		CTransform* tb = Get_Transform()->Find_ChildRecursive(m_vHurtBoxInfoList[i].boneName);
 
 		go->Get_Transform()->SetParent(tb);

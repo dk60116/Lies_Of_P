@@ -885,7 +885,9 @@ void CRigidBody::RebuildBodiesIfDirty()
         m_pCompoundShape->AddRef();
 
         const EMotionType motion = m_bKinematic ? EMotionType::Kinematic : EMotionType::Dynamic;
-        const ObjectLayer layer = Layers::MOVING;
+        const ObjectLayer layer = CPhysics::MakeObjectLayer(
+            m_pGameObject ? m_pGameObject->GetLayer() : 0u,
+            CPhysics::CollisionObjectType::Moving);
 
         BodyCreationSettings settings(m_pCompoundShape, pos, rot, motion, layer);
 
@@ -917,7 +919,9 @@ void CRigidBody::RebuildBodiesIfDirty()
         m_pSensorCompoundShape->AddRef();
 
         const EMotionType motion = m_bKinematic ? EMotionType::Kinematic : EMotionType::Dynamic;
-        const ObjectLayer layer = Layers::SENSOR;
+        const ObjectLayer layer = CPhysics::MakeObjectLayer(
+            m_pGameObject ? m_pGameObject->GetLayer() : 0u,
+            CPhysics::CollisionObjectType::Sensor);
 
         BodyCreationSettings settings(m_pSensorCompoundShape, pos, rot, motion, layer);
         settings.mIsSensor = true;

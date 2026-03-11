@@ -26,6 +26,55 @@ namespace
 
 		return candidates[0];
 	}
+
+	static constexpr _uint kPhysicsLayerCount = CPhysics::MAX_SCENE_LAYERS;
+
+	static _bool GetPhysicsLayerCollisionBit(const CSceneManager::PhysicsSettings& settings, const _uint row, const _uint column)
+	{
+		if (row >= kPhysicsLayerCount || column >= kPhysicsLayerCount)
+			return false;
+
+		const CSceneManager::LayerMask bit = (CSceneManager::LayerMask(1u) << column);
+		return (settings.layerCollisionMatrix[row] & bit) != 0u;
+	}
+
+	static void SetPhysicsLayerCollisionBit(CSceneManager::PhysicsSettings& settings, const _uint row, const _uint column, const _bool enabled)
+	{
+		if (row >= kPhysicsLayerCount || column >= kPhysicsLayerCount)
+			return;
+
+		const CSceneManager::LayerMask bit = (CSceneManager::LayerMask(1u) << column);
+		if (enabled)
+			settings.layerCollisionMatrix[row] |= bit;
+		else
+			settings.layerCollisionMatrix[row] &= ~bit;
+	}
+
+	static CSceneManager::PhysicsSettings NormalizePhysicsSettings(CSceneManager::PhysicsSettings settings)
+	{
+		for (_uint row = 0u; row < kPhysicsLayerCount; ++row)
+		{
+			CSceneManager::LayerMask sanitized = 0u;
+			for (_uint column = 0u; column < kPhysicsLayerCount; ++column)
+			{
+				if (GetPhysicsLayerCollisionBit(settings, row, column))
+					sanitized |= (CSceneManager::LayerMask(1u) << column);
+			}
+			settings.layerCollisionMatrix[row] = sanitized;
+		}
+
+		for (_uint row = 0u; row < kPhysicsLayerCount; ++row)
+		{
+			for (_uint column = row + 1u; column < kPhysicsLayerCount; ++column)
+			{
+				const _bool enabled = GetPhysicsLayerCollisionBit(settings, row, column) || GetPhysicsLayerCollisionBit(settings, column, row);
+				SetPhysicsLayerCollisionBit(settings, row, column, enabled);
+				SetPhysicsLayerCollisionBit(settings, column, row, enabled);
+			}
+		}
+
+		return settings;
+	}
 }
 
 CSceneManager::CSceneManager()
@@ -44,6 +93,7 @@ CSceneManager::CSceneManager()
 	, m_sTimeSetting({})
 	, m_sLightSetting({})
 	, m_mLayerList()
+	, m_vTagList()
 {
 }
 
@@ -61,11 +111,10 @@ CSceneManager& CSceneManager::GetInstance()
 HRESULT CSceneManager::Initialize()
 {
 	m_mLayerList.insert({ 0u, L"Default" });
-
-	for (_uint i = 1; i < 32; ++i)
-		m_mLayerList.insert({ 1u << (_uint)i, L"Layer_" +  to_wstring(i)});
+	m_vTagList.push_back(L"Untagged");
 
 	LoadLayerSettings();
+	Set_PhysicsSettings(m_sPhysicsSetting);
 	Set_ShadowQuality(m_sLightSetting.shadowQuality);
 	CTime::GetInstance().SetTimeScale(m_sTimeSetting.timeSclae);
 
@@ -330,6 +379,11 @@ const CSceneManager::TimeSettings& CSceneManager::Get_TimeSetting()
 	return m_sTimeSetting;
 }
 
+const CSceneManager::PhysicsSettings& CSceneManager::Get_PhysicsSetting()
+{
+	return m_sPhysicsSetting;
+}
+
 const CSceneManager::LightSettings& CSceneManager::Get_LightSetting()
 {
 	return m_sLightSetting;
@@ -350,6 +404,13 @@ void CSceneManager::Set_TimeScale(const _float value)
 		newValue = 0.f;
 	m_sTimeSetting.timeSclae = newValue;
 	CTime::GetInstance().SetTimeScale(m_sTimeSetting.timeSclae);
+}
+
+void CSceneManager::Set_PhysicsSettings(const PhysicsSettings& settings)
+{
+	m_sPhysicsSetting = NormalizePhysicsSettings(settings);
+	CPhysics::GetInstance().SetGravity(m_sPhysicsSetting.gravity);
+	CPhysics::GetInstance().SetLayerCollisionMasks(m_sPhysicsSetting.layerCollisionMatrix);
 }
 
 void CSceneManager::Set_ShadowQuality(const shadowQualityOptions option)
@@ -387,13 +448,76 @@ void CSceneManager::AddLayer(_uint _index, const wstring& _name)
 		return;
 
 	const _uint mask = (1u << _index);
-	m_mLayerList[mask] = _name;
+	const wstring trimmedName = CEngineString::Trim(_name);
+	if (trimmedName.empty())
+		m_mLayerList.erase(mask);
+	else
+		m_mLayerList[mask] = trimmedName;
 	SaveEngineSettings();
 }
 
 const map<_uint, wstring>& CSceneManager::Get_LayerList() const
 {
 	return m_mLayerList;
+}
+
+const vector<wstring>& CSceneManager::Get_TagList() const
+{
+	return m_vTagList;
+}
+
+void CSceneManager::AddTag(const wstring& tag)
+{
+	const wstring trimmedTag = CEngineString::Trim(tag);
+	if (trimmedTag.empty())
+		return;
+
+	for (const wstring& existingTag : m_vTagList)
+	{
+		if (existingTag == trimmedTag)
+			return;
+	}
+
+	m_vTagList.push_back(trimmedTag);
+	SaveEngineSettings();
+}
+
+void CSceneManager::RemoveTag(const wstring& tag)
+{
+	const wstring trimmedTag = CEngineString::Trim(tag);
+	if (trimmedTag.empty() || trimmedTag == L"Untagged")
+		return;
+
+	vector<wstring>::iterator removeIt = m_vTagList.end();
+	for (vector<wstring>::iterator it = m_vTagList.begin(); it != m_vTagList.end(); ++it)
+	{
+		if (*it == trimmedTag)
+		{
+			removeIt = it;
+			break;
+		}
+	}
+	if (removeIt == m_vTagList.end())
+		return;
+
+	m_vTagList.erase(removeIt);
+
+	for (const auto& scenePair : m_mSceneList)
+	{
+		CScene* scene = scenePair.second;
+		if (!scene)
+			continue;
+
+		for (CGameObject* object : scene->Get_ObjectList())
+		{
+			if (!object)
+				continue;
+			if (object->GetTag() == trimmedTag)
+				object->SetTag(L"Untagged");
+		}
+	}
+
+	SaveEngineSettings();
 }
 
 void CSceneManager::SaveLayerSettings() const
@@ -411,13 +535,25 @@ void CSceneManager::SaveEngineSettings() const
 
 	outFile << "TimeFixedStep=" << m_sTimeSetting.fixedTimeStep << "\n";
 	outFile << "TimeScale=" << m_sTimeSetting.timeSclae << "\n";
+	outFile << "PhysicsGravity=" << m_sPhysicsSetting.gravity.x << "," << m_sPhysicsSetting.gravity.y << "," << m_sPhysicsSetting.gravity.z << "\n";
+	for (_uint row = 0u; row < kPhysicsLayerCount; ++row)
+		outFile << "PhysicsLayerCollision" << row << "=" << m_sPhysicsSetting.layerCollisionMatrix[row] << "\n";
 	outFile << "LightShadowQuality=" << static_cast<_int>(m_sLightSetting.shadowQuality) << "\n";
+	for (const wstring& tag : m_vTagList)
+	{
+		const wstring trimmedTag = CEngineString::Trim(tag);
+		if (trimmedTag.empty() || trimmedTag == L"Untagged")
+			continue;
+		outFile << "Tag=" << CEngineString::WStringToString(trimmedTag) << "\n";
+	}
 
 	for (_uint i = 1u; i < 32u; ++i)
 	{
 		const _uint mask = (1u << i);
 		auto it = m_mLayerList.find(mask);
 		if (it == m_mLayerList.end())
+			continue;
+		if (CEngineString::Trim(it->second).empty())
 			continue;
 
 		outFile << i << "=" << CEngineString::WStringToString(it->second) << "\n";
@@ -477,6 +613,39 @@ void CSceneManager::LoadLayerSettings()
 			continue;
 		}
 
+		if (idxText == "PhysicsGravity")
+		{
+			const size_t comma0 = nameText.find(',');
+			const size_t comma1 = comma0 == string::npos ? string::npos : nameText.find(',', comma0 + 1u);
+			if (comma0 != string::npos && comma1 != string::npos)
+			{
+				try
+				{
+					m_sPhysicsSetting.gravity.x = stof(CEngineString::Trim(nameText.substr(0, comma0)));
+					m_sPhysicsSetting.gravity.y = stof(CEngineString::Trim(nameText.substr(comma0 + 1u, comma1 - comma0 - 1u)));
+					m_sPhysicsSetting.gravity.z = stof(CEngineString::Trim(nameText.substr(comma1 + 1u)));
+				}
+				catch (...)
+				{
+				}
+			}
+			continue;
+		}
+
+		if (idxText.rfind("PhysicsLayerCollision", 0u) == 0u)
+		{
+			try
+			{
+				const unsigned long row = stoul(idxText.substr(strlen("PhysicsLayerCollision")));
+				if (row < kPhysicsLayerCount)
+					m_sPhysicsSetting.layerCollisionMatrix[static_cast<_uint>(row)] = static_cast<LayerMask>(stoul(nameText));
+			}
+			catch (...)
+			{
+			}
+			continue;
+		}
+
 		if (idxText == "LightShadowQuality")
 		{
 			try
@@ -494,18 +663,48 @@ void CSceneManager::LoadLayerSettings()
 			continue;
 		}
 
+		if (idxText == "Tag")
+		{
+			const wstring trimmedTag = CEngineString::Trim(CEngineString::StringToWString(nameText));
+			if (!trimmedTag.empty())
+			{
+				_bool exists = false;
+				for (const wstring& existingTag : m_vTagList)
+				{
+					if (existingTag == trimmedTag)
+					{
+						exists = true;
+						break;
+					}
+				}
+				if (!exists)
+					m_vTagList.push_back(trimmedTag);
+			}
+			continue;
+		}
+
 		try
 		{
 			unsigned long idx = stoul(idxText);
 			if (idx < 1u || idx >= 32u)
 				continue;
 
-			m_mLayerList[1u << static_cast<_uint>(idx)] = CEngineString::StringToWString(nameText);
+			const string defaultLayerName = "Layer_" + to_string(idx);
+			if (nameText == defaultLayerName)
+				continue;
+
+			const wstring trimmedLayerName = CEngineString::Trim(CEngineString::StringToWString(nameText));
+			if (trimmedLayerName.empty())
+				continue;
+
+			m_mLayerList[1u << static_cast<_uint>(idx)] = trimmedLayerName;
 		}
 		catch (...)
 		{
 		}
 	}
+
+	m_sPhysicsSetting = NormalizePhysicsSettings(m_sPhysicsSetting);
 }
 
 const _uint CSceneManager::NameToLayer(const wstring& _name) const
@@ -520,22 +719,6 @@ const _uint CSceneManager::NameToLayer(const wstring& _name) const
 
 		if (name == _name)
 			return mask;
-	}
-
-	constexpr wchar_t kPrefix[] = L"Layer_";
-	if (_name.rfind(kPrefix, 0u) == 0u)
-	{
-		const wstring idxStr = _name.substr(std::size(kPrefix) - 1);
-		if (!idxStr.empty())
-		{
-			try
-			{
-				const unsigned long idx = stoul(idxStr);
-				if (idx < 32u)
-					return (1u << idx);
-			}
-			catch (...) { }
-		}
 	}
 
 	return 0u;

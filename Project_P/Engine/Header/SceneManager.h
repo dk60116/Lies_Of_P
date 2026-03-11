@@ -2,6 +2,7 @@
 
 #include "epch.h"
 #include "Scene.h"
+#include <array>
 
 NS_BEGIN(Engine)
 
@@ -18,6 +19,7 @@ public:
 	};
 
 	enum shadowQualityOptions { Low, Middle, High, SuperHigh, Ultra };
+	typedef _uint LayerMask;
 
 	struct TimeSettings
 	{
@@ -27,6 +29,14 @@ public:
 
 	struct PhysicsSettings
 	{
+		vector3 gravity = vector3(0.f, -9.81f, 0.f);
+		array<LayerMask, 32> layerCollisionMatrix = []()
+		{
+			array<LayerMask, 32> masks = {};
+			for (_uint i = 0u; i < masks.size(); ++i)
+				masks[i] = ~LayerMask(0u);
+			return masks;
+		}();
 	};
 
 	struct LightSettings
@@ -34,8 +44,6 @@ public:
 		shadowQualityOptions shadowQuality = SuperHigh;
 		_uint shadowMapSize = 0;
 	};
-
-	typedef _uint LayerMask;
 
 public:
 	HRESULT Initialize();
@@ -65,14 +73,19 @@ public:
 
 public:
 	const TimeSettings& Get_TimeSetting();
+	const PhysicsSettings& Get_PhysicsSetting();
 	const LightSettings& Get_LightSetting();
 	void Set_FixedTimeStep(const _float value);
 	void Set_TimeScale(const _float value);
+	void Set_PhysicsSettings(const PhysicsSettings& settings);
 	void Set_ShadowQuality(const shadowQualityOptions option);
 
 public:
 	void AddLayer(_uint _index, const wstring& _name);
 	const map<_uint, wstring>& Get_LayerList() const;
+	const vector<wstring>& Get_TagList() const;
+	void AddTag(const wstring& tag);
+	void RemoveTag(const wstring& tag);
 	void SaveLayerSettings() const;
 	void SaveEngineSettings() const;
 	const _uint NameToLayer(const wstring& _name) const;
@@ -101,10 +114,12 @@ private:
 
 private:
 	TimeSettings m_sTimeSetting;
+	PhysicsSettings m_sPhysicsSetting;
 	LightSettings m_sLightSetting;
 
 private:
 	map<_uint, wstring> m_mLayerList;
+	vector<wstring> m_vTagList;
 };
 
 NS_END

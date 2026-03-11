@@ -1,6 +1,7 @@
 #pragma once
 
 #include "epch.h"
+#include <array>
 #include <Jolt/Jolt.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/Core/TempAllocator.h>
@@ -17,7 +18,9 @@ namespace Layers
 	static constexpr ObjectLayer NON_MOVING = 0;
 	static constexpr ObjectLayer MOVING = 1;
 	static constexpr ObjectLayer SENSOR = 2;
-	static constexpr ObjectLayer NUM_LAYERS = 3;
+	static constexpr ObjectLayer NUM_TYPES = 3;
+	static constexpr _uint NUM_SCENE_LAYERS = 32;
+	static constexpr _uint NUM_LAYERS = NUM_TYPES * NUM_SCENE_LAYERS;
 };
 
 namespace BroadPhaseLayers
@@ -30,6 +33,17 @@ namespace BroadPhaseLayers
 class ENGINE_DLL CPhysics final
 {
 public:
+	static constexpr _uint MAX_SCENE_LAYERS = Layers::NUM_SCENE_LAYERS;
+	using LayerCollisionMask = _uint;
+	using LayerCollisionMaskArray = array<LayerCollisionMask, MAX_SCENE_LAYERS>;
+
+	enum class CollisionObjectType : ObjectLayer
+	{
+		NonMoving = Layers::NON_MOVING,
+		Moving = Layers::MOVING,
+		Sensor = Layers::SENSOR
+	};
+
 	struct Ray 
 	{ 
 		vector3 origin; 
@@ -88,6 +102,18 @@ public:
 
 	const _bool IsInitialized() const;
 
+	const vector3 GetGravity() const;
+	void SetGravity(const vector3& gravity);
+	const LayerCollisionMaskArray& GetLayerCollisionMasks() const;
+	void SetLayerCollisionMasks(const LayerCollisionMaskArray& masks);
+	const _bool GetLayerCollisionEnabled(const _uint layerAIndex, const _uint layerBIndex) const;
+	void SetLayerCollisionEnabled(const _uint layerAIndex, const _uint layerBIndex, const _bool enabled);
+
+	static _uint LayerMaskToIndex(const _uint sceneLayerMask);
+	static ObjectLayer MakeObjectLayer(const _uint sceneLayerMask, const CollisionObjectType type);
+	static CollisionObjectType GetCollisionObjectType(const ObjectLayer layer);
+	static _uint GetSceneLayerIndex(const ObjectLayer layer);
+
 	vector<RAYCASTHIT> Raycast(const Ray& _ray, const CSceneManager::LayerMask _mask = 0);
 	vector<RAYCASTHIT> BoxRaycast(const BoxRay& _boxRay, const CSceneManager::LayerMask _mask = 0);
 	vector<RAYCASTHIT> SphereRaycast(const SphereRay& _sphereRay, const CSceneManager::LayerMask _mask = 0);
@@ -108,6 +134,9 @@ private:
 	ObjectVsBroadPhaseLayerFilterImpl* m_pObjectVsBPLayerFilter;
 	ObjectLayerPairFilterImpl* m_pObjectLayerPairFilter;
 	ContactListenerImpl* m_pContactListener;
+
+	vector3 m_vGravity;
+	LayerCollisionMaskArray m_arrLayerCollisionMasks;
 
 	_float m_fFixedDeltaTime;   
 	_float m_fAccumulator;    

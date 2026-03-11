@@ -94,6 +94,8 @@ Eve_Battle_Jump_Start : Player/Eve/Animations/Eve_Battle_Jump_Start.fbx : [Anima
 Eve_Battle_Jump_End : Player/Eve/Animations/Eve_Battle_Jump_End.fbx : [Animation Clip]
 Eve_Battle_JumpForward_Start : Player/Eve/Animations/Eve_Battle_JumpForward_Start.fbx : [Animation Clip]
 Eve_Battle_JumpForward_End : Player/Eve/Animations/Eve_Battle_JumpForward_End.fbx : [Animation Clip]
+//Eve Animations - Hit
+Eve_Hit_Stand_Light_Fw : Player/Eve/Animations/Eve_Hit_Stand_Light_Fw.fbx : [Animation Clip]
 // Eve_Weapon
 Eve_Sword_Model : Player/Weapon/Eve_Sword.fbx : [Skinned Mesh]
 // Eve_Weapon_Texture

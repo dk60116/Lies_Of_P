@@ -63,13 +63,6 @@ namespace Engine
 	class CPhysics::BroadPhaseLayerInterfaceImpl final : public BroadPhaseLayerInterface
 	{
 	public:
-		BroadPhaseLayerInterfaceImpl()
-		{
-			mObjectToBroadPhase[Layers::NON_MOVING] = BroadPhaseLayers::NON_MOVING;
-			mObjectToBroadPhase[Layers::MOVING] = BroadPhaseLayers::MOVING;
-			mObjectToBroadPhase[Layers::SENSOR] = BroadPhaseLayers::MOVING;
-		}
-
 		uint GetNumBroadPhaseLayers() const override
 		{
 			return BroadPhaseLayers::NUM_BP_LAYERS;
@@ -77,7 +70,8 @@ namespace Engine
 
 		BroadPhaseLayer GetBroadPhaseLayer(ObjectLayer inLayer) const override
 		{
-			return mObjectToBroadPhase[inLayer];
+			const CollisionObjectType type = CPhysics::GetCollisionObjectType(inLayer);
+			return type == CollisionObjectType::NonMoving ? BroadPhaseLayers::NON_MOVING : BroadPhaseLayers::MOVING;
 		}
 
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
@@ -88,9 +82,6 @@ namespace Engine
 			return "UNKNOWN";
 		}
 #endif
-
-	private:
-		BroadPhaseLayer mObjectToBroadPhase[Layers::NUM_LAYERS];
 	};
 
 	class CPhysics::ObjectVsBroadPhaseLayerFilterImpl final : public ObjectVsBroadPhaseLayerFilter
@@ -98,15 +89,14 @@ namespace Engine
 	public:
 		_bool ShouldCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2) const override
 		{
-			switch (inLayer1)
+			switch (CPhysics::GetCollisionObjectType(inLayer1))
 			{
-			case Layers::NON_MOVING:
+			case CollisionObjectType::NonMoving:
 				return inLayer2 == BroadPhaseLayers::MOVING;
-			case Layers::MOVING:
+			case CollisionObjectType::Moving:
 				return true;
-			case Layers::SENSOR:
+			case CollisionObjectType::Sensor:
 				return true;
-
 			default:
 				return false;
 			}
@@ -118,17 +108,25 @@ namespace Engine
 	public:
 		_bool ShouldCollide(ObjectLayer inObject1, ObjectLayer inObject2) const override
 		{
-			if (inObject1 == Layers::SENSOR && inObject2 == Layers::SENSOR)
+			const _uint sceneLayer1 = CPhysics::GetSceneLayerIndex(inObject1);
+			const _uint sceneLayer2 = CPhysics::GetSceneLayerIndex(inObject2);
+			if (!CPhysics::GetInstance().GetLayerCollisionEnabled(sceneLayer1, sceneLayer2))
 				return false;
 
-			if (inObject1 == Layers::NON_MOVING)
-				return (inObject2 == Layers::MOVING) || (inObject2 == Layers::SENSOR);
+			const CollisionObjectType type1 = CPhysics::GetCollisionObjectType(inObject1);
+			const CollisionObjectType type2 = CPhysics::GetCollisionObjectType(inObject2);
 
-			if (inObject1 == Layers::MOVING)
-				return (inObject2 == Layers::NON_MOVING) || (inObject2 == Layers::MOVING) || (inObject2 == Layers::SENSOR);
+			if (type1 == CollisionObjectType::Sensor && type2 == CollisionObjectType::Sensor)
+				return false;
 
-			if (inObject1 == Layers::SENSOR)
-				return (inObject2 == Layers::NON_MOVING) || (inObject2 == Layers::MOVING);
+			if (type1 == CollisionObjectType::NonMoving)
+				return (type2 == CollisionObjectType::Moving) || (type2 == CollisionObjectType::Sensor);
+
+			if (type1 == CollisionObjectType::Moving)
+				return (type2 == CollisionObjectType::NonMoving) || (type2 == CollisionObjectType::Moving) || (type2 == CollisionObjectType::Sensor);
+
+			if (type1 == CollisionObjectType::Sensor)
+				return (type2 == CollisionObjectType::NonMoving) || (type2 == CollisionObjectType::Moving);
 
 			return false;
 		}
@@ -540,6 +538,7 @@ CPhysics::CPhysics()
 	, m_pObjectVsBPLayerFilter(nullptr)
 	, m_pObjectLayerPairFilter(nullptr)
 	, m_pContactListener(nullptr)
+	, m_vGravity(0.f, -9.81f, 0.f)
 	, m_fFixedDeltaTime(1.0f / 60.0f)
 	, m_fAccumulator(0.0f)
 	, m_fMaxFrameDelta(0.25f)
@@ -550,6 +549,8 @@ CPhysics::CPhysics()
 	, m_pLineMaterial(nullptr)
 #endif
 {
+	for (_uint i = 0u; i < MAX_SCENE_LAYERS; ++i)
+		m_arrLayerCollisionMasks[i] = ~LayerCollisionMask(0u);
 }
 
 CPhysics::~CPhysics()
@@ -561,6 +562,38 @@ CPhysics& CPhysics::GetInstance()
 	static CPhysics inst;
 
 	return inst;
+}
+
+_uint CPhysics::LayerMaskToIndex(const _uint sceneLayerMask)
+{
+	if (sceneLayerMask == 0u)
+		return 0u;
+
+	for (_uint i = 1u; i < MAX_SCENE_LAYERS; ++i)
+	{
+		if ((sceneLayerMask & (_uint(1u) << i)) != 0u)
+			return i;
+	}
+
+	return 0u;
+}
+
+ObjectLayer CPhysics::MakeObjectLayer(const _uint sceneLayerMask, const CollisionObjectType type)
+{
+	const _uint sceneLayerIndex = min<_uint>(LayerMaskToIndex(sceneLayerMask), MAX_SCENE_LAYERS - 1u);
+	const ObjectLayer typeIndex = static_cast<ObjectLayer>(type);
+	return static_cast<ObjectLayer>(sceneLayerIndex * Layers::NUM_TYPES + typeIndex);
+}
+
+CPhysics::CollisionObjectType CPhysics::GetCollisionObjectType(const ObjectLayer layer)
+{
+	return static_cast<CollisionObjectType>(static_cast<_uint>(layer) % Layers::NUM_TYPES);
+}
+
+_uint CPhysics::GetSceneLayerIndex(const ObjectLayer layer)
+{
+	const _uint sceneLayerIndex = static_cast<_uint>(layer) / Layers::NUM_TYPES;
+	return min<_uint>(sceneLayerIndex, MAX_SCENE_LAYERS - 1u);
 }
 
 HRESULT CPhysics::Initialize()
@@ -618,7 +651,7 @@ HRESULT CPhysics::Initialize()
 
 	m_pContactListener = new ContactListenerImpl();
 	m_PhysicsSystem.SetContactListener(m_pContactListener);
-	m_PhysicsSystem.SetGravity(Vec3(0.f, -9.81f, 0.f));
+	m_PhysicsSystem.SetGravity(Vec3(m_vGravity.x, m_vGravity.y, m_vGravity.z));
 	m_PhysicsSystem.OptimizeBroadPhase();
 
 	m_bJoltInitialized = true;
@@ -1001,6 +1034,81 @@ void CPhysics::SetFixedDeltaTime(const _float _fixedDt)
 _float CPhysics::GetFixedDeltaTime() const
 {
 	return m_fFixedDeltaTime;
+}
+
+const vector3 CPhysics::GetGravity() const
+{
+	return m_vGravity;
+}
+
+void CPhysics::SetGravity(const vector3& gravity)
+{
+	m_vGravity = gravity;
+
+	if (m_bJoltInitialized)
+		m_PhysicsSystem.SetGravity(Vec3(m_vGravity.x, m_vGravity.y, m_vGravity.z));
+}
+
+const CPhysics::LayerCollisionMaskArray& CPhysics::GetLayerCollisionMasks() const
+{
+	return m_arrLayerCollisionMasks;
+}
+
+void CPhysics::SetLayerCollisionMasks(const LayerCollisionMaskArray& masks)
+{
+	m_arrLayerCollisionMasks = masks;
+
+	for (_uint row = 0u; row < MAX_SCENE_LAYERS; ++row)
+	{
+		LayerCollisionMask sanitized = 0u;
+		for (_uint column = 0u; column < MAX_SCENE_LAYERS; ++column)
+		{
+			const LayerCollisionMask bit = (LayerCollisionMask(1u) << column);
+			if ((m_arrLayerCollisionMasks[row] & bit) != 0u)
+				sanitized |= bit;
+		}
+		m_arrLayerCollisionMasks[row] = sanitized;
+	}
+
+	for (_uint row = 0u; row < MAX_SCENE_LAYERS; ++row)
+	{
+		for (_uint column = row + 1u; column < MAX_SCENE_LAYERS; ++column)
+		{
+			const LayerCollisionMask rowBit = (LayerCollisionMask(1u) << column);
+			const LayerCollisionMask columnBit = (LayerCollisionMask(1u) << row);
+			const _bool enabled = ((m_arrLayerCollisionMasks[row] & rowBit) != 0u) || ((m_arrLayerCollisionMasks[column] & columnBit) != 0u);
+			SetLayerCollisionEnabled(row, column, enabled);
+		}
+	}
+}
+
+const _bool CPhysics::GetLayerCollisionEnabled(const _uint layerAIndex, const _uint layerBIndex) const
+{
+	if (layerAIndex >= MAX_SCENE_LAYERS || layerBIndex >= MAX_SCENE_LAYERS)
+		return false;
+
+	const LayerCollisionMask bit = (LayerCollisionMask(1u) << layerBIndex);
+	return (m_arrLayerCollisionMasks[layerAIndex] & bit) != 0u;
+}
+
+void CPhysics::SetLayerCollisionEnabled(const _uint layerAIndex, const _uint layerBIndex, const _bool enabled)
+{
+	if (layerAIndex >= MAX_SCENE_LAYERS || layerBIndex >= MAX_SCENE_LAYERS)
+		return;
+
+	const LayerCollisionMask bitA = (LayerCollisionMask(1u) << layerBIndex);
+	const LayerCollisionMask bitB = (LayerCollisionMask(1u) << layerAIndex);
+
+	if (enabled)
+	{
+		m_arrLayerCollisionMasks[layerAIndex] |= bitA;
+		m_arrLayerCollisionMasks[layerBIndex] |= bitB;
+	}
+	else
+	{
+		m_arrLayerCollisionMasks[layerAIndex] &= ~bitA;
+		m_arrLayerCollisionMasks[layerBIndex] &= ~bitB;
+	}
 }
 
 void CPhysics::SetMaxSubSteps(const _uint _maxSubSteps)

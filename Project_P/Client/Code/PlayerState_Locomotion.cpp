@@ -67,8 +67,9 @@ void CPlayerState_Locomotion::Update()
 {
     __super::Update();
 
-    static const array<CPlayerController::PlayerState, 5> kTickStates =
+    static const array<CPlayerController::PlayerState, 6> kTickStates =
     {
+        CPlayerController::PlayerState::Hit,
         CPlayerController::PlayerState::Attack,
         CPlayerController::PlayerState::Attack_S,
         CPlayerController::PlayerState::Guard,
@@ -82,8 +83,9 @@ void CPlayerState_Locomotion::Update()
     CPlayerState* next = nullptr;
     bool handled = false;
 
-    static const array<CPlayerController::PlayerState, 5> kBufferedPriority =
+    static const array<CPlayerController::PlayerState, 6> kBufferedPriority =
     {
+        CPlayerController::PlayerState::Hit,
         CPlayerController::PlayerState::Jump,
         CPlayerController::PlayerState::Evade,
         CPlayerController::PlayerState::Guard,
@@ -119,8 +121,9 @@ void CPlayerState_Locomotion::Update()
 
     if (!handled)
     {
-        static const array<CPlayerController::PlayerState, 5> kActivePriority =
+        static const array<CPlayerController::PlayerState, 6> kActivePriority =
         {
+            CPlayerController::PlayerState::Hit,
             CPlayerController::PlayerState::Evade,
             CPlayerController::PlayerState::Guard,
             CPlayerController::PlayerState::Attack_S,

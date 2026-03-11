@@ -2,6 +2,7 @@
 #include "TopToolBar.h"
 
 #include "Editor.h"
+#include "Physics.h"
 #include "MeshFilter.h"
 #include "MeshRenderer.h"
 #include "SkinnedMeshRenderer.h"
@@ -192,13 +193,14 @@ CTopToolBar::CTopToolBar()
 	, m_iProjectSettingsSelection(0)
 	, m_fPendingFixedTimeStep(0.02f)
 	, m_fPendingTimeScale(1.f)
+	, m_vPendingGravity(0.f, -9.81f, 0.f)
 	, m_iPendingShadowQuality(0)
 	, m_bSceneSettingsWindowOpen(false)
-	, m_bGameStatusWindowOpen(false)
 	, m_bNavigationWindowOpen(false)
 	, m_bNavigationBuildSucceeded(false)
 	, m_iNavigationPolygonCount(0)
 {
+	m_arrPendingPhysicsLayerCollisionMasks.fill(~0u);
 }
 
 CTopToolBar::~CTopToolBar()
@@ -316,9 +318,12 @@ void CTopToolBar::ShowEditMenu()
 		{
 			CSceneManager& sceneManager = CSceneManager::GetInstance();
 			auto timeSetting = sceneManager.Get_TimeSetting();
+			auto physicsSetting = sceneManager.Get_PhysicsSetting();
 			auto lightSetting = sceneManager.Get_LightSetting();
 			m_fPendingFixedTimeStep = timeSetting.fixedTimeStep;
 			m_fPendingTimeScale = timeSetting.timeSclae;
+			m_vPendingGravity = physicsSetting.gravity;
+			m_arrPendingPhysicsLayerCollisionMasks = physicsSetting.layerCollisionMatrix;
 			m_iPendingShadowQuality = static_cast<_int>(lightSetting.shadowQuality);
 			m_bProjectSettingsWindowOpen = true;
 		}
@@ -347,25 +352,28 @@ void CTopToolBar::ShowViewMenu()
 {
 	ImGui::SameLine();
 
+	CEditor& editor = CEditor::GetInstance();
+
 	if (ImGui::Button("View"))
 		ImGui::OpenPopup("ViewMenuPopup");
 
 	if (ImGui::BeginPopup("ViewMenuPopup"))
 	{
-		_bool showCollider = CEditor::GetInstance().IsColliderGizmoVisible();
+		_bool showCollider = editor.IsColliderGizmoVisible();
 		if (ImGui::MenuItem("Collider", nullptr, showCollider))
-			CEditor::GetInstance().SetColliderGizmoVisible(!showCollider);
+			editor.SetColliderGizmoVisible(!showCollider);
 
-		_bool showMeshCollider = CEditor::GetInstance().IsMeshColliderGizmoVisible();
+		_bool showMeshCollider = editor.IsMeshColliderGizmoVisible();
 		if (ImGui::MenuItem("Mesh Collider", nullptr, showMeshCollider))
-			CEditor::GetInstance().SetMeshColliderGizmoVisible(!showMeshCollider);
+			editor.SetMeshColliderGizmoVisible(!showMeshCollider);
 
-		_bool showNavigationMesh = CEditor::GetInstance().IsNavigationMeshVisible();
+		_bool showNavigationMesh = editor.IsNavigationMeshVisible();
 		if (ImGui::MenuItem("NaviMesh", nullptr, showNavigationMesh))
-			CEditor::GetInstance().SetNavigationMeshVisible(!showNavigationMesh);
+			editor.SetNavigationMeshVisible(!showNavigationMesh);
 
-		if (ImGui::MenuItem("Game Status", nullptr, m_bGameStatusWindowOpen))
-			m_bGameStatusWindowOpen = !m_bGameStatusWindowOpen;
+		_bool showGameStatus = editor.IsGameStatusWindowVisible();
+		if (ImGui::MenuItem("Game Status", nullptr, showGameStatus))
+			editor.SetGameStatusWindowVisible(!showGameStatus);
 
 		ImGui::EndPopup();
 	}
@@ -442,7 +450,7 @@ void CTopToolBar::ShowProjectSettingsWindow()
 	if (!m_bProjectSettingsWindowOpen)
 		return;
 
-	ImGui::SetNextWindowSize(ImVec2(720.f, 420.f), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(900.f, 560.f), ImGuiCond_FirstUseEver);
 
 	if (ImGui::Begin("Project Settings", &m_bProjectSettingsWindowOpen))
 	{
@@ -451,8 +459,10 @@ void CTopToolBar::ShowProjectSettingsWindow()
 		ImGui::BeginChild("ProjectSettingsCategoryList", ImVec2(180.f, 0.f), true);
 		if (ImGui::Selectable("Time", m_iProjectSettingsSelection == 0))
 			m_iProjectSettingsSelection = 0;
-		if (ImGui::Selectable("Light", m_iProjectSettingsSelection == 1))
+		if (ImGui::Selectable("Physics", m_iProjectSettingsSelection == 1))
 			m_iProjectSettingsSelection = 1;
+		if (ImGui::Selectable("Light", m_iProjectSettingsSelection == 2))
+			m_iProjectSettingsSelection = 2;
 		ImGui::EndChild();
 
 		ImGui::SameLine();
@@ -461,6 +471,8 @@ void CTopToolBar::ShowProjectSettingsWindow()
 		if (m_iProjectSettingsSelection == 0)
 			ShowProjectSettingsTime();
 		else if (m_iProjectSettingsSelection == 1)
+			ShowProjectSettingsPhysics();
+		else if (m_iProjectSettingsSelection == 2)
 			ShowProjectSettingsLight();
 		ImGui::EndChild();
 		ImGui::EndChild();
@@ -468,8 +480,12 @@ void CTopToolBar::ShowProjectSettingsWindow()
 		if (ImGui::Button("Save"))
 		{
 			CSceneManager& sceneManager = CSceneManager::GetInstance();
+			CSceneManager::PhysicsSettings physicsSetting = sceneManager.Get_PhysicsSetting();
+			physicsSetting.gravity = m_vPendingGravity;
+			physicsSetting.layerCollisionMatrix = m_arrPendingPhysicsLayerCollisionMasks;
 			sceneManager.Set_FixedTimeStep(m_fPendingFixedTimeStep);
 			sceneManager.Set_TimeScale(m_fPendingTimeScale);
+			sceneManager.Set_PhysicsSettings(physicsSetting);
 			sceneManager.Set_ShadowQuality(static_cast<CSceneManager::shadowQualityOptions>(m_iPendingShadowQuality));
 			sceneManager.SaveEngineSettings();
 		}
@@ -494,6 +510,91 @@ void CTopToolBar::ShowProjectSettingsTime()
 		if (m_fPendingTimeScale < 0.f)
 			m_fPendingTimeScale = 0.f;
 	}
+}
+
+void CTopToolBar::ShowProjectSettingsPhysics()
+{
+	ImGui::Text("Physics");
+	ImGui::Separator();
+
+	ImGui::DragFloat3("Gravity", &m_vPendingGravity.x, 0.1f, -1000.f, 1000.f, "%.2f");
+	ImGui::Spacing();
+	ImGui::Text("Layer Collision Matrix");
+
+	ImGui::BeginChild("PhysicsLayerCollisionMatrix", ImVec2(0.f, 0.f), true, ImGuiWindowFlags_HorizontalScrollbar);
+
+	vector<_uint> visibleLayerIndices = { 0u };
+	CSceneManager& sceneManager = CSceneManager::GetInstance();
+	const auto& layerList = sceneManager.Get_LayerList();
+	auto getLayerDisplayName = [&sceneManager](_uint layerIndex)
+	{
+		const _uint layerMask = layerIndex == 0u ? 0u : (1u << layerIndex);
+		string layerName = CEngineString::WStringToString(sceneManager.LayerToName(layerMask));
+		if (layerName.empty())
+			layerName = layerIndex == 0u ? "Default" : "<Empty>";
+		return layerName;
+	};
+	for (_uint layerIndex = 1u; layerIndex < CPhysics::MAX_SCENE_LAYERS; ++layerIndex)
+	{
+		const _uint layerMask = (1u << layerIndex);
+		auto it = layerList.find(layerMask);
+		if (it == layerList.end())
+			continue;
+		if (CEngineString::Trim(it->second).empty())
+			continue;
+		visibleLayerIndices.push_back(layerIndex);
+	}
+
+	const ImGuiTableFlags tableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY;
+	if (ImGui::BeginTable("PhysicsLayerCollisionTable", static_cast<_int>(visibleLayerIndices.size() + 1u), tableFlags))
+	{
+		ImGui::TableSetupScrollFreeze(1, 1);
+		ImGui::TableSetupColumn("Layer", ImGuiTableColumnFlags_WidthFixed, 180.f);
+		for (const _uint columnIndex : visibleLayerIndices)
+		{
+			const string columnName = getLayerDisplayName(columnIndex);
+			ImGui::TableSetupColumn(columnName.c_str(), ImGuiTableColumnFlags_WidthFixed, 120.f);
+		}
+		ImGui::TableHeadersRow();
+
+		for (const _uint rowIndex : visibleLayerIndices)
+		{
+			const string rowName = getLayerDisplayName(rowIndex);
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::TextUnformatted(rowName.c_str());
+
+			for (_uint columnSlot = 0u; columnSlot < visibleLayerIndices.size(); ++columnSlot)
+			{
+				const _uint columnIndex = visibleLayerIndices[columnSlot];
+				const _uint bit = (_uint(1u) << columnIndex);
+				_bool enabled = (m_arrPendingPhysicsLayerCollisionMasks[rowIndex] & bit) != 0u;
+
+				ImGui::TableSetColumnIndex(static_cast<_int>(columnSlot + 1u));
+				ImGui::PushID(static_cast<_int>(rowIndex * CPhysics::MAX_SCENE_LAYERS + columnIndex));
+				if (ImGui::Checkbox("##CollisionEnabled", &enabled))
+				{
+					const _uint symmetricBit = (_uint(1u) << rowIndex);
+					if (enabled)
+					{
+						m_arrPendingPhysicsLayerCollisionMasks[rowIndex] |= bit;
+						m_arrPendingPhysicsLayerCollisionMasks[columnIndex] |= symmetricBit;
+					}
+					else
+					{
+						m_arrPendingPhysicsLayerCollisionMasks[rowIndex] &= ~bit;
+						m_arrPendingPhysicsLayerCollisionMasks[columnIndex] &= ~symmetricBit;
+					}
+				}
+				ImGui::PopID();
+			}
+		}
+
+		ImGui::EndTable();
+	}
+
+	ImGui::EndChild();
 }
 
 void CTopToolBar::ShowProjectSettingsLight()
@@ -612,13 +713,17 @@ void CTopToolBar::Show2DButton()
 
 void CTopToolBar::ShowGameStatusWindow()
 {
-	if (!m_bGameStatusWindowOpen)
+	CEditor& editor = CEditor::GetInstance();
+	_bool isOpen = editor.IsGameStatusWindowVisible();
+	if (!isOpen)
 		return;
 
 	ImGui::SetNextWindowSize(ImVec2(320.f, 180.f), ImGuiCond_FirstUseEver);
-	if (!ImGui::Begin("Game Status", &m_bGameStatusWindowOpen, ImGuiWindowFlags_NoCollapse))
+	if (!ImGui::Begin("Game Status", &isOpen, ImGuiWindowFlags_NoCollapse))
 	{
 		ImGui::End();
+		if (isOpen != editor.IsGameStatusWindowVisible())
+			editor.SetGameStatusWindowVisible(isOpen);
 		return;
 	}
 
@@ -632,6 +737,8 @@ void CTopToolBar::ShowGameStatusWindow()
 	{
 		ImGui::TextUnformatted("No active game camera.");
 		ImGui::End();
+		if (isOpen != editor.IsGameStatusWindowVisible())
+			editor.SetGameStatusWindowVisible(isOpen);
 		return;
 	}
 
@@ -644,6 +751,9 @@ void CTopToolBar::ShowGameStatusWindow()
 	ImGui::Text("VisibleSkinnedMeshes: %u", stats.visibleSkinnedMeshes);
 
 	ImGui::End();
+
+	if (isOpen != editor.IsGameStatusWindowVisible())
+		editor.SetGameStatusWindowVisible(isOpen);
 }
 
 void CTopToolBar::ShowNavigationWindow()

@@ -1227,6 +1227,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		info.objID = (*it)->m_iUniqueID;
 		info.objGuid = (*it)->Get_Guid();
 		info.objName = (*it)->m_strGameObjectName;
+		info.objTag = (*it)->GetTag();
 		info.objPath = buildPath(*it);
 		vector3 pos = tf->Get_LocalPosition();
 		info.localPos = pos;
@@ -1492,6 +1493,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		CTransform* tf = obj->Get_Transform();
 
 		obj->SetActive(info.isActive);
+		obj->SetTag(info.objTag);
 		obj->SetLayer(info.objLayer);
 		obj->SetStatic(CGameObject::STATIC_METHOD::TransformStatic, info.isTransformStatic, false);
 		obj->SetStatic(CGameObject::STATIC_METHOD::NavigationStatic, info.isNavigationStatic, false);

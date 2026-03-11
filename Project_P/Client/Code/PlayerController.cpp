@@ -9,6 +9,7 @@
 #include "PlayerState_Guard.h"
 #include "PlayerState_Evade.h"
 #include "PlayerState_Jump.h"
+#include "PlayerState_Hit.h"
 
 CPlayerController::CPlayerController()
 	: m_pCtx(nullptr)
@@ -49,6 +50,7 @@ HRESULT CPlayerController::Initialize()
 	m_mStateList.insert({ PlayerState::Guard, new CPlayerState_Guard() });
 	m_mStateList.insert({ PlayerState::Evade, new CPlayerState_Evade() });
 	m_mStateList.insert({ PlayerState::Jump, new CPlayerState_Jump() });
+	m_mStateList.insert({ PlayerState::Hit, new PlayerState_Hit() });
 
 	auto loco = static_cast<CPlayerState_Locomotion*>(Get_PlayerState(PlayerState::Locomotion));
 
@@ -191,6 +193,14 @@ CPlayerState* CPlayerController::Get_PlayerState(PlayerState _state)
 		return nullptr;
 
 	return (*it).second;
+}
+
+void CPlayerController::RequestAction(PlayerState _state)
+{
+	if (!m_pCtx)
+		return;
+
+	m_pCtx->BufferAction(_state);
 }
 
 void CPlayerController::Set_Player(CPlayer* _player)

@@ -101,6 +101,9 @@ public:
 	const wstring Get_ObjectName() const;
 	const wstring Get_ObjectNameID() const;
 	void Set_ObjectName(wstring& _name);
+	const wstring& GetTag() const;
+	const _bool CompareTag(const wstring& _tag) const;
+	void SetTag(const wstring& tag);
 
 	void Set_Scene(CScene* _scene);
 	CScene* Get_Scene();
@@ -140,6 +143,7 @@ private:
 	_uint m_iUniqueID;
 	wstring m_strGuid;
 	wstring m_strGameObjectName;
+	wstring m_strTag;
 	_bool m_bActive, m_bActive_Origin, m_bPrevActive, m_bRecursiveActive;
 
 	list<CComponent*> m_lComponentList;

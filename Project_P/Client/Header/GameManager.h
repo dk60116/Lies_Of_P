@@ -6,6 +6,7 @@
 #include "PlayerHUD.h"
 #include "Monster.h"
 #include "MonsterController.h"
+#include "ColliderBox.h"
 
 class CGameManager final
 {

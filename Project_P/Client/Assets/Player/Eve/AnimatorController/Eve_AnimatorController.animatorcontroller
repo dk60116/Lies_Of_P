@@ -28,6 +28,8 @@ bool isJump=false
 trigger jump
 bool isGround=false
 bool isStrongAttack=false
+trigger Hit
+int HitDirection=0
 
 [state Attack_Light_04]
 motion=Eve_Attack_Light_04
@@ -210,6 +212,14 @@ child=Eve_Battle_JumpForward_Start,1.000000,1.000000
 speedMul=1.000000
 pos=-39,-597
 
+[state Hit_Stand_Light]
+blendTree=direct
+param=HitDirection
+directBlend=0.150000
+child=Eve_Hit_Stand_Light_Fw,0.000000
+speedMul=1.000000
+pos=851,-723
+
 [state Attack_Strong_01]
 motion=Eve_Attack_Strong_01
 speedMul=1.000000
@@ -337,6 +347,14 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 cond=isStrongAttack==true && attackCombo==0 && Attack
+
+[any]
+to=Hit_Stand_Light
+blend=0.150000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+cond=Hit
 
 [transition Idle->Run_Forward_Start]
 blend=0.150000
@@ -1158,6 +1176,22 @@ transitionOffset=0.000000
 [transition Attack_LLLS34->Run_Forward_Start]
 blend=0.150000
 cond=speed>0.100000 && isAttack==false && isStrongAttack==false
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Hit_Stand_Light->Idle]
+blend=0.150000
+cond=speed==0.000000
+exitTime=0.800000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Hit_Stand_Light->Run_Forward]
+blend=0.150000
+cond=speed>0.100000
+exitTime=0.100000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

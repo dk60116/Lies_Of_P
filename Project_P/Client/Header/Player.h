@@ -62,6 +62,9 @@ public:
 	const _uint GetLightAttackComboCount() const;
 	void SetLightAttakComboCount(const _uint _count);
 
+public:
+	void GetHitHandler(const HurtDescription& _hurtDesc) override;
+
 protected:
 	void SetAnimationAction() override;
 

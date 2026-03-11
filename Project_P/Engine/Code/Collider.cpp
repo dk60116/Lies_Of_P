@@ -253,6 +253,19 @@ void CCollider::RefreshStandaloneBody()
 	SyncStandaloneBodyTransform();
 }
 
+void CCollider::MarkPhysicsLayerDirty()
+{
+	m_bStandaloneBodyDirty = true;
+
+	if (m_pRigidBody)
+	{
+		m_pRigidBody->MarkBodyDirty();
+		return;
+	}
+
+	RefreshStandaloneBody();
+}
+
 void CCollider::CreateStandaloneBody()
 {
 	if (!CPhysics::GetInstance().IsInitialized())
@@ -270,7 +283,10 @@ void CCollider::CreateStandaloneBody()
 	Quat rot;
 	DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
 
-	const ObjectLayer layer = m_bIsTrigger ? Layers::SENSOR : Layers::NON_MOVING;
+	const CPhysics::CollisionObjectType layerType = m_bIsTrigger
+		? CPhysics::CollisionObjectType::Sensor
+		: CPhysics::CollisionObjectType::NonMoving;
+	const ObjectLayer layer = CPhysics::MakeObjectLayer(m_pGameObject ? m_pGameObject->GetLayer() : 0u, layerType);
 	BodyCreationSettings settings(shape, pos, rot, EMotionType::Static, layer);
 	settings.mIsSensor = m_bIsTrigger;
 
