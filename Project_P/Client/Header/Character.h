@@ -10,6 +10,7 @@ class CCharacter abstract : public CComponent
 	{
 		wstring boneName = L"";
 		vector3 size = vector3::one() * 0.5f;
+		vector3 center = vector3::zero();
 		CCollider::ColliderType shape = CCollider::ColliderType::Sphere;
 	};
 
@@ -40,6 +41,7 @@ public:
 protected:
 	virtual void SetAnimationAction() PURE;
 	void CreateHurtBox();
+	void CreateHitBox();
 
 private:
 	void Ground();
@@ -56,7 +58,7 @@ protected:
 	CSceneManager::LayerMask m_iGroundMask;
 	_bool m_bIsGround;
 
-	vector<ColliderBoxBonesInfo> m_vHurtBoxInfoList;
+	vector<ColliderBoxBonesInfo> m_vHurtBoxInfoList, m_vHitBoxInfoList;
 	map<wstring, class CHurtBox*> m_mHurtBoxList;
 };
 

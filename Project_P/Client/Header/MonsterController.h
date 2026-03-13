@@ -14,6 +14,7 @@ public:
 		Patrol,
 		Hide,
 		Detect,
+		Hit,
 		Chase,
 		Battle
 	};

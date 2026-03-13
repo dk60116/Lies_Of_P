@@ -3,6 +3,7 @@
 
 struct HurtDescription
 {
+	vector3 position = vector3::zero();
 	_int damage = 0;
 };
 
@@ -21,9 +22,12 @@ public:
 	void OnDestroy() override;
 
 public:
-	void CreateHurtBox(CCharacter* _character, const wstring& _name, const CCollider::ColliderType _type, const vector3 _size);
+	void CreateHurtBox(CCharacter* _character, const wstring& _name, const CCollider::ColliderType _type, const vector3& _size, const vector3& _center = vector3::zero());
+	void CreateHitBox(CCharacter* _character, const wstring& _name, const CCollider::ColliderType _type, const vector3& _size, const vector3& _center = vector3::zero());
 
 public:
+	CCharacter* GetCharacter();
+
 	void EnableBox();
 	void DisableBox();
 	void RequestDisableBox();

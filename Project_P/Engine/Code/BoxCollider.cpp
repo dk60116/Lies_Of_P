@@ -203,7 +203,7 @@ void CBoxCollider::BuildShapeIfNeeded()
 
     ReleaseShape();
 
-    const vector3 scale = Get_Transform()->Get_LocalScale();
+    const vector3 scale = GetWorldScale();
     const float sx = max(m_vSize.x * fabsf(scale.x), 0.001f);
     const float sy = max(m_vSize.y * fabsf(scale.y), 0.001f);
     const float sz = max(m_vSize.z * fabsf(scale.z), 0.001f);

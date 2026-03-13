@@ -204,6 +204,8 @@ struct TexturePickerState
 };
 
 static TexturePickerState g_texturePickerState;
+static vector<string> g_cachedAnimatorControllerFiles;
+static _bool g_cachedAnimatorControllerFilesInitialized = false;
 
 static void OpenTexturePicker(CMaterial* material, const _int slotIndex)
 {
@@ -213,6 +215,76 @@ static void OpenTexturePicker(CMaterial* material, const _int slotIndex)
     g_texturePickerState.open = true;
     g_texturePickerState.material = material;
     g_texturePickerState.slotIndex = slotIndex;
+}
+
+static string NormalizeAnimatorControllerName(const wstring& resourceName)
+{
+    string name = CEngineString::WStringToString(resourceName);
+    const string suffix = " (Animator Controller)";
+
+    if (name.size() >= suffix.size() && name.compare(name.size() - suffix.size(), suffix.size(), suffix) == 0)
+        name.erase(name.size() - suffix.size());
+
+    return name;
+}
+
+static const vector<string>& GetAnimatorControllerRelativeFiles(const _bool forceRefresh = false)
+{
+    if (!g_cachedAnimatorControllerFilesInitialized || forceRefresh)
+    {
+        g_cachedAnimatorControllerFiles = CollectRelativeFilesByExtension(fs::path(L"../Assets"), ".animatorcontroller");
+        g_cachedAnimatorControllerFilesInitialized = true;
+    }
+
+    return g_cachedAnimatorControllerFiles;
+}
+
+static string FindAnimatorControllerRelativePath(const CAnimatorController* controller)
+{
+    if (!controller)
+        return "";
+
+    const string targetName = NormalizeAnimatorControllerName(controller->Get_ResourceName());
+    const auto& controllerFiles = GetAnimatorControllerRelativeFiles();
+
+    for (const string& relPath : controllerFiles)
+    {
+        if (fs::path(relPath).stem().string() == targetName)
+            return relPath;
+    }
+
+    return "";
+}
+
+static CAnimatorController* LoadInspectorAnimatorControllerResource(const string& relPath)
+{
+    if (relPath.empty())
+        return nullptr;
+
+    CResources& resources = CResources::GetInstance();
+    const string controllerName = fs::path(relPath).stem().string();
+    const wstring controllerNameW = CEngineString::StringToWString(controllerName);
+
+    if (CAnimatorController* loaded = resources.LoadOnScene<CAnimatorController>(controllerNameW))
+        return loaded;
+
+    if (CAnimatorController* loaded = resources.LoadOnScene<CAnimatorController>(controllerNameW + L" (Animator Controller)"))
+        return loaded;
+
+    const fs::path relPathFs(relPath);
+    const string folderName = relPathFs.parent_path().filename().string();
+    const string acDataPath = folderName.empty() ? (controllerName + ".acdata") : (folderName + "_" + controllerName + ".acdata");
+    const wstring acDataPathW = CEngineString::StringToWString(acDataPath);
+
+    CAnimatorController::AnimatorControllerInitInfo acInfo = resources.ReadAnimatorControllerBufferInfos(acDataPathW);
+    CAnimatorController* controller = CResources::LoadResourceComplete_Scene<CAnimatorController>(controllerNameW + L" (Animator Controller)", acDataPathW, nullptr, true);
+    if (!controller)
+        return nullptr;
+
+    controller->Initiailize_Custom(acInfo);
+    CResources::AddSceneResource(controllerNameW, controller, true);
+
+    return controller;
 }
 
 static vector<string> CollectTextureFolders(const vector<string>& files)
@@ -1908,6 +1980,9 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
             if (CMeshFilter* meshFilter = dynamic_cast<CMeshFilter*>(component))
                 RenderMeshFilterComponent(_obj, meshFilter);
 
+            if (CAnimator* animator = dynamic_cast<CAnimator*>(component))
+                RenderAnimatorComponent(_obj, animator);
+
             if (CCloth* cloth = dynamic_cast<CCloth*>(component))
             {
                 _bool useGravity = cloth->GetUseGravity();
@@ -2631,6 +2706,138 @@ void CInspectorBox::RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _m
 
 }
 
+void CInspectorBox::RenderAnimatorComponent(CGameObject* _obj, CAnimator* _animator)
+{
+    if (!_obj || !_animator)
+        return;
+
+    const string animatorId = to_string(reinterpret_cast<uintptr_t>(_animator));
+    CAnimatorController* controller = _animator->Get_Controller();
+    const string currentControllerName = controller ? NormalizeAnimatorControllerName(controller->Get_ResourceName()) : "None";
+    const auto& controllerFiles = GetAnimatorControllerRelativeFiles();
+    const string currentControllerRelPath = FindAnimatorControllerRelativePath(controller);
+
+    if (ImGui::BeginCombo(("Controller##" + animatorId).c_str(), currentControllerName.c_str()))
+    {
+        if (ImGui::Selectable("None", controller == nullptr))
+            _animator->Set_Controller(nullptr);
+
+        for (const string& relPath : controllerFiles)
+        {
+            const string stem = fs::path(relPath).stem().string();
+            const _bool selected = controller && stem == currentControllerName;
+            if (ImGui::Selectable(relPath.c_str(), selected))
+            {
+                if (CAnimatorController* selectedController = LoadInspectorAnimatorControllerResource(relPath))
+                    _animator->Set_Controller(selectedController);
+            }
+
+            if (selected)
+                ImGui::SetItemDefaultFocus();
+        }
+
+        ImGui::EndCombo();
+    }
+
+    if (!currentControllerRelPath.empty())
+    {
+        ImGui::SameLine();
+        if (ImGui::Button(("Open Controller##" + animatorId).c_str()))
+            CEditor::GetInstance().OpenAnimatorController(fs::path(L"../Assets") / fs::path(currentControllerRelPath));
+    }
+
+    _bool applyRootMotion = _animator->ApplyRootmotion();
+    if (ImGui::Checkbox(("Apply Root Motion##" + animatorId).c_str(), &applyRootMotion))
+        _animator->SetApplyRootmotion(applyRootMotion, applyRootMotion ? _obj->Get_Transform() : nullptr);
+
+    _float playbackSpeed = _animator->Get_PlaybackSpeed();
+    if (ImGui::InputFloat(("Playback Speed##" + animatorId).c_str(), &playbackSpeed, 0.1f, 1.f, "%.3f"))
+        _animator->Set_PlaybackSpeed(max(0.01f, playbackSpeed));
+
+    if (ImGui::Button(("Play##" + animatorId).c_str()))
+        _animator->Play();
+    ImGui::SameLine();
+    if (ImGui::Button(("Pause##" + animatorId).c_str()))
+        _animator->Pause();
+    ImGui::SameLine();
+    if (ImGui::Button(("Stop##" + animatorId).c_str()))
+        _animator->Stop();
+
+    const string currentState = CEngineString::WStringToString(_animator->Get_CurrentState());
+    ImGui::Text("Current State: %s", currentState.empty() ? "None" : currentState.c_str());
+
+    CAnimationClip* currentAnimation = _animator->Get_CurrentDisplayAnimation();
+    const string currentAnimationName = currentAnimation ? CEngineString::WStringToString(currentAnimation->Get_ResourceName()) : "None";
+    ImGui::Text("Current Clip: %s", currentAnimationName.c_str());
+    ImGui::Text("Playing: %s", _animator->IsPlaying() ? "True" : "False");
+    ImGui::Text("Loop: %s", _animator->IsLoop() ? "True" : "False");
+    ImGui::Text("Normalized Time: %.3f", _animator->GetNormalizedTime());
+
+    if (!controller)
+        return;
+
+    if (ImGui::TreeNode(("Parameters##" + animatorId).c_str()))
+    {
+        vector<const CAnimatorController::ParameterDesc*> parameters;
+        parameters.reserve(controller->Get_ParamMap().size());
+
+        for (const auto& entry : controller->Get_ParamMap())
+            parameters.push_back(&entry.second);
+
+        sort(parameters.begin(), parameters.end(), [](const auto* lhs, const auto* rhs)
+            {
+                return lhs->name < rhs->name;
+            });
+
+        for (const CAnimatorController::ParameterDesc* parameter : parameters)
+        {
+            if (!parameter)
+                continue;
+
+            const string paramLabel = CEngineString::WStringToString(parameter->name);
+            switch (parameter->type)
+            {
+            case CAnimatorController::PARAM_TYPE::BOOL:
+            {
+                _bool value = parameter->defaultBool;
+                _animator->GetBool(parameter->name, value);
+                if (ImGui::Checkbox((paramLabel + "##Bool" + animatorId).c_str(), &value))
+                    _animator->SetBool(parameter->name, value);
+                break;
+            }
+            case CAnimatorController::PARAM_TYPE::INT:
+            {
+                _int value = parameter->defaultInt;
+                _animator->GetInt(parameter->name, value);
+                if (ImGui::InputInt((paramLabel + "##Int" + animatorId).c_str(), &value))
+                    _animator->SetInt(parameter->name, value);
+                break;
+            }
+            case CAnimatorController::PARAM_TYPE::FLOAT:
+            {
+                _float value = parameter->defaultFloat;
+                _animator->GetFloat(parameter->name, value);
+                if (ImGui::InputFloat((paramLabel + "##Float" + animatorId).c_str(), &value, 0.1f, 1.f, "%.3f"))
+                    _animator->SetFloat(parameter->name, value);
+                break;
+            }
+            case CAnimatorController::PARAM_TYPE::TRIGGER:
+            {
+                ImGui::TextUnformatted(paramLabel.c_str());
+                ImGui::SameLine();
+                if (ImGui::Button(("Fire##Trigger" + animatorId + paramLabel).c_str()))
+                    _animator->SetTrigger(parameter->name);
+                break;
+            }
+            default:
+                break;
+            }
+        }
+
+        ImGui::TreePop();
+    }
+}
+
 void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
 {
     if (!_obj)
@@ -2966,6 +3173,10 @@ void CInspectorBox::RenderSelectedAssetPreview(const fs::path& path)
     ImTextureID texId = (ImTextureID)(intptr_t)m_pPreviewTexture->Get_SRV();
     ImGui::Image(ImTextureRef(texId), size);
 }
+
+
+
+
 
 
 

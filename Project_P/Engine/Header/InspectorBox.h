@@ -30,6 +30,7 @@ private:
 	void RenderMeshRendererComponent(CMeshRenderer* _meshRenderer);
 	void RenderSkinnedMeshRendererComponent(CGameObject* _obj, CSkinnedMeshRenderer* _skinnedMeshRenderer);
 	void RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _meshFilter);
+	void RenderAnimatorComponent(CGameObject* _obj, CAnimator* _animator);
 	void RenderSelectedAssetInfo(const fs::path& path);
 	void RenderSelectedAssetPreview(const fs::path& path);
 	_float m_fRXDrag, m_fRYDrag, m_fRZDrag;
@@ -38,3 +39,4 @@ private:
 };
 
 NS_END
+

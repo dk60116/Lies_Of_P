@@ -16,6 +16,8 @@ public:
 		_float turnSpeed = 180.f;
 		_float attackRange = 1.f;
 		_float attackSpeed = 0.2f;
+		_float hitKnockbackSpeed = 8.f;
+		_float hitKnockbackDuration = 0.2f;
 	};
 
 protected:
@@ -34,6 +36,7 @@ public:
 public:
 	const wstring& GetMonsterName() const;
 
+public:
 	void Change_State(const _uint _state);
 	const MonsterStatus& GetStatus();
 
@@ -48,6 +51,12 @@ protected:
 public:
 	CNaviMeshAgent* GetNaviAgent();
 
+	const _bool HasPendingHitReaction() const;
+	const _bool IsHitReacting() const;
+	void BeginHitReaction();
+	void EndHitReaction();
+	void TickHitReactionKnockback();
+
 public:
 	void GetHitHandler(const HurtDescription& _hurtDesc) override;
 
@@ -59,4 +68,10 @@ protected:
 	CNaviMeshAgent* m_pNavAgent;
 
 	MonsterStatus m_sStatus;
+	_bool m_bHitRequested;
+	_bool m_bHitReacting;
+	vector3 m_vPendingHitKnockback;
+	vector3 m_vActiveHitKnockback;
+	_float m_fHitKnockbackRemain;
 };
+

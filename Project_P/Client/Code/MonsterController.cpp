@@ -175,10 +175,18 @@ void CMonsterController::Refresh_Target()
 
 CMonsterController::MonsterState CMonsterController::Resolve_State() const
 {
-	if (!m_bHasTarget || !m_pMonster || !m_pBT)
+	if (!m_pMonster)
+		return m_eDefaultState;
+
+	if (m_pMonster->HasPendingHitReaction() || m_pMonster->IsHitReacting())
+		return MonsterState::Hit;
+
+	if (!m_bHasTarget || !m_pBT)
 		return m_eDefaultState;
 
 	CPlayer* player = CGameManager::GetInstance().Get_Player();
+	if (!player)
+		return m_eDefaultState;
 
 	const AIContext& ctx = m_pBT->GetContext();
 	const CMonster::MonsterStatus& status = m_pMonster->GetStatus();

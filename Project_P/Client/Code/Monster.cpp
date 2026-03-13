@@ -8,6 +8,11 @@ CMonster::CMonster()
 	, m_vMeshRenderers({})
 	, m_pController(nullptr)
 	, m_pNavAgent(nullptr)
+	, m_bHitRequested(false)
+	, m_bHitReacting(false)
+	, m_vPendingHitKnockback(vector3::zero())
+	, m_vActiveHitKnockback(vector3::zero())
+	, m_fHitKnockbackRemain(0.f)
 {
 	m_strName = L"Monster";
 }
@@ -25,6 +30,7 @@ HRESULT CMonster::Initialize()
 	PaintTexture();
 	CreateAnimator();
 	CreateAI();
+	m_sStatus.crtHp = m_sStatus.maxHp;
 
 	return S_OK;
 }
@@ -46,6 +52,11 @@ void CMonster::Update()
 
 void CMonster::OnDestroy()
 {
+	m_bHitRequested = false;
+	m_bHitReacting = false;
+	m_vPendingHitKnockback = vector3::zero();
+	m_vActiveHitKnockback = vector3::zero();
+	m_fHitKnockbackRemain = 0.f;
 	__super::OnDestroy();
 }
 
@@ -124,6 +135,95 @@ CNaviMeshAgent* CMonster::GetNaviAgent()
 	return m_pNavAgent;
 }
 
+const _bool CMonster::HasPendingHitReaction() const
+{
+	return m_bHitRequested;
+}
+
+const _bool CMonster::IsHitReacting() const
+{
+	return m_bHitReacting;
+}
+
+void CMonster::BeginHitReaction()
+{
+	m_bHitRequested = false;
+	m_bHitReacting = true;
+	m_vActiveHitKnockback = m_vPendingHitKnockback;
+	m_vActiveHitKnockback.y = 0.f;
+	m_vPendingHitKnockback = vector3::zero();
+	m_fHitKnockbackRemain = m_vActiveHitKnockback.lengthSq() > 0.0001f ? m_sStatus.hitKnockbackDuration : 0.f;
+
+	if (m_fHitKnockbackRemain > 0.f)
+	{
+		const vector3 immediateDelta = m_vActiveHitKnockback.normalized() * max(0.15f, m_sStatus.hitKnockbackSpeed * 0.04f);
+		if (m_pRigidBody)
+			m_pRigidBody->Translate(immediateDelta);
+		else if (Get_Transform())
+			Get_Transform()->Translate(immediateDelta);
+	}
+}
+
+void CMonster::EndHitReaction()
+{
+	m_bHitReacting = false;
+	m_vPendingHitKnockback = vector3::zero();
+	m_vActiveHitKnockback = vector3::zero();
+	m_fHitKnockbackRemain = 0.f;
+}
+
+void CMonster::TickHitReactionKnockback()
+{
+	if (!m_bHitReacting)
+		return;
+
+	if (m_fHitKnockbackRemain <= 0.f || m_vActiveHitKnockback.lengthSq() <= 0.0001f)
+	{
+		m_fHitKnockbackRemain = 0.f;
+		m_vActiveHitKnockback = vector3::zero();
+		return;
+	}
+
+	const _float knockbackSpeed = max(0.f, m_sStatus.hitKnockbackSpeed);
+	if (knockbackSpeed <= 0.f)
+	{
+		m_fHitKnockbackRemain = 0.f;
+		m_vActiveHitKnockback = vector3::zero();
+		return;
+	}
+
+	const vector3 delta = m_vActiveHitKnockback.normalized() * knockbackSpeed * DELTA_TIME;
+	if (m_pRigidBody)
+		m_pRigidBody->Translate(delta);
+	else if (Get_Transform())
+		Get_Transform()->Translate(delta);
+
+	m_fHitKnockbackRemain = max(0.f, m_fHitKnockbackRemain - DELTA_TIME);
+	if (m_fHitKnockbackRemain <= 0.f)
+		m_vActiveHitKnockback = vector3::zero();
+}
+
 void CMonster::GetHitHandler(const HurtDescription& _hurtDesc)
 {
+	if (_hurtDesc.damage > 0)
+	{
+		m_sStatus.crtHp -= _hurtDesc.damage;
+		m_sStatus.crtHp = max(m_sStatus.crtHp, 0);
+	}
+
+	if (CTransform* transform = Get_Transform())
+	{
+		vector3 knockbackDir = transform->Get_Position() - _hurtDesc.position;
+		knockbackDir.y = 0.f;
+
+		if (knockbackDir.lengthSq() <= 0.0001f)
+			knockbackDir = transform->Get_Directions().forward;
+
+		knockbackDir.y = 0.f;
+		if (knockbackDir.lengthSq() > 0.0001f)
+			m_vPendingHitKnockback = knockbackDir.normalized();
+	}
+
+	// Allow rapid combo hits to restart the hit reaction while the monster is already reacting.
+	m_bHitRequested = true;
 }

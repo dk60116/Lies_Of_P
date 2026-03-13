@@ -10,7 +10,7 @@ float speed=0
 trigger turn
 bool isDead=false
 float turnDir=0
-trigger Attack
+trigger attack
 int attackCombo=0
 bool comboContinue=false
 bool isAttack=false
@@ -30,6 +30,7 @@ bool isGround=false
 bool isStrongAttack=false
 trigger Hit
 int HitDirection=0
+int hitDir=0
 
 [state Attack_Light_04]
 motion=Eve_Attack_Light_04
@@ -140,7 +141,7 @@ pos=-873,829
 [state Guard_Start]
 motion=Eve_Guard_Start
 speedMul=1.000000
-pos=-102,-180
+pos=-142,-273
 
 [state SprintToRun]
 blendTree=direct
@@ -153,7 +154,7 @@ pos=873,494
 [state Guard_Idle]
 motion=Eve_Guard_Idle
 speedMul=1.000000
-pos=-387,-206
+pos=-375,-170
 
 [state Guard_End]
 motion=Eve_Guard_End
@@ -217,6 +218,9 @@ blendTree=direct
 param=HitDirection
 directBlend=0.150000
 child=Eve_Hit_Stand_Light_Fw,0.000000
+child=Eve_Hit_Stand_Light_Bw,1.000000
+child=Eve_Hit_Stand_Light_Lw,2.000000
+child=Eve_Hit_Stand_Light_Rw,3.000000
 speedMul=1.000000
 pos=851,-723
 
@@ -298,7 +302,7 @@ blend=0.150000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
-cond=turn && turnDir>0.000000 && isGuard==false
+cond=turn && turnDir>0.000000 && isGuard==false && isStrongAttack==false && isAttack==false
 
 [any]
 to=Run_TurnL
@@ -314,7 +318,7 @@ blend=0.150000
 fixedDuration=false
 transitionDuration=0.000000
 transitionOffset=0.000000
-cond=Attack && attackCombo==0 && isAttack==true
+cond=attack && attackCombo==0 && isAttack==true
 
 [any]
 to=Guard_Start
@@ -346,7 +350,7 @@ blend=0.150000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
-cond=isStrongAttack==true && attackCombo==0 && Attack
+cond=isStrongAttack==true && attackCombo==0 && attack
 
 [any]
 to=Hit_Stand_Light
@@ -394,7 +398,7 @@ transitionOffset=0.000000
 
 [transition Run_TurnR->Run_Forward]
 blend=0.150000
-cond=isAttack==false
+cond=isAttack==false && isStrongAttack==false
 exitTime=0.250000
 fixedDuration=false
 transitionDuration=0.150000
@@ -1188,10 +1192,10 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
-[transition Hit_Stand_Light->Run_Forward]
+[transition Hit_Stand_Light->Run_Forward_Start]
 blend=0.150000
 cond=speed>0.100000
-exitTime=0.100000
+exitTime=0.200000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

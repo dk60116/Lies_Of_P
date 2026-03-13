@@ -1,6 +1,7 @@
 #include "cpch.h"
 #include "Character.h"
 #include "HurtBox.h"
+#include "HitBox.h"
 
 CCharacter::CCharacter()
 	: m_strCharacterName(L"")
@@ -11,6 +12,7 @@ CCharacter::CCharacter()
 	, m_bIsGround(false)
 	, m_iGroundMask(0)
 	, m_vHurtBoxInfoList({})
+	, m_vHitBoxInfoList({})
 	, m_mHurtBoxList({})
 {
 }
@@ -30,6 +32,7 @@ HRESULT CCharacter::Initialize()
 void CCharacter::Awake()
 {
 	CreateHurtBox();
+	CreateHitBox();
 	SetAnimationAction();
 }
 
@@ -50,6 +53,9 @@ void CCharacter::OnDestroy()
 {
 	for (TRAVERSAL_ITER(m_mHurtBoxList, it))
 		Safe_Release((*it).second);
+
+	m_vHurtBoxInfoList.clear();
+	m_vHitBoxInfoList.clear();
 }
 
 CAnimator* CCharacter::GetAnimator()
@@ -81,7 +87,7 @@ void CCharacter::CreateHurtBox()
 {
 	for (size_t i = 0; i < m_vHurtBoxInfoList.size(); ++i)
 	{
-		CGameObject* go = m_pGameObject->Get_Scene()->Add_GameObject(L"ColliderBox_" + m_vHurtBoxInfoList[i].boneName);
+		CGameObject* go = m_pGameObject->Get_Scene()->Add_GameObject(L"HurtBox_" + m_vHurtBoxInfoList[i].boneName);
 		CTransform* tb = Get_Transform()->Find_ChildRecursive(m_vHurtBoxInfoList[i].boneName);
 
 		go->Get_Transform()->SetParent(tb);
@@ -91,7 +97,25 @@ void CCharacter::CreateHurtBox()
 
 		CHurtBox* hb = go->AddComponent<CHurtBox>();
 
-		hb->CreateHurtBox(this, m_vHurtBoxInfoList[i].boneName, m_vHurtBoxInfoList[i].shape, m_vHurtBoxInfoList[i].size);
+		hb->CreateHurtBox(this, m_vHurtBoxInfoList[i].boneName, m_vHurtBoxInfoList[i].shape, m_vHurtBoxInfoList[i].size, m_vHurtBoxInfoList[i].center);
+	}
+}
+
+void CCharacter::CreateHitBox()
+{
+	for (size_t i = 0; i < m_vHitBoxInfoList.size(); ++i)
+	{
+		CGameObject* go = m_pGameObject->Get_Scene()->Add_GameObject(L"HitBox_" + m_vHitBoxInfoList[i].boneName);
+		CTransform* tb = Get_Transform()->Find_ChildRecursive(m_vHitBoxInfoList[i].boneName);
+
+		go->Get_Transform()->SetParent(tb);
+		go->Get_Transform()->Set_LocalPosition(vector3::zero());
+		go->Get_Transform()->Set_LocalEulerAngles(vector3::zero());
+		go->Get_Transform()->Set_LocalScale(vector3::one());
+
+		CHitBox* hb = go->AddComponent<CHitBox>();
+
+		hb->CreateHitBox(this, m_vHitBoxInfoList[i].boneName, m_vHitBoxInfoList[i].shape, m_vHitBoxInfoList[i].size, m_vHitBoxInfoList[i].center);
 	}
 }
 

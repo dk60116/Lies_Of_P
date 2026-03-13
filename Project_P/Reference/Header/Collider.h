@@ -55,12 +55,13 @@ private:
 protected:
     void NotifyShapeChanged();
     _float4 GetGizmoColor() const;
+    vector3 GetWorldScale();
 
 protected:
     class CRigidBody* m_pRigidBody;
     _bool m_bIsTrigger;
     vector3 m_vCenter;
-    vector3 m_vCachedScale;
+    vector3 m_vCachedShapeWorldScale;
 
     _bool m_bShapeDirty;
     const mutable Shape* m_pShape;

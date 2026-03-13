@@ -233,7 +233,7 @@ void CMeshCollider::Update()
         NotifyShapeChanged();
     }
 
-    const vector3 worldScale = ExtractWorldScale(Get_Transform());
+    const vector3 worldScale = GetWorldScale();
     const _float dx = fabsf(worldScale.x - m_vCachedWorldScale.x);
     const _float dy = fabsf(worldScale.y - m_vCachedWorldScale.y);
     const _float dz = fabsf(worldScale.z - m_vCachedWorldScale.z);
@@ -283,7 +283,7 @@ void CMeshCollider::Render_Gizmo()
 
     m_pLineMaterial->Set_BaseColor(GetGizmoColor());
 
-    const vector3 scale = ExtractWorldScale(Get_Transform());
+    const vector3 scale = GetWorldScale();
     const _float meshScale = renderer->GetScaleFactor();
     const _matrix centerOffset = XMMatrixTranslation(m_vCenter.x * scale.x * meshScale, m_vCenter.y * scale.y * meshScale, m_vCenter.z * scale.z * meshScale);
     const _matrix gizmoWorld = centerOffset * Get_Transform()->Get_WorldMatrix();
@@ -359,7 +359,7 @@ void CMeshCollider::BuildShapeIfNeeded()
         return;
     }
 
-    const vector3 scale = ExtractWorldScale(Get_Transform());
+    const vector3 scale = GetWorldScale();
     m_vCachedWorldScale = scale;
     const _float meshScale = renderer->GetScaleFactor();
 

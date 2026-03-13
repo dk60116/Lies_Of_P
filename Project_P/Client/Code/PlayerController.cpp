@@ -203,6 +203,14 @@ void CPlayerController::RequestAction(PlayerState _state)
 	m_pCtx->BufferAction(_state);
 }
 
+void CPlayerController::QueueHitKnockback(const vector3& _dir)
+{
+	if (!m_pCtx)
+		return;
+
+	m_pCtx->QueueHitKnockback(_dir);
+}
+
 void CPlayerController::Set_Player(CPlayer* _player)
 {
 	m_pPlayer = _player;
@@ -283,3 +291,4 @@ void CPlayerController::Update_Key()
 	m_mKeyDown[Jump] = CInput::GetInstance().GetKeyDown(key_Jump);
 	m_mKeyUp[Jump] = CInput::GetInstance().GetKeyUp(key_Jump);
 }
+

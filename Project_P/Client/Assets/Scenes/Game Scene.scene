@@ -96,6 +96,9 @@ Eve_Battle_JumpForward_Start : Player/Eve/Animations/Eve_Battle_JumpForward_Star
 Eve_Battle_JumpForward_End : Player/Eve/Animations/Eve_Battle_JumpForward_End.fbx : [Animation Clip]
 //Eve Animations - Hit
 Eve_Hit_Stand_Light_Fw : Player/Eve/Animations/Eve_Hit_Stand_Light_Fw.fbx : [Animation Clip]
+Eve_Hit_Stand_Light_Bw : Player/Eve/Animations/Eve_Hit_Stand_Light_Bw.fbx : [Animation Clip]
+Eve_Hit_Stand_Light_Lw : Player/Eve/Animations/Eve_Hit_Stand_Light_Lw.fbx : [Animation Clip]
+Eve_Hit_Stand_Light_Rw : Player/Eve/Animations/Eve_Hit_Stand_Light_Rw.fbx : [Animation Clip]
 // Eve_Weapon
 Eve_Sword_Model : Player/Weapon/Eve_Sword.fbx : [Skinned Mesh]
 // Eve_Weapon_Texture
@@ -122,6 +125,7 @@ Anim_Mon_Creeper_Run_Start : Monster/Creeper/Animations/Mon_Creeper_Run_Start.fb
 Anim_Mon_Creeper_Run_Loop : Monster/Creeper/Animations/Mon_Creeper_Run_Loop.fbx : [Animation Clip] [Loop]
 Anim_Mon_Creeper_Run_End : Monster/Creeper/Animations/Mon_Creeper_Run_End.fbx : [Animation Clip] [Loop]
 Anim_Mon_Creeper_BaseAttack : Monster/Creeper/Animations/Mon_Creeper_BaseAttack.fbx : [Animation Clip]
+Anim_Mon_Creeper_Hit_Fw.fbx : Monster/Creeper/Animations/Mon_Creeper_Hit_Fw.fbx : [Animation Clip]
 // UI
 HeartBar : UI/HUDUI/HeartBar.png : [Texture]Building_0_Stage01_Building_00_Auto_1770860177475 : Map/Map01/Building_0/Stage01_Building_00.fbx : [Mesh]
 Building_0_Stage01_Building_00_Auto_1770865212651 : Map/Map01/Building_0/Stage01_Building_00.fbx : [Mesh]

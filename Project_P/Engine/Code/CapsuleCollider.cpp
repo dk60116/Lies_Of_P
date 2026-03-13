@@ -132,7 +132,7 @@ void CCapsuleCollider::Render_Gizmo()
 
     m_pLineMaterial->Set_BaseColor(GetGizmoColor());
 
-    const vector3 scale = Get_Transform()->Get_LocalScale();
+    const vector3 scale = GetWorldScale();
     const _float radialScale = max(fabsf(scale.x), fabsf(scale.z));
     const _float heightScale = fabsf(scale.y);
 
@@ -140,9 +140,10 @@ void CCapsuleCollider::Render_Gizmo()
     const _float halfHeight = max(m_fHeight * heightScale * 0.5f, 0.f);
     const _uint segmentCount = 36u;
 
-    const _matrix objectWorld = Get_Transform()->Get_WorldMatrix();
-    const _matrix centerOffset = XMMatrixTranslation(m_vCenter.x, m_vCenter.y, m_vCenter.z);
-    const _matrix world = centerOffset * objectWorld;
+    const vector3 scaledCenter(m_vCenter.x * scale.x, m_vCenter.y * scale.y, m_vCenter.z * scale.z);
+    const vector3 worldPos = Get_Transform()->Get_Position();
+    const quaternion worldRotation = Get_Transform()->Get_Quaternion();
+    const _matrix world = XMMatrixRotationQuaternion(XMVectorSet(worldRotation.x, worldRotation.y, worldRotation.z, worldRotation.w)) * XMMatrixTranslation(worldPos.x, worldPos.y, worldPos.z);
 
     _float3 camPos = _float3();
     _matrix matView = cam->GetViewMatrix();
@@ -164,10 +165,10 @@ void CCapsuleCollider::Render_Gizmo()
         const _float t0 = (XM_2PI * static_cast<_float>(i)) / static_cast<_float>(segmentCount);
         const _float t1 = (XM_2PI * static_cast<_float>(i + 1)) / static_cast<_float>(segmentCount);
 
-        _vector top0 = XMVectorSet(cosf(t0) * radius, halfHeight, sinf(t0) * radius, 1.f);
-        _vector top1 = XMVectorSet(cosf(t1) * radius, halfHeight, sinf(t1) * radius, 1.f);
-        _vector bottom0 = XMVectorSet(cosf(t0) * radius, -halfHeight, sinf(t0) * radius, 1.f);
-        _vector bottom1 = XMVectorSet(cosf(t1) * radius, -halfHeight, sinf(t1) * radius, 1.f);
+        _vector top0 = XMVectorSet(cosf(t0) * radius + scaledCenter.x, halfHeight + scaledCenter.y, sinf(t0) * radius + scaledCenter.z, 1.f);
+        _vector top1 = XMVectorSet(cosf(t1) * radius + scaledCenter.x, halfHeight + scaledCenter.y, sinf(t1) * radius + scaledCenter.z, 1.f);
+        _vector bottom0 = XMVectorSet(cosf(t0) * radius + scaledCenter.x, -halfHeight + scaledCenter.y, sinf(t0) * radius + scaledCenter.z, 1.f);
+        _vector bottom1 = XMVectorSet(cosf(t1) * radius + scaledCenter.x, -halfHeight + scaledCenter.y, sinf(t1) * radius + scaledCenter.z, 1.f);
 
         top0 = XMVector3Transform(top0, world);
         top1 = XMVector3Transform(top1, world);
@@ -180,17 +181,17 @@ void CCapsuleCollider::Render_Gizmo()
 
     _vector axisTop[4] =
     {
-        XMVectorSet(radius, halfHeight, 0.f, 1.f),
-        XMVectorSet(-radius, halfHeight, 0.f, 1.f),
-        XMVectorSet(0.f, halfHeight, radius, 1.f),
-        XMVectorSet(0.f, halfHeight, -radius, 1.f)
+        XMVectorSet(radius + scaledCenter.x, halfHeight + scaledCenter.y, scaledCenter.z, 1.f),
+        XMVectorSet(-radius + scaledCenter.x, halfHeight + scaledCenter.y, scaledCenter.z, 1.f),
+        XMVectorSet(scaledCenter.x, halfHeight + scaledCenter.y, radius + scaledCenter.z, 1.f),
+        XMVectorSet(scaledCenter.x, halfHeight + scaledCenter.y, -radius + scaledCenter.z, 1.f)
     };
     _vector axisBottom[4] =
     {
-        XMVectorSet(radius, -halfHeight, 0.f, 1.f),
-        XMVectorSet(-radius, -halfHeight, 0.f, 1.f),
-        XMVectorSet(0.f, -halfHeight, radius, 1.f),
-        XMVectorSet(0.f, -halfHeight, -radius, 1.f)
+        XMVectorSet(radius + scaledCenter.x, -halfHeight + scaledCenter.y, scaledCenter.z, 1.f),
+        XMVectorSet(-radius + scaledCenter.x, -halfHeight + scaledCenter.y, scaledCenter.z, 1.f),
+        XMVectorSet(scaledCenter.x, -halfHeight + scaledCenter.y, radius + scaledCenter.z, 1.f),
+        XMVectorSet(scaledCenter.x, -halfHeight + scaledCenter.y, -radius + scaledCenter.z, 1.f)
     };
 
     for (_uint i = 0; i < 4; ++i)
@@ -206,15 +207,15 @@ void CCapsuleCollider::Render_Gizmo()
         const _float t0 = (XM_PI * static_cast<_float>(i)) / static_cast<_float>(hemiSegments);
         const _float t1 = (XM_PI * static_cast<_float>(i + 1)) / static_cast<_float>(hemiSegments);
 
-        _vector pxTop0 = XMVectorSet(cosf(t0) * radius, halfHeight + sinf(t0) * radius, 0.f, 1.f);
-        _vector pxTop1 = XMVectorSet(cosf(t1) * radius, halfHeight + sinf(t1) * radius, 0.f, 1.f);
-        _vector pzTop0 = XMVectorSet(0.f, halfHeight + sinf(t0) * radius, cosf(t0) * radius, 1.f);
-        _vector pzTop1 = XMVectorSet(0.f, halfHeight + sinf(t1) * radius, cosf(t1) * radius, 1.f);
+        _vector pxTop0 = XMVectorSet(cosf(t0) * radius + scaledCenter.x, halfHeight + sinf(t0) * radius + scaledCenter.y, scaledCenter.z, 1.f);
+        _vector pxTop1 = XMVectorSet(cosf(t1) * radius + scaledCenter.x, halfHeight + sinf(t1) * radius + scaledCenter.y, scaledCenter.z, 1.f);
+        _vector pzTop0 = XMVectorSet(scaledCenter.x, halfHeight + sinf(t0) * radius + scaledCenter.y, cosf(t0) * radius + scaledCenter.z, 1.f);
+        _vector pzTop1 = XMVectorSet(scaledCenter.x, halfHeight + sinf(t1) * radius + scaledCenter.y, cosf(t1) * radius + scaledCenter.z, 1.f);
 
-        _vector pxBottom0 = XMVectorSet(cosf(t0) * radius, -halfHeight - sinf(t0) * radius, 0.f, 1.f);
-        _vector pxBottom1 = XMVectorSet(cosf(t1) * radius, -halfHeight - sinf(t1) * radius, 0.f, 1.f);
-        _vector pzBottom0 = XMVectorSet(0.f, -halfHeight - sinf(t0) * radius, cosf(t0) * radius, 1.f);
-        _vector pzBottom1 = XMVectorSet(0.f, -halfHeight - sinf(t1) * radius, cosf(t1) * radius, 1.f);
+        _vector pxBottom0 = XMVectorSet(cosf(t0) * radius + scaledCenter.x, -halfHeight - sinf(t0) * radius + scaledCenter.y, scaledCenter.z, 1.f);
+        _vector pxBottom1 = XMVectorSet(cosf(t1) * radius + scaledCenter.x, -halfHeight - sinf(t1) * radius + scaledCenter.y, scaledCenter.z, 1.f);
+        _vector pzBottom0 = XMVectorSet(scaledCenter.x, -halfHeight - sinf(t0) * radius + scaledCenter.y, cosf(t0) * radius + scaledCenter.z, 1.f);
+        _vector pzBottom1 = XMVectorSet(scaledCenter.x, -halfHeight - sinf(t1) * radius + scaledCenter.y, cosf(t1) * radius + scaledCenter.z, 1.f);
 
         drawSegment(XMVector3Transform(pxTop0, world), XMVector3Transform(pxTop1, world));
         drawSegment(XMVector3Transform(pzTop0, world), XMVector3Transform(pzTop1, world));
@@ -261,7 +262,7 @@ void CCapsuleCollider::BuildShapeIfNeeded()
 
     ReleaseShape();
 
-    const vector3 scale = Get_Transform()->Get_LocalScale();
+    const vector3 scale = GetWorldScale();
     const _float radialScale = max(fabsf(scale.x), fabsf(scale.z));
     const _float heightScale = fabsf(scale.y);
 
@@ -313,6 +314,5 @@ void CCapsuleCollider::BuildShapeIfNeeded()
 
     m_bShapeDirty = false;
 }
-
 
 

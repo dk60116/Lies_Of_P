@@ -116,8 +116,6 @@ namespace Engine
 			const CollisionObjectType type1 = CPhysics::GetCollisionObjectType(inObject1);
 			const CollisionObjectType type2 = CPhysics::GetCollisionObjectType(inObject2);
 
-			if (type1 == CollisionObjectType::Sensor && type2 == CollisionObjectType::Sensor)
-				return false;
 
 			if (type1 == CollisionObjectType::NonMoving)
 				return (type2 == CollisionObjectType::Moving) || (type2 == CollisionObjectType::Sensor);
@@ -126,7 +124,7 @@ namespace Engine
 				return (type2 == CollisionObjectType::NonMoving) || (type2 == CollisionObjectType::Moving) || (type2 == CollisionObjectType::Sensor);
 
 			if (type1 == CollisionObjectType::Sensor)
-				return (type2 == CollisionObjectType::NonMoving) || (type2 == CollisionObjectType::Moving);
+				return (type2 == CollisionObjectType::NonMoving) || (type2 == CollisionObjectType::Moving) || (type2 == CollisionObjectType::Sensor);
 
 			return false;
 		}
@@ -1369,3 +1367,4 @@ vector<CPhysics::RAYCASTHIT> CPhysics::SphereRaycast(const SphereRay& _sphereRay
 
 	return hits;
 }
+

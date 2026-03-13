@@ -492,7 +492,7 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     vector3 currentPos(static_cast<_float>(tfPos.GetX()), static_cast<_float>(tfPos.GetY()), static_cast<_float>(tfPos.GetZ()));
     quaternion currentRot(tfRot.GetX(), tfRot.GetY(), tfRot.GetZ(), tfRot.GetW());
 
-    if (m_bHasBody)
+    if (m_bHasBody && !m_bKinematic)
     {
         const RVec3 bodyPos = GetBI().GetPosition(m_iBodyID);
         const Quat bodyRot = GetBI().GetRotation(m_iBodyID);
@@ -519,6 +519,14 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
         m_vConstRotation.z = targetEuler.z;
 
     ApplyAxisConstraints(targetPos, targetRot);
+
+    if (m_bKinematic)
+    {
+        Get_Transform()->Set_Position(targetPos);
+        Get_Transform()->Set_Quaternion(targetRot);
+        CacheLastSyncedTransform(targetPos, targetRot);
+        return;
+    }
 
     const _float fixedDt = max(CPhysics::GetInstance().GetFixedDeltaTime(), 0.0001f);
     const _float commandDt = max(DELTA_TIME, 0.0001f);
@@ -1170,5 +1178,4 @@ void CRigidBody::CacheLastSyncedTransform(const vector3& _pos, const quaternion&
     m_vLastSyncedRotation = _rot;
     m_bHasLastSyncedTransform = true;
 }
-
 

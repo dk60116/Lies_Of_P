@@ -12,5 +12,16 @@ public:
     void Enter() override;
     void Update() override;
     void Exit() override;
+
+private:
+    void StopHandler();
+
+private:
+    _bool m_bCanMove;
+    vector3 m_vKnockbackDir;
+
+private:
+    vector<wstring> m_vAnimationNames;
 };
+
 

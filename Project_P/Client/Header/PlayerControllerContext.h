@@ -66,6 +66,8 @@ public:
 	CAnimator* Animator();
 	CRigidBody* RigidBody();
 	const CPlayer::PlayerStatus& PlayerStatus();
+	void QueueHitKnockback(const vector3& _dir);
+	vector3 ConsumeHitKnockback();
 
 	void SetAnimMoveSpeed(_float _v);
 
@@ -98,6 +100,7 @@ public:
 
 public:
 	CPlayerController* Get_Controller();
+	CPlayer* Get_Player();
 
 	const _bool IsSprint() const;
 	const _bool IsBigTurn() const;
@@ -148,6 +151,7 @@ private:
 	CPlayer* m_pPlayer;
 	CPlayerCamera* m_pCam;
 	CPlayerController* m_pController;
+	vector3 m_vPendingHitKnockback;
 
 private:
 	_bool m_bSprint, m_bBigTurn;
@@ -162,3 +166,6 @@ private:
 	CONTEXT_VALUE* GetBattleContext(PlayerState state);
 	const CONTEXT_VALUE* GetBattleContext(PlayerState state) const;
 };
+
+
+

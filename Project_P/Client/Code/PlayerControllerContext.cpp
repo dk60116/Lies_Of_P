@@ -6,6 +6,7 @@ CPlayerControllerContext::CPlayerControllerContext()
 	: m_pPlayer(nullptr)
 	, m_pController(nullptr)
 	, m_pCam(nullptr)
+	, m_vPendingHitKnockback(vector3::zero())
 	, m_Cv_Move({})
 	, m_eCurrentState(CPlayerController::PlayerState::Idle)
 	, m_bSprint(false)
@@ -218,6 +219,12 @@ void CPlayerControllerContext::TickMove()
 		return;
 	}
 
+	if (!m_bCanMove)
+	{
+		m_Cv_Move.m_fMove01 = 0.f;
+		return;
+	}
+
 	const _float target01 = IsKeyPressed_Hold(CPlayerController::PlayerState::Move) ? 1.f : 0.f;
 	const _float rate = (target01 > m_Cv_Move.m_fMove01) ? PlayerStatus().moveAccelRate : PlayerStatus().moveDecelRat;
 	const _float maxDelta = rate * dt;
@@ -281,7 +288,14 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float _stopEpsDeg)
 
 	m_bBigTurn = false;
 
-	if (!m_Cv_Move.m_bBigTurnLatched && absDelta >= m_Cv_Move.m_fBigTurnDeg && IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
+	const _bool isAttackTurning =
+		IsActionActive(CPlayerController::PlayerState::Attack) ||
+		IsActionActive(CPlayerController::PlayerState::Attack_S);
+
+	if (!isAttackTurning &&
+		!m_Cv_Move.m_bBigTurnLatched &&
+		absDelta >= m_Cv_Move.m_fBigTurnDeg &&
+		IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
 	{  
 		SetAnimTurn(m_Cv_Move.m_turnDir);
 		m_pPlayer->GetAnimator()->SetTrigger(L"turn");
@@ -326,6 +340,18 @@ CRigidBody* CPlayerControllerContext::RigidBody()
 const CPlayer::PlayerStatus& CPlayerControllerContext::PlayerStatus()
 {
 	return m_pPlayer->Get_PlayerStatus();
+}
+
+void CPlayerControllerContext::QueueHitKnockback(const vector3& _dir)
+{
+	m_vPendingHitKnockback = _dir;
+}
+
+vector3 CPlayerControllerContext::ConsumeHitKnockback()
+{
+	const vector3 knockbackDir = m_vPendingHitKnockback;
+	m_vPendingHitKnockback = vector3::zero();
+	return knockbackDir;
 }
 
 void CPlayerControllerContext::SetAnimMoveSpeed(_float _v)
@@ -510,6 +536,11 @@ CPlayerController* CPlayerControllerContext::Get_Controller()
 	return m_pController;
 }
 
+CPlayer* CPlayerControllerContext::Get_Player()
+{
+	return m_pPlayer;
+}
+
 const _bool CPlayerControllerContext::IsSprint() const
 {
 	return m_bSprint;
@@ -621,3 +652,7 @@ void CPlayerControllerContext::StopMoveImmediate()
 
 	SetAnimMoveSpeed(0.f);
 }
+
+
+
+

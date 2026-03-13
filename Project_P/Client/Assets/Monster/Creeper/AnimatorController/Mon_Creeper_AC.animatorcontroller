@@ -9,31 +9,40 @@ Any_stateTranslation=10,10
 float speed=0
 trigger attack
 bool isDead=false
+trigger Hit
+int HitDir=0
 
 [state Idle]
 motion=Anim_Mon_Creeper_Idle
 speedMul=1.000000
-pos=228,77
-
-[state Run_Loop]
-motion=Anim_Mon_Creeper_Run_Loop
-speedMul=1.000000
-pos=692,273
-
-[state Run_Start]
-motion=Anim_Mon_Creeper_Run_Start
-speedMul=1.000000
-pos=595,118
+pos=216,72
 
 [state Attack]
 motion=Anim_Mon_Creeper_BaseAttack
 speedMul=1.000000
 pos=199,-101
 
+[state Run_Start]
+motion=Anim_Mon_Creeper_Run_Start
+speedMul=1.000000
+pos=595,118
+
+[state Run_Loop]
+motion=Anim_Mon_Creeper_Run_Loop
+speedMul=1.000000
+pos=692,273
+
 [state Run_End]
 motion=Anim_Mon_Creeper_Run_End
 speedMul=1.000000
 pos=405,446
+
+[state Hit]
+blendTree=direct
+param=HitDir
+child=Anim_Mon_Creeper_Hit_Fw.fbx,0.000000
+speedMul=1.000000
+pos=-94,-188
 
 [entry]
 to=Idle
@@ -49,6 +58,14 @@ fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 cond=attack
+
+[any]
+to=Hit
+blend=0.150000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+cond=Hit
 
 [transition Idle->Run_Start]
 blend=0.150000
@@ -90,6 +107,22 @@ transitionOffset=0.000000
 blend=0.150000
 cond=speed>0.100000
 exitTime=0.800000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Hit->Idle]
+blend=0.150000
+cond=speed==0.000000
+exitTime=0.800000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Hit->Run_Start]
+blend=0.150000
+cond=speed>=0.100000
+exitTime=0.300000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

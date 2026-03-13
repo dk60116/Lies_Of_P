@@ -30,6 +30,7 @@ public:
 		_int attackPower = 1;
 		_float evadeLength = 5.f;
 		_float jumpPower = 340.f;
+		_float hitKnockbackSpeed = 3.f;
 	};
 
 protected:
@@ -63,6 +64,8 @@ public:
 	void SetLightAttakComboCount(const _uint _count);
 
 public:
+	void OnSwordAttackHandler();
+	void DisableSwordCollider();
 	void GetHitHandler(const HurtDescription& _hurtDesc) override;
 
 protected:
@@ -83,4 +86,5 @@ private:
 public:
 	_uint m_iLightAttackComboCount;
 };
+
 

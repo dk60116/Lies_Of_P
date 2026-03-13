@@ -739,6 +739,21 @@ void CAnimator::Set_Controller(CAnimatorController* _controller, const _bool _pl
 	}
 }
 
+CAnimatorController* CAnimator::Get_Controller() const
+{
+	return m_pController;
+}
+
+const wstring& CAnimator::Get_CurrentState() const
+{
+	return m_ControllerInst.Get_CurrentState();
+}
+
+const _float CAnimator::Get_PlaybackSpeed() const
+{
+	return m_fPlaybackSpeed;
+}
+
 unordered_map<wstring, CAnimationClip*>& CAnimator::Get_AnimationClipList()
 {
 	return m_mAnimationList;
@@ -746,6 +761,20 @@ unordered_map<wstring, CAnimationClip*>& CAnimator::Get_AnimationClipList()
 
 CAnimationClip* CAnimator::Get_CurrentAnimation()
 {
+	return m_pCrtAnimation;
+}
+
+CAnimationClip* CAnimator::Get_CurrentDisplayAnimation() const
+{
+	if (m_bBlending && m_bNextBlendTreeActive && m_pNextBlendTree)
+		return GetBlendTreeDominantClip(*m_pNextBlendTree);
+
+	if (m_bBlendTreeActive && m_pBlendTree)
+		return GetBlendTreeDominantClip(*m_pBlendTree);
+
+	if (m_bBlending && m_pNextAnimation)
+		return m_pNextAnimation;
+
 	return m_pCrtAnimation;
 }
 
@@ -1311,7 +1340,7 @@ const _bool CAnimator::GetBool(const wstring& n, _bool& out) const
 	return r;
 }
 
-const _bool CAnimator::GetInt(const wstring& n, _bool& out) const
+const _bool CAnimator::GetInt(const wstring& n, _int& out) const
 {
 	_bool r = m_ControllerInst.GetInt(n, out);
 	if (!r)
@@ -1326,3 +1355,6 @@ const _bool CAnimator::GetFloat(const wstring& n, _float& out) const
 		CDebug::LogError(L"Not fount Animation Clip Float Value - \"" + n + L'"' + L": " + m_pGameObject->Get_ObjectNameID());
 	return r;
 }
+
+
+

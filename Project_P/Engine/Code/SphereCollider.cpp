@@ -130,7 +130,7 @@ void CSphereCollider::Render_Gizmo()
 
     m_pLineMaterial->Set_BaseColor(GetGizmoColor());
 
-    const vector3 scale = Get_Transform()->Get_LocalScale();
+    const vector3 scale = GetWorldScale();
     const _float maxScale = max(fabsf(scale.x), max(fabsf(scale.y), fabsf(scale.z)));
     const _float radius = max(m_fRadius * maxScale, 0.001f);
     const _uint segmentCount = 48u;
@@ -212,7 +212,7 @@ void CSphereCollider::BuildShapeIfNeeded()
 
     ReleaseShape();
 
-    const vector3 scale = Get_Transform()->Get_LocalScale();
+    const vector3 scale = GetWorldScale();
     const _float maxScale = max(fabsf(scale.x), max(fabsf(scale.y), fabsf(scale.z)));
     const _float radius = max(m_fRadius * maxScale, 0.001f);
     JPH::SphereShapeSettings sphereSettings(radius);

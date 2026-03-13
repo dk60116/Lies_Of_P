@@ -33,10 +33,6 @@ HRESULT CGameScene::Initialize()
 	m_pDirLight->Set_Color(ColorValue(170, 230, 160));
 	m_pDirLight->Get_Transform()->Set_EulerAngles(45.f, 160.f, 0.f);
 
-	CGameObject* lightObject2 = Add_GameObject(L"Point Light");
-	CLight* pointLight = lightObject2->AddComponent<CLight>();
-	pointLight->Set_Type(CLight::Type::point);
-
 	CGameObject* hudObject = Add_GameObject(L"Player HUD");
 	m_pHUD = hudObject->AddComponent<CPlayerHUD>();
 

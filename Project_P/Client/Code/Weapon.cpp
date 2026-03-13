@@ -5,6 +5,7 @@ CWeapon::CWeapon()
 	: m_strWeaponName(L"")
 	, m_vRenderers({})
 	, m_pTargetHand(nullptr)
+	, m_pHurtBox(nullptr)
 {
 }
 
@@ -32,9 +33,26 @@ HRESULT CWeapon::Initialize()
 
 	m_vRenderers[1]->Get_Material()->Set_Texture(weaponTM, 2);
 
+	CreateHurtBox();
+
 	return S_OK;
 }
 
 void CWeapon::OnDestroy()
 {
+}
+
+void CWeapon::CreateHurtBox()
+{
+	m_pHurtBox = m_pGameObject->AddComponent<CHurtBox>();
+}
+
+void CWeapon::EnableHurtBox()
+{
+	m_pHurtBox->EnableBox();
+}
+
+void CWeapon::DisableHurtBox()
+{
+	m_pHurtBox->DisableBox();
 }

@@ -146,6 +146,7 @@
     <ClInclude Include="..\Header\BT_Monster.h" />
     <ClInclude Include="..\Header\Character.h" />
     <ClInclude Include="..\Header\ColliderBox.h" />
+    <ClInclude Include="..\Header\HitBox.h" />
     <ClInclude Include="..\Header\HurtBox.h" />
     <ClInclude Include="..\Header\Map_01_SilentStreet.h" />
     <ClInclude Include="..\Header\MonsterController.h" />
@@ -184,6 +185,7 @@
     <ClCompile Include="..\Code\ColliderBox.cpp" />
     <ClCompile Include="..\Code\GameManager.cpp" />
     <ClCompile Include="..\Code\GameScene.cpp" />
+    <ClCompile Include="..\Code\HitBox.cpp" />
     <ClCompile Include="..\Code\HurtBox.cpp" />
     <ClCompile Include="..\Code\LoadingScene.cpp" />
     <ClCompile Include="..\Code\MainScene.cpp" />

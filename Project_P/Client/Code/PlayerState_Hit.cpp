@@ -2,6 +2,9 @@
 #include "PlayerState_Hit.h"
 
 PlayerState_Hit::PlayerState_Hit()
+	: m_bCanMove(false)
+	, m_vKnockbackDir(vector3::zero())
+	, m_vAnimationNames({})
 {
 }
 
@@ -13,32 +16,35 @@ void PlayerState_Hit::Initialize(CPlayerControllerContext* _ctx, const CPlayerCo
 {
 	__super::Initialize(_ctx, _type);
 
+	m_vAnimationNames.push_back(L"Eve_Hit_Stand_Light_Fw (Animation Clip)");
+	m_vAnimationNames.push_back(L"Eve_Hit_Stand_Light_Bw (Animation Clip)");
+	m_vAnimationNames.push_back(L"Eve_Hit_Stand_Light_Lw (Animation Clip)");
+	m_vAnimationNames.push_back(L"Eve_Hit_Stand_Light_Rw (Animation Clip)");
+
+	for (size_t i = 0; i < m_vAnimationNames.size(); ++i)
 	{
-		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Hit_Stand_Light_Fw (Animation Clip)");
-
-		const _uint endFrame = startClip->Get_NormalizedFrameIndex(0.78f);
-
 		{
-			CAnimationClip::ActionTrigger at = { 14, L"Hit0_Exit" };
-			startClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"Hit0_Exit", [this]()
-				{
-					m_pCtx->SetCanMove(true);
-					m_pCtx->SetCanTurn(true);
-					m_pCtx->SetCanAttack(true);
-					m_pCtx->SetCanEvade(true);
-					m_pCtx->SetCanGuard(true);
-					m_pCtx->SetCanJump(true);
-				});
-		}
+			CAnimationClip* ac = CResources::GetInstance().LoadOnScene<CAnimationClip>(m_vAnimationNames[i]);
 
-		{
-			CAnimationClip::ActionTrigger at = { endFrame, L"Hit0_End" };
-			startClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"Hit0_End", [this]()
-				{
-					Exit();
-				});
+			const _uint endFrame = ac->Get_NormalizedFrameIndex(0.78f);
+
+			{
+				CAnimationClip::ActionTrigger at = { 14, L"Hit_"+ to_wstring(i) + L"_Stop" };
+				ac->Add_ActionTrigger(at);
+				m_pCtx->Animator()->RegisterActionHandler(L"Hit_" + to_wstring(i) + L"_Stop", [this]()
+					{
+						StopHandler();
+					});
+			}
+
+			{
+				CAnimationClip::ActionTrigger at = { endFrame, L"Hit_" + to_wstring(i) + L"_End" };
+				ac->Add_ActionTrigger(at);
+				m_pCtx->Animator()->RegisterActionHandler(L"Hit_" + to_wstring(i) + L"_End", [this]()
+					{
+						Exit();
+					});
+			}
 		}
 	}
 }
@@ -56,18 +62,53 @@ void PlayerState_Hit::Enter()
 	m_pCtx->SetCanGuard(false);
 	m_pCtx->SetCanJump(false);
 
+	m_bCanMove = false;
+	m_vKnockbackDir = m_pCtx->ConsumeHitKnockback();
+	m_pCtx->StopMoveImmediate();
+
+	_int hitDirection = 0;
+	vector3 playerForward = m_pCtx->PlayerForward();
+	playerForward.y = 0.f;
+
+	if (playerForward.lengthSq() > 0.0001f && m_vKnockbackDir.lengthSq() > 0.0001f)
+	{
+		const vector3 normalizedForward = playerForward.normalized();
+		const vector3 normalizedRight = m_pCtx->Get_Controller()->Get_GameObject()->Get_Transform()->Get_Directions().right.normalized();
+		const vector3 normalizedKnockback = m_vKnockbackDir.normalized();
+		const _float forwardDot = vector3::dot(normalizedForward, normalizedKnockback);
+		const _float rightDot = vector3::dot(normalizedRight, normalizedKnockback);
+
+		if (fabsf(rightDot) >= fabsf(forwardDot))
+			hitDirection = rightDot >= 0.f ? 3 : 2;
+		else
+			hitDirection = forwardDot >= 0.f ? 1 : 0;
+	}
+
+	m_pCtx->Animator()->SetInt(L"HitDirection", hitDirection);
 	m_pCtx->Animator()->SetTrigger(L"Hit");
 }
 
 void PlayerState_Hit::Update()
 {
 	__super::Update();
+
+	if (!m_bCanMove && m_vKnockbackDir.lengthSq() > 0.0001f)
+		m_pCtx->AddPosition(m_vKnockbackDir * m_pCtx->PlayerStatus().hitKnockbackSpeed * DELTA_TIME);
+
+	if (m_bCanMove)
+	{
+		if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
+		{
+			Exit();
+		}
+	}
 }
 
 void PlayerState_Hit::Exit()
 {
 	__super::Exit();
 
+	m_vKnockbackDir = vector3::zero();
 	m_pCtx->SetCanMove(true);
 	m_pCtx->SetCanTurn(true);
 	m_pCtx->SetCanAttack(true);
@@ -75,3 +116,28 @@ void PlayerState_Hit::Exit()
 	m_pCtx->SetCanGuard(true);
 	m_pCtx->SetCanJump(true);
 }
+
+void PlayerState_Hit::StopHandler()
+{
+	m_pCtx->SetCanMove(true);
+	m_pCtx->SetCanTurn(true);
+	m_pCtx->SetCanAttack(true);
+	m_pCtx->SetCanEvade(true);
+	m_pCtx->SetCanGuard(true);
+	m_pCtx->SetCanJump(true);
+
+	m_bCanMove = true;
+	m_vKnockbackDir = vector3::zero();
+
+	m_pCtx->StopMoveImmediate();
+}
+
+
+
+
+
+
+
+
+
+

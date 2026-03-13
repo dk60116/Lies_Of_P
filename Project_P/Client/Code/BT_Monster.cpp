@@ -23,8 +23,26 @@ namespace
 		if (!currentClip)
 			return false;
 
+		wstring clipName = currentClip->Get_ResourceName();
+		transform(clipName.begin(), clipName.end(), clipName.begin(), towlower);
+		return clipName.find(L"attack") != wstring::npos;
+	}
+
+	_bool IsHitAnimationPlaying(CMonster* _monster)
+	{
+		if (!_monster)
+			return false;
+
+		CAnimator* animator = _monster->GetAnimator();
+		if (!animator)
+			return false;
+
+		CAnimationClip* currentClip = animator->Get_CurrentAnimation();
+		if (!currentClip)
+			return false;
+
 		const wstring& clipName = currentClip->Get_ResourceName();
-		return clipName.find(L"Attack") != wstring::npos;
+		return clipName.find(L"Hit") != wstring::npos;
 	}
 
 	_bool ShouldPlayRunTurnAnimation(CMonster* _monster, const vector3& _targetPosition)
@@ -57,6 +75,8 @@ CBT_Monster::CBT_Monster()
 	: m_pController(nullptr)
 	, m_bChaseMoveActive(false)
 	, m_fAttackCooldown(0.f)
+	, m_bHitAnimationObserved(false)
+	, m_fHitReactionTimeout(0.f)
 {
 }
 
@@ -83,6 +103,8 @@ void CBT_Monster::OnEnable()
 {
 	m_bChaseMoveActive = false;
 	m_fAttackCooldown = 0.f;
+	m_bHitAnimationObserved = false;
+	m_fHitReactionTimeout = 0.f;
 	__super::OnEnable();
 }
 
@@ -90,6 +112,8 @@ void CBT_Monster::OnDisable()
 {
 	m_bChaseMoveActive = false;
 	m_fAttackCooldown = 0.f;
+	m_bHitAnimationObserved = false;
+	m_fHitReactionTimeout = 0.f;
 	__super::OnDisable();
 }
 
@@ -103,6 +127,8 @@ void CBT_Monster::OnDestroy()
 {
 	m_bChaseMoveActive = false;
 	m_fAttackCooldown = 0.f;
+	m_bHitAnimationObserved = false;
+	m_fHitReactionTimeout = 0.f;
 	m_pController = nullptr;
 	__super::OnDestroy();
 }
@@ -110,6 +136,11 @@ void CBT_Monster::OnDestroy()
 CBTNode* CBT_Monster::CreateHideChaseRoot()
 {
 	CBTSelector* root = new CBTSelector();
+
+	CBTAction* hitAction = new CBTAction([this](AIContext& _ctx)
+		{
+			return RunHit(_ctx);
+		});
 
 	CBTAction* attackAction = new CBTAction([this](AIContext& _ctx)
 		{
@@ -126,6 +157,7 @@ CBTNode* CBT_Monster::CreateHideChaseRoot()
 			return RunHide(_ctx);
 		});
 
+	root->AddChild(hitAction);
 	root->AddChild(attackAction);
 	root->AddChild(chaseAction);
 	root->AddChild(hideAction);
@@ -174,6 +206,7 @@ BTState CBT_Monster::RunHide(AIContext& _ctx)
 	CNaviMeshAgent* navAgent = monster->GetNaviAgent();
 	if (navAgent)
 	{
+		navAgent->SetAngularSpeed(monster->GetStatus().turnSpeed);
 		navAgent->SetAlwaysLookAt(false);
 		navAgent->ResetPath();
 	}
@@ -271,10 +304,12 @@ BTState CBT_Monster::RunAttack(AIContext& _ctx)
 		if (isAttackPlaying)
 		{
 			navAgent->SetAlwaysLookAt(false);
+			navAgent->SetAngularSpeed(0.f);
 			navAgent->ResetPath();
 		}
 		else
 		{
+			navAgent->SetAngularSpeed(status.turnSpeed);
 			navAgent->SetAlwaysLookAt(true);
 			navAgent->SetStoppingDistance(battleStopDistance);
 			navAgent->SetDestination(targetTransform->Get_Position());
@@ -302,14 +337,76 @@ BTState CBT_Monster::RunAttack(AIContext& _ctx)
 	return BTState::Success;
 }
 
+BTState CBT_Monster::RunHit(AIContext& _ctx)
+{
+	UNREFERENCED_PARAMETER(_ctx);
+
+	CMonsterController* controller = Get_Controller();
+	CMonster* monster = Get_Monster();
+	if (!controller || !monster)
+		return BTState::Failure;
+
+	if (controller->Get_State() != CMonsterController::MonsterState::Hit)
+		return BTState::Failure;
+
+	m_bChaseMoveActive = false;
+	m_fAttackCooldown = 0.f;
+
+	CNaviMeshAgent* navAgent = monster->GetNaviAgent();
+	if (navAgent)
+	{
+		navAgent->SetAngularSpeed(monster->GetStatus().turnSpeed);
+		navAgent->SetAlwaysLookAt(false);
+		navAgent->ResetPath();
+	}
+
+	CAnimator* animator = monster->GetAnimator();
+	if (animator)
+	{
+		animator->SetFloat(L"speed", 0.f);
+		if (!animator->IsPlaying())
+			animator->Play();
+	}
+
+	if (monster->HasPendingHitReaction())
+	{
+		if (animator)
+		{
+			animator->SetTrigger(L"Hit");
+			CDebug::LogError("Hit");
+		}
+
+		monster->BeginHitReaction();
+		monster->TickHitReactionKnockback();
+		m_bHitAnimationObserved = false;
+		m_fHitReactionTimeout = 0.75f;
+		return BTState::Running;
+	}
+
+	if (!monster->IsHitReacting())
+		return BTState::Success;
+
+	monster->TickHitReactionKnockback();
+	m_fHitReactionTimeout = max(0.f, m_fHitReactionTimeout - DELTA_TIME);
+
+	const _bool isHitPlaying = IsHitAnimationPlaying(monster);
+	if (isHitPlaying)
+	{
+		m_bHitAnimationObserved = true;
+		return BTState::Running;
+	}
+
+	if (!m_bHitAnimationObserved && m_fHitReactionTimeout > 0.f)
+		return BTState::Running;
+
+	monster->EndHitReaction();
+	m_bHitAnimationObserved = false;
+	m_fHitReactionTimeout = 0.f;
+	return BTState::Success;
+}
+
 void CBT_Monster::Resolve_References()
 {
 	if (!m_pController && m_pGameObject)
 		m_pController = m_pGameObject->GetComponent<CMonsterController>();
 }
-
-
-
-
-
-

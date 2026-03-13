@@ -35,6 +35,7 @@ public:
 public:
     CPlayerState* Get_PlayerState(PlayerState _state);
     void RequestAction(PlayerState _state);
+    void QueueHitKnockback(const vector3& _dir);
 
 public:
     void Set_Player(CPlayer* _player);
@@ -68,3 +69,4 @@ private:
 private:
     _float m_fPrevSpeed;
 };
+

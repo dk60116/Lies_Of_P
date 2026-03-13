@@ -34,7 +34,7 @@ namespace
 CCollider::CCollider()
 	: m_pRigidBody(nullptr)
 	, m_bIsTrigger(false)
-	, m_vCachedScale(vector3::one())
+	, m_vCachedShapeWorldScale(vector3::one())
 	, m_bShapeDirty(true)
 	, m_pShape(nullptr)
 	, m_iContactCount(0)
@@ -63,7 +63,7 @@ HRESULT CCollider::Initialize()
 
 void CCollider::Awake()
 {
-	m_vCachedScale = m_pGameObject->Get_Transform()->Get_LocalScale();
+	m_vCachedShapeWorldScale = GetWorldScale();
 	m_vCachedWorldPosition = m_pGameObject->Get_Transform()->Get_Position();
 	m_vCachedWorldRotation = m_pGameObject->Get_Transform()->Get_Quaternion();
 	RefreshStandaloneBody();
@@ -86,14 +86,14 @@ void CCollider::OnDisable()
 
 void CCollider::Update()
 {
-	const vector3 scale = m_pGameObject->Get_Transform()->Get_LocalScale();
-	const _float dx = fabsf(scale.x - m_vCachedScale.x);
-	const _float dy = fabsf(scale.y - m_vCachedScale.y);
-	const _float dz = fabsf(scale.z - m_vCachedScale.z);
+	const vector3 worldScale = GetWorldScale();
+	const _float dx = fabsf(worldScale.x - m_vCachedShapeWorldScale.x);
+	const _float dy = fabsf(worldScale.y - m_vCachedShapeWorldScale.y);
+	const _float dz = fabsf(worldScale.z - m_vCachedShapeWorldScale.z);
 
 	if (dx > 0.0001f || dy > 0.0001f || dz > 0.0001f)
 	{
-		m_vCachedScale = scale;
+		m_vCachedShapeWorldScale = worldScale;
 		m_bShapeDirty = true;
 		m_bStandaloneBodyDirty = true;
 
@@ -204,6 +204,22 @@ _float4 CCollider::GetGizmoColor() const
 	}
 
 	return color;
+}
+
+vector3 CCollider::GetWorldScale()
+{
+	CTransform* transform = Get_Transform();
+	if (!transform)
+		return vector3::one();
+
+	XMVECTOR scaleVec;
+	XMVECTOR rotationVec;
+	XMVECTOR translationVec;
+	XMMatrixDecompose(&scaleVec, &rotationVec, &translationVec, transform->Get_WorldMatrix());
+
+	_float3 scale = {};
+	XMStoreFloat3(&scale, scaleVec);
+	return vector3(scale.x, scale.y, scale.z);
 }
 
 const Shape* CCollider::GetShape()
@@ -340,7 +356,6 @@ void CCollider::SyncStandaloneBodyTransform()
 	BodyInterface& bodyInterface = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
 	bodyInterface.SetPositionAndRotation(m_iStandaloneBodyID, RVec3(pos), rot, EActivation::Activate);
 }
-
 
 
 

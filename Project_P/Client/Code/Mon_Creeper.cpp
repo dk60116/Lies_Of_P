@@ -31,6 +31,8 @@ HRESULT CMon_Creeper::Initialize()
 
 	m_vHurtBoxInfoList.push_back({ L"FX_Tail_04_end", vector3::one() * 0.2f });
 
+	m_vHitBoxInfoList.push_back({ L"Bip001-Pelvis", vector3::one() * 30.f, vector3::up() * 20.f });
+
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 

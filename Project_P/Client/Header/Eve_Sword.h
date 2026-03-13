@@ -13,6 +13,9 @@ protected:
 	static CEve_Sword* Create();
 	CComponent* Clone() const override;
 
+protected:
+	void CreateHurtBox() override;
+
 public:
 	void OnDestroy() override;
 };

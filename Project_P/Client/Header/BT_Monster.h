@@ -27,6 +27,7 @@ protected:
 	BTState RunHide(AIContext& _ctx);
 	BTState RunChase(AIContext& _ctx);
 	BTState RunAttack(AIContext& _ctx);
+	BTState RunHit(AIContext& _ctx);
 
 private:
 	void Resolve_References();
@@ -35,4 +36,6 @@ protected:
 	CMonsterController* m_pController;
 	_bool m_bChaseMoveActive;
 	_float m_fAttackCooldown;
+	_bool m_bHitAnimationObserved;
+	_float m_fHitReactionTimeout;
 };

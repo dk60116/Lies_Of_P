@@ -194,7 +194,7 @@ public:
 	void ResetTrigger(const wstring& _name);
 
 	const _bool GetBool(const wstring& n, _bool& out) const;
-	const _bool GetInt(const wstring& n, _bool& out) const;
+	const _bool GetInt(const wstring& n, _int& out) const;
 	const _bool GetFloat(const wstring& n, _float& out) const;
 	const _bool TryGetParamValue(const wstring& n, _float& out) const;
 
@@ -217,3 +217,4 @@ private:
 };
 
 NS_END
+

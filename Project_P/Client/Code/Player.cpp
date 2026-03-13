@@ -264,15 +264,39 @@ void CPlayer::SetLightAttakComboCount(const _uint _count)
 	m_iLightAttackComboCount = _count;
 }
 
+void CPlayer::OnSwordAttackHandler()
+{
+	m_pEquipWeapon->EnableHurtBox();
+}
+
+void CPlayer::DisableSwordCollider()
+{
+	m_pEquipWeapon->DisableHurtBox();
+}
+
 void CPlayer::GetHitHandler(const HurtDescription& _hurtDesc)
 {
 	if (_hurtDesc.damage > 0)
 		GetDamage(static_cast<_uint>(_hurtDesc.damage));
 
 	if (m_pController)
+	{
+		vector3 knockbackDir = Get_Transform()->Get_Position() - _hurtDesc.position;
+		knockbackDir.y = 0.f;
+
+		if (knockbackDir.lengthSq() <= 0.0001f)
+			knockbackDir = Get_Transform()->Get_Directions().forward;
+
+		knockbackDir.y = 0.f;
+
+		if (knockbackDir.lengthSq() > 0.0001f)
+			m_pController->QueueHitKnockback(knockbackDir.normalized());
+
 		m_pController->RequestAction(CPlayerController::PlayerState::Hit);
+	}
 }
 
 void CPlayer::SetAnimationAction()
 {
 }
+

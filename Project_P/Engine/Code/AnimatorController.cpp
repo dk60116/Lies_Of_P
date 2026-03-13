@@ -191,7 +191,7 @@ const _bool CAnimatorControllerInstance::GetBool(const wstring& n, _bool& out) c
     return true;
 }
 
-const _bool CAnimatorControllerInstance::GetInt(const wstring& n, _bool& out) const
+const _bool CAnimatorControllerInstance::GetInt(const wstring& n, _int& out) const
 {
     auto it = m_mRuntimeParams.find(n);
     if (it == m_mRuntimeParams.end())
@@ -475,3 +475,4 @@ void CAnimatorControllerInstance::Update(CAnimator* _animator, const _float _dt)
             return;
     }
 }
+
