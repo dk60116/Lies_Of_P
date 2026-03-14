@@ -32,7 +32,18 @@ private:
 		_bool  m_bBuffered = false;
 		_float m_fBufferT = 0.f;
 		_float m_fBufferLife = 0.25f;
-	}CONTEXT_VALUE;
+	}CV_DEFAULT;
+
+	typedef struct ContextValue_CanOrNot
+	{
+		_bool m_bCanMove = true;
+		_bool m_bCanTurn = true;
+		_bool m_bCanAttack = true;
+		_bool m_bCanGuard = true;
+		_bool m_bCanEvade = true;
+		_bool m_bCanJump = true;
+		_bool m_bCanHit = true;
+	}CV_CON;
 
 public:
 	CPlayerControllerContext();
@@ -68,6 +79,7 @@ public:
 	const CPlayer::PlayerStatus& PlayerStatus();
 	void QueueHitKnockback(const vector3& _dir);
 	vector3 ConsumeHitKnockback();
+	void StartGuardKnockback(const vector3& _dir);
 
 	void SetAnimMoveSpeed(_float _v);
 
@@ -118,6 +130,8 @@ public:
 	void SetCanEvade(const _bool _value);
 	const _bool IsCanJump() const;
 	void SetCanJump(const _bool _value);
+	const _bool IsCanHit() const;
+	void SetCanHit(const _bool _value);
 
 	const _bool IsEvadeExit() const;
 	void SetEvadeExit();
@@ -152,19 +166,21 @@ private:
 	CPlayerCamera* m_pCam;
 	CPlayerController* m_pController;
 	vector3 m_vPendingHitKnockback;
+	vector3 m_vGuardKnockbackDir;
+	_float m_fGuardKnockbackRemain;
 
 private:
 	_bool m_bSprint, m_bBigTurn;
-	_bool m_bCanMove, m_bCanTurn, m_bCanAttack, m_bCanGuard, m_bCanEvade, m_bCanJump;
 
 private:
 	CV_MOVE m_Cv_Move;
-	map<PlayerState, CONTEXT_VALUE> m_mBattleContext;
+	CV_CON m_Cv_Con;
+	map<PlayerState, CV_DEFAULT> m_mBattleContext;
 
 private:
 	CPlayerController::PlayerState m_eCurrentState;
-	CONTEXT_VALUE* GetBattleContext(PlayerState state);
-	const CONTEXT_VALUE* GetBattleContext(PlayerState state) const;
+	CV_DEFAULT* GetBattleContext(PlayerState state);
+	const CV_DEFAULT* GetBattleContext(PlayerState state) const;
 };
 
 

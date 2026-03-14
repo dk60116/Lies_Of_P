@@ -9,6 +9,7 @@ CCharacter::CCharacter()
 	, m_pBodyCollider(nullptr)
 	, m_pRigidBody(nullptr)
 	, m_pAnimator(nullptr)
+	, m_pNavAgent(nullptr)
 	, m_bIsGround(false)
 	, m_iGroundMask(0)
 	, m_vHurtBoxInfoList({})
@@ -25,6 +26,8 @@ HRESULT CCharacter::Initialize()
 {
 	vector<_uint> ignore = { CSceneManager::GetInstance().NameToLayer(L"Player") };
 	m_iGroundMask = CSceneManager::GetInstance().MakeLayerMask(true, ignore);
+
+	m_pNavAgent = m_pGameObject->AddComponent<CNaviMeshAgent>();
 
 	return S_OK;
 }
@@ -81,6 +84,11 @@ void CCharacter::AddHurtBox(const wstring& _name, CHurtBox* _box)
 const wstring& CCharacter::GetCharacterName() const
 {
 	return m_strCharacterName;
+}
+
+void CCharacter::SetAbleNavAgent(const _bool _value)
+{
+	m_pNavAgent->SetEnable(_value);
 }
 
 void CCharacter::CreateHurtBox()

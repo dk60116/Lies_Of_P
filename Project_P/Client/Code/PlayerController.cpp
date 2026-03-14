@@ -199,6 +199,8 @@ void CPlayerController::RequestAction(PlayerState _state)
 {
 	if (!m_pCtx)
 		return;
+	if (!m_pCtx->IsCanHit())
+		return;
 
 	m_pCtx->BufferAction(_state);
 }
@@ -209,6 +211,28 @@ void CPlayerController::QueueHitKnockback(const vector3& _dir)
 		return;
 
 	m_pCtx->QueueHitKnockback(_dir);
+}
+
+const _bool CPlayerController::IsGuardActive() const
+{
+	return m_pCtx && m_pCtx->IsActionActive(PlayerState::Guard);
+}
+
+_bool CPlayerController::PlayGuardHit(const vector3& _dir)
+{
+	if (!IsGuardActive())
+		return false;
+
+	CAnimator* animator = m_pCtx->Animator();
+	if (!animator)
+		return false;
+
+	if (animator->Get_CurrentState() == L"Guard_Hit")
+		return false;
+
+	animator->SetTrigger(L"Hit");
+	m_pCtx->StartGuardKnockback(_dir);
+	return true;
 }
 
 void CPlayerController::Set_Player(CPlayer* _player)

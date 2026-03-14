@@ -1593,7 +1593,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				if (getComponentPersistName(component) != savedComponentName)
 					continue;
 
-				component->Set_Enable(info.componentEnabledStates[componentIndex]);
+				component->SetEnable(info.componentEnabledStates[componentIndex]);
 				break;
 			}
 		}

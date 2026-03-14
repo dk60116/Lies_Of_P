@@ -29,7 +29,7 @@ HRESULT CMon_Creeper::Initialize()
 {
 	m_vMaterialTransparent = { false, true };
 
-	m_vHurtBoxInfoList.push_back({ L"FX_Tail_04_end", vector3::one() * 0.2f });
+	m_vHurtBoxInfoList.push_back({ L"FX_Tail_04_end", vector3::one() * 10.f });
 
 	m_vHitBoxInfoList.push_back({ L"Bip001-Pelvis", vector3::one() * 30.f, vector3::up() * 20.f });
 
@@ -40,10 +40,11 @@ HRESULT CMon_Creeper::Initialize()
 	m_pController->Bind(this, bt);
 	m_pController->Set_DefaultState(CMonsterController::MonsterState::Hide);
 
-	m_pBodyCollider->SetCenter(vector3(0.f, 0.9f, 0.f));
-	m_pBodyCollider->SetHeight(0.8f);
+	m_pBodyCollider->SetCenter(vector3(0.f, 2.f, 0.f));
+	m_pBodyCollider->SetHeight(2.f);
+	m_pBodyCollider->SetRadius(1.f);
 
-	m_sStatus.moveSpeed = 4.f;
+	m_sStatus.moveSpeed = 6.f;
 	m_sStatus.attackRange = 0.5f;
 
 	return S_OK;
@@ -82,7 +83,7 @@ void CMon_Creeper::SetAnimationAction()
 		const _uint end = ac->Get_NormalizedFrameIndex(0.78f);
 
 		{
-			CAnimationClip::ActionTrigger at = { 18, L"AttackBase_Start" };
+			CAnimationClip::ActionTrigger at = { 17, L"AttackBase_Start" };
 
 			ac->Add_ActionTrigger(at);
 			m_pAnimator->RegisterActionHandler(L"AttackBase_Start", [this]()

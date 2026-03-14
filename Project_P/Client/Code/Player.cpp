@@ -3,6 +3,11 @@
 #include "PlayerController.h"
 #include "Eve_Sword.h"
 
+namespace
+{
+	constexpr _float kGuardBlockMinDot = 0.25f;
+}
+
 CPlayer::CPlayer()
 	: m_pController(nullptr)
 	, m_pHeadObj(nullptr)
@@ -276,6 +281,9 @@ void CPlayer::DisableSwordCollider()
 
 void CPlayer::GetHitHandler(const HurtDescription& _hurtDesc)
 {
+	if (TryGuardHit(_hurtDesc))
+		return;
+
 	if (_hurtDesc.damage > 0)
 		GetDamage(static_cast<_uint>(_hurtDesc.damage));
 
@@ -298,5 +306,44 @@ void CPlayer::GetHitHandler(const HurtDescription& _hurtDesc)
 
 void CPlayer::SetAnimationAction()
 {
+}
+
+_bool CPlayer::CanGuardHit(const HurtDescription& _hurtDesc)
+{
+	if (!m_pController || !m_pController->IsGuardActive())
+		return false;
+
+	CTransform* transform = Get_Transform();
+	if (!transform)
+		return false;
+
+	vector3 playerForward = transform->Get_Directions().forward;
+	playerForward.y = 0.f;
+
+	if (playerForward.lengthSq() <= 0.0001f)
+		return false;
+
+	vector3 toAttacker = _hurtDesc.position - transform->Get_Position();
+	toAttacker.y = 0.f;
+
+	if (toAttacker.lengthSq() <= 0.0001f)
+		toAttacker = playerForward;
+
+	return vector3::dot(playerForward.normalized(), toAttacker.normalized()) >= kGuardBlockMinDot;
+}
+
+_bool CPlayer::TryGuardHit(const HurtDescription& _hurtDesc)
+{
+	if (!CanGuardHit(_hurtDesc))
+		return false;
+
+	vector3 knockbackDir = Get_Transform()->Get_Position() - _hurtDesc.position;
+	knockbackDir.y = 0.f;
+
+	if (knockbackDir.lengthSq() <= 0.0001f)
+		knockbackDir = Get_Transform()->Get_Directions().forward;
+
+	m_pController->PlayGuardHit(knockbackDir);
+	return true;
 }
 

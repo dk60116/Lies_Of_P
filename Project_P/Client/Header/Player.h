@@ -72,6 +72,10 @@ protected:
 	void SetAnimationAction() override;
 
 private:
+	_bool CanGuardHit(const HurtDescription& _hurtDesc);
+	_bool TryGuardHit(const HurtDescription& _hurtDesc);
+
+private:
 	class CPlayerController* m_pController;
 	CGameObject* m_pHeadObj, *m_pHairObj, *m_pPonyTailObj;
 

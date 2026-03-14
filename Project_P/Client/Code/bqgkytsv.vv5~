@@ -136,7 +136,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
             L"LightAttack0" + attackIndex + L"_Exit",
             m_iComboTerm[i - 1],
             m_iComboLimit[i - 1],
-            true,
+            i > 1,
             nullptr
         );
     }
@@ -154,7 +154,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
             L"StrongAttack_0" + attackIndex + L"_Exit",
             m_iComboTerm_S[i - 1],
             m_iComboLimit_S[i - 1],
-            true,
+            i > 1,
             nullptr
         );
     }
@@ -258,9 +258,9 @@ void CPlayerState_Attack::Enter()
 
     m_pCtx->Get_Player()->OnSwordAttackHandler();
 
-    m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionX(true);
+    //m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionX(true);
     m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionY(true);
-    m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionZ(true);
+    //m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionZ(true);
 
     m_pCtx->Get_Player()->SetAbleNavAgent(true);
 }

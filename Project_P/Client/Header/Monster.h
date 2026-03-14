@@ -34,9 +34,6 @@ public:
 	void OnDestroy() override;
 
 public:
-	const wstring& GetMonsterName() const;
-
-public:
 	void Change_State(const _uint _state);
 	const MonsterStatus& GetStatus();
 
@@ -65,7 +62,6 @@ protected:
 	vector<_bool> m_vMaterialTransparent;
 	vector<CSkinnedMeshRenderer*> m_vMeshRenderers;
 	CMonsterController* m_pController;
-	CNaviMeshAgent* m_pNavAgent;
 
 	MonsterStatus m_sStatus;
 	_bool m_bHitRequested;

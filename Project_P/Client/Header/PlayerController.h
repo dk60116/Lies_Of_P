@@ -36,6 +36,8 @@ public:
     CPlayerState* Get_PlayerState(PlayerState _state);
     void RequestAction(PlayerState _state);
     void QueueHitKnockback(const vector3& _dir);
+    const _bool IsGuardActive() const;
+    _bool PlayGuardHit(const vector3& _dir);
 
 public:
     void Set_Player(CPlayer* _player);

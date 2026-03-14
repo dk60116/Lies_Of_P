@@ -42,7 +42,7 @@ void CColliderBox::LateUpdate()
 		return;
 
 	m_bPendingDisable = false;
-	m_pCollider->Set_Enable(false);
+	m_pCollider->SetEnable(false);
 	RefreshColliderPhysics(m_pGameObject);
 }
 
@@ -100,7 +100,7 @@ void CColliderBox::CreateHurtBox(CCharacter* _character, const wstring& _name, c
 
 	m_pCollider->SetTrigger(true);
 	m_bPendingDisable = false;
-	m_pCollider->Set_Enable(false);
+	m_pCollider->SetEnable(false);
 	RefreshColliderPhysics(m_pGameObject);
 }
 
@@ -156,7 +156,7 @@ void CColliderBox::CreateHitBox(CCharacter* _character, const wstring& _name, co
 
 	m_pCollider->SetTrigger(true);
 	m_bPendingDisable = false;
-	m_pCollider->Set_Enable(true);
+	m_pCollider->SetEnable(true);
 	RefreshColliderPhysics(m_pGameObject);
 }
 
@@ -171,7 +171,7 @@ void CColliderBox::EnableBox()
 		return;
 
 	m_bPendingDisable = false;
-	m_pCollider->Set_Enable(true);
+	m_pCollider->SetEnable(true);
 	RefreshColliderPhysics(m_pGameObject);
 }
 
@@ -181,7 +181,7 @@ void CColliderBox::DisableBox()
 		return;
 
 	m_bPendingDisable = false;
-	m_pCollider->Set_Enable(false);
+	m_pCollider->SetEnable(false);
 	RefreshColliderPhysics(m_pGameObject);
 }
 

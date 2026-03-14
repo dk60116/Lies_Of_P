@@ -99,6 +99,9 @@ Eve_Hit_Stand_Light_Fw : Player/Eve/Animations/Eve_Hit_Stand_Light_Fw.fbx : [Ani
 Eve_Hit_Stand_Light_Bw : Player/Eve/Animations/Eve_Hit_Stand_Light_Bw.fbx : [Animation Clip]
 Eve_Hit_Stand_Light_Lw : Player/Eve/Animations/Eve_Hit_Stand_Light_Lw.fbx : [Animation Clip]
 Eve_Hit_Stand_Light_Rw : Player/Eve/Animations/Eve_Hit_Stand_Light_Rw.fbx : [Animation Clip]
+Eve_Guard_Hit : Player/Eve/Animations/Eve_Guard_Hit.fbx : [Animation Clip]
+Eve_Guard_Hit_Back : Player/Eve/Animations/Eve_Guard_Hit_Back.fbx : [Animation Clip]
+Eve_Guard_StrongHit_Back : Player/Eve/Animations/Eve_Guard_StrongHit_Back.fbx : [Animation Clip]
 // Eve_Weapon
 Eve_Sword_Model : Player/Weapon/Eve_Sword.fbx : [Skinned Mesh]
 // Eve_Weapon_Texture

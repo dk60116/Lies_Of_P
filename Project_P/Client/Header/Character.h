@@ -38,6 +38,9 @@ public:
 public:
 	virtual void GetHitHandler(const HurtDescription& _hurtDesc) PURE;
 
+public:
+	void SetAbleNavAgent(const _bool _value);
+
 protected:
 	virtual void SetAnimationAction() PURE;
 	void CreateHurtBox();
@@ -54,6 +57,7 @@ protected:
 	CCapsuleCollider* m_pBodyCollider;
 	CRigidBody* m_pRigidBody;
 	CAnimator* m_pAnimator;
+	CNaviMeshAgent* m_pNavAgent;
 
 	CSceneManager::LayerMask m_iGroundMask;
 	_bool m_bIsGround;

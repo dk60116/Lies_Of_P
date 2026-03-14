@@ -7,21 +7,18 @@ CPlayerControllerContext::CPlayerControllerContext()
 	, m_pController(nullptr)
 	, m_pCam(nullptr)
 	, m_vPendingHitKnockback(vector3::zero())
+	, m_vGuardKnockbackDir(vector3::zero())
+	, m_fGuardKnockbackRemain(0.f)
 	, m_Cv_Move({})
+	, m_Cv_Con({})
 	, m_eCurrentState(CPlayerController::PlayerState::Idle)
 	, m_bSprint(false)
 	, m_bBigTurn(false)
-	, m_bCanMove(true)
-	, m_bCanTurn(true)
-	, m_bCanAttack(true)
-	, m_bCanGuard(true)
-	, m_bCanEvade(true)
-	, m_bCanJump(true)
 {
 	m_strName = L"PlayerControllerContext";
 
 	for (_int i = 0; i < static_cast<_int>(PlayerState::Count); ++i)
-		m_mBattleContext.emplace(static_cast<PlayerState>(i), CONTEXT_VALUE{});
+		m_mBattleContext.emplace(static_cast<PlayerState>(i), CV_DEFAULT{});
 }
 
 CPlayerControllerContext::~CPlayerControllerContext()
@@ -204,12 +201,21 @@ void CPlayerControllerContext::TickMove()
 	if (!m_pPlayer) 
 		return;
 
-	if (!m_bCanMove)
-		return;
-
 	_float dt = DELTA_TIME;
             
 	dt = std::clamp(dt, 0.f, 0.05f);
+
+	if (m_fGuardKnockbackRemain > 0.f && m_vGuardKnockbackDir.lengthSq() > 0.0001f)
+	{
+		AddPosition(m_vGuardKnockbackDir * PlayerStatus().hitKnockbackSpeed * 0.5f * dt);
+		m_fGuardKnockbackRemain = max(0.f, m_fGuardKnockbackRemain - dt);
+
+		if (m_fGuardKnockbackRemain <= 0.f)
+			m_vGuardKnockbackDir = vector3::zero();
+	}
+
+	if (!m_Cv_Con.m_bCanMove)
+		return;
 
 	if (m_Cv_Move.m_fMoveLockTimer > 0.f)
 	{
@@ -219,7 +225,7 @@ void CPlayerControllerContext::TickMove()
 		return;
 	}
 
-	if (!m_bCanMove)
+	if (!m_Cv_Con.m_bCanMove)
 	{
 		m_Cv_Move.m_fMove01 = 0.f;
 		return;
@@ -263,7 +269,7 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float _stopEpsDeg)
 	if (!m_pPlayer) 
 		return;
 
-	if (!m_bCanTurn)
+	if (!m_Cv_Con.m_bCanTurn)
 		return;
 
 	if (!m_Cv_Move.m_bTurning)
@@ -352,6 +358,23 @@ vector3 CPlayerControllerContext::ConsumeHitKnockback()
 	const vector3 knockbackDir = m_vPendingHitKnockback;
 	m_vPendingHitKnockback = vector3::zero();
 	return knockbackDir;
+}
+
+void CPlayerControllerContext::StartGuardKnockback(const vector3& _dir)
+{
+	vector3 knockbackDir = _dir;
+	knockbackDir.y = 0.f;
+
+	if (knockbackDir.lengthSq() <= 0.0001f)
+	{
+		m_vGuardKnockbackDir = vector3::zero();
+		m_fGuardKnockbackRemain = 0.f;
+		return;
+	}
+
+	m_vGuardKnockbackDir = knockbackDir.normalized();
+	m_fGuardKnockbackRemain = 0.23f;
+	StartMoveLock(m_fGuardKnockbackRemain);
 }
 
 void CPlayerControllerContext::SetAnimMoveSpeed(_float _v)
@@ -556,7 +579,7 @@ void CPlayerControllerContext::SetSprint(const _bool _value)
 	m_bSprint = _value;
 }
 
-CPlayerControllerContext::CONTEXT_VALUE* CPlayerControllerContext::GetBattleContext(PlayerState state)
+CPlayerControllerContext::CV_DEFAULT* CPlayerControllerContext::GetBattleContext(PlayerState state)
 {
 	auto it = m_mBattleContext.find(state);
 	if (it == m_mBattleContext.end())
@@ -564,7 +587,7 @@ CPlayerControllerContext::CONTEXT_VALUE* CPlayerControllerContext::GetBattleCont
 	return &it->second;
 }
 
-const CPlayerControllerContext::CONTEXT_VALUE* CPlayerControllerContext::GetBattleContext(PlayerState state) const
+const CPlayerControllerContext::CV_DEFAULT* CPlayerControllerContext::GetBattleContext(PlayerState state) const
 {
 	auto it = m_mBattleContext.find(state);
 	if (it == m_mBattleContext.end())
@@ -574,62 +597,72 @@ const CPlayerControllerContext::CONTEXT_VALUE* CPlayerControllerContext::GetBatt
 
 const _bool CPlayerControllerContext::IsCanMove() const
 {
-	return m_bCanMove;
+	return m_Cv_Con.m_bCanMove;
 }
 
 void CPlayerControllerContext::SetCanMove(const _bool _value)
 {
-	m_bCanMove = _value;
+	m_Cv_Con.m_bCanMove = _value;
 }
 
 const _bool CPlayerControllerContext::IsCanTurn() const
 {
-	return m_bCanTurn;
+	return m_Cv_Con.m_bCanTurn;
 }
 
 void CPlayerControllerContext::SetCanTurn(const _bool _value)
 {
-	m_bCanTurn = _value;
+	m_Cv_Con.m_bCanTurn = _value;
 }
 
 const _bool CPlayerControllerContext::IsCanAttack() const
 {
-	return m_bCanAttack;
+	return m_Cv_Con.m_bCanAttack;
 }
 
 void CPlayerControllerContext::SetCanAttack(const _bool _value)
 {
-	m_bCanAttack = _value;
+	m_Cv_Con.m_bCanAttack = _value;
 }
 
 const _bool CPlayerControllerContext::IsCanGuard() const
 {
-	return m_bCanGuard;
+	return m_Cv_Con.m_bCanGuard;
 }
 
 void CPlayerControllerContext::SetCanGuard(const _bool _value)
 {
-	m_bCanGuard = _value;
+	m_Cv_Con.m_bCanGuard = _value;
 }
 
 const _bool CPlayerControllerContext::IsCanEvade() const
 {
-	return m_bCanEvade;
+	return m_Cv_Con.m_bCanEvade;
 }
 
 void CPlayerControllerContext::SetCanEvade(const _bool _value)
 {
-	m_bCanEvade = _value;
+	m_Cv_Con.m_bCanEvade = _value;
 }
 
 const _bool CPlayerControllerContext::IsCanJump() const
 {
-	return m_bCanJump;
+	return m_Cv_Con.m_bCanJump;
 }
 
 void CPlayerControllerContext::SetCanJump(const _bool _value)
 {
-	m_bCanJump = _value;
+	m_Cv_Con.m_bCanJump = _value;
+}
+
+const _bool CPlayerControllerContext::IsCanHit() const
+{
+	return m_Cv_Con.m_bCanHit;
+}
+
+void CPlayerControllerContext::SetCanHit(const _bool _value)
+{
+	m_Cv_Con.m_bCanHit = _value;
 }
 
 const _bool CPlayerControllerContext::IsEvadeExit() const

@@ -59,6 +59,7 @@ CRigidBody::CRigidBody()
     , m_bConstRotationZ(false)
     , m_vConstPosition(vector3::zero())
     , m_vConstRotation(vector3::zero())
+    , m_bSkipPositionConstraintSyncOnce(false)
     , m_bHasLastSyncedTransform(false)
     , m_vLastSyncedPosition(vector3::zero())
     , m_vLastSyncedRotation(quaternion::identity())
@@ -90,6 +91,7 @@ CComponent* CRigidBody::Clone() const
     clone->m_bConstRotationZ = m_bConstRotationZ;
     clone->m_vConstPosition = m_vConstPosition;
     clone->m_vConstRotation = m_vConstRotation;
+    clone->m_bSkipPositionConstraintSyncOnce = false;
 
     return clone;
 }
@@ -502,23 +504,12 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
 
     vector3 targetPos = currentPos + _deltaWorld;
     quaternion targetRot = currentRot;
+    const _bool bypassPositionConstraints = !m_bKinematic && m_bConstPositionX && m_bConstPositionY && m_bConstPositionZ;
 
-    if (m_bConstPositionX)
-        m_vConstPosition.x = targetPos.x;
-    if (m_bConstPositionY)
-        m_vConstPosition.y = targetPos.y;
-    if (m_bConstPositionZ)
-        m_vConstPosition.z = targetPos.z;
+    if (!bypassPositionConstraints)
+        ApplyPositionConstraints(targetPos);
 
-    vector3 targetEuler = targetRot.to_euler();
-    if (m_bConstRotationX)
-        m_vConstRotation.x = targetEuler.x;
-    if (m_bConstRotationY)
-        m_vConstRotation.y = targetEuler.y;
-    if (m_bConstRotationZ)
-        m_vConstRotation.z = targetEuler.z;
-
-    ApplyAxisConstraints(targetPos, targetRot);
+    ApplyRotationConstraints(targetRot);
 
     if (m_bKinematic)
     {
@@ -590,7 +581,17 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
         const Quat bodyRot = GetBI().GetRotation(m_iBodyID);
         correctedPos = vector3(static_cast<_float>(bodyPos.GetX()), static_cast<_float>(bodyPos.GetY()), static_cast<_float>(bodyPos.GetZ()));
         correctedRot = quaternion(bodyRot.GetX(), bodyRot.GetY(), bodyRot.GetZ(), bodyRot.GetW());
-        ApplyAxisConstraints(correctedPos, correctedRot);
+
+        if (bypassPositionConstraints)
+        {
+            SyncPositionConstraintCache(correctedPos);
+            ApplyRotationConstraints(correctedRot);
+            m_bSkipPositionConstraintSyncOnce = true;
+        }
+        else
+        {
+            ApplyAxisConstraints(correctedPos, correctedRot);
+        }
     }
 
     Get_Transform()->Set_Position(correctedPos);
@@ -802,10 +803,8 @@ void CRigidBody::ResetVelocity()
     }
 }
 
-void CRigidBody::ApplyAxisConstraints(vector3& _pos, quaternion& _rot)
+void CRigidBody::ApplyPositionConstraints(vector3& _pos)
 {
-    vector3 euler = _rot.to_euler();
-
     if (m_bConstPositionX)
         _pos.x = m_vConstPosition.x;
     else
@@ -820,6 +819,11 @@ void CRigidBody::ApplyAxisConstraints(vector3& _pos, quaternion& _rot)
         _pos.z = m_vConstPosition.z;
     else
         m_vConstPosition.z = _pos.z;
+}
+
+void CRigidBody::ApplyRotationConstraints(quaternion& _rot)
+{
+    vector3 euler = _rot.to_euler();
 
     if (m_bConstRotationX)
         euler.x = m_vConstRotation.x;
@@ -837,6 +841,17 @@ void CRigidBody::ApplyAxisConstraints(vector3& _pos, quaternion& _rot)
         m_vConstRotation.z = euler.z;
 
     _rot = euler.to_quaternion();
+}
+
+void CRigidBody::ApplyAxisConstraints(vector3& _pos, quaternion& _rot)
+{
+    ApplyPositionConstraints(_pos);
+    ApplyRotationConstraints(_rot);
+}
+
+void CRigidBody::SyncPositionConstraintCache(const vector3& _pos)
+{
+    m_vConstPosition = _pos;
 }
 
 
@@ -949,6 +964,7 @@ void CRigidBody::RebuildBodiesIfDirty()
 void CRigidBody::DestroyBodies()
 {
     m_bHasLastSyncedTransform = false;
+    m_bSkipPositionConstraintSyncOnce = false;
 
     if (!CPhysics::GetInstance().IsInitialized())
     {
@@ -997,6 +1013,8 @@ void CRigidBody::SyncKinematicToJolt()
 {
     if (!m_bHasBody && !m_bHasSensorBody)
         return;
+
+    m_bSkipPositionConstraintSyncOnce = false;
 
     Get_Transform()->Update();
 
@@ -1124,16 +1142,26 @@ void CRigidBody::SyncDynamicFromJolt()
         }
 
         CacheLastSyncedTransform(currentTfPos, currentTfRot);
+        m_bSkipPositionConstraintSyncOnce = false;
 
         return;
     }
 
     vector3 pos = vector3(static_cast<_float>(joltPos.GetX()), static_cast<_float>(joltPos.GetY()), static_cast<_float>(joltPos.GetZ()));
     quaternion rot = quaternion(joltRot.GetX(), joltRot.GetY(), joltRot.GetZ(), joltRot.GetW());
+    const _bool skipPositionConstraintSync = m_bSkipPositionConstraintSyncOnce;
 
-    ApplyAxisConstraints(pos, rot);
+    if (skipPositionConstraintSync)
+    {
+        SyncPositionConstraintCache(pos);
+        ApplyRotationConstraints(rot);
+    }
+    else
+    {
+        ApplyAxisConstraints(pos, rot);
+    }
 
-    const _bool lockAllPosition = m_bConstPositionX && m_bConstPositionY && m_bConstPositionZ;
+    const _bool lockAllPosition = !skipPositionConstraintSync && m_bConstPositionX && m_bConstPositionY && m_bConstPositionZ;
     const _bool lockAllRotation = m_bConstRotationX && m_bConstRotationY && m_bConstRotationZ;
     const EActivation activation = lockAllPosition ? EActivation::Activate : EActivation::DontActivate;
 
@@ -1170,6 +1198,7 @@ void CRigidBody::SyncDynamicFromJolt()
     }
 
     CacheLastSyncedTransform(pos, rot);
+    m_bSkipPositionConstraintSyncOnce = false;
 }
 
 void CRigidBody::CacheLastSyncedTransform(const vector3& _pos, const quaternion& _rot)

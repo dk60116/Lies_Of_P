@@ -10,6 +10,8 @@
 
 namespace
 {
+	constexpr _float kRunAnimationMoveThresholdSq = 0.0001f;
+
 	_bool IsAttackAnimationPlaying(CMonster* _monster)
 	{
 		if (!_monster)
@@ -69,6 +71,37 @@ namespace
 		const _float facingDot = forward.x * toTarget.x + forward.y * toTarget.y + forward.z * toTarget.z;
 		return facingDot < 0.995f;
 	}
+
+	_bool ConsumeHorizontalMovementSample(CMonster* _monster, vector3& _inOutPreviousPosition, _bool& _inOutHasPreviousPosition)
+	{
+		if (!_monster)
+		{
+			_inOutPreviousPosition = vector3::zero();
+			_inOutHasPreviousPosition = false;
+			return false;
+		}
+
+		CTransform* transform = _monster->Get_Transform();
+		if (!transform)
+		{
+			_inOutPreviousPosition = vector3::zero();
+			_inOutHasPreviousPosition = false;
+			return false;
+		}
+
+		const vector3 currentPosition = transform->Get_Position();
+		_bool didMoveHorizontally = false;
+		if (_inOutHasPreviousPosition)
+		{
+			vector3 delta = currentPosition - _inOutPreviousPosition;
+			delta.y = 0.f;
+			didMoveHorizontally = delta.lengthSq() > kRunAnimationMoveThresholdSq;
+		}
+
+		_inOutPreviousPosition = currentPosition;
+		_inOutHasPreviousPosition = true;
+		return didMoveHorizontally;
+	}
 }
 
 CBT_Monster::CBT_Monster()
@@ -77,6 +110,8 @@ CBT_Monster::CBT_Monster()
 	, m_fAttackCooldown(0.f)
 	, m_bHitAnimationObserved(false)
 	, m_fHitReactionTimeout(0.f)
+	, m_vPreviousMonsterPosition(vector3::zero())
+	, m_bHasPreviousMonsterPosition(false)
 {
 }
 
@@ -105,6 +140,8 @@ void CBT_Monster::OnEnable()
 	m_fAttackCooldown = 0.f;
 	m_bHitAnimationObserved = false;
 	m_fHitReactionTimeout = 0.f;
+	m_vPreviousMonsterPosition = vector3::zero();
+	m_bHasPreviousMonsterPosition = false;
 	__super::OnEnable();
 }
 
@@ -114,6 +151,8 @@ void CBT_Monster::OnDisable()
 	m_fAttackCooldown = 0.f;
 	m_bHitAnimationObserved = false;
 	m_fHitReactionTimeout = 0.f;
+	m_vPreviousMonsterPosition = vector3::zero();
+	m_bHasPreviousMonsterPosition = false;
 	__super::OnDisable();
 }
 
@@ -129,6 +168,8 @@ void CBT_Monster::OnDestroy()
 	m_fAttackCooldown = 0.f;
 	m_bHitAnimationObserved = false;
 	m_fHitReactionTimeout = 0.f;
+	m_vPreviousMonsterPosition = vector3::zero();
+	m_bHasPreviousMonsterPosition = false;
 	m_pController = nullptr;
 	__super::OnDestroy();
 }
@@ -195,6 +236,7 @@ BTState CBT_Monster::RunHide(AIContext& _ctx)
 
 	m_bChaseMoveActive = false;
 	m_fAttackCooldown = 0.f;
+	ConsumeHorizontalMovementSample(monster, m_vPreviousMonsterPosition, m_bHasPreviousMonsterPosition);
 
 	if (CAnimator* animator = monster->GetAnimator())
 	{
@@ -245,6 +287,8 @@ BTState CBT_Monster::RunChase(AIContext& _ctx)
 	if (!targetTransform)
 		return BTState::Failure;
 
+	const _bool didMoveThisFrame = ConsumeHorizontalMovementSample(monster, m_vPreviousMonsterPosition, m_bHasPreviousMonsterPosition);
+
 	const CMonster::MonsterStatus& status = monster->GetStatus();
 	const _float baseStopDistance = 1.f + monster->GetRadius() + status.attackRange;
 	const _float stopBuffer = max(0.5f, monster->GetRadius());
@@ -256,16 +300,14 @@ BTState CBT_Monster::RunChase(AIContext& _ctx)
 	else
 		m_bChaseMoveActive = (_ctx.distanceToTarget > animResumeDistance);
 
-	if (!m_bChaseMoveActive)
-		m_bChaseMoveActive = true;
-
 	if (CAnimator* animator = monster->GetAnimator())
 	{
-		animator->SetFloat(L"speed", 1.f);
+		animator->SetFloat(L"speed", (m_bChaseMoveActive || didMoveThisFrame) ? 1.f : 0.f);
 		if (!animator->IsPlaying())
 			animator->Play();
 	}
 
+	navAgent->SetAngularSpeed(status.turnSpeed);
 	navAgent->SetAlwaysLookAt(false);
 	navAgent->SetMoveSpeed(status.moveSpeed);
 	navAgent->SetStoppingDistance(animStopDistance);
@@ -295,8 +337,9 @@ BTState CBT_Monster::RunAttack(AIContext& _ctx)
 
 	const CMonster::MonsterStatus& status = monster->GetStatus();
 	const _float stopBuffer = max(0.5f, monster->GetRadius());
-	const _float battleStopDistance = 2.f + monster->GetRadius() + status.attackRange + stopBuffer * 3.f;
+	const _float battleStopDistance = monster->GetRadius() + status.attackRange + stopBuffer;
 	const _bool isAttackPlaying = IsAttackAnimationPlaying(monster);
+	const _bool didMoveThisFrame = ConsumeHorizontalMovementSample(monster, m_vPreviousMonsterPosition, m_bHasPreviousMonsterPosition);
 
 	CNaviMeshAgent* navAgent = monster->GetNaviAgent();
 	if (navAgent)
@@ -321,8 +364,10 @@ BTState CBT_Monster::RunAttack(AIContext& _ctx)
 
 	if (CAnimator* animator = monster->GetAnimator())
 	{
-		const _bool shouldPlayRunTurn = !isAttackPlaying && ShouldPlayRunTurnAnimation(monster, targetTransform->Get_Position());
-		animator->SetFloat(L"speed", shouldPlayRunTurn ? 1.f : 0.f);
+		const _bool shouldMoveToTarget = _ctx.distanceToTarget > (battleStopDistance + 0.01f);
+		const _bool shouldPlayRunTurn = ShouldPlayRunTurnAnimation(monster, targetTransform->Get_Position());
+		const _bool shouldPlayRun = !isAttackPlaying && (shouldMoveToTarget || shouldPlayRunTurn || didMoveThisFrame);
+		animator->SetFloat(L"speed", shouldPlayRun ? 1.f : 0.f);
 
 		if (status.attackSpeed > 0.f && m_fAttackCooldown <= 0.f)
 		{
@@ -351,6 +396,7 @@ BTState CBT_Monster::RunHit(AIContext& _ctx)
 
 	m_bChaseMoveActive = false;
 	m_fAttackCooldown = 0.f;
+	ConsumeHorizontalMovementSample(monster, m_vPreviousMonsterPosition, m_bHasPreviousMonsterPosition);
 
 	CNaviMeshAgent* navAgent = monster->GetNaviAgent();
 	if (navAgent)

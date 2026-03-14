@@ -163,7 +163,7 @@ const _bool CComponent::Get_Enable() const
 	return m_bEnable;
 }
 
-void CComponent::Set_Enable(const _bool _enable)
+void CComponent::SetEnable(const _bool _enable)
 {
 	if (m_bEnable == _enable)
 		return;

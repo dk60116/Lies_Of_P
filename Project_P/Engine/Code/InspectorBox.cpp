@@ -1736,7 +1736,7 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(smallFramePaddingX, smallFramePaddingY));
         _bool componentEnabled = component->Get_Enable();
         if (ImGui::Checkbox("##ComponentEnabled", &componentEnabled))
-            component->Set_Enable(componentEnabled);
+            component->SetEnable(componentEnabled);
         ImGui::PopStyleVar();
 
         ImGui::SameLine(0.f, style.ItemInnerSpacing.x);

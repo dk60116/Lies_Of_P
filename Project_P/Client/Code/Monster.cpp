@@ -7,7 +7,6 @@ CMonster::CMonster()
 	, m_vMaterialTransparent({})
 	, m_vMeshRenderers({})
 	, m_pController(nullptr)
-	, m_pNavAgent(nullptr)
 	, m_bHitRequested(false)
 	, m_bHitReacting(false)
 	, m_vPendingHitKnockback(vector3::zero())
@@ -122,7 +121,6 @@ void CMonster::CreateAnimator()
 
 void CMonster::CreateAI()
 {
-	m_pNavAgent = m_pGameObject->AddComponent<CNaviMeshAgent>();
 	m_pController = m_pGameObject->AddComponent<CMonsterController>();
 
 	m_pNavAgent->SetMoveSpeed(m_sStatus.moveSpeed);
@@ -224,6 +222,5 @@ void CMonster::GetHitHandler(const HurtDescription& _hurtDesc)
 			m_vPendingHitKnockback = knockbackDir.normalized();
 	}
 
-	// Allow rapid combo hits to restart the hit reaction while the monster is already reacting.
 	m_bHitRequested = true;
 }

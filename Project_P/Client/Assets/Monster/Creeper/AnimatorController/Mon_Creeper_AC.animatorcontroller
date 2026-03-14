@@ -35,7 +35,7 @@ pos=692,273
 [state Run_End]
 motion=Anim_Mon_Creeper_Run_End
 speedMul=1.000000
-pos=405,446
+pos=408,352
 
 [state Hit]
 blendTree=direct
@@ -90,6 +90,7 @@ transitionOffset=0.000000
 
 [transition Run_End->Idle]
 blend=0.150000
+cond=speed==0.000000
 exitTime=0.800000
 fixedDuration=false
 transitionDuration=0.150000
@@ -123,6 +124,14 @@ transitionOffset=0.000000
 blend=0.150000
 cond=speed>=0.100000
 exitTime=0.300000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Run_End->Run_Start]
+blend=0.150000
+cond=speed>0.100000
+exitTime=0.250000
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

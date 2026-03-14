@@ -38,4 +38,6 @@ protected:
 	_float m_fAttackCooldown;
 	_bool m_bHitAnimationObserved;
 	_float m_fHitReactionTimeout;
+	vector3 m_vPreviousMonsterPosition;
+	_bool m_bHasPreviousMonsterPosition;
 };

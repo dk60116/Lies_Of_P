@@ -88,7 +88,10 @@ private:
 
 	void SyncKinematicToJolt();
 	void SyncDynamicFromJolt();
+	void ApplyPositionConstraints(vector3& _pos);
+	void ApplyRotationConstraints(quaternion& _rot);
 	void ApplyAxisConstraints(vector3& _pos, quaternion& _rot);
+	void SyncPositionConstraintCache(const vector3& _pos);
 	void CacheLastSyncedTransform(const vector3& _pos, const quaternion& _rot);
 
 private:
@@ -117,6 +120,7 @@ private:
 	_bool m_bConstRotationZ;
 	vector3 m_vConstPosition;
 	vector3 m_vConstRotation;
+	_bool m_bSkipPositionConstraintSyncOnce;
 
 	_bool m_bHasLastSyncedTransform;
 	vector3 m_vLastSyncedPosition;
