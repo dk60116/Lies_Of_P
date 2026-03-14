@@ -917,6 +917,9 @@ void CScene::Render_Editor()
 	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
 	m_pEditorCamera->RenderDisplay();
+	m_pContext->RSSetState(m_pUIResterizerState);
+	m_pContext->OMSetDepthStencilState(m_pUIDepthStencilState, 0);
+	m_pEditorCamera->RenderUI_Editor();
 	DrawNavigationMeshOverlays(m_pEditorCamera, m_mResourceList, m_pMeshResterizerState, m_pUIDepthStencilState, m_pBlendingState);
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
@@ -1186,6 +1189,55 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		return path;
 	};
 
+	auto getSiblingIndex = [](CGameObject* obj) -> _int
+	{
+		if (!obj)
+			return -1;
+
+		CTransform* transform = obj->Get_Transform();
+		if (!transform)
+			return -1;
+
+		if (CTransform* parent = transform->Get_Parent())
+		{
+			_int index = 0;
+			for (CTransform* child : parent->Get_ChldList())
+			{
+				if (!child)
+					continue;
+
+				if (child == transform)
+					return index;
+
+				++index;
+			}
+
+			return -1;
+		}
+
+		CScene* scene = obj->Get_Scene();
+		if (!scene)
+			return -1;
+
+		_int index = 0;
+		for (CGameObject* candidate : scene->Get_ObjectList())
+		{
+			if (!candidate || !candidate->Is_SaveTarget())
+				continue;
+
+			CTransform* candidateTransform = candidate->Get_Transform();
+			if (!candidateTransform || !candidateTransform->Is_Root())
+				continue;
+
+			if (candidate == obj)
+				return index;
+
+			++index;
+		}
+
+		return -1;
+	};
+
 	auto getComponentPersistName = [](CComponent* component) -> wstring
 	{
 		if (!component)
@@ -1229,6 +1281,8 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		info.objName = (*it)->m_strGameObjectName;
 		info.objTag = (*it)->GetTag();
 		info.objPath = buildPath(*it);
+		info.sceneOrder = static_cast<_int>(result.size());
+		info.siblingIndex = getSiblingIndex(*it);
 		vector3 pos = tf->Get_LocalPosition();
 		info.localPos = pos;
 		const quaternion quat = tf->Get_LocalQuaternion();
@@ -1453,6 +1507,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 	unordered_map<wstring, vector<size_t>> infoIndicesByName;
 	infoIndicesByName.reserve(_infoList.size());
 	vector<_bool> usedInfo(_infoList.size(), false);
+	vector<CGameObject*> matchedObjects(_infoList.size(), nullptr);
 
 	for (size_t i = 0; i < _infoList.size(); ++i)
 	{
@@ -1916,6 +1971,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			applyInfo(obj, info);
 			applyComponents(obj, info);
 			usedInfo[guidIter->second] = true;
+			matchedObjects[guidIter->second] = obj;
 			continue;
 		}
 
@@ -1929,6 +1985,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			applyInfo(obj, info);
 			applyComponents(obj, info);
 			usedInfo[pathIter->second] = true;
+			matchedObjects[pathIter->second] = obj;
 			continue;
 		}
 
@@ -1954,6 +2011,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 					obj->m_strGuid = info.objGuid;
 				applyInfo(obj, info);
 				applyComponents(obj, info);
+				matchedObjects[matchedIndex] = obj;
 			}
 		}
 	}
@@ -2007,6 +2065,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				applyInfo(existingObj, info);
 				applyComponents(existingObj, info);
 				usedInfo[i] = true;
+				matchedObjects[i] = existingObj;
 				continue;
 			}
 
@@ -2043,8 +2102,208 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			applyInfo(newObj, info);
 			applyComponents(newObj, info);
 			usedInfo[i] = true;
+			matchedObjects[i] = newObj;
 			createdAny = true;
 		}
+	}
+
+	auto getParentPath = [](const wstring& path)
+	{
+		const size_t lastSlash = path.find_last_of(L'/');
+		if (lastSlash == wstring::npos)
+			return wstring();
+
+		return path.substr(0, lastSlash);
+	};
+
+	auto getPathDepth = [](const wstring& path) -> size_t
+	{
+		if (path.empty())
+			return 0;
+
+		size_t depth = 1;
+		for (wchar_t ch : path)
+		{
+			if (ch == L'/')
+				++depth;
+		}
+
+		return depth;
+	};
+
+	auto compareSavedOrder = [&](size_t lhs, size_t rhs)
+	{
+		const _int lhsSiblingIndex = _infoList[lhs].siblingIndex;
+		const _int rhsSiblingIndex = _infoList[rhs].siblingIndex;
+
+		if (lhsSiblingIndex >= 0 || rhsSiblingIndex >= 0)
+		{
+			if (lhsSiblingIndex < 0)
+				return false;
+			if (rhsSiblingIndex < 0)
+				return true;
+			if (lhsSiblingIndex != rhsSiblingIndex)
+				return lhsSiblingIndex < rhsSiblingIndex;
+		}
+
+		const _int lhsSceneOrder = _infoList[lhs].sceneOrder;
+		const _int rhsSceneOrder = _infoList[rhs].sceneOrder;
+		if (lhsSceneOrder != rhsSceneOrder)
+			return lhsSceneOrder < rhsSceneOrder;
+
+		return lhs < rhs;
+	};
+
+	vector<size_t> matchedInfoIndices;
+	matchedInfoIndices.reserve(_infoList.size());
+	for (size_t i = 0; i < matchedObjects.size(); ++i)
+	{
+		if (matchedObjects[i])
+			matchedInfoIndices.push_back(i);
+	}
+
+	stable_sort
+	(
+		matchedInfoIndices.begin(),
+		matchedInfoIndices.end(),
+		[&](size_t lhs, size_t rhs)
+		{
+			const size_t lhsDepth = getPathDepth(_infoList[lhs].objPath);
+			const size_t rhsDepth = getPathDepth(_infoList[rhs].objPath);
+			if (lhsDepth != rhsDepth)
+				return lhsDepth < rhsDepth;
+
+			return compareSavedOrder(lhs, rhs);
+		}
+	);
+
+	unordered_map<wstring, CGameObject*> objectBySavedPath;
+	objectBySavedPath.reserve(matchedInfoIndices.size());
+	for (size_t infoIndex : matchedInfoIndices)
+	{
+		if (_infoList[infoIndex].objPath.empty() || !matchedObjects[infoIndex])
+			continue;
+
+		objectBySavedPath[_infoList[infoIndex].objPath] = matchedObjects[infoIndex];
+	}
+
+	for (size_t infoIndex : matchedInfoIndices)
+	{
+		CGameObject* obj = matchedObjects[infoIndex];
+		if (!obj)
+			continue;
+
+		const wstring parentPath = getParentPath(_infoList[infoIndex].objPath);
+		CGameObject* parentObj = nullptr;
+		if (!parentPath.empty())
+		{
+			auto savedParentIter = objectBySavedPath.find(parentPath);
+			if (savedParentIter != objectBySavedPath.end())
+				parentObj = savedParentIter->second;
+			else
+				parentObj = findObjectByPath(parentPath);
+		}
+
+		CTransform* desiredParent = parentObj ? parentObj->Get_Transform() : nullptr;
+		if (obj->Get_Transform()->Get_Parent() != desiredParent)
+			obj->Get_Transform()->SetParent(desiredParent);
+	}
+
+	unordered_map<CTransform*, vector<size_t>> childInfoIndicesByParent;
+	childInfoIndicesByParent.reserve(matchedInfoIndices.size());
+	for (size_t infoIndex : matchedInfoIndices)
+	{
+		CGameObject* obj = matchedObjects[infoIndex];
+		if (!obj)
+			continue;
+
+		if (CTransform* parent = obj->Get_Transform()->Get_Parent())
+			childInfoIndicesByParent[parent].push_back(infoIndex);
+	}
+
+	for (auto& [parentTransform, childInfoIndices] : childInfoIndicesByParent)
+	{
+		stable_sort
+		(
+			childInfoIndices.begin(),
+			childInfoIndices.end(),
+			[&](size_t lhs, size_t rhs)
+			{
+				return compareSavedOrder(lhs, rhs);
+			}
+		);
+
+		CTransform* beforeChild = nullptr;
+		for (auto childIt = childInfoIndices.rbegin(); childIt != childInfoIndices.rend(); ++childIt)
+		{
+			CGameObject* childObj = matchedObjects[*childIt];
+			if (!childObj)
+				continue;
+
+			parentTransform->InsertChildBefore(childObj->Get_Transform(), beforeChild);
+			beforeChild = childObj->Get_Transform();
+		}
+	}
+
+	vector<size_t> sceneOrderedInfoIndices = matchedInfoIndices;
+	stable_sort
+	(
+		sceneOrderedInfoIndices.begin(),
+		sceneOrderedInfoIndices.end(),
+		[&](size_t lhs, size_t rhs)
+		{
+			const _int lhsSceneOrder = _infoList[lhs].sceneOrder;
+			const _int rhsSceneOrder = _infoList[rhs].sceneOrder;
+			if (lhsSceneOrder != rhsSceneOrder)
+				return lhsSceneOrder < rhsSceneOrder;
+
+			return lhs < rhs;
+		}
+	);
+
+	unordered_set<CGameObject*> savedObjectSet;
+	savedObjectSet.reserve(sceneOrderedInfoIndices.size());
+	for (size_t infoIndex : sceneOrderedInfoIndices)
+	{
+		if (matchedObjects[infoIndex])
+			savedObjectSet.insert(matchedObjects[infoIndex]);
+	}
+
+	list<CGameObject*> reorderedObjects;
+	for (CGameObject* obj : m_lObjectList)
+	{
+		if (!obj || savedObjectSet.find(obj) != savedObjectSet.end())
+			continue;
+
+		if (obj->m_iUniqueID == 0)
+			reorderedObjects.push_back(obj);
+	}
+
+	for (size_t infoIndex : sceneOrderedInfoIndices)
+	{
+		if (matchedObjects[infoIndex])
+			reorderedObjects.push_back(matchedObjects[infoIndex]);
+	}
+
+	for (CGameObject* obj : m_lObjectList)
+	{
+		if (!obj || savedObjectSet.find(obj) != savedObjectSet.end())
+			continue;
+
+		if (obj->m_iUniqueID != 0)
+			reorderedObjects.push_back(obj);
+	}
+
+	if (!reorderedObjects.empty())
+		m_lObjectList.swap(reorderedObjects);
+
+	for (size_t infoIndex : matchedInfoIndices)
+	{
+		CGameObject* obj = matchedObjects[infoIndex];
+		if (!obj)
+			continue;
+
+		applyInfo(obj, _infoList[infoIndex]);
 	}
 }
 
@@ -3073,11 +3332,6 @@ ID3D11BlendState* CScene::Get_NoneBlendingState() const
 {
 	return m_pNoneBlendingState;
 }
-
-
-
-
-
 
 
 

@@ -11,3 +11,4 @@
 #pragma comment(lib, "d3dcompiler.lib")
 
 #include "GameManager.h"
+#include "InterfaceManager.h"

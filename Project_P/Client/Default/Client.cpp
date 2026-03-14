@@ -201,6 +201,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 #endif
     }
     return 0;
+    case WM_SETCURSOR:
+        if (LOWORD(lParam) == HTCLIENT)
+        {
+            CDisplay::GetInstance().ApplyCursorVisibility(hWnd);
+            return TRUE;
+        }
+        break;
     case WM_DESTROY:
         PostQuitMessage(0);
         break;

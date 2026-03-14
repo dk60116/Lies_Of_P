@@ -83,6 +83,7 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+#include "Display.h"
 #include <windows.h>
 #include <windowsx.h> // GET_X_LPARAM(), GET_Y_LPARAM()
 #include <tchar.h>
@@ -115,6 +116,7 @@ struct ImGui_ImplWin32_Data
     INT64                       Time;
     INT64                       TicksPerSecond;
     ImGuiMouseCursor            LastMouseCursor;
+    bool                        LastCursorVisible;
     UINT32                      KeyboardCodePage;
 
 #ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
@@ -240,9 +242,10 @@ static bool ImGui_ImplWin32_UpdateMouseCursor(ImGuiIO& io, ImGuiMouseCursor imgu
     if (io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
         return false;
 
-    if (imgui_cursor == ImGuiMouseCursor_None || io.MouseDrawCursor)
+    const bool is_cursor_visible = Engine::CDisplay::GetInstance().IsVisibleCursor();
+    if (!is_cursor_visible || imgui_cursor == ImGuiMouseCursor_None || io.MouseDrawCursor)
     {
-        // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
+        // Hide OS mouse cursor when gameplay requests it or if imgui is drawing it.
         ::SetCursor(nullptr);
     }
     else
@@ -412,9 +415,11 @@ void    ImGui_ImplWin32_NewFrame()
 
     // Update OS mouse cursor with the cursor requested by imgui
     ImGuiMouseCursor mouse_cursor = io.MouseDrawCursor ? ImGuiMouseCursor_None : ImGui::GetMouseCursor();
-    if (bd->LastMouseCursor != mouse_cursor)
+    const bool is_cursor_visible = Engine::CDisplay::GetInstance().IsVisibleCursor();
+    if (bd->LastMouseCursor != mouse_cursor || bd->LastCursorVisible != is_cursor_visible)
     {
         bd->LastMouseCursor = mouse_cursor;
+        bd->LastCursorVisible = is_cursor_visible;
         ImGui_ImplWin32_UpdateMouseCursor(io, mouse_cursor);
     }
 

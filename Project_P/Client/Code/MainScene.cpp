@@ -19,6 +19,8 @@ HRESULT CMainScene::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
+	CResources::GetInstance().CreateGameResource<CFont>(L"", L"");
+
 	CGameObject* cameraObject = Add_GameObject(L"Main Camera");
 	m_pMainCamera = cameraObject->AddComponent<CCamera>();
 

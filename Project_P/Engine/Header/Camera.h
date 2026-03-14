@@ -106,6 +106,7 @@ protected:
 public:
 	void RenderMesh();
 	void RenderUI();
+	void RenderUI_Editor();
 	void RenderDisplay();
 
 public:

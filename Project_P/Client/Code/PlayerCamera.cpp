@@ -123,6 +123,7 @@ void CPlayerCamera::Update()
     if (!hWnd) return;
 
     const bool canUpdateMouse = IsOurWindowActive(hWnd);
+    CDisplay::GetInstance().SetCursorVisible(!m_bMouseLocked || !canUpdateMouse);
 
     if (!canUpdateMouse)
     {
@@ -188,7 +189,9 @@ void CPlayerCamera::Update()
     CTransform* playerTf = CGameManager::GetInstance().Get_Player()->Get_Transform();
 
     const vector3 playerPos = playerTf->Get_Position();
-    const vector3 pivot = playerPos + vector3::up() * m_sOptions.lookHeightOffset;
+
+    const vector3 playerRight = playerTf->Get_Directions().right;
+    const vector3 pivot = playerPos + vector3::up() * m_sOptions.heightOffset + playerRight * m_sOptions.xOffset;
 
     const _float dt = std::clamp(DELTA_TIME, 0.f, 0.05f);
     const _float speed = (m_sOptions.trackingSpeed > 0.f) ? m_sOptions.trackingSpeed : 10.f;
@@ -225,6 +228,7 @@ void CPlayerCamera::LateUpdate()
 void CPlayerCamera::OnDestroy()
 {
     ClipCursor(nullptr);
+    CDisplay::GetInstance().SetCursorVisible(true);
 }
 
 _float CPlayerCamera::LerpAngle(_float current, _float target, _float t)

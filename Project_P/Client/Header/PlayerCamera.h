@@ -9,8 +9,8 @@ class CPlayerCamera final : public CComponent
 public:
     struct PlayerCameraOptions
     {
-        _float HeightOffset = 5.f;
-        _float lookHeightOffset = 3.f;
+        _float xOffset = 1.f;
+        _float heightOffset = 2.5f;
         _float zoomMin = 2.f;
         _float zoomMax = 10.f;
         _float trackingSpeed = 10.f;

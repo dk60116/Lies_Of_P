@@ -1162,6 +1162,31 @@ void CCamera::RenderUI()
 	m_vUIList.clear();
 }
 
+void CCamera::RenderUI_Editor()
+{
+	if (m_vUIList.empty())
+		return;
+
+	const _matrix viewMat = GetViewMatrix();
+	const _matrix projMat = GetProjectionMatrix();
+
+	for (TRAVERSAL_ITER(m_vUIList, it))
+	{
+		if (!(*it)->Get_GameObject()->IsRecursiveActive() || !(*it)->Get_Enable())
+			continue;
+
+		if (CImage* img = dynamic_cast<CImage*>(*it))
+		{
+			img->Bind_UIMaterial();
+			(*it)->Bind_Matrix();
+			(*it)->Bind_Camera(viewMat, projMat);
+			(*it)->Bind_Mesh();
+		}
+	}
+
+	m_vUIList.clear();
+}
+
 void CCamera::RenderDisplay()
 {
 	if (!m_pRectBuffer)

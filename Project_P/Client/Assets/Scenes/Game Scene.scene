@@ -113,7 +113,7 @@ Eve_AnimatorController : Player/Eve/AnimatorController/Eve_AnimatorController.an
 // Monster
 // Creeper
 Mon_Creeper_Body_Model : Monster/Creeper/Creeper.fbx : [Skinned Mesh]
-// Texture
+// Creeper-Texture
 Tex_Mon_Creeper_0_TD : Monster/Creeper/Textures/CH_M_NA_Antlion_Body_A.png : [Texture]
 Tex_Mon_Creeper_0_TN : Monster/Creeper/Textures/CH_M_NA_Antlion_Body_N.png : [Texture]
 Tex_Mon_Creeper_0_TORM : Monster/Creeper/Textures/CH_M_NA_Antlion_Body_ORM.png : [Texture]
@@ -130,7 +130,10 @@ Anim_Mon_Creeper_Run_End : Monster/Creeper/Animations/Mon_Creeper_Run_End.fbx : 
 Anim_Mon_Creeper_BaseAttack : Monster/Creeper/Animations/Mon_Creeper_BaseAttack.fbx : [Animation Clip]
 Anim_Mon_Creeper_Hit_Fw.fbx : Monster/Creeper/Animations/Mon_Creeper_Hit_Fw.fbx : [Animation Clip]
 // UI
-HeartBar : UI/HUDUI/HeartBar.png : [Texture]Building_0_Stage01_Building_00_Auto_1770860177475 : Map/Map01/Building_0/Stage01_Building_00.fbx : [Mesh]
+// HUD
+HUD_Aim : UI/Client/HUDUI/HUD_Aim.png : [Texture]
+HUD_Potion_Holder : UI/Client/HUDUI/HUD_Potion_Holder.png : [Texture]
+HUD_Btn_PcEmpty : UI/Client/HUDUI/HUD_Btn_PcEmpty.png : [Texture]
 Building_0_Stage01_Building_00_Auto_1770865212651 : Map/Map01/Building_0/Stage01_Building_00.fbx : [Mesh]
 Building_1_Stage01_Building_01_Auto_1770868093590 : Map/Map01/Building_1/Stage01_Building_01.fbx : [Mesh]
 Building_2_Stage01_Building_02_Auto_1770868471760 : Map/Map01/Building_2/Stage01_Building_02.fbx : [Mesh]

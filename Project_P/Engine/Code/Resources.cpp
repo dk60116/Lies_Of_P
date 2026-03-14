@@ -11,6 +11,468 @@
 
 namespace
 {
+	constexpr int kSpriteFontFirstChar = 32;
+	constexpr int kSpriteFontLastChar = 126;
+	constexpr int kSpriteFontPadding = 2;
+	constexpr float kSpriteFontPointSize = 32.f;
+
+	struct PrivateFontRegistration
+	{
+		wstring path;
+		bool loaded = false;
+
+		explicit PrivateFontRegistration(const wstring& fontPath)
+			: path(fontPath)
+		{
+			loaded = (AddFontResourceExW(path.c_str(), FR_PRIVATE, nullptr) > 0);
+		}
+
+		~PrivateFontRegistration()
+		{
+			if (loaded)
+				RemoveFontResourceExW(path.c_str(), FR_PRIVATE, nullptr);
+		}
+	};
+
+	uint16_t ReadBigEndianUInt16(const uint8_t* data)
+	{
+		return static_cast<uint16_t>((static_cast<uint16_t>(data[0]) << 8) | data[1]);
+	}
+
+	uint32_t ReadBigEndianUInt32(const uint8_t* data)
+	{
+		return
+			(static_cast<uint32_t>(data[0]) << 24) |
+			(static_cast<uint32_t>(data[1]) << 16) |
+			(static_cast<uint32_t>(data[2]) << 8) |
+			static_cast<uint32_t>(data[3]);
+	}
+
+	bool TryDecodeUtf16BE(const uint8_t* data, size_t size, wstring& outValue)
+	{
+		if ((size % 2) != 0)
+			return false;
+
+		outValue.clear();
+		outValue.reserve(size / 2);
+
+		for (size_t i = 0; i < size; i += 2)
+		{
+			const wchar_t ch = static_cast<wchar_t>(ReadBigEndianUInt16(data + i));
+			if (ch != L'\0')
+				outValue.push_back(ch);
+		}
+
+		return !outValue.empty();
+	}
+
+	wstring ToLowerCopy(wstring value)
+	{
+		transform(value.begin(), value.end(), value.begin(), [](wchar_t ch)
+			{
+				return static_cast<wchar_t>(towlower(ch));
+			});
+		return value;
+	}
+
+	bool TryExtractFontName(const vector<uint8_t>& bytes, uint16_t desiredNameId, wstring& outValue)
+	{
+		if (bytes.size() < 12)
+			return false;
+
+		const uint16_t tableCount = ReadBigEndianUInt16(bytes.data() + 4);
+		size_t nameTableOffset = 0;
+		size_t nameTableLength = 0;
+
+		for (uint16_t i = 0; i < tableCount; ++i)
+		{
+			const size_t entryOffset = 12ull + static_cast<size_t>(i) * 16ull;
+			if (entryOffset + 16 > bytes.size())
+				return false;
+
+			const uint32_t tag = ReadBigEndianUInt32(bytes.data() + entryOffset);
+			if (tag != 0x6E616D65) // 'name'
+				continue;
+
+			nameTableOffset = ReadBigEndianUInt32(bytes.data() + entryOffset + 8);
+			nameTableLength = ReadBigEndianUInt32(bytes.data() + entryOffset + 12);
+			break;
+		}
+
+		if (nameTableOffset == 0 || nameTableOffset + nameTableLength > bytes.size())
+			return false;
+
+		const uint8_t* nameTable = bytes.data() + nameTableOffset;
+		const uint16_t recordCount = ReadBigEndianUInt16(nameTable + 2);
+		const uint16_t stringStorageOffset = ReadBigEndianUInt16(nameTable + 4);
+		const size_t recordsOffset = nameTableOffset + 6;
+		const size_t stringsOffset = nameTableOffset + stringStorageOffset;
+
+		int bestScore = -1;
+		wstring bestValue;
+
+		for (uint16_t i = 0; i < recordCount; ++i)
+		{
+			const size_t recordOffset = recordsOffset + static_cast<size_t>(i) * 12ull;
+			if (recordOffset + 12 > bytes.size())
+				return false;
+
+			const uint16_t platformId = ReadBigEndianUInt16(bytes.data() + recordOffset + 0);
+			const uint16_t encodingId = ReadBigEndianUInt16(bytes.data() + recordOffset + 2);
+			const uint16_t languageId = ReadBigEndianUInt16(bytes.data() + recordOffset + 4);
+			const uint16_t nameId = ReadBigEndianUInt16(bytes.data() + recordOffset + 6);
+			const uint16_t stringLength = ReadBigEndianUInt16(bytes.data() + recordOffset + 8);
+			const uint16_t stringOffset = ReadBigEndianUInt16(bytes.data() + recordOffset + 10);
+
+			if (nameId != desiredNameId)
+				continue;
+
+			const size_t absoluteStringOffset = stringsOffset + stringOffset;
+			if (absoluteStringOffset + stringLength > bytes.size())
+				continue;
+
+			if (platformId != 0 && platformId != 3)
+				continue;
+
+			wstring value;
+			if (!TryDecodeUtf16BE(bytes.data() + absoluteStringOffset, stringLength, value))
+				continue;
+
+			int score = 0;
+			if (platformId == 3)
+				score += 100;
+			if (platformId == 0)
+				score += 90;
+			if (languageId == 0x0409)
+				score += 10;
+			if (encodingId == 10 || encodingId == 1)
+				score += 5;
+
+			if (score > bestScore)
+			{
+				bestScore = score;
+				bestValue = move(value);
+			}
+		}
+
+		if (bestValue.empty())
+			return false;
+
+		outValue = move(bestValue);
+		return true;
+	}
+
+	struct ScopedDeleteDC
+	{
+		HDC dc = nullptr;
+
+		explicit ScopedDeleteDC(HDC handle)
+			: dc(handle)
+		{
+		}
+
+		~ScopedDeleteDC()
+		{
+			if (dc)
+				DeleteDC(dc);
+		}
+	};
+
+	struct ScopedDeleteObject
+	{
+		HGDIOBJ object = nullptr;
+
+		explicit ScopedDeleteObject(HGDIOBJ handle)
+			: object(handle)
+		{
+		}
+
+		~ScopedDeleteObject()
+		{
+			if (object)
+				DeleteObject(object);
+		}
+	};
+
+	struct ScopedSelectObject
+	{
+		HDC dc = nullptr;
+		HGDIOBJ previous = nullptr;
+
+		ScopedSelectObject(HDC targetDc, HGDIOBJ object)
+			: dc(targetDc)
+		{
+			if (dc)
+				previous = SelectObject(dc, object);
+		}
+
+		~ScopedSelectObject()
+		{
+			if (dc && previous)
+				SelectObject(dc, previous);
+		}
+	};
+
+	struct SpriteFontGlyphData
+	{
+		wchar_t character = 0;
+		RECT subrect = { 0, 0, 0, 0 };
+		float xOffset = 0.f;
+		float yOffset = 0.f;
+		float xAdvance = 0.f;
+		int width = 1;
+		int height = 1;
+		vector<uint8_t> alpha;
+	};
+
+	bool ResolveFontInputPath(const wstring& inputPath, wstring& outAbsolutePath)
+	{
+		if (inputPath.empty())
+			return false;
+
+		wchar_t exeDir[MAX_PATH] = {};
+		GetModuleFileNameW(nullptr, exeDir, MAX_PATH);
+		PathRemoveFileSpecW(exeDir);
+
+		fs::path candidate = fs::path(inputPath);
+		if (!candidate.is_absolute())
+			candidate = fs::path(exeDir) / candidate;
+
+		error_code ec;
+		const fs::path absolutePath = fs::absolute(candidate, ec);
+		if (ec || !fs::exists(absolutePath))
+			return false;
+
+		outAbsolutePath = absolutePath.wstring();
+		return true;
+	}
+
+	bool TryGetPrivateFontInfo(const wstring& fontPath, wstring& outFamilyName, LONG& outWeight, bool& outItalic)
+	{
+		ifstream in(fontPath, ios::binary);
+		if (!in.is_open())
+			return false;
+
+		vector<uint8_t> bytes((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
+		if (bytes.empty())
+			return false;
+
+		if (!TryExtractFontName(bytes, 16, outFamilyName) && !TryExtractFontName(bytes, 1, outFamilyName))
+			return false;
+
+		wstring styleName;
+		TryExtractFontName(bytes, 17, styleName);
+		if (styleName.empty())
+			TryExtractFontName(bytes, 2, styleName);
+
+		const wstring styleNameLower = ToLowerCopy(styleName);
+		outWeight =
+			(styleNameLower.find(L"bold") != wstring::npos ||
+				styleNameLower.find(L"black") != wstring::npos ||
+				styleNameLower.find(L"heavy") != wstring::npos)
+			? FW_BOLD
+			: FW_NORMAL;
+		outItalic =
+			(styleNameLower.find(L"italic") != wstring::npos ||
+				styleNameLower.find(L"oblique") != wstring::npos);
+
+		return true;
+	}
+
+	HFONT CreateSpriteFontHandle(HDC dc, const wstring& familyName, LONG fontWeight, bool italic, float pointSize)
+	{
+		if (!dc)
+			return nullptr;
+
+		LOGFONTW fontDesc = {};
+		fontDesc.lfHeight = -MulDiv(static_cast<int>(pointSize), GetDeviceCaps(dc, LOGPIXELSY), 72);
+		fontDesc.lfWeight = fontWeight;
+		fontDesc.lfItalic = italic ? TRUE : FALSE;
+		fontDesc.lfCharSet = DEFAULT_CHARSET;
+		fontDesc.lfOutPrecision = OUT_TT_ONLY_PRECIS;
+		fontDesc.lfQuality = ANTIALIASED_QUALITY;
+		fontDesc.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+		wcsncpy_s(fontDesc.lfFaceName, familyName.c_str(), _TRUNCATE);
+
+		return CreateFontIndirectW(&fontDesc);
+	}
+
+	bool BuildGlyphBitmap(HDC dc, wchar_t character, float ascent, SpriteFontGlyphData& outGlyph)
+	{
+		MAT2 identity =
+		{
+			{ 0, 1 }, { 0, 0 },
+			{ 0, 0 }, { 0, 1 }
+		};
+
+		GLYPHMETRICS metrics = {};
+		const DWORD bufferSize = GetGlyphOutlineW(dc, character, GGO_GRAY8_BITMAP, &metrics, 0, nullptr, &identity);
+		if (bufferSize == GDI_ERROR)
+			return false;
+
+		outGlyph.character = character;
+		outGlyph.xAdvance = static_cast<float>(metrics.gmCellIncX);
+		outGlyph.xOffset = static_cast<float>(metrics.gmptGlyphOrigin.x);
+		outGlyph.yOffset = ascent - static_cast<float>(metrics.gmptGlyphOrigin.y);
+
+		const int bitmapWidth = static_cast<int>(metrics.gmBlackBoxX);
+		const int bitmapHeight = static_cast<int>(metrics.gmBlackBoxY);
+
+		outGlyph.width = max(bitmapWidth, 1);
+		outGlyph.height = max(bitmapHeight, 1);
+		outGlyph.alpha.assign(static_cast<size_t>(outGlyph.width) * static_cast<size_t>(outGlyph.height), 0);
+
+		if (bitmapWidth == 0 || bitmapHeight == 0 || bufferSize == 0)
+			return true;
+
+		vector<uint8_t> glyphBuffer(bufferSize);
+		if (GetGlyphOutlineW(dc, character, GGO_GRAY8_BITMAP, &metrics, bufferSize, glyphBuffer.data(), &identity) == GDI_ERROR)
+			return false;
+
+		const int sourceStride = (bitmapWidth + 3) & ~3;
+		for (int y = 0; y < bitmapHeight; ++y)
+		{
+			for (int x = 0; x < bitmapWidth; ++x)
+			{
+				const uint8_t coverage = glyphBuffer[static_cast<size_t>(y) * sourceStride + x];
+				outGlyph.alpha[static_cast<size_t>(y) * outGlyph.width + x] =
+					static_cast<uint8_t>(min(255, (static_cast<int>(coverage) * 255 + 32) / 64));
+			}
+		}
+
+		return true;
+	}
+
+	bool PackGlyphs(vector<SpriteFontGlyphData>& glyphs, int& outTextureWidth, int& outTextureHeight)
+	{
+		for (int candidateWidth = 256; candidateWidth <= 2048; candidateWidth *= 2)
+		{
+			int cursorX = kSpriteFontPadding;
+			int cursorY = kSpriteFontPadding;
+			int rowHeight = 0;
+			bool packed = true;
+
+			for (auto& glyph : glyphs)
+			{
+				if (glyph.width + (kSpriteFontPadding * 2) > candidateWidth)
+				{
+					packed = false;
+					break;
+				}
+
+				if (cursorX + glyph.width + kSpriteFontPadding > candidateWidth)
+				{
+					cursorX = kSpriteFontPadding;
+					cursorY += rowHeight + kSpriteFontPadding;
+					rowHeight = 0;
+				}
+
+				glyph.subrect.left = cursorX;
+				glyph.subrect.top = cursorY;
+				glyph.subrect.right = cursorX + glyph.width;
+				glyph.subrect.bottom = cursorY + glyph.height;
+
+				cursorX += glyph.width + kSpriteFontPadding;
+				rowHeight = max(rowHeight, glyph.height);
+			}
+
+			if (!packed)
+				continue;
+
+			outTextureWidth = candidateWidth;
+			outTextureHeight = max(cursorY + rowHeight + kSpriteFontPadding, 1);
+			return true;
+		}
+
+		return false;
+	}
+
+	vector<uint8_t> BuildFontTexture(const vector<SpriteFontGlyphData>& glyphs, int textureWidth, int textureHeight)
+	{
+		vector<uint8_t> pixels(static_cast<size_t>(textureWidth) * static_cast<size_t>(textureHeight) * 4, 0);
+
+		for (const auto& glyph : glyphs)
+		{
+			for (int y = 0; y < glyph.height; ++y)
+			{
+				for (int x = 0; x < glyph.width; ++x)
+				{
+					const uint8_t alpha = glyph.alpha[static_cast<size_t>(y) * glyph.width + x];
+					if (alpha == 0)
+						continue;
+
+					const size_t pixelIndex =
+						(static_cast<size_t>(glyph.subrect.top + y) * textureWidth + static_cast<size_t>(glyph.subrect.left + x)) * 4;
+
+					pixels[pixelIndex + 0] = 255;
+					pixels[pixelIndex + 1] = 255;
+					pixels[pixelIndex + 2] = 255;
+					pixels[pixelIndex + 3] = alpha;
+				}
+			}
+		}
+
+		return pixels;
+	}
+
+	bool SaveSpriteFontBinary(
+		const wstring& outputPath,
+		const vector<SpriteFontGlyphData>& glyphs,
+		float lineSpacing,
+		wchar_t defaultCharacter,
+		int textureWidth,
+		int textureHeight,
+		const vector<uint8_t>& pixels)
+	{
+		ofstream out(outputPath, ios::binary);
+		if (!out.is_open())
+			return false;
+
+		const string magic = "DXTKfont";
+		out.write(magic.data(), magic.size());
+
+		const int32_t glyphCount = static_cast<int32_t>(glyphs.size());
+		out.write(reinterpret_cast<const char*>(&glyphCount), sizeof(glyphCount));
+
+		for (const auto& glyph : glyphs)
+		{
+			const int32_t character = static_cast<int32_t>(glyph.character);
+			const int32_t left = glyph.subrect.left;
+			const int32_t top = glyph.subrect.top;
+			const int32_t right = glyph.subrect.right;
+			const int32_t bottom = glyph.subrect.bottom;
+
+			out.write(reinterpret_cast<const char*>(&character), sizeof(character));
+			out.write(reinterpret_cast<const char*>(&left), sizeof(left));
+			out.write(reinterpret_cast<const char*>(&top), sizeof(top));
+			out.write(reinterpret_cast<const char*>(&right), sizeof(right));
+			out.write(reinterpret_cast<const char*>(&bottom), sizeof(bottom));
+			out.write(reinterpret_cast<const char*>(&glyph.xOffset), sizeof(glyph.xOffset));
+			out.write(reinterpret_cast<const char*>(&glyph.yOffset), sizeof(glyph.yOffset));
+			out.write(reinterpret_cast<const char*>(&glyph.xAdvance), sizeof(glyph.xAdvance));
+		}
+
+		out.write(reinterpret_cast<const char*>(&lineSpacing), sizeof(lineSpacing));
+
+		const int32_t defaultCharacterCode = static_cast<int32_t>(defaultCharacter);
+		out.write(reinterpret_cast<const char*>(&defaultCharacterCode), sizeof(defaultCharacterCode));
+
+		const int32_t width = textureWidth;
+		const int32_t height = textureHeight;
+		const int32_t format = static_cast<int32_t>(DXGI_FORMAT_R8G8B8A8_UNORM);
+		const int32_t stride = textureWidth * 4;
+		const int32_t rows = textureHeight;
+
+		out.write(reinterpret_cast<const char*>(&width), sizeof(width));
+		out.write(reinterpret_cast<const char*>(&height), sizeof(height));
+		out.write(reinterpret_cast<const char*>(&format), sizeof(format));
+		out.write(reinterpret_cast<const char*>(&stride), sizeof(stride));
+		out.write(reinterpret_cast<const char*>(&rows), sizeof(rows));
+		out.write(reinterpret_cast<const char*>(pixels.data()), static_cast<streamsize>(pixels.size()));
+
+		return out.good();
+	}
+
 	void WriteBinaryWString(ofstream& out, const wstring& value)
 	{
 		_uint size = static_cast<_uint>(value.size());
@@ -659,97 +1121,105 @@ HRESULT CResources::ConvertFBXToAnimationClipData(const wstring _filePath)
 
 HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 {
+	wstring absoluteFontPath;
+	if (!ResolveFontInputPath(_filePath, absoluteFontPath))
+	{
+		CDebug::LogError(L"Invalid font path: " + _filePath);
+		return E_FAIL;
+	}
+
+	wstring familyName;
+	LONG fontWeight = FW_NORMAL;
+	bool italic = false;
+	if (!TryGetPrivateFontInfo(absoluteFontPath, familyName, fontWeight, italic))
+	{
+		CDebug::LogError(L"Failed to inspect font file: " + absoluteFontPath);
+		return E_FAIL;
+	}
+
+	PrivateFontRegistration privateFont(absoluteFontPath);
+	if (!privateFont.loaded)
+	{
+		CDebug::LogError(L"Failed to load font into the current process: " + absoluteFontPath);
+		return E_FAIL;
+	}
+
+	ScopedDeleteDC dc(CreateCompatibleDC(nullptr));
+	if (!dc.dc)
+	{
+		CDebug::LogError("CreateCompatibleDC failed while building spritefont.");
+		return E_FAIL;
+	}
+
+	ScopedDeleteObject font(CreateSpriteFontHandle(dc.dc, familyName, fontWeight, italic, kSpriteFontPointSize));
+	if (!font.object)
+	{
+		CDebug::LogError(L"CreateFontIndirect failed for font family: " + familyName);
+		return E_FAIL;
+	}
+
+	ScopedSelectObject selectFont(dc.dc, font.object);
+
+	TEXTMETRICW textMetric = {};
+	if (!GetTextMetricsW(dc.dc, &textMetric))
+	{
+		CDebug::LogError(L"GetTextMetrics failed for font family: " + familyName);
+		return E_FAIL;
+	}
+
+	vector<SpriteFontGlyphData> glyphs;
+	glyphs.reserve(kSpriteFontLastChar - kSpriteFontFirstChar + 1);
+
+	for (int ch = kSpriteFontFirstChar; ch <= kSpriteFontLastChar; ++ch)
+	{
+		SpriteFontGlyphData glyph;
+		if (!BuildGlyphBitmap(dc.dc, static_cast<wchar_t>(ch), static_cast<float>(textMetric.tmAscent), glyph))
+		{
+			CDebug::LogError(L"Failed to rasterize glyph for character code: " + to_wstring(ch));
+			return E_FAIL;
+		}
+
+		glyphs.push_back(move(glyph));
+	}
+
+	int textureWidth = 0;
+	int textureHeight = 0;
+	if (!PackGlyphs(glyphs, textureWidth, textureHeight))
+	{
+		CDebug::LogError(L"Failed to pack glyph atlas for font: " + familyName);
+		return E_FAIL;
+	}
+
+	const vector<uint8_t> pixels = BuildFontTexture(glyphs, textureWidth, textureHeight);
+
 	wchar_t exeDir[MAX_PATH] = {};
-	GetModuleFileNameW(NULL, exeDir, MAX_PATH);
+	GetModuleFileNameW(nullptr, exeDir, MAX_PATH);
 	PathRemoveFileSpecW(exeDir);
 
-	wchar_t fullFontPath[MAX_PATH] = {};
-	wcscpy_s(fullFontPath, exeDir);
-	PathAppendW(fullFontPath, _filePath.c_str());
-
-	wchar_t absoluteFontPath[MAX_PATH] = {};
-	if (!GetFullPathNameW(fullFontPath, MAX_PATH, absoluteFontPath, nullptr))
+	const fs::path outputDir = fs::path(exeDir) / L"BinaryAssets" / L"FontData";
+	error_code createDirError;
+	fs::create_directories(outputDir, createDirError);
+	if (createDirError)
 	{
-		CDebug::LogError("GetFullPathName failed.");
+		CDebug::LogError(L"Failed to create font output directory: " + outputDir.wstring());
 		return E_FAIL;
 	}
 
-	wchar_t fontsDir[MAX_PATH] = {};
-	GetWindowsDirectoryW(fontsDir, MAX_PATH);
-	PathAppendW(fontsDir, L"Fonts");
-
-	const wchar_t* fontFileName = PathFindFileNameW(absoluteFontPath);
-	wchar_t installedFontPath[MAX_PATH] = {};
-	PathCombineW(installedFontPath, fontsDir, fontFileName);
-
-	if (!CopyFileW(absoluteFontPath, installedFontPath, FALSE))
+	const fs::path outputPath = outputDir / (fs::path(absoluteFontPath).stem().wstring() + L".spritefont");
+	if (!SaveSpriteFontBinary(
+		outputPath.wstring(),
+		glyphs,
+		static_cast<float>(textMetric.tmHeight),
+		L'?',
+		textureWidth,
+		textureHeight,
+		pixels))
 	{
-		CDebug::LogError(L"Failed to copy to Fonts folder. Error: " + GetLastError());
+		CDebug::LogError(L"Failed to save spritefont file: " + outputPath.wstring());
 		return E_FAIL;
 	}
 
-	if (AddFontResourceExW(installedFontPath, FR_NOT_ENUM, 0) == 0)
-	{
-		CDebug::LogError("AddFontResourceExW failed");
-		return E_FAIL;
-	}
-	SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
-
-	wstring fixPath = CEngineString::Replace(_filePath, L"/", L"\\");
-	auto splitPath = CEngineString::Split(_filePath, L"\\");
-	wstring onlyFileName = CEngineString::Split(splitPath[splitPath.size() - 1], L".")[0];
-
-	wstring outfilePath = L"BinaryAssets/FontData/" + onlyFileName + L".spritefont";
-	outfilePath = CEngineString::Replace(outfilePath, L"/", L"\\");
-
-	CDebug::Log(L"OutFilePath: " + outfilePath);
-
-	wchar_t spriteOutput[MAX_PATH] = {};
-	wcscpy_s(spriteOutput, exeDir);
-	PathAppendW(spriteOutput, outfilePath.c_str());
-
-	wchar_t outputFullPath[MAX_PATH] = {};
-	GetFullPathNameW(spriteOutput, MAX_PATH, outputFullPath, nullptr);
-
-	wstring cmdLine = L"\"";
-	cmdLine += exeDir;
-	cmdLine += L"\\..\\..\\Engine\\Tools\\MakeSpriteFont.exe\" /FontSize:32 /FontStyle:Regular ";
-	cmdLine += L"\"Liberation Sans\" ";
-	cmdLine += L"\"" + wstring(outputFullPath) + L"\"";
-
-	CDebug::Log(L"[RUNNING]: " + cmdLine);
-
-	STARTUPINFOW si{ sizeof(si) };
-	PROCESS_INFORMATION pi{};
-	vector<wchar_t> cmdBuf(cmdLine.begin(), cmdLine.end());
-	cmdBuf.push_back(L'\0');
-
-	if (!CreateProcessW(nullptr, cmdBuf.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, exeDir, &si, &pi))
-	{
-		CDebug::LogError(L"CreateProcess failed. Error: " + GetLastError());
-		RemoveFontResourceExW(installedFontPath, FR_NOT_ENUM, 0);
-		DeleteFileW(installedFontPath);
-		return E_FAIL;
-	}
-
-	WaitForSingleObject(pi.hProcess, INFINITE);
-	DWORD exitCode = 0;
-	GetExitCodeProcess(pi.hProcess, &exitCode);
-	CloseHandle(pi.hProcess);
-	CloseHandle(pi.hThread);
-
-	RemoveFontResourceExW(installedFontPath, FR_NOT_ENUM, 0);
-	SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
-	DeleteFileW(installedFontPath);
-
-	if (exitCode != 0)
-	{
-		CDebug::LogError("MakeSpriteFont.exe failed with exit code: " + exitCode);
-		return E_FAIL;
-	}
-
-	CDebug::Log(L"SpriteFont successfully created at: " + wstring(outputFullPath));
-	
+	CDebug::Log(L"SpriteFont successfully created at: " + outputPath.wstring());
 	return S_OK;
 }
 
@@ -766,7 +1236,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 16;
+	const _uint version = 17;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -794,6 +1264,8 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 		out.write(reinterpret_cast<const char*>(&pathSize), sizeof(_uint));
 		if (pathSize > 0)
 			out.write(reinterpret_cast<const char*>(info.objPath.data()), sizeof(wchar_t) * pathSize);
+		out.write(reinterpret_cast<const char*>(&info.sceneOrder), sizeof(_int));
+		out.write(reinterpret_cast<const char*>(&info.siblingIndex), sizeof(_int));
 
 		out.write(reinterpret_cast<const char*>(&info.localPos), sizeof(_float3));
 		out.write(reinterpret_cast<const char*>(&info.localQuaternion), sizeof(_float4));
@@ -976,6 +1448,17 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 			{
 				info.objPath = L"";
 			}
+		}
+
+		if (version >= 17)
+		{
+			in.read(reinterpret_cast<char*>(&info.sceneOrder), sizeof(_int));
+			in.read(reinterpret_cast<char*>(&info.siblingIndex), sizeof(_int));
+		}
+		else
+		{
+			info.sceneOrder = static_cast<_int>(resultInfo.size());
+			info.siblingIndex = -1;
 		}
 
 		_float3 pos = {};
@@ -2131,9 +2614,9 @@ void CResources::Ready_GameResources()
 		LoadResourceComplete_Game<CMaterial>(L"G_BufferLit (Material)", L"", &g_BufferLitMatDesc);
 	}
 
-		{
-			CShader::SHADERDESC g_BufferCutoutLitShaderDesc = { L"../EngineResources/Shader/GbufferCutoutLit.hlsl", L"", VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
-			LoadResourceComplete_Game<CShader>(L"G_BufferCutoutLit (Shader)", L"", &g_BufferCutoutLitShaderDesc);
+	{
+		CShader::SHADERDESC g_BufferCutoutLitShaderDesc = { L"../EngineResources/Shader/GbufferCutoutLit.hlsl", L"", VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"G_BufferCutoutLit (Shader)", L"", &g_BufferCutoutLitShaderDesc);
 
 		CShader* g_BufferCutoutLitShader = LoadOnGame<CShader>(L"G_BufferCutoutLit (Shader)");
 		CMaterial::MATERIALDESC g_BufferCutoutLitMatDesc = { g_BufferCutoutLitShader, true, true, true, true };
@@ -2142,22 +2625,22 @@ void CResources::Ready_GameResources()
 		g_BufferCutoutLitMatDesc.customFloatValues.push_back({ L"gMetallic", 0.f });
 		g_BufferCutoutLitMatDesc.customIntValues.push_back({ L"gObjectID", 0 });
 		g_BufferCutoutLitMatDesc.customVector2Values.push_back({ L"gTiling", {1.f, 1.f} });
-			LoadResourceComplete_Game<CMaterial>(L"G_BufferCutoutLit (Material)", L"", &g_BufferCutoutLitMatDesc);
-		}
+		LoadResourceComplete_Game<CMaterial>(L"G_BufferCutoutLit (Material)", L"", &g_BufferCutoutLitMatDesc);
+	}
 
-		{
-			CShader::SHADERDESC g_TransparentLitShaderDesc = { L"../EngineResources/Shader/G_TransparentLit.hlsl", L"", VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
-			LoadResourceComplete_Game<CShader>(L"G_TransparentLit (Shader)", L"", &g_TransparentLitShaderDesc);
+	{
+		CShader::SHADERDESC g_TransparentLitShaderDesc = { L"../EngineResources/Shader/G_TransparentLit.hlsl", L"", VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"G_TransparentLit (Shader)", L"", &g_TransparentLitShaderDesc);
 
-			CShader* g_TransparentLitShader = LoadOnGame<CShader>(L"G_TransparentLit (Shader)");
-			CMaterial::MATERIALDESC g_TransparentLitMatDesc = { g_TransparentLitShader, true, true, true, true, true };
-			g_TransparentLitMatDesc.customFloatValues.push_back({ L"gOcculusion", 1.f });
-			g_TransparentLitMatDesc.customFloatValues.push_back({ L"gRoughness", 0.5f });
-			g_TransparentLitMatDesc.customFloatValues.push_back({ L"gMetallic", 0.f });
-			g_TransparentLitMatDesc.customIntValues.push_back({ L"gObjectID", 0 });
-			g_TransparentLitMatDesc.customVector2Values.push_back({ L"gTiling", {1.f, 1.f} });
-			LoadResourceComplete_Game<CMaterial>(L"G_TransparentLit (Material)", L"", &g_TransparentLitMatDesc);
-		}
+		CShader* g_TransparentLitShader = LoadOnGame<CShader>(L"G_TransparentLit (Shader)");
+		CMaterial::MATERIALDESC g_TransparentLitMatDesc = { g_TransparentLitShader, true, true, true, true, true };
+		g_TransparentLitMatDesc.customFloatValues.push_back({ L"gOcculusion", 1.f });
+		g_TransparentLitMatDesc.customFloatValues.push_back({ L"gRoughness", 0.5f });
+		g_TransparentLitMatDesc.customFloatValues.push_back({ L"gMetallic", 0.f });
+		g_TransparentLitMatDesc.customIntValues.push_back({ L"gObjectID", 0 });
+		g_TransparentLitMatDesc.customVector2Values.push_back({ L"gTiling", {1.f, 1.f} });
+		LoadResourceComplete_Game<CMaterial>(L"G_TransparentLit (Material)", L"", &g_TransparentLitMatDesc);
+	}
 
 	{
 		CShader::SHADERDESC deferredPresentShaderDesc = { L"../EngineResources/Shader/DeferredPresent.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };

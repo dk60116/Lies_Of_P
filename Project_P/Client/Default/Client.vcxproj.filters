@@ -162,6 +162,9 @@
     <ClInclude Include="..\Header\HitBox.h">
       <Filter>Scripts\Object\Character\Collider</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\InterfaceManager.h">
+      <Filter>Scripts\Managers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Code\MainScene.cpp">
@@ -262,6 +265,9 @@
     </ClCompile>
     <ClCompile Include="..\Code\HitBox.cpp">
       <Filter>Scripts\Object\Character\Collider</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\InterfaceManager.cpp">
+      <Filter>Scripts\Managers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -18,12 +18,18 @@ public:
 	const vector2Int Get_ScreenResolution() const;
 	const _float Get_Aspect() const;
 
+public:
+	const _bool IsVisibleCursor() const;
+	void SetCursorVisible(const _bool _value);
+	void ApplyCursorVisibility(HWND _hWnd = nullptr) const;
+
 private:
 	HINSTANCE m_hInst;
 	HWND m_hGameWindow;
 	HWND m_hEditorWindow;
 	_bool m_bIsFullScreen;
 	_uint m_iWidth, m_iHeight;
+	_bool m_bVisibleCursor;
 };
 
 NS_END

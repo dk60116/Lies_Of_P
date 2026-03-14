@@ -1,5 +1,34 @@
 #include "epch.h"
 #include "Canvas.h"
+#include "GameObject.h"
+#include "Transform.h"
+
+namespace
+{
+	void CollectCanvasUIInHierarchyOrder(CTransform* parentTransform, CCanvas* canvas, CCamera* camera)
+	{
+		if (!parentTransform || !canvas || !camera)
+			return;
+
+		for (CTransform* childTransform : parentTransform->Get_ChldList())
+		{
+			if (!childTransform)
+				continue;
+
+			CGameObject* childObject = childTransform->Get_GameObject();
+			if (!childObject)
+				continue;
+
+			if (CUI* ui = childObject->GetComponent<CUI>())
+			{
+				if (ui != canvas && ui->Get_Canvas() == canvas)
+					camera->Add_RenderTarget_UI(ui);
+			}
+
+			CollectCanvasUIInHierarchyOrder(childTransform, canvas, camera);
+		}
+	}
+}
 
 CCanvas::CCanvas()
 	: m_eRenderMode(RenderMode::ScreenSpace_Overlay)
@@ -64,6 +93,9 @@ void CCanvas::Render_Editor()
 {
 	CCamera* cam = CSceneManager::GetInstance().Get_EditorCamera();
 
+	if (!cam)
+		return;
+
 	vector3 cPos = cam->Get_Transform()->Get_Position();
 	_float3 camPos = cPos.toFloat3();
 	_matrix matWorld = Get_Transform()->Get_WorldMatrix();
@@ -78,6 +110,8 @@ void CCanvas::Render_Editor()
 
 	if (m_pRectGizmoMesh)
 		m_pRectGizmoMesh->Render();
+
+	CollectCanvasUIInHierarchyOrder(Get_Transform(), this, cam);
 }
 
 void CCanvas::OnPostRender_Editor()
@@ -86,14 +120,15 @@ void CCanvas::OnPostRender_Editor()
 
 void CCanvas::Render()
 {
-	for (TRAVERSAL_ITER(m_lUIObjectList, it))
-	{
-		if (auto scene = CSceneManager::GetInstance().Get_CrtScene())
-		{
-			if (auto camera = scene->Get_Camera())
-				CSceneManager::GetInstance().Get_CrtScene()->Get_Camera()->Add_RenderTarget_UI(*it);
-		}
-	}
+	CScene* scene = CSceneManager::GetInstance().Get_CrtScene();
+	if (!scene)
+		return;
+
+	CCamera* camera = scene->Get_Camera();
+	if (!camera)
+		return;
+
+	CollectCanvasUIInHierarchyOrder(Get_Transform(), this, camera);
 }
 
 void CCanvas::OnDestroy()
@@ -113,6 +148,9 @@ void CCanvas::Add_UIObject(CUI* _ui)
 {
 	if (_ui)
 	{
+		if (find(m_lUIObjectList.begin(), m_lUIObjectList.end(), _ui) != m_lUIObjectList.end())
+			return;
+
 		m_lUIObjectList.push_back(_ui);
 		m_lUIObjectList.back()->AddRef();
 	}
@@ -121,7 +159,18 @@ void CCanvas::Add_UIObject(CUI* _ui)
 void CCanvas::Remove_UIObject(CUI* _ui)
 {
 	if (_ui)
-		m_lUIObjectList.remove(_ui);
+	{
+		for (auto it = m_lUIObjectList.begin(); it != m_lUIObjectList.end();)
+		{
+			if (*it == _ui)
+			{
+				Safe_Release(*it);
+				it = m_lUIObjectList.erase(it);
+			}
+			else
+				++it;
+		}
+	}
 }
 
 const CCanvas::RenderMode CCanvas::Get_RenderMode() const

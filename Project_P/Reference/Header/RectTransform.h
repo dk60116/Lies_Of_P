@@ -65,6 +65,13 @@ public:
 
 private:
 	void Set_UI(class CUI* _pUI);
+	vector2 GetReferenceSize() const;
+	vector2 GetAnchorSpan() const;
+	vector2 GetAnchorReference() const;
+	void RefreshSizeFromLayout();
+	void SyncAnchoredPositionFromLocal();
+	void SyncLocalPositionFromAnchored();
+	_bool NeedsDefaultLayoutInitialization() const;
 
 private:
 	CUI* m_pUI;

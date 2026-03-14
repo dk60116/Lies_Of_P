@@ -35,6 +35,8 @@ public:
         wstring objName = L"";
         wstring objTag = L"";
         wstring objPath = L"";
+        _int sceneOrder = -1;
+        _int siblingIndex = -1;
         _float3 localPos = {};
         _float4 localQuaternion = {};
         _float3 localScale = {};
@@ -227,6 +229,5 @@ protected:
 };
 
 NS_END
-
 
 
