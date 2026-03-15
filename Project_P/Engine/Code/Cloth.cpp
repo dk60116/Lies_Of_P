@@ -92,11 +92,11 @@ void CCloth::FixedUpdate()
 	if (!CPhysics::GetInstance().IsInitialized())
 		return;
 
-	if (!m_pGameObject || !m_pGameObject->Get_Transform())
+	if (!m_pGameObject || !m_pGameObject->GetTransform())
 		return;
 
 	BodyInterface& bi = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
-	const vector3 currentTransformPos = m_pGameObject->Get_Transform()->Get_Position();
+	const vector3 currentTransformPos = m_pGameObject->GetTransform()->Get_Position();
 
 	if (m_bHasLastSyncedPosition)
 	{
@@ -113,7 +113,7 @@ void CCloth::FixedUpdate()
 		const RVec3 pos = body.GetCenterOfMassPosition();
 		m_vLastSyncedPosition = vector3((float)pos.GetX(), (float)pos.GetY(), (float)pos.GetZ());
 		m_bHasLastSyncedPosition = true;
-		m_pGameObject->Get_Transform()->Set_Position(m_vLastSyncedPosition);
+		m_pGameObject->GetTransform()->Set_Position(m_vLastSyncedPosition);
 	}
 
 	vector<VertexTexNormalTangentBuffer> clothVertices;
@@ -343,8 +343,8 @@ void CCloth::CreateSoftBody()
 	settings->CreateConstraints(attrs, 2, SoftBodySharedSettings::EBendType::Distance);
 	settings->Optimize();
 
-	const vector3 pos = m_pGameObject->Get_Transform()->Get_Position();
-	const quaternion rot = m_pGameObject->Get_Transform()->Get_Quaternion();
+	const vector3 pos = m_pGameObject->GetTransform()->Get_Position();
+	const quaternion rot = m_pGameObject->GetTransform()->Get_Quaternion();
 	SoftBodyCreationSettings softBodySettings(
 		settings,
 		RVec3(pos.x, pos.y, pos.z),

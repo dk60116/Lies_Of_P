@@ -49,7 +49,7 @@ namespace
 
 	_bool PrepareInstancingChunk(CRenderer* leader, const vector<CRenderer*>& batch, size_t offset, const _uint maxInstanceCount)
 	{
-		if (!leader || !leader->Get_Transform() || offset >= batch.size() || maxInstanceCount == 0)
+		if (!leader || !leader->GetTransform() || offset >= batch.size() || maxInstanceCount == 0)
 			return false;
 
 		vector<CRenderer*> chunkRenderers = {};
@@ -58,7 +58,7 @@ namespace
 		for (size_t i = offset; i < batch.size() && chunkRenderers.size() < maxInstanceCount; ++i)
 		{
 			CRenderer* renderer = batch[i];
-			if (!renderer || !renderer->Get_Transform())
+			if (!renderer || !renderer->GetTransform())
 				continue;
 
 			chunkRenderers.push_back(renderer);
@@ -69,16 +69,16 @@ namespace
 
 		leader->CreateMeshInstancing(static_cast<_uint>(chunkRenderers.size()));
 
-		const vector3 leaderPos = leader->Get_Transform()->Get_Position();
-		const vector3 leaderRot = leader->Get_Transform()->Get_EulerAngles();
-		const vector3 leaderScale = leader->Get_Transform()->Get_LocalScale();
+		const vector3 leaderPos = leader->GetTransform()->Get_Position();
+		const vector3 leaderRot = leader->GetTransform()->Get_EulerAngles();
+		const vector3 leaderScale = leader->GetTransform()->Get_LocalScale();
 
 		for (_uint i = 0; i < static_cast<_uint>(chunkRenderers.size()); ++i)
 		{
 			CRenderer* renderer = chunkRenderers[i];
-			const vector3 pos = renderer->Get_Transform()->Get_Position();
-			const vector3 rot = renderer->Get_Transform()->Get_EulerAngles();
-			const vector3 scale = renderer->Get_Transform()->Get_LocalScale();
+			const vector3 pos = renderer->GetTransform()->Get_Position();
+			const vector3 rot = renderer->GetTransform()->Get_EulerAngles();
+			const vector3 scale = renderer->GetTransform()->Get_LocalScale();
 
 			const vector3 relPos = pos - leaderPos;
 			const vector3 relRot = rot - leaderRot;
@@ -522,7 +522,7 @@ void CCamera::Add_RenderTarget_UI(CUI* _ui)
 
 void CCamera::Bind_ViewMatrix()
 {
-	_matrix inverseWorldMatrix = Get_Transform()->Get_InverseWorldMatrix();
+	_matrix inverseWorldMatrix = GetTransform()->Get_InverseWorldMatrix();
 	XMStoreFloat4x4(&m_vViewMatrix, inverseWorldMatrix);
 }
 
@@ -613,7 +613,7 @@ void CCamera::RenderMesh()
 				continue;
 
 			CRenderer* leader = batch[0];
-			if (!leader || !leader->Get_GameObject() || !leader->Get_Transform())
+			if (!leader || !leader->Get_GameObject() || !leader->GetTransform())
 				continue;
 
 			if (batch.size() == 1)
@@ -759,7 +759,7 @@ _bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, BoundingBox& _out
 	if (_outChanged)
 		*_outChanged = false;
 
-	if (!_renderer || !_renderer->Get_GameObject() || !_renderer->Get_Transform())
+	if (!_renderer || !_renderer->Get_GameObject() || !_renderer->GetTransform())
 		return false;
 
 	CMeshBuffer* meshBuffer = _renderer->Get_MeshBuffer();
@@ -780,7 +780,7 @@ _bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, BoundingBox& _out
 	}
 
 	_float4x4 worldMatrix = {};
-	XMStoreFloat4x4(&worldMatrix, _renderer->Get_Transform()->Get_WorldMatrix());
+	XMStoreFloat4x4(&worldMatrix, _renderer->GetTransform()->Get_WorldMatrix());
 
 	auto cacheIt = m_mRendererBoundsCache.find(_renderer);
 	if (cacheIt != m_mRendererBoundsCache.end())
@@ -1045,15 +1045,15 @@ void CCamera::SortTransparentRenderersByCameraDistance(vector<CRenderer*>& _rend
 	if (_renderers.empty())
 		return;
 
-	vector3 cameraPos = Get_Transform()->Get_Position();
+	vector3 cameraPos = GetTransform()->Get_Position();
 
 	sort(_renderers.begin(), _renderers.end(), [&](CRenderer* _lhs, CRenderer* _rhs)
 		{
 			if (!_lhs || !_rhs)
 				return _lhs != nullptr;
 
-			vector3 lhsPos = _lhs->Get_Transform()->Get_Position();
-			vector3 rhsPos = _rhs->Get_Transform()->Get_Position();
+			vector3 lhsPos = _lhs->GetTransform()->Get_Position();
+			vector3 rhsPos = _rhs->GetTransform()->Get_Position();
 
 			const _float lhsDistSq = (lhsPos - cameraPos).lengthSq();
 			const _float rhsDistSq = (rhsPos - cameraPos).lengthSq();
@@ -1181,6 +1181,10 @@ void CCamera::RenderUI_Editor()
 			(*it)->Bind_Matrix();
 			(*it)->Bind_Camera(viewMat, projMat);
 			(*it)->Bind_Mesh();
+		}
+		else if (CText* txt = dynamic_cast<CText*>(*it))
+		{
+			txt->RenderText_Editor();
 		}
 	}
 
@@ -1510,7 +1514,7 @@ void CCamera::RenderLightingCombined(const D3D11_VIEWPORT* vp)
 	_matrix v = XMMatrixIdentity();
 	_matrix p = XMMatrixOrthographicOffCenterLH(0.f, W, H, 0.f, 0.f, 1.f);
 	_matrix w = XMMatrixScaling(W, H, 1.f) * XMMatrixTranslation(W * 0.5f, H * 0.5f, 0.f);
-	_float3 camPos = Get_Transform()->Get_Position();
+	_float3 camPos = GetTransform()->Get_Position();
 
 	InvViewProjCB invCB = { m_vVPInverseMatrix };
 	ctx->UpdateSubresource(m_pInvViewProjCB, 0, nullptr, &invCB, 0, 0);
@@ -1643,7 +1647,7 @@ void CCamera::RenderLightingPass_ToDiffuse(const D3D11_VIEWPORT* vp)
 	_matrix v = XMMatrixIdentity();
 	_matrix p = XMMatrixOrthographicOffCenterLH(0.f, W, H, 0.f, 0.f, 1.f);
 	_matrix w = XMMatrixScaling(W, H, 1.f) * XMMatrixTranslation(W * 0.5f, H * 0.5f, 0.f);
-	_float3 camPos = Get_Transform()->Get_Position();
+	_float3 camPos = GetTransform()->Get_Position();
 
 	InvViewProjCB invCB = { m_vVPInverseMatrix };
 	ctx->UpdateSubresource(m_pInvViewProjCB, 0, nullptr, &invCB, 0, 0);
@@ -1759,7 +1763,7 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 	_matrix p = XMMatrixOrthographicOffCenterLH(0.f, W, H, 0.f, 0.f, 1.f);
 	_matrix w = XMMatrixScaling(W, H, 1.f) * XMMatrixTranslation(W * 0.5f, H * 0.5f, 0.f);
 
-	_float3 camPos = Get_Transform()->Get_Position();
+	_float3 camPos = GetTransform()->Get_Position();
 
 	InvViewProjCB invCB = { m_vVPInverseMatrix };
 	ctx->UpdateSubresource(m_pInvViewProjCB, 0, nullptr, &invCB, 0, 0);
@@ -1953,13 +1957,13 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 			continue;
 
 		CRenderer* leader = batch[0];
-		if (!leader || !leader->Get_GameObject() || !leader->Get_Transform())
+		if (!leader || !leader->Get_GameObject() || !leader->GetTransform())
 			continue;
 
 		const _uint maxInstanceCount = 128u;
-		const vector3 leaderPos = leader->Get_Transform()->Get_Position();
-		const vector3 leaderRot = leader->Get_Transform()->Get_EulerAngles();
-		const vector3 leaderScale = leader->Get_Transform()->Get_LocalScale();
+		const vector3 leaderPos = leader->GetTransform()->Get_Position();
+		const vector3 leaderRot = leader->GetTransform()->Get_EulerAngles();
+		const vector3 leaderScale = leader->GetTransform()->Get_LocalScale();
 
 		for (size_t offset = 0; offset < batch.size(); offset += maxInstanceCount)
 		{
@@ -1971,12 +1975,12 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 			for (_uint i = 0; i < chunkCount; ++i)
 			{
 				CRenderer* r = batch[offset + i];
-				if (!r || !r->Get_Transform())
+				if (!r || !r->GetTransform())
 					continue;
 
-				const vector3 pos = r->Get_Transform()->Get_Position();
-				const vector3 rot = r->Get_Transform()->Get_EulerAngles();
-				const vector3 scale = r->Get_Transform()->Get_LocalScale();
+				const vector3 pos = r->GetTransform()->Get_Position();
+				const vector3 rot = r->GetTransform()->Get_EulerAngles();
+				const vector3 scale = r->GetTransform()->Get_LocalScale();
 
 				const vector3 relPos = pos - leaderPos;
 				const vector3 relRot = rot - leaderRot;
@@ -2134,7 +2138,7 @@ void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 	_matrix v = XMMatrixIdentity();
 	_matrix p = XMMatrixOrthographicOffCenterLH(0.f, W, H, 0.f, 0.f, 1.f);
 	_matrix w = XMMatrixScaling(W, H, 1.f) * XMMatrixTranslation(W * 0.5f, H * 0.5f, 0.f);
-	_float3 camPos = Get_Transform()->Get_Position();
+	_float3 camPos = GetTransform()->Get_Position();
 
 	InvViewProjCB invCB = { m_vVPInverseMatrix };
 	ctx->UpdateSubresource(m_pInvViewProjCB, 0, nullptr, &invCB, 0, 0);
@@ -2363,7 +2367,7 @@ CPhysics::Ray CCamera::ScreenPointToRay_Editor(const vector2Int& _pixel, _float 
 
 	if (m_eCamViewMode == ViewMode::Perspective)
 	{
-		_vector camPos = Get_Transform()->Get_WorldMatrix().r[3];
+		_vector camPos = GetTransform()->Get_WorldMatrix().r[3];
 		_vector rayDir = XMVectorSubtract(ptFar, camPos);
 
 		XMStoreFloat3(&origin, camPos);
@@ -2372,7 +2376,7 @@ CPhysics::Ray CCamera::ScreenPointToRay_Editor(const vector2Int& _pixel, _float 
 	else
 	{
 		XMStoreFloat3(&origin, ptNear);
-		dir = Get_Transform()->Get_Directions().forward;
+		dir = GetTransform()->Get_Directions().forward;
 	}
 
 	vector3 resultDir = vector3(dir);

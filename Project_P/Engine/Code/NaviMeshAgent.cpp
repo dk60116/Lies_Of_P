@@ -157,7 +157,7 @@ void CNaviMeshAgent::OnDisable()
 
 void CNaviMeshAgent::Update()
 {
-	CTransform* transform = Get_Transform();
+	CTransform* transform = GetTransform();
 	if (!transform)
 		return;
 
@@ -340,11 +340,11 @@ void CNaviMeshAgent::Render_Gizmo()
 		return;
 
 	CCamera* camera = CSceneManager::GetInstance().Get_EditorCamera();
-	CTransform* transform = Get_Transform();
-	if (!camera || !transform || !camera->Get_Transform())
+	CTransform* transform = GetTransform();
+	if (!camera || !transform || !camera->GetTransform())
 		return;
 
-	const vector3 cameraPos3 = camera->Get_Transform()->Get_Position();
+	const vector3 cameraPos3 = camera->GetTransform()->Get_Position();
 	const _float3 cameraPosition(cameraPos3.x, cameraPos3.y, cameraPos3.z);
 	const _matrix view = camera->GetViewMatrix();
 	const _matrix proj = camera->GetProjectionMatrix();
@@ -651,7 +651,7 @@ wstring CNaviMeshAgent::BuildDefaultNavigationMeshResourceName() const
 
 vector3 CNaviMeshAgent::GetNavigationBaseOffset()
 {
-    CTransform* transform = Get_Transform();
+    CTransform* transform = GetTransform();
     if (!transform)
         return vector3(0.f, GetWorldAgentHeight() * 0.5f, 0.f);
 
@@ -662,7 +662,7 @@ vector3 CNaviMeshAgent::GetNavigationBaseOffset()
 
 _float CNaviMeshAgent::GetWorldAgentRadius()
 {
-	CTransform* transform = Get_Transform();
+	CTransform* transform = GetTransform();
 	if (!transform)
 		return max(0.05f, m_fAgentRadius);
 
@@ -673,7 +673,7 @@ _float CNaviMeshAgent::GetWorldAgentRadius()
 
 _float CNaviMeshAgent::GetWorldAgentHeight()
 {
-	CTransform* transform = Get_Transform();
+	CTransform* transform = GetTransform();
 	if (!transform)
 		return max(0.05f, m_fAgentHeight);
 

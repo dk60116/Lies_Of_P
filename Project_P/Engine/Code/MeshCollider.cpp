@@ -286,7 +286,7 @@ void CMeshCollider::Render_Gizmo()
     const vector3 scale = GetWorldScale();
     const _float meshScale = renderer->GetScaleFactor();
     const _matrix centerOffset = XMMatrixTranslation(m_vCenter.x * scale.x * meshScale, m_vCenter.y * scale.y * meshScale, m_vCenter.z * scale.z * meshScale);
-    const _matrix gizmoWorld = centerOffset * Get_Transform()->Get_WorldMatrix();
+    const _matrix gizmoWorld = centerOffset * GetTransform()->Get_WorldMatrix();
 
     _float3 camPos = _float3();
     _matrix matView = cam->GetViewMatrix();

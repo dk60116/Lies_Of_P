@@ -68,6 +68,7 @@ protected:
 	_bool m_bHitReacting;
 	vector3 m_vPendingHitKnockback;
 	vector3 m_vActiveHitKnockback;
+	quaternion m_qHitReactionRotation;
 	_float m_fHitKnockbackRemain;
 };
 

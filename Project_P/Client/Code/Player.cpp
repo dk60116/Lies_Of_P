@@ -75,7 +75,7 @@ HRESULT CPlayer::Initialize()
 
 	m_vBodySuits = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveBody_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveBody_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
 
-	CTransform* addRoot = Get_Transform()->Find_ChildRecursive(L"Root");
+	CTransform* addRoot = GetTransform()->Find_ChildRecursive(L"Root");
 
 	for (TRAVERSAL_ITER(m_vBodySuits, it))
 		(*it)->AddRootBone(addRoot);
@@ -143,33 +143,33 @@ HRESULT CPlayer::Initialize()
 	m_pAnimator = m_pGameObject->AddComponent<CAnimator>();
 	CAnimatorController* animCon = CResources::GetInstance().LoadOnScene<CAnimatorController>(L"Eve_AnimatorController (Animator Controller)");
 	m_pAnimator->Set_Controller(animCon);
-	m_pAnimator->SetApplyRootmotion(true, Get_Transform());
+	m_pAnimator->SetApplyRootmotion(true, GetTransform());
 
-	CTransform* headSlot = Get_Transform()->Find_ChildRecursive(L"Bip001-Head");
-	m_pHeadObj->Get_Transform()->SetParent(headSlot);
-	//m_pHeadObj->Get_Transform()->Set_LocalPosition(vector3(0.012f, -151.302f, -11.860f));
-	m_pHeadObj->Get_Transform()->Set_LocalEulerAngles(vector3(-4.5f, 180.f, 0.f));
+	CTransform* headSlot = GetTransform()->Find_ChildRecursive(L"Bip001-Head");
+	m_pHeadObj->GetTransform()->SetParent(headSlot);
+	//m_pHeadObj->GetTransform()->Set_LocalPosition(vector3(0.012f, -151.302f, -11.860f));
+	m_pHeadObj->GetTransform()->Set_LocalEulerAngles(vector3(-4.5f, 180.f, 0.f));
 
-	m_pHairObj->Get_Transform()->SetParent(m_pHeadObj->Get_Transform());
-	m_pHairObj->Get_Transform()->Set_LocalPosition(vector3::up() * 3.039f);
+	m_pHairObj->GetTransform()->SetParent(m_pHeadObj->GetTransform());
+	m_pHairObj->GetTransform()->Set_LocalPosition(vector3::up() * 3.039f);
 
-	m_pPonyTailObj->Get_Transform()->SetParent(m_pHairObj->Get_Transform());
-	m_pPonyTailObj->Get_Transform()->Set_LocalPosition(-0.086f, -3.039f, 0.f);
-	m_pHairObj->Get_Transform()->Set_LocalEulerAngles(vector3::zero());
+	m_pPonyTailObj->GetTransform()->SetParent(m_pHairObj->GetTransform());
+	m_pPonyTailObj->GetTransform()->Set_LocalPosition(-0.086f, -3.039f, 0.f);
+	m_pHairObj->GetTransform()->Set_LocalEulerAngles(vector3::zero());
 
 	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp;
 
 	CGameManager::GetInstance().Set_Player(this);
 
-	m_pWeaponHolder = Get_Transform()->Find_ChildRecursive(L"SC_WeaponConstraint");
+	m_pWeaponHolder = GetTransform()->Find_ChildRecursive(L"SC_WeaponConstraint");
 
 	CGameObject* m_pWeaponObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Eve_Sword");
 	m_pEquipWeapon = m_pWeaponObj->AddComponent<CEve_Sword>();
 
-	m_pWeaponObj->Get_Transform()->SetParent(m_pWeaponHolder);
-	m_pWeaponObj->Get_Transform()->Set_LocalPosition(vector3::zero());
-	m_pWeaponObj->Get_Transform()->Set_LocalEulerAngles(vector3::back() * 90.f);
-	m_pWeaponObj->Get_Transform()->Set_LocalScale(0.5f);
+	m_pWeaponObj->GetTransform()->SetParent(m_pWeaponHolder);
+	m_pWeaponObj->GetTransform()->Set_LocalPosition(vector3::zero());
+	m_pWeaponObj->GetTransform()->Set_LocalEulerAngles(vector3::back() * 90.f);
+	m_pWeaponObj->GetTransform()->Set_LocalScale(0.5f);
 
 	m_pBodyCollider = m_pGameObject->AddComponent<CCapsuleCollider>();
 	m_pBodyCollider->SetCenter(vector3::up() * 1.75f);
@@ -188,7 +188,7 @@ void CPlayer::Awake()
 {
 	__super::Awake();
 
-	Get_Transform()->Set_PositionZ(6.f);
+	GetTransform()->Set_PositionZ(6.f);
 }
 
 void CPlayer::Start()
@@ -285,11 +285,11 @@ void CPlayer::GetHitHandler(const HurtDescription& _hurtDesc)
 
 	if (m_pController)
 	{
-		vector3 knockbackDir = Get_Transform()->Get_Position() - _hurtDesc.position;
+		vector3 knockbackDir = GetTransform()->Get_Position() - _hurtDesc.position;
 		knockbackDir.y = 0.f;
 
 		if (knockbackDir.lengthSq() <= 0.0001f)
-			knockbackDir = Get_Transform()->Get_Directions().forward;
+			knockbackDir = GetTransform()->Get_Directions().forward;
 
 		knockbackDir.y = 0.f;
 
@@ -309,7 +309,7 @@ _bool CPlayer::CanGuardHit(const HurtDescription& _hurtDesc)
 	if (!m_pController || !m_pController->IsGuardActive())
 		return false;
 
-	CTransform* transform = Get_Transform();
+	CTransform* transform = GetTransform();
 	if (!transform)
 		return false;
 
@@ -333,11 +333,11 @@ _bool CPlayer::TryGuardHit(const HurtDescription& _hurtDesc)
 	if (!CanGuardHit(_hurtDesc))
 		return false;
 
-	vector3 knockbackDir = Get_Transform()->Get_Position() - _hurtDesc.position;
+	vector3 knockbackDir = GetTransform()->Get_Position() - _hurtDesc.position;
 	knockbackDir.y = 0.f;
 
 	if (knockbackDir.lengthSq() <= 0.0001f)
-		knockbackDir = Get_Transform()->Get_Directions().forward;
+		knockbackDir = GetTransform()->Get_Directions().forward;
 
 	m_pController->PlayGuardHit(knockbackDir);
 	return true;

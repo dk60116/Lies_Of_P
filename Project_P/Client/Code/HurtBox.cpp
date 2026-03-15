@@ -72,7 +72,9 @@ void CHurtBox::OnHitEvent(CCharacter* _target)
     if (!_target)
         return;
 
-    m_sHurtDesc.position = m_pCharacter ? m_pCharacter->Get_Transform()->Get_Position() : Get_Transform()->Get_Position();
+    CTransform* attackerTransform = m_pCharacter ? m_pCharacter->GetTransform() : GetTransform();
+    m_sHurtDesc.position = attackerTransform ? attackerTransform->Get_Position() : vector3::zero();
+    m_sHurtDesc.forward = attackerTransform ? attackerTransform->Get_Directions().forward : vector3::zero();
     _target->GetHitHandler(m_sHurtDesc);
 }
 

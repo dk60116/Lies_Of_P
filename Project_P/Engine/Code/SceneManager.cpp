@@ -212,7 +212,7 @@ void CSceneManager::LoadScene(wstring _scene)
 
 #ifndef  _CLIENT_BUILD
 	if (m_pCrtScene)
-		CEditor::GetInstance().Set_EditorCamTransform(Get_EditorCamera()->Get_Transform());
+		CEditor::GetInstance().Set_EditorCamTransform(Get_EditorCamera()->GetTransform());
 #endif
 
 	m_pTempScene = iter->second;

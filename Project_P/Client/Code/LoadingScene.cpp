@@ -26,22 +26,22 @@ HRESULT CLoadingScene::Initialize()
 
 	CGameObject* bgObj = Add_GameObject(L"BG");
 	CImage* bgImage = bgObj->AddComponent<CImage>();
-	bgImage->Get_Transform()->SetParent(m_pCanvas->Get_Transform());
+	bgImage->GetTransform()->SetParent(m_pCanvas->GetTransform());
 
 	CGameObject* bottomObject = Add_GameObject(L"Bottom");
 	CImage* bottomImage = bottomObject->AddComponent<CImage>();
-	bottomImage->Get_Transform()->SetParent(m_pCanvas->Get_Transform());
+	bottomImage->GetTransform()->SetParent(m_pCanvas->GetTransform());
 	bottomImage->SetColor(ColorValue::black());
 
 	CGameObject* backLogoObj = Add_GameObject(L"Logo_Back");
 	CImage* backLogoImage = backLogoObj->AddComponent<CImage>();
-	backLogoImage->Get_Transform()->SetParent(m_pCanvas->Get_Transform());
+	backLogoImage->GetTransform()->SetParent(m_pCanvas->GetTransform());
 	backLogoImage->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"Logo (Texture)"));
 	backLogoImage->SetColor(ColorValue::gray(0.5f));
 
 	CGameObject* logoObj = Add_GameObject(L"Logo");
 	m_pLogoImage = logoObj->AddComponent<CImage>();
-	m_pLogoImage->Get_Transform()->SetParent(backLogoImage->Get_Transform());
+	m_pLogoImage->GetTransform()->SetParent(backLogoImage->GetTransform());
 	m_pLogoImage->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"Logo (Texture)"));
 	m_pLogoImage->Set_FillMethod(CImage::FillMethod::Horizontal);
 

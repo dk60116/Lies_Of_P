@@ -185,8 +185,8 @@ void CPlayerCamera::Update()
         m_fBackOffset = std::clamp(m_fBackOffset, m_sOptions.zoomMin, m_sOptions.zoomMax);
     }
 
-    CTransform* tf = Get_Transform();
-    CTransform* playerTf = CGameManager::GetInstance().Get_Player()->Get_Transform();
+    CTransform* tf = GetTransform();
+    CTransform* playerTf = CGameManager::GetInstance().Get_Player()->GetTransform();
 
     const vector3 playerPos = playerTf->Get_Position();
 
@@ -245,7 +245,7 @@ _float CPlayerCamera::LerpAngle(_float current, _float target, _float t)
 
 const vector3 CPlayerCamera::Get_ForwardVector()
 {
-    vector3 forward = Get_Transform()->Get_Directions().forward;
+    vector3 forward = GetTransform()->Get_Directions().forward;
     forward.y = 0.f;
     return forward.normalized();
 }

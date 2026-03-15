@@ -132,7 +132,7 @@ void CPlayerControllerContext::StartMoveLock(_float _sec)
 
 const vector3& CPlayerControllerContext::PlayerForward()
 {
-	return m_pPlayer->Get_Transform()->Get_Directions().forward;
+	return m_pPlayer->GetTransform()->Get_Directions().forward;
 }
 
 void CPlayerControllerContext::SetPlayerYaw(const _float _y)
@@ -140,7 +140,7 @@ void CPlayerControllerContext::SetPlayerYaw(const _float _y)
 	if (!m_pPlayer)
 		return;
 
-	auto tr = m_pPlayer->Get_Transform();
+	auto tr = m_pPlayer->GetTransform();
 
 	const _float curYaw = tr->Get_EulerAngles().y;
 	const _float deltaYaw = DeltaAngleDeg(curYaw, WrapDeg(_y));
@@ -158,7 +158,7 @@ void CPlayerControllerContext::AddPosition(const vector3& delta)
 		return;
 	}
 
-	m_pPlayer->Get_Transform()->Translate(delta);
+	m_pPlayer->GetTransform()->Translate(delta);
 }
 
 void CPlayerControllerContext::BeginTurnTo(_float _targetYawDeg)
@@ -166,7 +166,7 @@ void CPlayerControllerContext::BeginTurnTo(_float _targetYawDeg)
 	m_Cv_Move.m_targetYaw = WrapDeg(_targetYawDeg);
 	if (!m_Cv_Move.m_bTurning && m_pPlayer)
 	{
-		const _float curYaw = m_pPlayer->Get_Transform()->Get_EulerAngles().y;
+		const _float curYaw = m_pPlayer->GetTransform()->Get_EulerAngles().y;
 		const _float delta = DeltaAngleDeg(curYaw, m_Cv_Move.m_targetYaw);
 		if (fabsf(delta) >= 1e-4f)
 			m_Cv_Move.m_turnDir = (delta > 0.f) ? 1.f : -1.f;
@@ -280,7 +280,7 @@ void CPlayerControllerContext::TickTurn(_float _yawSmooth, _float _stopEpsDeg)
 		return;
 	}
 
-	auto tr = m_pPlayer->Get_Transform();
+	auto tr = m_pPlayer->GetTransform();
 	vector3 e = tr->Get_EulerAngles();
 	_float curYaw = e.y;
 

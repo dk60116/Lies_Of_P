@@ -431,7 +431,7 @@ list<CComponent*>& CGameObject::Get_ComponentList()
 	return m_lComponentList;
 }
 
-CTransform* CGameObject::Get_Transform() const
+CTransform* CGameObject::GetTransform() const
 {
 	return m_pTransform;
 }
@@ -454,7 +454,7 @@ void CGameObject::Set_Transform(CTransform* _transform)
 
 vector<CMeshRenderer*> CGameObject::CreateMeshHierachy(vector<MeshBundle> _meshInfos, const _float _scaleFactor)
 {
-	CTransform* parentTransform = Get_Transform();
+	CTransform* parentTransform = GetTransform();
 
 	if (!m_pScene || !parentTransform)
 	{
@@ -481,13 +481,13 @@ vector<CMeshRenderer*> CGameObject::CreateMeshHierachy(vector<MeshBundle> _meshI
 
 		wstring childName = mb.meshBuffer->Get_ResourceName() + L"_" + to_wstring(childIndex++);
 		CGameObject* child = m_pScene->Add_GameObject(childName);
-		if (!child || !child->Get_Transform())
+		if (!child || !child->GetTransform())
 			continue;
 
-		child->Get_Transform()->SetParent(parentTransform);
-		child->Get_Transform()->Set_LocalPosition(vector3::zero());
-		child->Get_Transform()->Set_LocalEulerAngles(vector3::zero());
-		child->Get_Transform()->Set_LocalScale(_scaleFactor);
+		child->GetTransform()->SetParent(parentTransform);
+		child->GetTransform()->Set_LocalPosition(vector3::zero());
+		child->GetTransform()->Set_LocalEulerAngles(vector3::zero());
+		child->GetTransform()->Set_LocalScale(_scaleFactor);
 
 		CMeshRenderer* ren = child->AddComponent<CMeshRenderer>();
 
@@ -510,7 +510,7 @@ vector<CMeshRenderer*> CGameObject::CreateMeshHierachy(vector<MeshBundle> _meshI
 
 vector<CSkinnedMeshRenderer*> CGameObject::CreateSkinnedMeshHierachy(vector<SkinnedMeshBundle> _skinnedInfos, vector<CSkinnedMeshBuffer::SKINNEDSKELETAL> _bonesInfo, const _float _scaleFactor, const vector3 _rotationFactor)
 {
-	CTransform* rootTf = Get_Transform();
+	CTransform* rootTf = GetTransform();
 
 	if (_skinnedInfos.empty())
 	{
@@ -527,7 +527,7 @@ vector<CSkinnedMeshRenderer*> CGameObject::CreateSkinnedMeshHierachy(vector<Skin
 			continue;
 
 		CGameObject* g = m_pScene->Add_GameObject(si.meshBuffer->Get_ResourceName());
-		g->Get_Transform()->SetParent(rootTf);
+		g->GetTransform()->SetParent(rootTf);
 		auto* r = g->AddComponent<CSkinnedMeshRenderer>();
 		r->Set_MeshBuffer(si.meshBuffer);
 		r->Set_Material(CResources::GetInstance().CloneOnGame<CMaterial>(L"G_BufferLit (Material)"));
@@ -543,11 +543,11 @@ vector<CSkinnedMeshRenderer*> CGameObject::CreateSkinnedMeshHierachy(vector<Skin
 	for (size_t i = 0; i < _bonesInfo.size(); ++i)
 	{
 		CGameObject* g = m_pScene->Add_GameObject(_bonesInfo[i].name);
-		boneTfs[i] = g->Get_Transform();
+		boneTfs[i] = g->GetTransform();
 		g->m_bIsBoneTransform = true;
 
 		if (_bonesInfo[i].parentId == -1)
-			rootBone = g->Get_Transform();
+			rootBone = g->GetTransform();
 	}
 
 	for (size_t i = 0; i < _bonesInfo.size(); ++i)
@@ -693,7 +693,7 @@ CGameObject* CGameObject::Instantiate(const CGameObject* _rhs)
 	}
 
 	newGameObj->SetTag(_rhs->GetTag());
-	newGameObj->Get_Transform()->SetTransformForMatrix(_rhs->Get_Transform()->Get_WorldMatrix());
+	newGameObj->GetTransform()->SetTransformForMatrix(_rhs->GetTransform()->Get_WorldMatrix());
 
 	return newGameObj;
 }

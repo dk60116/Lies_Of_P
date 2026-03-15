@@ -196,9 +196,9 @@ vector<FieldInfo> CComponent::GetInspectorFields()
 	return vector<FieldInfo> {};
 }
 
-CTransform* CComponent::Get_Transform()
+CTransform* CComponent::GetTransform()
 {
-	return m_pGameObject->Get_Transform();
+	return m_pGameObject->GetTransform();
 }
 
 const _int CComponent::GetSortIndex() const

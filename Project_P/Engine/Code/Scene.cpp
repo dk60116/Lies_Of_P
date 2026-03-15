@@ -105,7 +105,7 @@ namespace
 			source.label = object->Get_ObjectNameID();
 			source.walkable = true;
 			_matrix worldMatrix = XMMatrixIdentity();
-			if (CTransform* transform = object->Get_Transform())
+			if (CTransform* transform = object->GetTransform())
 				worldMatrix = transform->Get_WorldMatrix();
 			XMStoreFloat4x4(&source.worldMatrix, worldMatrix);
 			sources.push_back(source);
@@ -235,7 +235,7 @@ namespace
 		if (!outLineMesh || !outLineMat)
 			return false;
 
-		_vector camPosV = camera->Get_Transform()->Get_Position().toXMVector();
+		_vector camPosV = camera->GetTransform()->Get_Position().toXMVector();
 		XMStoreFloat3(&outCamPos, camPosV);
 		outView = camera->GetViewMatrix();
 		outProj = camera->GetProjectionMatrix();
@@ -345,7 +345,7 @@ namespace
 
 		CMeshBuffer* meshBuffer = nullptr;
 		CSkinnedMeshRenderer* skinnedRenderer = nullptr;
-		_matrix objectWorld = selected->Get_Transform()->Get_WorldMatrix();
+		_matrix objectWorld = selected->GetTransform()->Get_WorldMatrix();
 		if (CMeshRenderer* meshRenderer = selected->GetComponent<CMeshRenderer>())
 		{
 			meshBuffer = meshRenderer->Get_MeshBuffer();
@@ -700,8 +700,8 @@ HRESULT CScene::Initialize()
 	CEditor::GetInstance().MoveTo_SelectedGameObject(nullptr);
 	CGameObject* ecObj = Add_GameObject(L"Editor Camera Object");
 	m_pEditorCamera = ecObj->AddComponent<CEditorCamera>();
-	m_pEditorCamera->Get_Transform()->Set_Position(CEditor::GetInstance().Get_EditorCamPositon());
-	m_pEditorCamera->Get_Transform()->Set_Quaternion(CEditor::GetInstance().Get_EditorCamQuaternion());
+	m_pEditorCamera->GetTransform()->Set_Position(CEditor::GetInstance().Get_EditorCamPositon());
+	m_pEditorCamera->GetTransform()->Set_Quaternion(CEditor::GetInstance().Get_EditorCamQuaternion());
 #endif
 
 	CDebug::Log(L"Load scene Complete: " + m_strSceneName);
@@ -1114,8 +1114,8 @@ void CScene::EndFrame()
 		if (obj && obj->m_bKill)
 		{
 			m_mObjectOfId.erase(obj->m_iUniqueID);
-			if (auto* parent = (*it)->Get_Transform()->Get_Parent())
-				parent->RemoveChild((*it)->Get_Transform());
+			if (auto* parent = (*it)->GetTransform()->Get_Parent())
+				parent->RemoveChild((*it)->GetTransform());
 			Safe_Release(obj);
 			it = m_lObjectList.erase(it); 
 		}
@@ -1169,7 +1169,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 	auto buildPath = [](CGameObject* obj)
 	{
 		vector<wstring> names;
-		CTransform* current = obj->Get_Transform();
+		CTransform* current = obj->GetTransform();
 		while (current)
 		{
 			CGameObject* currentObj = current->Get_GameObject();
@@ -1194,7 +1194,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		if (!obj)
 			return -1;
 
-		CTransform* transform = obj->Get_Transform();
+		CTransform* transform = obj->GetTransform();
 		if (!transform)
 			return -1;
 
@@ -1225,7 +1225,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			if (!candidate || !candidate->Is_SaveTarget())
 				continue;
 
-			CTransform* candidateTransform = candidate->Get_Transform();
+			CTransform* candidateTransform = candidate->GetTransform();
 			if (!candidateTransform || !candidateTransform->Is_Root())
 				continue;
 
@@ -1274,7 +1274,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 
 		SCENETRANSFORMINFO info = {};
 
-		CTransform* tf = (*it)->Get_Transform();
+		CTransform* tf = (*it)->GetTransform();
 
 		info.objID = (*it)->m_iUniqueID;
 		info.objGuid = (*it)->Get_Guid();
@@ -1327,10 +1327,12 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 
 		if (info.isRect)
 		{
+			info.localScale = rect->Get_SizeScale();
+
 			SCENERECTINFO rectInfo = {};
 
 			rectInfo.anchoredPos = rect->Get_AnchoredPosition();
-			rectInfo.widthHeight = rect->Get_WidthHeight();
+			rectInfo.widthHeight = rect->Get_AnchoredSize();
 			rectInfo.pivot = rect->Get_Pivot();
 			rectInfo.anchorMin = rect->Get_Anchors().min;
 			rectInfo.anchorMax = rect->Get_Anchors().max;
@@ -1523,7 +1525,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 	auto buildPath = [](CGameObject* obj)
 	{
 		vector<wstring> names;
-		CTransform* current = obj->Get_Transform();
+		CTransform* current = obj->GetTransform();
 		while (current)
 		{
 			CGameObject* currentObj = current->Get_GameObject();
@@ -1545,7 +1547,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 
 	auto applyInfo = [](CGameObject* obj, const SCENETRANSFORMINFO& info)
 	{
-		CTransform* tf = obj->Get_Transform();
+		CTransform* tf = obj->GetTransform();
 
 		obj->SetActive(info.isActive);
 		obj->SetTag(info.objTag);
@@ -1563,7 +1565,8 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				rect->Set_Pivot(info.rectInfo.pivot);
 				rect->Set_AnchorsMin(info.rectInfo.anchorMin);
 				rect->Set_AnchorsMax(info.rectInfo.anchorMax);
-				rect->Set_WidthHeight(info.rectInfo.widthHeight);
+				rect->Set_AnchoredSize(info.rectInfo.widthHeight);
+				rect->Set_SizeScale(info.localScale);
 			}
 			else
 			{
@@ -2094,7 +2097,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				continue;
 
 			if (parentObj)
-				newObj->Get_Transform()->SetParent(parentObj->Get_Transform());
+				newObj->GetTransform()->SetParent(parentObj->GetTransform());
 
 			if (!info.objGuid.empty())
 				newObj->m_strGuid = info.objGuid;
@@ -2204,9 +2207,9 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				parentObj = findObjectByPath(parentPath);
 		}
 
-		CTransform* desiredParent = parentObj ? parentObj->Get_Transform() : nullptr;
-		if (obj->Get_Transform()->Get_Parent() != desiredParent)
-			obj->Get_Transform()->SetParent(desiredParent);
+		CTransform* desiredParent = parentObj ? parentObj->GetTransform() : nullptr;
+		if (obj->GetTransform()->Get_Parent() != desiredParent)
+			obj->GetTransform()->SetParent(desiredParent);
 	}
 
 	unordered_map<CTransform*, vector<size_t>> childInfoIndicesByParent;
@@ -2217,7 +2220,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		if (!obj)
 			continue;
 
-		if (CTransform* parent = obj->Get_Transform()->Get_Parent())
+		if (CTransform* parent = obj->GetTransform()->Get_Parent())
 			childInfoIndicesByParent[parent].push_back(infoIndex);
 	}
 
@@ -2240,8 +2243,8 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			if (!childObj)
 				continue;
 
-			parentTransform->InsertChildBefore(childObj->Get_Transform(), beforeChild);
-			beforeChild = childObj->Get_Transform();
+			parentTransform->InsertChildBefore(childObj->GetTransform(), beforeChild);
+			beforeChild = childObj->GetTransform();
 		}
 	}
 
@@ -2624,7 +2627,7 @@ vector<CGameObject*> CScene::Get_RootObjects()
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
-		if ((*it)->Get_Transform()->Is_Root())
+		if ((*it)->GetTransform()->Is_Root())
 		{
 			if ((*it)->m_iUniqueID != 0)
 				result.push_back(*it);
@@ -3332,7 +3335,6 @@ ID3D11BlendState* CScene::Get_NoneBlendingState() const
 {
 	return m_pNoneBlendingState;
 }
-
 
 
 

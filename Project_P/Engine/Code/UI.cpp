@@ -117,7 +117,7 @@ void CUI::Bind_Mesh()
 
 void CUI::Bind_Matrix()
 {
-	m_pMaterial->Bind_Matrix(Get_Transform()->Get_WorldMatrix());
+	m_pMaterial->Bind_Matrix(GetTransform()->Get_WorldMatrix());
 }
 
 void CUI::Bind_Camera(const _fmatrix _view, const _cmatrix _projection)
@@ -141,6 +141,11 @@ CCanvas* CUI::Get_Canvas() const
 	return m_pCanvas;
 }
 
+ColorValue CUI::GetColor() const
+{
+	return m_vColor;
+}
+
 void CUI::Set_Canvas(CCanvas* _canvas)
 {
 	if (_canvas == m_pCanvas)
@@ -154,7 +159,7 @@ void CUI::Set_Canvas(CCanvas* _canvas)
 		m_pCanvas->AddRef();
 }
 
-CRectTransform* CUI::Get_RectTransform() const
+CRectTransform* CUI::GetRectTransform() const
 {
 	return m_pRectTransform;
 }

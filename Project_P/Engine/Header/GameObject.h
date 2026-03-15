@@ -90,7 +90,7 @@ public:
 	void SetActive(const _bool _active);
 
 	list<CComponent*>& Get_ComponentList();
-	class CTransform* Get_Transform() const;
+	class CTransform* GetTransform() const;
 	void Set_Transform(CTransform* _transform);
 
 	vector<class CMeshRenderer*> CreateMeshHierachy(vector<MeshBundle> _meshInfos, const _float _scaleFactor = 1.f);

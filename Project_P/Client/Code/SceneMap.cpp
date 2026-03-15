@@ -20,9 +20,9 @@ HRESULT CSceneMap::Initialize()
 	CScene* scene = m_pGameObject->Get_Scene();
 
 	CGameObject* parentObj = scene->Add_GameObject(m_strMapName);
-	m_pParentTF = parentObj->Get_Transform();
+	m_pParentTF = parentObj->GetTransform();
 
-	m_pParentTF->SetParent(Get_Transform());
+	m_pParentTF->SetParent(GetTransform());
 
 	if (m_pParentTF)
 		m_pParentTF->AddRef();
@@ -101,8 +101,8 @@ void CSceneMap::CreateObject(const MapObjectType _type)
 			renders[i]->Get_Material()->Set_Texture(tn, 1);
 	}
 
-	mapObj->Get_Transform()->SetParent(m_pParentTF);
-	mapObj->Get_Transform()->Set_LocalScale(1.f);
+	mapObj->GetTransform()->SetParent(m_pParentTF);
+	mapObj->GetTransform()->Set_LocalScale(1.f);
 
 	MapObject mapObjStruct = {};
 

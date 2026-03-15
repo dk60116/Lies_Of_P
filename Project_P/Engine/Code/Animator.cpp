@@ -86,7 +86,7 @@ HRESULT CAnimator::Initialize()
 
 	if (!m_pSkinnedRenderer)
 	{
-		m_pSkinnedRenderer = m_pGameObject->Get_Transform()
+		m_pSkinnedRenderer = m_pGameObject->GetTransform()
 			->Get_Child(0)->Get_GameObject()
 			->GetComponent<CSkinnedMeshRenderer>();
 

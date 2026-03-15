@@ -296,8 +296,8 @@ uint64_t CSkinnedMeshRenderer::ComputeSkinningPoseHash(_uint _boneCount) const
 	hashBytes(&_boneCount, sizeof(_boneCount));
 
 	_float4x4 meshWorld = {};
-	if (m_pGameObject && m_pGameObject->Get_Transform())
-		XMStoreFloat4x4(&meshWorld, m_pGameObject->Get_Transform()->Get_WorldMatrix());
+	if (m_pGameObject && m_pGameObject->GetTransform())
+		XMStoreFloat4x4(&meshWorld, m_pGameObject->GetTransform()->Get_WorldMatrix());
 	hashBytes(&meshWorld, sizeof(meshWorld));
 
 	for (_uint i = 0; i < _boneCount; ++i)
@@ -358,7 +358,7 @@ _bool CSkinnedMeshRenderer::TryUpdateSkinningCache(_uint* _outBoneCount) const
 	if (m_vCachedBoneMatrices.size() != MAX_BONE)
 		m_vCachedBoneMatrices.resize(MAX_BONE);
 
-	CTransform* meshTransform = (m_pGameObject) ? m_pGameObject->Get_Transform() : nullptr;
+	CTransform* meshTransform = (m_pGameObject) ? m_pGameObject->GetTransform() : nullptr;
 	const TransformLocalPose meshLocalPose = CaptureLocalPose(meshTransform);
 
 	_bool poseUnchanged = m_bSkinningCacheValid
@@ -532,7 +532,7 @@ _bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3&
 		cache.meshWorldMatrixValid = false;
 	}
 
-	CTransform* meshTransform = (m_pGameObject) ? m_pGameObject->Get_Transform() : nullptr;
+	CTransform* meshTransform = (m_pGameObject) ? m_pGameObject->GetTransform() : nullptr;
 	const _matrix meshWorld = meshTransform ? meshTransform->Get_WorldMatrix() : XMMatrixIdentity();
 	_float4x4 meshWorldMatrix = {};
 	XMStoreFloat4x4(&meshWorldMatrix, meshWorld);
@@ -563,7 +563,7 @@ void CSkinnedMeshRenderer::CreateBoneHierachy(const vector<CSkinnedMeshBuffer::S
 	const auto& n = nodes[nodeIdx];
 
 	CGameObject* boneGO = m_pGameObject->Get_Scene()->Add_GameObject(n.name);
-	CTransform* boneTf = boneGO->Get_Transform();
+	CTransform* boneTf = boneGO->GetTransform();
 
 	if (parentTf)
 		boneTf->SetParent(parentTf);
@@ -615,10 +615,10 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 
 	m_pMaterial->Set_IntValue(L"gObjectID", m_pGameObject->Get_UniqueID());
 
-	vector3 cPos = _cam->Get_Transform()->Get_Position();
+	vector3 cPos = _cam->GetTransform()->Get_Position();
 	const _float3 camPos = cPos.toFloat3();
 
-	const _matrix matWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
+	const _matrix matWorld = m_pGameObject->GetTransform()->Get_WorldMatrix();
 	const _matrix matView = _cam->GetViewMatrix();
 	const _matrix matProj = _cam->GetProjectionMatrix();
 
@@ -672,7 +672,7 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 		return;
 	}
 
-	const _matrix matWorld = m_pGameObject->Get_Transform()->Get_WorldMatrix();
+	const _matrix matWorld = m_pGameObject->GetTransform()->Get_WorldMatrix();
 	const _matrix matView = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.view));
 	const _matrix matProj = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.proj));
 

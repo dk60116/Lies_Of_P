@@ -879,8 +879,8 @@ void CPhysics::RenderRaycastDebugDisplay()
 		}
 	};
 
-	vector3 camRight = camera->Get_Transform()->Get_Directions().right;
-	vector3 camUp = camera->Get_Transform()->Get_Directions().up;
+	vector3 camRight = camera->GetTransform()->Get_Directions().right;
+	vector3 camUp = camera->GetTransform()->Get_Directions().up;
 	const _float camRightLen2 = camRight.x * camRight.x + camRight.y * camRight.y + camRight.z * camRight.z;
 	if (camRightLen2 <= 0.000001f)
 		camRight = vector3::right();

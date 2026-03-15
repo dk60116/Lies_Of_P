@@ -96,12 +96,12 @@ void CCharacter::CreateHurtBox()
 	for (size_t i = 0; i < m_vHurtBoxInfoList.size(); ++i)
 	{
 		CGameObject* go = m_pGameObject->Get_Scene()->Add_GameObject(L"HurtBox_" + m_vHurtBoxInfoList[i].boneName);
-		CTransform* tb = Get_Transform()->Find_ChildRecursive(m_vHurtBoxInfoList[i].boneName);
+		CTransform* tb = GetTransform()->Find_ChildRecursive(m_vHurtBoxInfoList[i].boneName);
 
-		go->Get_Transform()->SetParent(tb);
-		go->Get_Transform()->Set_LocalPosition(vector3::zero());
-		go->Get_Transform()->Set_LocalEulerAngles(vector3::zero());
-		go->Get_Transform()->Set_LocalScale(vector3::one());
+		go->GetTransform()->SetParent(tb);
+		go->GetTransform()->Set_LocalPosition(vector3::zero());
+		go->GetTransform()->Set_LocalEulerAngles(vector3::zero());
+		go->GetTransform()->Set_LocalScale(vector3::one());
 
 		CHurtBox* hb = go->AddComponent<CHurtBox>();
 
@@ -114,12 +114,12 @@ void CCharacter::CreateHitBox()
 	for (size_t i = 0; i < m_vHitBoxInfoList.size(); ++i)
 	{
 		CGameObject* go = m_pGameObject->Get_Scene()->Add_GameObject(L"HitBox_" + m_vHitBoxInfoList[i].boneName);
-		CTransform* tb = Get_Transform()->Find_ChildRecursive(m_vHitBoxInfoList[i].boneName);
+		CTransform* tb = GetTransform()->Find_ChildRecursive(m_vHitBoxInfoList[i].boneName);
 
-		go->Get_Transform()->SetParent(tb);
-		go->Get_Transform()->Set_LocalPosition(vector3::zero());
-		go->Get_Transform()->Set_LocalEulerAngles(vector3::zero());
-		go->Get_Transform()->Set_LocalScale(vector3::one());
+		go->GetTransform()->SetParent(tb);
+		go->GetTransform()->Set_LocalPosition(vector3::zero());
+		go->GetTransform()->Set_LocalEulerAngles(vector3::zero());
+		go->GetTransform()->Set_LocalScale(vector3::one());
 
 		CHitBox* hb = go->AddComponent<CHitBox>();
 
@@ -131,7 +131,7 @@ void CCharacter::Ground()
 {
 	CPhysics::RAYCASTHIT hit = {};
 	CPhysics::SphereRay ray = {};
-	ray.center = Get_Transform()->Get_Position() + vector3::up() * 1.f;
+	ray.center = GetTransform()->Get_Position() + vector3::up() * 1.f;
 	ray.radius = 0.5f;
 	ray.dir = vector3::down();
 	ray.maxDist = 0.75f;
@@ -146,7 +146,7 @@ void CCharacter::Ground()
 	{
 		CPhysics::RAYCASTHIT ehit = {};
 		CPhysics::Ray eray = {};
-		eray.origin = Get_Transform()->Get_Position() + vector3::up() * 0.5f;
+		eray.origin = GetTransform()->Get_Position() + vector3::up() * 0.5f;
 		eray.dir = vector3::up();
 		eray.maxDist = 1.f;
 

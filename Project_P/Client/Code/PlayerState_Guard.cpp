@@ -121,6 +121,8 @@ void CPlayerState_Guard::Enter()
 {
 	__super::Enter();
 
+	m_pCtx->StopMoveImmediate();
+
 	m_pCtx->SetCanMove(false);
 	m_pCtx->SetCanTurn(true);
 

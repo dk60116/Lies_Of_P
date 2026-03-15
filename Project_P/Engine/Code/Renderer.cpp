@@ -177,10 +177,10 @@ void CRenderer::Bind_InstanceBuffer(const _matrix& _baseWorld)
 
 	vector3 basePosition = vector3::zero();
 	vector3 baseRotation = vector3::zero();
-	if (m_pGameObject && m_pGameObject->Get_Transform())
+	if (m_pGameObject && m_pGameObject->GetTransform())
 	{
-		basePosition = m_pGameObject->Get_Transform()->Get_Position();
-		baseRotation = m_pGameObject->Get_Transform()->Get_EulerAngles();
+		basePosition = m_pGameObject->GetTransform()->Get_Position();
+		baseRotation = m_pGameObject->GetTransform()->Get_EulerAngles();
 	}
 	else
 	{

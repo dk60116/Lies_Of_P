@@ -52,7 +52,7 @@ namespace
 		if (!_monster)
 			return false;
 
-		CTransform* transform = _monster->Get_Transform();
+		CTransform* transform = _monster->GetTransform();
 		if (!transform)
 			return false;
 
@@ -81,7 +81,7 @@ namespace
 			return false;
 		}
 
-		CTransform* transform = _monster->Get_Transform();
+		CTransform* transform = _monster->GetTransform();
 		if (!transform)
 		{
 			_inOutPreviousPosition = vector3::zero();
@@ -283,7 +283,7 @@ BTState CBT_Monster::RunChase(AIContext& _ctx)
 		return BTState::Success;
 	}
 
-	CTransform* targetTransform = _ctx.target->Get_Transform();
+	CTransform* targetTransform = _ctx.target->GetTransform();
 	if (!targetTransform)
 		return BTState::Failure;
 
@@ -329,7 +329,7 @@ BTState CBT_Monster::RunAttack(AIContext& _ctx)
 	if (!_ctx.target || !_ctx.hasTarget)
 		return BTState::Failure;
 
-	CTransform* targetTransform = _ctx.target->Get_Transform();
+	CTransform* targetTransform = _ctx.target->GetTransform();
 	if (!targetTransform)
 		return BTState::Failure;
 

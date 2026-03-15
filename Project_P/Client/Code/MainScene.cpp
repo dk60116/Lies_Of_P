@@ -19,7 +19,28 @@ HRESULT CMainScene::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
-	CResources::GetInstance().CreateGameResource<CFont>(L"", L"");
+	CResources& resources = CResources::GetInstance();
+	const wstring orbitronFontAssetPath = L"../Assets/Fonts/orbitron-medium.otf";
+	wstring orbitronSpriteFontPath = L"BinaryAssets/FontData/orbitron-medium.spritefont";
+	const wstring orbitronFontResourceName = L"Orbitron Medium (Font)";
+
+	if (!CResources::FileExists(orbitronSpriteFontPath))
+	{
+		if (FAILED(resources.ConvertOTFTTFToSpriteFont(orbitronFontAssetPath)))
+			return E_FAIL;
+	}
+
+	CFont* orbitronFont = nullptr;
+	auto fontIter = resources.m_mGameResourceList.find(orbitronFontResourceName);
+	if (fontIter != resources.m_mGameResourceList.end())
+		orbitronFont = dynamic_cast<CFont*>(fontIter->second);
+
+	if (!orbitronFont)
+	{
+		orbitronFont = resources.CreateGameResource<CFont>(orbitronFontResourceName, L"", &orbitronSpriteFontPath);
+		if (!orbitronFont)
+			return E_FAIL;
+	}
 
 	CGameObject* cameraObject = Add_GameObject(L"Main Camera");
 	m_pMainCamera = cameraObject->AddComponent<CCamera>();
@@ -38,23 +59,25 @@ HRESULT CMainScene::Initialize()
 
 	m_pLogoImage->SetFillAmount(1.f);
 
-	ImageObject->Get_Transform()->SetParent(canvasObj->Get_Transform());
+	ImageObject->GetTransform()->SetParent(canvasObj->GetTransform());
 
-	ImageObject2->Get_Transform()->SetParent(image->Get_Transform());
+	ImageObject2->GetTransform()->SetParent(image->GetTransform());
 
 	CGameObject* gameStartTextObject = Add_GameObject(L"Game Start Text");
 	CText* gameStartText = gameStartTextObject->AddComponent<CText>();
-	gameStartText->Get_Transform()->SetParent(canvasObj->Get_Transform());
-	gameStartText->Set_FontSize(6.f);
+	gameStartText->GetTransform()->SetParent(canvasObj->GetTransform());
+	gameStartText->SetFont(orbitronFont);
+	gameStartText->SetFontSize(6.f);
 	gameStartText->SetColor(ColorValue::white());
-	gameStartText->Set_Text(L"Start Game");
+	gameStartText->SetText(L"Start Game");
 
 	CGameObject* exitTextObject = Add_GameObject(L"Exit Text");
 	CText* exitText = exitTextObject->AddComponent<CText>();
-	exitText->Get_Transform()->SetParent(canvasObj->Get_Transform());
-	exitText->Set_FontSize(5.f);
+	exitText->GetTransform()->SetParent(canvasObj->GetTransform());
+	exitText->SetFont(orbitronFont);
+	exitText->SetFontSize(5.f);
 	exitText->SetColor(ColorValue::white());
-	exitText->Set_Text(L"Exit");
+	exitText->SetText(L"Exit");
 
 	return S_OK;
 }

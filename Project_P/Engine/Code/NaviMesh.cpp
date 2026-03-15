@@ -816,7 +816,7 @@ void CNaviMesh::RenderOverlay(CCamera* _camera, CMaterial* _material)
 		return;
 
 	_float3 cameraPosition = {};
-	if (CTransform* cameraTransform = _camera->Get_Transform())
+	if (CTransform* cameraTransform = _camera->GetTransform())
 	{
 		const vector3 position = cameraTransform->Get_Position();
 		cameraPosition = _float3(position.x, position.y, position.z);

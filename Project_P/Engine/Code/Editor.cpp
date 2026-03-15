@@ -172,7 +172,7 @@ void CEditor::Editor_Update_During()
 
 		vector3 interpPos = vector3::Lerp(m_vCameraMoveStartPos, m_vCameraMoveTargetPos, t);
 
-		CTransform* camTransform = CSceneManager::GetInstance().Get_EditorCamera()->Get_Transform();
+		CTransform* camTransform = CSceneManager::GetInstance().Get_EditorCamera()->GetTransform();
 		camTransform->Set_Position(interpPos);
 	}
 }
@@ -495,8 +495,8 @@ void CEditor::MoveTo_SelectedGameObject(CGameObject* _target)
 
 	m_pMoveTargetGameObject = _target;
 
-	_float3 targetPos = _target->Get_Transform()->Get_Position();
-	CTransform& ect = *CSceneManager::GetInstance().Get_EditorCamera()->Get_Transform();
+	_float3 targetPos = _target->GetTransform()->Get_Position();
+	CTransform& ect = *CSceneManager::GetInstance().Get_EditorCamera()->GetTransform();
 
 	m_vCameraMoveStartPos = ect.Get_Position();
 	m_vCameraMoveTargetPos = targetPos + ect.Get_Directions().forward * -distance;

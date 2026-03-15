@@ -134,7 +134,7 @@ void CSphereCollider::Render_Gizmo()
     const _float maxScale = max(fabsf(scale.x), max(fabsf(scale.y), fabsf(scale.z)));
     const _float radius = max(m_fRadius * maxScale, 0.001f);
     const _uint segmentCount = 48u;
-    const _matrix objectWorld = Get_Transform()->Get_WorldMatrix();
+    const _matrix objectWorld = GetTransform()->Get_WorldMatrix();
     const _vector localCenter = XMVectorSet(m_vCenter.x, m_vCenter.y, m_vCenter.z, 1.f);
     const _vector worldCenter4 = XMVector3TransformCoord(localCenter, objectWorld);
     const vector3 worldCenter = vector3(XMVectorGetX(worldCenter4), XMVectorGetY(worldCenter4), XMVectorGetZ(worldCenter4));
@@ -146,12 +146,12 @@ void CSphereCollider::Render_Gizmo()
         return v.normalized();
     };
 
-    const auto dirs = Get_Transform()->Get_Directions();
+    const auto dirs = GetTransform()->Get_Directions();
     const vector3 worldRight = normalizeOr(dirs.right, vector3::right());
     const vector3 worldUp = normalizeOr(dirs.up, vector3::up());
     const vector3 worldForward = normalizeOr(dirs.forward, vector3::forward());
-    const vector3 camRight = normalizeOr(cam->Get_Transform()->Get_Directions().right, vector3::right());
-    const vector3 camUp = normalizeOr(cam->Get_Transform()->Get_Directions().up, vector3::up());
+    const vector3 camRight = normalizeOr(cam->GetTransform()->Get_Directions().right, vector3::right());
+    const vector3 camUp = normalizeOr(cam->GetTransform()->Get_Directions().up, vector3::up());
 
     _float3 camPos = _float3();
     _matrix matView = cam->GetViewMatrix();

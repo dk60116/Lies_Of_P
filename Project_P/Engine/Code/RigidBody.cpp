@@ -422,7 +422,7 @@ void CRigidBody::SetConstPositionX(_bool _value)
 
     m_bConstPositionX = _value;
     if (_value)
-        m_vConstPosition.x = Get_Transform()->Get_Position().x;
+        m_vConstPosition.x = GetTransform()->Get_Position().x;
 }
 
 _bool CRigidBody::IsConstPositionY() const { return m_bConstPositionY; }
@@ -433,7 +433,7 @@ void CRigidBody::SetConstPositionY(_bool _value)
 
     m_bConstPositionY = _value;
     if (_value)
-        m_vConstPosition.y = Get_Transform()->Get_Position().y;
+        m_vConstPosition.y = GetTransform()->Get_Position().y;
 }
 
 _bool CRigidBody::IsConstPositionZ() const { return m_bConstPositionZ; }
@@ -444,7 +444,7 @@ void CRigidBody::SetConstPositionZ(_bool _value)
 
     m_bConstPositionZ = _value;
     if (_value)
-        m_vConstPosition.z = Get_Transform()->Get_Position().z;
+        m_vConstPosition.z = GetTransform()->Get_Position().z;
 }
 
 _bool CRigidBody::IsConstRotationX() const { return m_bConstRotationX; }
@@ -455,7 +455,7 @@ void CRigidBody::SetConstRotationX(_bool _value)
 
     m_bConstRotationX = _value;
     if (_value)
-        m_vConstRotation.x = Get_Transform()->Get_EulerAngles().x;
+        m_vConstRotation.x = GetTransform()->Get_EulerAngles().x;
 }
 
 _bool CRigidBody::IsConstRotationY() const { return m_bConstRotationY; }
@@ -466,7 +466,7 @@ void CRigidBody::SetConstRotationY(_bool _value)
 
     m_bConstRotationY = _value;
     if (_value)
-        m_vConstRotation.y = Get_Transform()->Get_EulerAngles().y;
+        m_vConstRotation.y = GetTransform()->Get_EulerAngles().y;
 }
 
 _bool CRigidBody::IsConstRotationZ() const { return m_bConstRotationZ; }
@@ -477,7 +477,7 @@ void CRigidBody::SetConstRotationZ(_bool _value)
 
     m_bConstRotationZ = _value;
     if (_value)
-        m_vConstRotation.z = Get_Transform()->Get_EulerAngles().z;
+        m_vConstRotation.z = GetTransform()->Get_EulerAngles().z;
 }
 
 void CRigidBody::Translate(const vector3& _deltaWorld)
@@ -485,11 +485,11 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     if (_deltaWorld.lengthSq() <= 0.f)
         return;
 
-    Get_Transform()->Update();
+    GetTransform()->Update();
 
     Vec3 tfPos;
     Quat tfRot;
-    DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), tfPos, tfRot);
+    DecomposeWorldMatrix(GetTransform()->Get_WorldMatrix(), tfPos, tfRot);
 
     vector3 currentPos(static_cast<_float>(tfPos.GetX()), static_cast<_float>(tfPos.GetY()), static_cast<_float>(tfPos.GetZ()));
     quaternion currentRot(tfRot.GetX(), tfRot.GetY(), tfRot.GetZ(), tfRot.GetW());
@@ -513,8 +513,8 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
 
     if (m_bKinematic)
     {
-        Get_Transform()->Set_Position(targetPos);
-        Get_Transform()->Set_Quaternion(targetRot);
+        GetTransform()->Set_Position(targetPos);
+        GetTransform()->Set_Quaternion(targetRot);
         CacheLastSyncedTransform(targetPos, targetRot);
         return;
     }
@@ -594,8 +594,8 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
         }
     }
 
-    Get_Transform()->Set_Position(correctedPos);
-    Get_Transform()->Set_Quaternion(correctedRot);
+    GetTransform()->Set_Position(correctedPos);
+    GetTransform()->Set_Quaternion(correctedRot);
 
     CacheLastSyncedTransform(correctedPos, correctedRot);
 }
@@ -643,11 +643,11 @@ void CRigidBody::Rotate(const vector3& _deltaEuler)
     if (_deltaEuler.lengthSq() <= 0.f)
         return;
 
-    Get_Transform()->Update();
+    GetTransform()->Update();
 
     Vec3 pos;
     Quat rot;
-    DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
+    DecomposeWorldMatrix(GetTransform()->Get_WorldMatrix(), pos, rot);
 
     const quaternion currentRot(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
     const quaternion deltaRot = _deltaEuler.to_quaternion();
@@ -678,8 +678,8 @@ void CRigidBody::Rotate(const vector3& _deltaEuler)
 
     ApplyAxisConstraints(targetPos, targetRot);
 
-    Get_Transform()->Set_Position(targetPos);
-    Get_Transform()->Set_Quaternion(targetRot);
+    GetTransform()->Set_Position(targetPos);
+    GetTransform()->Set_Quaternion(targetRot);
 
     const RVec3 joltTargetPos(targetPos.x, targetPos.y, targetPos.z);
     const Quat joltTargetRot(targetRot.x, targetRot.y, targetRot.z, targetRot.w);
@@ -899,7 +899,7 @@ void CRigidBody::RebuildBodiesIfDirty()
 
     Vec3 pos;
     Quat rot;
-    DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
+    DecomposeWorldMatrix(GetTransform()->Get_WorldMatrix(), pos, rot);
     CacheLastSyncedTransform(vector3(pos.GetX(), pos.GetY(), pos.GetZ()), quaternion(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW()));
 
     if (bodyCompound != nullptr)
@@ -1016,11 +1016,11 @@ void CRigidBody::SyncKinematicToJolt()
 
     m_bSkipPositionConstraintSyncOnce = false;
 
-    Get_Transform()->Update();
+    GetTransform()->Update();
 
     Vec3 pos;
     Quat rot;
-    DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
+    DecomposeWorldMatrix(GetTransform()->Get_WorldMatrix(), pos, rot);
     CacheLastSyncedTransform(vector3(pos.GetX(), pos.GetY(), pos.GetZ()), quaternion(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW()));
 
     if (m_bHasBody)
@@ -1041,13 +1041,13 @@ void CRigidBody::SyncDynamicFromJolt()
     if (!m_bHasBody && !m_bHasSensorBody)
         return;
 
-    Get_Transform()->Update();
+    GetTransform()->Update();
 
     const BodyID sourceBodyId = m_bHasBody ? m_iBodyID : m_iSensorBodyID;
 
     Vec3 tfPos;
     Quat tfRot;
-    DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), tfPos, tfRot);
+    DecomposeWorldMatrix(GetTransform()->Get_WorldMatrix(), tfPos, tfRot);
 
     const RVec3 joltPos = GetBI().GetPosition(sourceBodyId);
     const Quat joltRot = GetBI().GetRotation(sourceBodyId);
@@ -1055,8 +1055,8 @@ void CRigidBody::SyncDynamicFromJolt()
     const vector3 currentTfPos(tfPos.GetX(), tfPos.GetY(), tfPos.GetZ());
     const quaternion currentTfRot(tfRot.GetX(), tfRot.GetY(), tfRot.GetZ(), tfRot.GetW());
 
-    const vector3 syncRefPos = m_bHasLastSyncedTransform ? m_vLastSyncedPosition : Get_Transform()->Get_PrevPosition();
-    const quaternion syncRefRot = m_bHasLastSyncedTransform ? m_vLastSyncedRotation : Get_Transform()->Get_PrevQuaternion();
+    const vector3 syncRefPos = m_bHasLastSyncedTransform ? m_vLastSyncedPosition : GetTransform()->Get_PrevPosition();
+    const quaternion syncRefRot = m_bHasLastSyncedTransform ? m_vLastSyncedRotation : GetTransform()->Get_PrevQuaternion();
 
     const _float dpx = syncRefPos.x - tfPos.GetX();
     const _float dpy = syncRefPos.y - tfPos.GetY();
@@ -1165,8 +1165,8 @@ void CRigidBody::SyncDynamicFromJolt()
     const _bool lockAllRotation = m_bConstRotationX && m_bConstRotationY && m_bConstRotationZ;
     const EActivation activation = lockAllPosition ? EActivation::Activate : EActivation::DontActivate;
 
-    Get_Transform()->Set_Position(pos);
-    Get_Transform()->Set_Quaternion(rot);
+    GetTransform()->Set_Position(pos);
+    GetTransform()->Set_Quaternion(rot);
 
     if (m_bHasBody)
         GetBI().SetPositionAndRotation(m_iBodyID, RVec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), activation);

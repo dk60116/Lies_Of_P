@@ -72,7 +72,7 @@ public:
 	void SetEnable(const _bool _enable);
 
 	CGameObject* Get_GameObject();
-	class CTransform* Get_Transform();
+	class CTransform* GetTransform();
 
 	const _int GetSortIndex() const;
 	const _bool Is_SaveTarget() const;

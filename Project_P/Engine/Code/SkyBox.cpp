@@ -84,7 +84,7 @@ void CSkyBox::RenderSky(CCamera* _camera)
 	m_pMaterial->Bind_Matrix(XMMatrixIdentity());
 	m_pMaterial->Bind_Camera
 	(
-		_camera->Get_Transform()->Get_Position(),
+		_camera->GetTransform()->Get_Position(),
 		viewNoTrans,
 		skyProj
 	);

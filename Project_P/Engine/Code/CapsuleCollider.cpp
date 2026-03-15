@@ -141,8 +141,8 @@ void CCapsuleCollider::Render_Gizmo()
     const _uint segmentCount = 36u;
 
     const vector3 scaledCenter(m_vCenter.x * scale.x, m_vCenter.y * scale.y, m_vCenter.z * scale.z);
-    const vector3 worldPos = Get_Transform()->Get_Position();
-    const quaternion worldRotation = Get_Transform()->Get_Quaternion();
+    const vector3 worldPos = GetTransform()->Get_Position();
+    const quaternion worldRotation = GetTransform()->Get_Quaternion();
     const _matrix world = XMMatrixRotationQuaternion(XMVectorSet(worldRotation.x, worldRotation.y, worldRotation.z, worldRotation.w)) * XMMatrixTranslation(worldPos.x, worldPos.y, worldPos.z);
 
     _float3 camPos = _float3();

@@ -30,10 +30,11 @@ public:
 	void Bind_Mesh();
 	void Bind_Matrix();
 	void Bind_Camera(const _fmatrix _view, const _cmatrix _projection);
-	CRectTransform* Get_RectTransform() const;
+	CRectTransform* GetRectTransform() const;
 
 public:
 	CCanvas* Get_Canvas() const;
+	ColorValue GetColor() const;
 	void SetColor(ColorValue _color);
 	void SetAlpha(const _float _value);
 

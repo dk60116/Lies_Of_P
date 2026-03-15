@@ -61,7 +61,7 @@ namespace
 			source.label = object->Get_ObjectNameID();
 			source.walkable = true;
 			_matrix worldMatrix = XMMatrixIdentity();
-			if (CTransform* transform = object->Get_Transform())
+			if (CTransform* transform = object->GetTransform())
 				worldMatrix = transform->Get_WorldMatrix();
 			XMStoreFloat4x4(&source.worldMatrix, worldMatrix);
 			sources.push_back(source);
@@ -705,8 +705,8 @@ void CTopToolBar::Show2DButton()
 	if (ImGui::Button("2D"))
 	{
 		CCamera* editorCam = CSceneManager::GetInstance().Get_EditorCamera();
-		editorCam->Get_Transform()->Set_PositionZ(-999999.f);
-		editorCam->Get_Transform()->Set_EulerAngles(vector3::zero());
+		editorCam->GetTransform()->Set_PositionZ(-999999.f);
+		editorCam->GetTransform()->Set_EulerAngles(vector3::zero());
 		editorCam->SetViewMode(CCamera::ViewMode::Orthographic);
 	}
 }

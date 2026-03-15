@@ -73,7 +73,7 @@ void PlayerState_Hit::Enter()
 	if (playerForward.lengthSq() > 0.0001f && m_vKnockbackDir.lengthSq() > 0.0001f)
 	{
 		const vector3 normalizedForward = playerForward.normalized();
-		const vector3 normalizedRight = m_pCtx->Get_Controller()->Get_GameObject()->Get_Transform()->Get_Directions().right.normalized();
+		const vector3 normalizedRight = m_pCtx->Get_Controller()->Get_GameObject()->GetTransform()->Get_Directions().right.normalized();
 		const vector3 normalizedKnockback = m_vKnockbackDir.normalized();
 		const _float forwardDot = vector3::dot(normalizedForward, normalizedKnockback);
 		const _float rightDot = vector3::dot(normalizedRight, normalizedKnockback);

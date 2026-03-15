@@ -1,11 +1,49 @@
 #include "epch.h"
 #include "RectTransform.h"
 
+namespace
+{
+    vector2 ProjectRectLocalPointToScreen(const CRectTransform& rect, const vector2& localPoint)
+    {
+        const _vector local = XMVectorSet(localPoint.x, localPoint.y, 0.f, 1.f);
+        const _vector world = XMVector3TransformCoord(local, rect.Get_WorldMatrix());
+        const _matrix viewMatrix = XMMatrixTranslation(-50.f, -50.f, 0.f);
+
+        const _float aspect = CDisplay::GetInstance().Get_Aspect();
+        const _float halfHeight = 7.2f * 0.5f;
+        const _float halfWidth = halfHeight * aspect;
+        const _matrix projMatrix = XMMatrixOrthographicOffCenterLH
+        (
+            -halfWidth, halfWidth,
+            -halfHeight, halfHeight,
+            0.f, 1.f
+        );
+
+        _vector clipPos = XMVector4Transform(world, viewMatrix);
+        clipPos = XMVector4Transform(clipPos, projMatrix);
+
+        const _float clipW = XMVectorGetW(clipPos);
+        if (fabsf(clipW) < 1e-6f)
+            return vector2::zero();
+
+        const _float ndcX = XMVectorGetX(clipPos) / clipW;
+        const _float ndcY = XMVectorGetY(clipPos) / clipW;
+        const vector2 screenResolution = vector2(CDisplay::GetInstance().Get_ScreenResolution().x, CDisplay::GetInstance().Get_ScreenResolution().y);
+
+        return vector2
+        (
+            (ndcX * 0.5f + 0.5f) * screenResolution.x,
+            (ndcY * 0.5f + 0.5f) * screenResolution.y
+        );
+    }
+}
+
 CRectTransform::CRectTransform()
     : m_pUI(nullptr)
     , m_vAnchoredPosition({})
     , m_vAnchoredScale({})
     , m_vStaticWH({})
+    , m_vSizeScale(vector3::one())
     , m_fWidth(0.f)
     , m_fHeight(0.f)
     , m_sAnchors({})
@@ -35,6 +73,7 @@ CComponent* CRectTransform::Clone() const
     clone->m_vAnchoredPosition = this->m_vAnchoredPosition;
     clone->m_vAnchoredScale = this->m_vAnchoredScale;
     clone->m_vStaticWH = this->m_vStaticWH;
+    clone->m_vSizeScale = this->m_vSizeScale;
     clone->m_fWidth = this->m_fWidth;
     clone->m_fHeight = this->m_fHeight;
     clone->m_sAnchors = this->m_sAnchors;
@@ -70,6 +109,22 @@ void CRectTransform::Update()
     __super::Update();
 }
 
+void CRectTransform::Update_Editor()
+{
+    CCanvas* canvas = m_pUI ? m_pUI->Get_Canvas() : nullptr;
+
+    if (!canvas)
+    {
+        __super::Update_Editor();
+        return;
+    }
+
+    RefreshSizeFromLayout();
+    SyncAnchoredPositionFromLocal();
+
+    __super::Update_Editor();
+}
+
 void CRectTransform::Render_Gizmo()
 {
     if (CEditor::GetInstance().Get_SelectedGameObject() != m_pGameObject)
@@ -93,7 +148,8 @@ void CRectTransform::Render_Gizmo()
     }
     else if (!m_pParentRect)
     {
-        canvasSize = vector2(canvas->Get_Transform()->Get_LocalScale().x, canvas->Get_Transform()->Get_LocalScale().y);
+        if (canvas)
+            canvasSize = vector2(canvas->GetTransform()->Get_LocalScale().x, canvas->GetTransform()->Get_LocalScale().y);
 
         pivotTrans = vector2(m_vPivot.x * m_vScale.x * canvasSize.x - m_vAnchoredScale.x * 0.5f, m_vPivot.y * m_vScale.y * canvasSize.y - m_vAnchoredScale.y * 0.5f);
         _matrix translateMat = XMMatrixTranslation(pivotTrans.x, pivotTrans.y, 0.f);
@@ -166,6 +222,9 @@ void CRectTransform::Render_Gizmo()
         _matrix translateMat = XMMatrixTranslation(-pivotTrans.x, -pivotTrans.y, 0.f);
         newWorldMatrix *= translateMat;
 
+        const _bool hasCanvas = (m_pUI && m_pUI->Get_Canvas());
+        const vector3 previousScale = m_vScale;
+
         if (m_pParent)
         {
             // Convert world to local using the parent's inverse matrix.
@@ -176,19 +235,61 @@ void CRectTransform::Render_Gizmo()
             _vector S, R, T;
             XMMatrixDecompose(&S, &R, &T, localMatrix);
 
-            XMStoreFloat3(reinterpret_cast<_float3*>(&m_vScale), S);
+            vector3 decomposedScale = {};
+            XMStoreFloat3(reinterpret_cast<_float3*>(&decomposedScale), S);
             XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), R);
             XMStoreFloat3(reinterpret_cast<_float3*>(&m_vPosition), T);
+
+            if (hasCanvas)
+            {
+                if (currentGizmoOperation == ImGuizmo::SCALE)
+                {
+                    const _float baseScaleX = (fabsf(m_vSizeScale.x) > 1e-4f) ? (previousScale.x / m_vSizeScale.x) : previousScale.x;
+                    const _float baseScaleY = (fabsf(m_vSizeScale.y) > 1e-4f) ? (previousScale.y / m_vSizeScale.y) : previousScale.y;
+                    m_vSizeScale.x = (fabsf(baseScaleX) > 1e-4f) ? (decomposedScale.x / baseScaleX) : decomposedScale.x;
+                    m_vSizeScale.y = (fabsf(baseScaleY) > 1e-4f) ? (decomposedScale.y / baseScaleY) : decomposedScale.y;
+                    m_vSizeScale.z = decomposedScale.z;
+                }
+
+                RefreshSizeFromLayout();
+                SyncAnchoredPositionFromLocal();
+            }
+            else
+            {
+                m_vScale = decomposedScale;
+            }
         }
         else
         {
             _vector S, R, T;
             XMMatrixDecompose(&S, &R, &T, newWorldMatrix);
 
-            XMStoreFloat3(reinterpret_cast<_float3*>(&m_vScale), S);
+            vector3 decomposedScale = {};
+            XMStoreFloat3(reinterpret_cast<_float3*>(&decomposedScale), S);
             XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), R);
             XMStoreFloat3(reinterpret_cast<_float3*>(&m_vPosition), T);
+
+            if (hasCanvas)
+            {
+                if (currentGizmoOperation == ImGuizmo::SCALE)
+                {
+                    const _float baseScaleX = (fabsf(m_vSizeScale.x) > 1e-4f) ? (previousScale.x / m_vSizeScale.x) : previousScale.x;
+                    const _float baseScaleY = (fabsf(m_vSizeScale.y) > 1e-4f) ? (previousScale.y / m_vSizeScale.y) : previousScale.y;
+                    m_vSizeScale.x = (fabsf(baseScaleX) > 1e-4f) ? (decomposedScale.x / baseScaleX) : decomposedScale.x;
+                    m_vSizeScale.y = (fabsf(baseScaleY) > 1e-4f) ? (decomposedScale.y / baseScaleY) : decomposedScale.y;
+                    m_vSizeScale.z = decomposedScale.z;
+                }
+
+                RefreshSizeFromLayout();
+                SyncAnchoredPositionFromLocal();
+            }
+            else
+            {
+                m_vScale = decomposedScale;
+            }
         }
+
+        __super::Update_Editor();
     }
 }
 
@@ -267,6 +368,68 @@ void CRectTransform::SetParent(CTransform* _parent)
     Update();
 }
 
+void CRectTransform::Set_LocalScale(const vector3& _scale)
+{
+    Set_SizeScale(_scale);
+}
+
+void CRectTransform::Set_LocalScale(const _float _x, const _float _y, const _float _z)
+{
+    Set_SizeScale(_x, _y, _z);
+}
+
+void CRectTransform::Set_LocalScale(const _float _value)
+{
+    Set_SizeScale(_value, _value, _value);
+}
+
+void CRectTransform::Set_LocalScaleX(const _float _value)
+{
+    vector3 scale = Get_SizeScale();
+    scale.x = _value;
+    Set_SizeScale(scale);
+}
+
+void CRectTransform::Set_LocalScaleY(const _float _value)
+{
+    vector3 scale = Get_SizeScale();
+    scale.y = _value;
+    Set_SizeScale(scale);
+}
+
+void CRectTransform::Set_LocalScaleZ(const _float _value)
+{
+    vector3 scale = Get_SizeScale();
+    scale.z = _value;
+    Set_SizeScale(scale);
+}
+
+void CRectTransform::Add_LocalScale(const vector3& _scale)
+{
+    Set_SizeScale(Get_SizeScale() + _scale);
+}
+
+void CRectTransform::Add_LocalScaleX(const _float _value)
+{
+    vector3 scale = Get_SizeScale();
+    scale.x += _value;
+    Set_SizeScale(scale);
+}
+
+void CRectTransform::Add_LocalScaleY(const _float _value)
+{
+    vector3 scale = Get_SizeScale();
+    scale.y += _value;
+    Set_SizeScale(scale);
+}
+
+void CRectTransform::Add_LocalScaleZ(const _float _value)
+{
+    vector3 scale = Get_SizeScale();
+    scale.z += _value;
+    Set_SizeScale(scale);
+}
+
 const vector2 CRectTransform::Get_AnchoredPosition() const
 {
     return m_vAnchoredPosition;
@@ -301,6 +464,77 @@ void CRectTransform::Set_AnchoredPositonY(const _float _value)
     Set_AnchoredPosition(vector2(m_vAnchoredPosition.x, _value));
 }
 
+const vector2 CRectTransform::Get_AnchoredSize() const
+{
+    const vector2 referenceSize = GetReferenceSize();
+    const vector2 anchorSpan = GetAnchorSpan();
+
+    return vector2
+    (
+        referenceSize.x * anchorSpan.x + m_vStaticWH.x,
+        referenceSize.y * anchorSpan.y + m_vStaticWH.y
+    );
+}
+
+void CRectTransform::Set_AnchoredSize(const vector2 _size)
+{
+    CCanvas* canvas = m_pUI ? m_pUI->Get_Canvas() : nullptr;
+
+    if (!canvas)
+        return;
+
+    const vector2 currentAnchoredPosition = m_vAnchoredPosition;
+    const vector2 referenceSize = GetReferenceSize();
+    const vector2 anchorSpan = GetAnchorSpan();
+
+    m_vStaticWH = vector2
+    (
+        _size.x - referenceSize.x * anchorSpan.x,
+        _size.y - referenceSize.y * anchorSpan.y
+    );
+    RefreshSizeFromLayout();
+    m_vAnchoredPosition = currentAnchoredPosition;
+    SyncLocalPositionFromAnchored();
+
+    Update();
+}
+
+void CRectTransform::Set_AnchoredSize(const _float _x, const _float _y)
+{
+    Set_AnchoredSize(vector2(_x, _y));
+}
+
+const vector3 CRectTransform::Get_SizeScale() const
+{
+    return m_vSizeScale;
+}
+
+void CRectTransform::Set_SizeScale(const vector3& _scale)
+{
+    m_vSizeScale = _scale;
+
+    CCanvas* canvas = m_pUI ? m_pUI->Get_Canvas() : nullptr;
+
+    if (!canvas)
+    {
+        __super::Set_LocalScale(_scale);
+        return;
+    }
+
+    const vector2 currentAnchoredPosition = m_vAnchoredPosition;
+
+    RefreshSizeFromLayout();
+    m_vAnchoredPosition = currentAnchoredPosition;
+    SyncLocalPositionFromAnchored();
+
+    Update();
+}
+
+void CRectTransform::Set_SizeScale(const _float _x, const _float _y, const _float _z)
+{
+    Set_SizeScale(vector3(_x, _y, _z));
+}
+
 const vector2 CRectTransform::Get_ScreenPosition() const
 {
     CCanvas* canvas = m_pUI ? m_pUI->Get_Canvas() : nullptr;
@@ -308,39 +542,17 @@ const vector2 CRectTransform::Get_ScreenPosition() const
     if (!canvas)
         return vector2::zero();
 
-    const _vector localPivot = XMVectorSet(m_vPivot.x - 0.5f, m_vPivot.y - 0.5f, 0.f, 1.f);
-    const _vector worldPivot = XMVector3TransformCoord(localPivot, XMLoadFloat4x4(&m_vMatWorld));
+    return ProjectRectLocalPointToScreen(*this, vector2(m_vPivot.x - 0.5f, m_vPivot.y - 0.5f));
+}
 
-    const _matrix viewMatrix = XMMatrixTranslation(-50.f, -50.f, 0.f);
+const vector2 CRectTransform::Get_ScreenCenterPosition() const
+{
+    CCanvas* canvas = m_pUI ? m_pUI->Get_Canvas() : nullptr;
 
-    const _float aspect = CDisplay::GetInstance().Get_Aspect();
-    const _float halfHeight = 7.2f * 0.5f;
-    const _float halfWidth = halfHeight * aspect;
-
-    const _matrix projMatrix = XMMatrixOrthographicOffCenterLH
-    (
-        -halfWidth, halfWidth,
-        -halfHeight, halfHeight,
-        0.f, 1.f
-    );
-
-    _vector clipPos = XMVector4Transform(worldPivot, viewMatrix);
-    clipPos = XMVector4Transform(clipPos, projMatrix);
-
-    const _float clipW = XMVectorGetW(clipPos);
-    if (fabsf(clipW) < 1e-6f)
+    if (!canvas)
         return vector2::zero();
 
-    const _float ndcX = XMVectorGetX(clipPos) / clipW;
-    const _float ndcY = XMVectorGetY(clipPos) / clipW;
-    const vector2 screenResolution = vector2(CDisplay::GetInstance().Get_ScreenResolution().x, CDisplay::GetInstance().Get_ScreenResolution().y);
-    const vector2 pivotPos
-    (
-        (ndcX * 0.5f + 0.5f) * screenResolution.x,
-        (ndcY * 0.5f + 0.5f) * screenResolution.y
-    );
-
-    return pivotPos;
+    return ProjectRectLocalPointToScreen(*this, vector2::zero());
 }
 
 const _float CRectTransform::Get_Width() const
@@ -397,6 +609,8 @@ void CRectTransform::Set_AnchorsMin(const vector2 _pivot)
 {
     const vector2 currentSize = Get_WidthHeight();
     const vector2 currentAnchoredPosition = Get_AnchoredPosition();
+    const _float sizeScaleX = (fabsf(m_vSizeScale.x) > 1e-4f) ? m_vSizeScale.x : 1.f;
+    const _float sizeScaleY = (fabsf(m_vSizeScale.y) > 1e-4f) ? m_vSizeScale.y : 1.f;
 
     m_sAnchors.min = _pivot;
 
@@ -407,8 +621,8 @@ void CRectTransform::Set_AnchorsMin(const vector2 _pivot)
 
         m_vStaticWH = vector2
         (
-            currentSize.x - referenceSize.x * anchorSpan.x,
-            currentSize.y - referenceSize.y * anchorSpan.y
+            (currentSize.x / sizeScaleX) - referenceSize.x * anchorSpan.x,
+            (currentSize.y / sizeScaleY) - referenceSize.y * anchorSpan.y
         );
         RefreshSizeFromLayout();
         m_vAnchoredPosition = currentAnchoredPosition;
@@ -427,6 +641,8 @@ void CRectTransform::Set_AnchorsMax(const vector2 _pivot)
 {
     const vector2 currentSize = Get_WidthHeight();
     const vector2 currentAnchoredPosition = Get_AnchoredPosition();
+    const _float sizeScaleX = (fabsf(m_vSizeScale.x) > 1e-4f) ? m_vSizeScale.x : 1.f;
+    const _float sizeScaleY = (fabsf(m_vSizeScale.y) > 1e-4f) ? m_vSizeScale.y : 1.f;
 
     m_sAnchors.max = _pivot;
 
@@ -437,8 +653,8 @@ void CRectTransform::Set_AnchorsMax(const vector2 _pivot)
 
         m_vStaticWH = vector2
         (
-            currentSize.x - referenceSize.x * anchorSpan.x,
-            currentSize.y - referenceSize.y * anchorSpan.y
+            (currentSize.x / sizeScaleX) - referenceSize.x * anchorSpan.x,
+            (currentSize.y / sizeScaleY) - referenceSize.y * anchorSpan.y
         );
         RefreshSizeFromLayout();
         m_vAnchoredPosition = currentAnchoredPosition;
@@ -463,11 +679,13 @@ void CRectTransform::Set_WidthHeight(const vector2 _rect)
     const vector2 currentAnchoredPosition = m_vAnchoredPosition;
     const vector2 referenceSize = GetReferenceSize();
     const vector2 anchorSpan = GetAnchorSpan();
+    const _float sizeScaleX = (fabsf(m_vSizeScale.x) > 1e-4f) ? m_vSizeScale.x : 1.f;
+    const _float sizeScaleY = (fabsf(m_vSizeScale.y) > 1e-4f) ? m_vSizeScale.y : 1.f;
 
     m_vStaticWH = vector2
     (
-        _rect.x - referenceSize.x * anchorSpan.x,
-        _rect.y - referenceSize.y * anchorSpan.y
+        (_rect.x / sizeScaleX) - referenceSize.x * anchorSpan.x,
+        (_rect.y / sizeScaleY) - referenceSize.y * anchorSpan.y
     );
     RefreshSizeFromLayout();
     m_vAnchoredPosition = currentAnchoredPosition;
@@ -523,7 +741,7 @@ vector2 CRectTransform::GetReferenceSize() const
     if (!canvas)
         return vector2::zero();
 
-    return vector2(canvas->Get_Transform()->Get_LocalScale().x, canvas->Get_Transform()->Get_LocalScale().y) * 100.f;
+    return vector2(canvas->GetTransform()->Get_LocalScale().x, canvas->GetTransform()->Get_LocalScale().y) * 100.f;
 }
 
 vector2 CRectTransform::GetAnchorSpan() const
@@ -546,12 +764,15 @@ void CRectTransform::RefreshSizeFromLayout()
 {
     const vector2 referenceSize = GetReferenceSize();
     const vector2 anchorSpan = GetAnchorSpan();
+    const _float baseWidth = referenceSize.x * anchorSpan.x + m_vStaticWH.x;
+    const _float baseHeight = referenceSize.y * anchorSpan.y + m_vStaticWH.y;
 
-    m_fWidth = referenceSize.x * anchorSpan.x + m_vStaticWH.x;
-    m_fHeight = referenceSize.y * anchorSpan.y + m_vStaticWH.y;
+    m_fWidth = baseWidth * m_vSizeScale.x;
+    m_fHeight = baseHeight * m_vSizeScale.y;
 
     m_vScale.x = (referenceSize.x != 0.f) ? (m_fWidth / referenceSize.x) : 0.f;
     m_vScale.y = (referenceSize.y != 0.f) ? (m_fHeight / referenceSize.y) : 0.f;
+    m_vScale.z = m_vSizeScale.z;
     m_vAnchoredScale = vector2(m_fWidth * 0.01f, m_fHeight * 0.01f);
 }
 
@@ -588,6 +809,7 @@ _bool CRectTransform::NeedsDefaultLayoutInitialization() const
     return m_vAnchoredPosition == vector2::zero()
         && m_vAnchoredScale == vector2::zero()
         && m_vStaticWH == vector2::zero()
+        && m_vSizeScale == vector3::one()
         && m_fWidth == 0.f
         && m_fHeight == 0.f
         && m_sAnchors.min == vector2::one() * 0.5f

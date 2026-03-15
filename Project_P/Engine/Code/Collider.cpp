@@ -64,8 +64,8 @@ HRESULT CCollider::Initialize()
 void CCollider::Awake()
 {
 	m_vCachedShapeWorldScale = GetWorldScale();
-	m_vCachedWorldPosition = m_pGameObject->Get_Transform()->Get_Position();
-	m_vCachedWorldRotation = m_pGameObject->Get_Transform()->Get_Quaternion();
+	m_vCachedWorldPosition = m_pGameObject->GetTransform()->Get_Position();
+	m_vCachedWorldRotation = m_pGameObject->GetTransform()->Get_Quaternion();
 	RefreshStandaloneBody();
 }
 
@@ -101,8 +101,8 @@ void CCollider::Update()
 			m_pRigidBody->MarkBodyDirty();
 	}
 
-	const vector3 pos = m_pGameObject->Get_Transform()->Get_Position();
-	const quaternion rot = m_pGameObject->Get_Transform()->Get_Quaternion();
+	const vector3 pos = m_pGameObject->GetTransform()->Get_Position();
+	const quaternion rot = m_pGameObject->GetTransform()->Get_Quaternion();
 
 	const _float dpx = fabsf(pos.x - m_vCachedWorldPosition.x);
 	const _float dpy = fabsf(pos.y - m_vCachedWorldPosition.y);
@@ -208,7 +208,7 @@ _float4 CCollider::GetGizmoColor() const
 
 vector3 CCollider::GetWorldScale()
 {
-	CTransform* transform = Get_Transform();
+	CTransform* transform = GetTransform();
 	if (!transform)
 		return vector3::one();
 
@@ -297,7 +297,7 @@ void CCollider::CreateStandaloneBody()
 
 	Vec3 pos;
 	Quat rot;
-	DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
+	DecomposeWorldMatrix(GetTransform()->Get_WorldMatrix(), pos, rot);
 
 	const CPhysics::CollisionObjectType layerType = m_bIsTrigger
 		? CPhysics::CollisionObjectType::Sensor
@@ -351,7 +351,7 @@ void CCollider::SyncStandaloneBodyTransform()
 
 	Vec3 pos;
 	Quat rot;
-	DecomposeWorldMatrix(Get_Transform()->Get_WorldMatrix(), pos, rot);
+	DecomposeWorldMatrix(GetTransform()->Get_WorldMatrix(), pos, rot);
 
 	BodyInterface& bodyInterface = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
 	bodyInterface.SetPositionAndRotation(m_iStandaloneBodyID, RVec3(pos), rot, EActivation::Activate);

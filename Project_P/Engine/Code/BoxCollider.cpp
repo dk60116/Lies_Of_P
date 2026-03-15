@@ -145,7 +145,7 @@ void CBoxCollider::Render_Gizmo()
         XMVectorSet(-hx, hy, hz, 1.f)
     };
 
-    const _matrix objectWorld = Get_Transform()->Get_WorldMatrix();
+    const _matrix objectWorld = GetTransform()->Get_WorldMatrix();
     const _matrix centerOffset = XMMatrixTranslation(m_vCenter.x, m_vCenter.y, m_vCenter.z);
     const _matrix world = centerOffset * objectWorld;
 

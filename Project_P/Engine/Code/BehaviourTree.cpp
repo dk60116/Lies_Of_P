@@ -150,8 +150,8 @@ void CBehaviourTree::RefreshContext()
 	if (!m_tContext.owner || !m_tContext.target)
 		return;
 
-	CTransform* ownerTransform = m_tContext.owner->Get_Transform();
-	CTransform* targetTransform = m_tContext.target->Get_Transform();
+	CTransform* ownerTransform = m_tContext.owner->GetTransform();
+	CTransform* targetTransform = m_tContext.target->GetTransform();
 	if (!ownerTransform || !targetTransform)
 		return;
 

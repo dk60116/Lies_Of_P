@@ -66,9 +66,9 @@ HRESULT CCanvas::Initialize()
 
 	if (m_eRenderMode == RenderMode::ScreenSpace_Overlay)
 	{
-		Get_Transform()->Set_Position(10.f, 10.f, 0.f);
-		Get_Transform()->Set_EulerAngles(vector3::zero());
-		Get_Transform()->Set_LocalScale(resolution.x * 0.01f, resolution.y * 0.01f, 1.f);
+		GetTransform()->Set_Position(10.f, 10.f, 0.f);
+		GetTransform()->Set_EulerAngles(vector3::zero());
+		GetTransform()->Set_LocalScale(resolution.x * 0.01f, resolution.y * 0.01f, 1.f);
 	}
 
 	return S_OK;
@@ -83,9 +83,9 @@ void CCanvas::OnPreRender_Editor()
 	
 	if (m_eRenderMode == RenderMode::ScreenSpace_Overlay)
 	{
-		Get_Transform()->Set_Position(50.f, 50.f, 0.f);
-		Get_Transform()->Set_EulerAngles(vector3::zero());
-		Get_Transform()->Set_LocalScale(resolution.x * 0.01f, resolution.y * 0.01f, 1.f);
+		GetTransform()->Set_Position(50.f, 50.f, 0.f);
+		GetTransform()->Set_EulerAngles(vector3::zero());
+		GetTransform()->Set_LocalScale(resolution.x * 0.01f, resolution.y * 0.01f, 1.f);
 	}
 }
 
@@ -96,9 +96,9 @@ void CCanvas::Render_Editor()
 	if (!cam)
 		return;
 
-	vector3 cPos = cam->Get_Transform()->Get_Position();
+	vector3 cPos = cam->GetTransform()->Get_Position();
 	_float3 camPos = cPos.toFloat3();
-	_matrix matWorld = Get_Transform()->Get_WorldMatrix();
+	_matrix matWorld = GetTransform()->Get_WorldMatrix();
 	_matrix matView = cam->GetViewMatrix();
 	_matrix matProj = cam->GetProjectionMatrix();
 
@@ -111,7 +111,7 @@ void CCanvas::Render_Editor()
 	if (m_pRectGizmoMesh)
 		m_pRectGizmoMesh->Render();
 
-	CollectCanvasUIInHierarchyOrder(Get_Transform(), this, cam);
+	CollectCanvasUIInHierarchyOrder(GetTransform(), this, cam);
 }
 
 void CCanvas::OnPostRender_Editor()
@@ -128,7 +128,7 @@ void CCanvas::Render()
 	if (!camera)
 		return;
 
-	CollectCanvasUIInHierarchyOrder(Get_Transform(), this, camera);
+	CollectCanvasUIInHierarchyOrder(GetTransform(), this, camera);
 }
 
 void CCanvas::OnDestroy()

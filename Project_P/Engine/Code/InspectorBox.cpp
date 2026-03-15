@@ -1168,7 +1168,7 @@ void CInspectorBox::Render()
                 string optionId = string(option.label) + "##" + to_string(selectedObj->Get_UniqueID());
                 if (ImGui::Checkbox(optionId.c_str(), &enabled))
                 {
-                    CTransform* transform = selectedObj->Get_Transform();
+                    CTransform* transform = selectedObj->GetTransform();
                     const _bool hasChildren = transform && !transform->Get_ChldList().empty();
 
                     if (hasChildren)
@@ -1335,7 +1335,7 @@ void CInspectorBox::OnDestroy()
 
 void CInspectorBox::ShowTransform(CGameObject* _obj)
 {
-    CTransform* transform = _obj->Get_Transform();
+    CTransform* transform = _obj->GetTransform();
 
     if (transform)
     {
@@ -1490,7 +1490,7 @@ void CInspectorBox::ShowTransform(CGameObject* _obj)
 
 void CInspectorBox::ShowRectTransform(CGameObject* _obj)
 {
-    CRectTransform* rectTransform = dynamic_cast<CRectTransform*>(_obj->Get_Transform());
+    CRectTransform* rectTransform = dynamic_cast<CRectTransform*>(_obj->GetTransform());
 
     if (rectTransform)
     {
@@ -1532,36 +1532,32 @@ void CInspectorBox::ShowRectTransform(CGameObject* _obj)
             ImGui::EndTable();
         }
 
-        _float width = rectTransform->Get_Width();
-        _float height = rectTransform->Get_Height();
-        if (ImGui::BeginTable("Rotation Table", 2, ImGuiTableFlags_BordersInnerV))
+        vector2 anchoredSize = rectTransform->Get_AnchoredSize();
+        if (ImGui::BeginTable("Anchored Size Table", 2, ImGuiTableFlags_BordersInnerV))
         {
             ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, LabelWidth);
             ImGui::TableSetupColumn("Value");
 
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Size");
             ImGui::TableSetColumnIndex(1);
 
-            // X
-            ImGui::TextUnformatted("Width"); 
+            ImGui::TextUnformatted("Width");
             ImGui::SameLine();
             ImGui::PushItemWidth(boxWidth);
-            if (ImGui::InputFloat("##Width", &width, 0.f))
-                rectTransform->Set_WidthHeight(vector2(width, height));
+            if (ImGui::InputFloat("##AnchoredWidth", &anchoredSize.x, 0.f))
+                rectTransform->Set_AnchoredSize(anchoredSize);
             ImGui::PopItemWidth();
 
             ImGui::SameLine();
 
-            // Y
-            ImGui::TextUnformatted("Height"); 
+            ImGui::TextUnformatted("Height");
             ImGui::SameLine();
             ImGui::PushItemWidth(boxWidth);
-            if (ImGui::InputFloat("##Height", &height, 0.f))
-                rectTransform->Set_WidthHeight(vector2(width, height));
+            if (ImGui::InputFloat("##AnchoredHeight", &anchoredSize.y, 0.f))
+                rectTransform->Set_AnchoredSize(anchoredSize);
             ImGui::PopItemWidth();
-
-            ImGui::SameLine();
 
             ImGui::EndTable();
         }
@@ -1642,6 +1638,45 @@ void CInspectorBox::ShowRectTransform(CGameObject* _obj)
             ImGui::PopItemWidth();
 
             ImGui::TreePop();
+        }
+
+        _float3 scale = rectTransform->Get_SizeScale();
+        if (ImGui::BeginTable("Scale Table", 2, ImGuiTableFlags_BordersInnerV))
+        {
+            ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, LabelWidth);
+            ImGui::TableSetupColumn("Value");
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Scale");
+            ImGui::TableSetColumnIndex(1);
+
+            ImGui::TextUnformatted("X");
+            ImGui::SameLine();
+            ImGui::PushItemWidth(boxWidth);
+            if (ImGui::InputFloat("##ScaleX", &scale.x, 0.f))
+                rectTransform->Set_SizeScale(scale);
+            ImGui::PopItemWidth();
+
+            ImGui::SameLine();
+
+            ImGui::TextUnformatted("Y");
+            ImGui::SameLine();
+            ImGui::PushItemWidth(boxWidth);
+            if (ImGui::InputFloat("##ScaleY", &scale.y, 0.f))
+                rectTransform->Set_SizeScale(scale);
+            ImGui::PopItemWidth();
+
+            ImGui::SameLine();
+
+            ImGui::TextUnformatted("Z");
+            ImGui::SameLine();
+            ImGui::PushItemWidth(boxWidth);
+            if (ImGui::InputFloat("##ScaleZ", &scale.z, 0.f))
+                rectTransform->Set_SizeScale(scale);
+            ImGui::PopItemWidth();
+
+            ImGui::EndTable();
         }
 
         vector3 rotation = rectTransform->Get_LocalEulerAngles();
@@ -2059,6 +2094,58 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 ImGui::Text("Current Polygon: %d", navMeshAgent->GetCurrentPolygonIndex());
                 ImGui::Text("Path Points: %d", navMeshAgent->GetPathPointCount());
                 ImGui::Text("Resolved Destination: (%.2f, %.2f, %.2f)", resolvedDestination.x, resolvedDestination.y, resolvedDestination.z);
+            }
+
+            if (CText* text = dynamic_cast<CText*>(component))
+            {
+                static const char* horizontalLabels[] = { "Left", "Center", "Right", "Justified", "Flush" };
+                static const char* verticalLabels[] = { "Top", "Middle", "Bottom" };
+
+                const string textId = to_string(reinterpret_cast<uintptr_t>(text));
+
+                if (CFont* font = text->GetFont())
+                {
+                    const string fontName = CEngineString::WStringToString(font->Get_ResourceName());
+                    ImGui::Text("Font: %s", fontName.empty() ? "None" : fontName.c_str());
+                }
+                else
+                {
+                    ImGui::TextUnformatted("Font: None");
+                }
+
+                string content = CEngineString::WStringToString(text->GetText());
+                if (ImGui::InputTextMultiline(("Text##" + textId).c_str(), &content, ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 6.f)))
+                    text->SetText(content);
+
+                _float fontSize = text->GetFontSize();
+                if (ImGui::DragFloat(("Font Size##" + textId).c_str(), &fontSize, 0.1f, 0.1f, 1000.f, "%.2f"))
+                    text->SetFontSize(fontSize);
+
+                _int horizontalIndex = static_cast<_int>(text->GetAligmentHorizontal());
+                if (ImGui::Combo(("Horizontal##" + textId).c_str(), &horizontalIndex, horizontalLabels, IM_ARRAYSIZE(horizontalLabels)))
+                    text->SetAligmentHorizontal(static_cast<CText::TextAligmentHorizontal>(horizontalIndex));
+
+                _int verticalIndex = static_cast<_int>(text->GetAligmentVertical());
+                if (ImGui::Combo(("Vertical##" + textId).c_str(), &verticalIndex, verticalLabels, IM_ARRAYSIZE(verticalLabels)))
+                    text->SetAligmentVertical(static_cast<CText::TexAligmentVertical>(verticalIndex));
+
+                ColorValue colorValue = text->GetColor();
+                _float textColor[4] =
+                {
+                    colorValue.r / 255.f,
+                    colorValue.g / 255.f,
+                    colorValue.b / 255.f,
+                    colorValue.a / 255.f
+                };
+
+                if (ImGui::ColorEdit4(("Color##" + textId).c_str(), textColor))
+                {
+                    text->SetColor(ColorValue(
+                        static_cast<BYTE>(std::clamp(textColor[0], 0.f, 1.f) * 255.f),
+                        static_cast<BYTE>(std::clamp(textColor[1], 0.f, 1.f) * 255.f),
+                        static_cast<BYTE>(std::clamp(textColor[2], 0.f, 1.f) * 255.f),
+                        static_cast<BYTE>(std::clamp(textColor[3], 0.f, 1.f) * 255.f)));
+                }
             }
 
             if (CBoxCollider* boxCollider = dynamic_cast<CBoxCollider*>(component))
@@ -2748,7 +2835,7 @@ void CInspectorBox::RenderAnimatorComponent(CGameObject* _obj, CAnimator* _anima
 
     _bool applyRootMotion = _animator->ApplyRootmotion();
     if (ImGui::Checkbox(("Apply Root Motion##" + animatorId).c_str(), &applyRootMotion))
-        _animator->SetApplyRootmotion(applyRootMotion, applyRootMotion ? _obj->Get_Transform() : nullptr);
+        _animator->SetApplyRootmotion(applyRootMotion, applyRootMotion ? _obj->GetTransform() : nullptr);
 
     _float playbackSpeed = _animator->Get_PlaybackSpeed();
     if (ImGui::InputFloat(("Playback Speed##" + animatorId).c_str(), &playbackSpeed, 0.1f, 1.f, "%.3f"))

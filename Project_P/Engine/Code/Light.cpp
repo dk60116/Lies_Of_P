@@ -136,8 +136,8 @@ const _float4x4 CLight::To_LightInfo()
 {
 	_float4x4 result = {};
 
-	const vector3 pos = Get_Transform()->Get_Position();
-	vector3 dir = Get_Transform()->Get_Directions().forward;
+	const vector3 pos = GetTransform()->Get_Position();
+	vector3 dir = GetTransform()->Get_Directions().forward;
 	dir = dir.normalized();
 	const vector3 color = m_vDiffuseColor.f3Color();
 
@@ -179,13 +179,13 @@ void CLight::BuildDirectionalShadow(CCamera* _cam, _float _shadowDistance, Shado
 	if (!_cam)
 		return;
 
-	vector3 camPos = _cam->Get_Transform()->Get_Position();
-	vector3 camFwd = _cam->Get_Transform()->Get_Directions().forward;
+	vector3 camPos = _cam->GetTransform()->Get_Position();
+	vector3 camFwd = _cam->GetTransform()->Get_Directions().forward;
 	camFwd = camFwd.normalized();
 
 	vector3 center = camPos + camFwd * (_shadowDistance * 0.5f);
 
-	vector3 lightDir = Get_Transform()->Get_Directions().forward;
+	vector3 lightDir = GetTransform()->Get_Directions().forward;
 	lightDir = lightDir.normalized();
 
 	vector3 lightPos = center - lightDir * _shadowDistance;

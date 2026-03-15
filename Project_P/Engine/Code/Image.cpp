@@ -56,7 +56,7 @@ void CImage::Render_Editor()
 		return;
 
 	_float3 camPos = _float3();
-	_matrix matWorld = Get_Transform()->Get_WorldMatrix();
+	_matrix matWorld = GetTransform()->Get_WorldMatrix();
 	_matrix matView = cam->GetViewMatrix();
 	_matrix matProj = cam->GetProjectionMatrix();
 

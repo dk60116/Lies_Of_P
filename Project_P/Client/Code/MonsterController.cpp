@@ -148,8 +148,8 @@ void CMonsterController::Refresh_Target()
 		return;
 	}
 
-	CTransform* monsterTransform = m_pMonster->Get_Transform();
-	CTransform* playerTransform = player->Get_Transform();
+	CTransform* monsterTransform = m_pMonster->GetTransform();
+	CTransform* playerTransform = player->GetTransform();
 	if (!monsterTransform || !playerTransform)
 	{
 		m_bHasTarget = false;

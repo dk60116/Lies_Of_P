@@ -44,10 +44,10 @@ namespace
 
 		if (parent)
 		{
-			newObject->Get_Transform()->SetParent(parent->Get_Transform());
-			newObject->Get_Transform()->Set_LocalPosition(vector3::zero());
-			newObject->Get_Transform()->Set_LocalQuaternion(quaternion::identity());
-			newObject->Get_Transform()->Set_LocalScale(1.f);
+			newObject->GetTransform()->SetParent(parent->GetTransform());
+			newObject->GetTransform()->Set_LocalPosition(vector3::zero());
+			newObject->GetTransform()->Set_LocalQuaternion(quaternion::identity());
+			newObject->GetTransform()->Set_LocalScale(1.f);
 		}
 
 		CEditor::GetInstance().Set_SelectedGameObject(newObject);
@@ -201,7 +201,7 @@ void CHierachyBox::Render()
 						CGameObject* droppedObject = *reinterpret_cast<CGameObject* const*>(payload->Data);
 						if (droppedObject)
 						{
-							if (CTransform* droppedTransform = droppedObject->Get_Transform())
+							if (CTransform* droppedTransform = droppedObject->GetTransform())
 								droppedTransform->SetParent(nullptr);
 						}
 					}
@@ -250,7 +250,7 @@ bool CHierachyBox::ObjectMatchesFilter(CGameObject* _obj, const std::string& fil
 	if (name.find(filterLower) != string::npos)
 		return true;
 
-	for (auto* child : _obj->Get_Transform()->Get_ChldList())
+	for (auto* child : _obj->GetTransform()->Get_ChldList())
 	{
 		if (ObjectMatchesFilter(child->Get_GameObject(), filterLower))
 			return true;
@@ -264,7 +264,7 @@ bool CHierachyBox::IsAncestorOfSelected(CGameObject* _obj, CGameObject* selected
 	if (!_obj || !selected)
 		return false;
 
-	CTransform* parent = selected->Get_Transform()->Get_Parent();
+	CTransform* parent = selected->GetTransform()->Get_Parent();
 
 	while (parent)
 	{
@@ -318,11 +318,11 @@ bool CHierachyBox::TryInsertObject(CGameObject* _droppedObject, CTransform* _tar
 	if (_beforeObject == _droppedObject)
 		return false;
 
-	CTransform* droppedTransform = _droppedObject->Get_Transform();
+	CTransform* droppedTransform = _droppedObject->GetTransform();
 	if (!droppedTransform)
 		return false;
 
-	CTransform* beforeTransform = _beforeObject ? _beforeObject->Get_Transform() : nullptr;
+	CTransform* beforeTransform = _beforeObject ? _beforeObject->GetTransform() : nullptr;
 
 	if (_targetParent)
 	{
@@ -381,7 +381,7 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filte
 	if (filterActive && !matchesFilter)
 		return;
 
-	_bool hasChildren = !_obj->Get_Transform()->Get_ChldList().empty();
+	_bool hasChildren = !_obj->GetTransform()->Get_ChldList().empty();
 
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow;
 
@@ -419,8 +419,8 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filte
 				CGameObject* droppedObject = *reinterpret_cast<CGameObject* const*>(payload->Data);
 				if (droppedObject && droppedObject != _obj)
 				{
-					CTransform* droppedTransform = droppedObject->Get_Transform();
-					CTransform* targetTransform = _obj->Get_Transform();
+					CTransform* droppedTransform = droppedObject->GetTransform();
+					CTransform* targetTransform = _obj->GetTransform();
 					if (droppedTransform && targetTransform && !IsAncestorTransform(droppedTransform, targetTransform))
 						droppedTransform->SetParent(targetTransform);
 				}
@@ -468,16 +468,16 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filte
 
 	if (hasChildren && nodeOpen)
 	{
-		for (auto* child : _obj->Get_Transform()->Get_ChldList())
+		for (auto* child : _obj->GetTransform()->Get_ChldList())
 		{
 			if (!filterActive)
-				RenderInsertionDropZone(_obj->Get_Transform(), child->Get_GameObject());
+				RenderInsertionDropZone(_obj->GetTransform(), child->Get_GameObject());
 
 			RenderObjectHierarchy(child->Get_GameObject(), _filterLower);
 		}
 
 		if (!filterActive)
-			RenderInsertionDropZone(_obj->Get_Transform(), nullptr);
+			RenderInsertionDropZone(_obj->GetTransform(), nullptr);
 
 		ImGui::TreePop();
 	}

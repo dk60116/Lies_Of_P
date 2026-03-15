@@ -51,7 +51,7 @@ void CEditorCamera::Update_Editor()
 	const _bool isCtrl = CInput::GetInstance().GetKey_Editor(CONTROL);
 	const _bool wantsMouse = ImGui::GetIO().WantCaptureMouse;
 
-	CTransform& camTransform = *Get_Transform();
+	CTransform& camTransform = *GetTransform();
 
 	if (m_bMoving)
 	{
@@ -68,7 +68,7 @@ void CEditorCamera::Update_Editor()
 		float smoothT = t * t * (3.f - 2.f * t);
 
 		_vector newPos = XMVectorLerp(moveFrom, moveTo, smoothT);
-		Get_Transform()->Add_Position(vector3(newPos));
+		GetTransform()->Add_Position(vector3(newPos));
 	}
 	else
 	{
