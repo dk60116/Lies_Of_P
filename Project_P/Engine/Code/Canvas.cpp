@@ -96,21 +96,6 @@ void CCanvas::Render_Editor()
 	if (!cam)
 		return;
 
-	vector3 cPos = cam->GetTransform()->Get_Position();
-	_float3 camPos = cPos.toFloat3();
-	_matrix matWorld = GetTransform()->Get_WorldMatrix();
-	_matrix matView = cam->GetViewMatrix();
-	_matrix matProj = cam->GetProjectionMatrix();
-
-	if (m_pLineMat)
-	{
-		m_pLineMat->Bind_Matrix(matWorld);
-		m_pLineMat->Bind_Camera(camPos, matView, matProj, 0);
-	}
-
-	if (m_pRectGizmoMesh)
-		m_pRectGizmoMesh->Render();
-
 	CollectCanvasUIInHierarchyOrder(GetTransform(), this, cam);
 }
 

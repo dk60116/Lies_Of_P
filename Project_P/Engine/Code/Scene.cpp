@@ -1252,6 +1252,8 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		if (dynamic_cast<CCanvas*>(component)) return L"Canvas";
 		if (dynamic_cast<CImage*>(component)) return L"Image";
 		if (dynamic_cast<CText*>(component)) return L"Text";
+		if (dynamic_cast<CHorizontalLayoutGroup*>(component)) return L"HorizontalLayoutGroup";
+		if (dynamic_cast<CVerticalLayoutGroup*>(component)) return L"VerticalLayoutGroup";
 		if (dynamic_cast<CTerrain*>(component)) return L"Terrain";
 		if (dynamic_cast<CUI*>(component)) return L"UI";
 		if (dynamic_cast<CRigidBody*>(component)) return L"RigidBody";
@@ -1338,6 +1340,40 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			rectInfo.anchorMax = rect->Get_Anchors().max;
 
 			info.rectInfo = rectInfo;
+		}
+
+		if (CHorizontalLayoutGroup* horizontalLayout = (*it)->GetComponent<CHorizontalLayoutGroup>())
+		{
+			info.horizontalLayoutGroupInfo.hasHorizontalLayoutGroup = true;
+
+			const CLayoutGroup::Padding& padding = horizontalLayout->GetPadding();
+			info.horizontalLayoutGroupInfo.paddingLeft = padding.left;
+			info.horizontalLayoutGroupInfo.paddingRight = padding.right;
+			info.horizontalLayoutGroupInfo.paddingTop = padding.top;
+			info.horizontalLayoutGroupInfo.paddingBottom = padding.bottom;
+			info.horizontalLayoutGroupInfo.spacing = horizontalLayout->GetSpacing();
+			info.horizontalLayoutGroupInfo.childAlignment = static_cast<_int>(horizontalLayout->GetChildAlignment());
+			info.horizontalLayoutGroupInfo.controlChildSizeWidth = horizontalLayout->GetControlChildSizeWidth();
+			info.horizontalLayoutGroupInfo.controlChildSizeHeight = horizontalLayout->GetControlChildSizeHeight();
+			info.horizontalLayoutGroupInfo.forceExpandWidth = horizontalLayout->GetForceExpandWidth();
+			info.horizontalLayoutGroupInfo.forceExpandHeight = horizontalLayout->GetForceExpandHeight();
+		}
+
+		if (CVerticalLayoutGroup* verticalLayout = (*it)->GetComponent<CVerticalLayoutGroup>())
+		{
+			info.verticalLayoutGroupInfo.hasVerticalLayoutGroup = true;
+
+			const CLayoutGroup::Padding& padding = verticalLayout->GetPadding();
+			info.verticalLayoutGroupInfo.paddingLeft = padding.left;
+			info.verticalLayoutGroupInfo.paddingRight = padding.right;
+			info.verticalLayoutGroupInfo.paddingTop = padding.top;
+			info.verticalLayoutGroupInfo.paddingBottom = padding.bottom;
+			info.verticalLayoutGroupInfo.spacing = verticalLayout->GetSpacing();
+			info.verticalLayoutGroupInfo.childAlignment = static_cast<_int>(verticalLayout->GetChildAlignment());
+			info.verticalLayoutGroupInfo.controlChildSizeWidth = verticalLayout->GetControlChildSizeWidth();
+			info.verticalLayoutGroupInfo.controlChildSizeHeight = verticalLayout->GetControlChildSizeHeight();
+			info.verticalLayoutGroupInfo.forceExpandWidth = verticalLayout->GetForceExpandWidth();
+			info.verticalLayoutGroupInfo.forceExpandHeight = verticalLayout->GetForceExpandHeight();
 		}
 
 		for (CComponent* component : (*it)->Get_ComponentList())
@@ -1463,6 +1499,8 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			if (componentName == L"Canvas" && dynamic_cast<CCanvas*>(component)) return true;
 			if (componentName == L"Image" && dynamic_cast<CImage*>(component)) return true;
 			if (componentName == L"Text" && dynamic_cast<CText*>(component)) return true;
+			if (componentName == L"HorizontalLayoutGroup" && dynamic_cast<CHorizontalLayoutGroup*>(component)) return true;
+			if (componentName == L"VerticalLayoutGroup" && dynamic_cast<CVerticalLayoutGroup*>(component)) return true;
 			if (componentName == L"Terrain" && dynamic_cast<CTerrain*>(component)) return true;
 			if (componentName == L"UI" && dynamic_cast<CUI*>(component)) return true;
 			if (componentName == L"RigidBody" && dynamic_cast<CRigidBody*>(component)) return true;
@@ -1491,6 +1529,8 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		else if (componentName == L"Canvas") obj->AddComponent<CCanvas>();
 		else if (componentName == L"Image") obj->AddComponent<CImage>();
 		else if (componentName == L"Text") obj->AddComponent<CText>();
+		else if (componentName == L"HorizontalLayoutGroup") obj->AddComponent<CHorizontalLayoutGroup>();
+		else if (componentName == L"VerticalLayoutGroup") obj->AddComponent<CVerticalLayoutGroup>();
 		else if (componentName == L"Terrain") obj->AddComponent<CTerrain>();
 		else if (componentName == L"UI") obj->AddComponent<CUI>();
 		else if (componentName == L"RigidBody") obj->AddComponent<CRigidBody>();
@@ -1613,6 +1653,58 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
             }
         }
 
+		if (info.horizontalLayoutGroupInfo.hasHorizontalLayoutGroup)
+		{
+			if (CHorizontalLayoutGroup* horizontalLayout = obj->GetComponent<CHorizontalLayoutGroup>())
+			{
+				horizontalLayout->SetPadding
+				(
+					info.horizontalLayoutGroupInfo.paddingLeft,
+					info.horizontalLayoutGroupInfo.paddingRight,
+					info.horizontalLayoutGroupInfo.paddingTop,
+					info.horizontalLayoutGroupInfo.paddingBottom
+				);
+				horizontalLayout->SetSpacing(info.horizontalLayoutGroupInfo.spacing);
+				horizontalLayout->SetChildAlignment(static_cast<CLayoutGroup::ChildAlignment>(info.horizontalLayoutGroupInfo.childAlignment));
+				horizontalLayout->SetControlChildSize
+				(
+					info.horizontalLayoutGroupInfo.controlChildSizeWidth,
+					info.horizontalLayoutGroupInfo.controlChildSizeHeight
+				);
+				horizontalLayout->SetForceExpand
+				(
+					info.horizontalLayoutGroupInfo.forceExpandWidth,
+					info.horizontalLayoutGroupInfo.forceExpandHeight
+				);
+			}
+		}
+
+		if (info.verticalLayoutGroupInfo.hasVerticalLayoutGroup)
+		{
+			if (CVerticalLayoutGroup* verticalLayout = obj->GetComponent<CVerticalLayoutGroup>())
+			{
+				verticalLayout->SetPadding
+				(
+					info.verticalLayoutGroupInfo.paddingLeft,
+					info.verticalLayoutGroupInfo.paddingRight,
+					info.verticalLayoutGroupInfo.paddingTop,
+					info.verticalLayoutGroupInfo.paddingBottom
+				);
+				verticalLayout->SetSpacing(info.verticalLayoutGroupInfo.spacing);
+				verticalLayout->SetChildAlignment(static_cast<CLayoutGroup::ChildAlignment>(info.verticalLayoutGroupInfo.childAlignment));
+				verticalLayout->SetControlChildSize
+				(
+					info.verticalLayoutGroupInfo.controlChildSizeWidth,
+					info.verticalLayoutGroupInfo.controlChildSizeHeight
+				);
+				verticalLayout->SetForceExpand
+				(
+					info.verticalLayoutGroupInfo.forceExpandWidth,
+					info.verticalLayoutGroupInfo.forceExpandHeight
+				);
+			}
+		}
+
 		auto getComponentPersistName = [](CComponent* component) -> wstring
 		{
 			if (!component)
@@ -1627,6 +1719,8 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			if (dynamic_cast<CCanvas*>(component)) return L"Canvas";
 			if (dynamic_cast<CImage*>(component)) return L"Image";
 			if (dynamic_cast<CText*>(component)) return L"Text";
+			if (dynamic_cast<CHorizontalLayoutGroup*>(component)) return L"HorizontalLayoutGroup";
+			if (dynamic_cast<CVerticalLayoutGroup*>(component)) return L"VerticalLayoutGroup";
 			if (dynamic_cast<CTerrain*>(component)) return L"Terrain";
 			if (dynamic_cast<CUI*>(component)) return L"UI";
 			if (dynamic_cast<CRigidBody*>(component)) return L"RigidBody";
@@ -3335,8 +3429,6 @@ ID3D11BlendState* CScene::Get_NoneBlendingState() const
 {
 	return m_pNoneBlendingState;
 }
-
-
 
 
 

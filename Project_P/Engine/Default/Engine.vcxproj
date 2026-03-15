@@ -171,6 +171,9 @@ call copy.bat</Command>
     <ClInclude Include="..\Header\BTSelector.h" />
     <ClInclude Include="..\Header\BTSequence.h" />
     <ClInclude Include="..\Header\CColliderManager.h" />
+    <ClInclude Include="..\Header\GridLayoutGroup.h" />
+    <ClInclude Include="..\Header\HorizontalLayoutGroup.h" />
+    <ClInclude Include="..\Header\LayoutGroup.h" />
     <ClInclude Include="..\Header\MeshCollider.h" />
     <ClInclude Include="..\Header\NaviMeshAgent.h" />
     <ClInclude Include="..\Header\SphereCollider.h" />
@@ -234,6 +237,7 @@ call copy.bat</Command>
     <ClInclude Include="..\Header\MeshBuffer.h" />
     <ClInclude Include="..\Header\UI.h" />
     <ClInclude Include="..\Header\UIManager.h" />
+    <ClInclude Include="..\Header\VerticalLayoutGroup.h" />
     <ClInclude Include="epch.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
@@ -253,6 +257,9 @@ call copy.bat</Command>
     <ClCompile Include="..\Code\BTSelector.cpp" />
     <ClCompile Include="..\Code\BTSequence.cpp" />
     <ClCompile Include="..\Code\CColliderManager.cpp" />
+    <ClCompile Include="..\Code\GridLayoutGroup.cpp" />
+    <ClCompile Include="..\Code\HorizontalLayoutGroup.cpp" />
+    <ClCompile Include="..\Code\LayoutGroup.cpp" />
     <ClCompile Include="..\Code\MeshCollider.cpp" />
     <ClCompile Include="..\Code\NaviMeshAgent.cpp" />
     <ClCompile Include="..\Code\SphereCollider.cpp" />
@@ -358,6 +365,7 @@ call copy.bat</Command>
     <ClCompile Include="..\Code\MeshBuffer.cpp" />
     <ClCompile Include="..\Code\UI.cpp" />
     <ClCompile Include="..\Code\UIManager.cpp" />
+    <ClCompile Include="..\Code\VerticalLayoutGroup.cpp" />
     <ClCompile Include="..\Code\WICTextureLoader.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -460,5 +468,3 @@ call copy.bat</Command>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
-
-

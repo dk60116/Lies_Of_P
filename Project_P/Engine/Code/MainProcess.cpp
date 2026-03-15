@@ -100,6 +100,10 @@ void CMainProcess::Update_MainApp()
 			scene->Update();
 			scene->LateUpdate();
 		}
+		else
+		{
+			scene->LateUpdateEditor();
+		}
 
 		graphicDev.Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
 		scene->Render_Game();

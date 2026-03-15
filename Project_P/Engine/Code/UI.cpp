@@ -51,11 +51,16 @@ HRESULT CUI::Initialize()
 
 	if (!m_pRectTransform)
 	{
-		m_pRectTransform = m_pGameObject->AddComponent<CRectTransform>();
+		m_pRectTransform = m_pGameObject->GetComponent<CRectTransform>();
+
+		if (!m_pRectTransform)
+			m_pRectTransform = m_pGameObject->AddComponent<CRectTransform>();
 
 		if (m_pRectTransform)
 		{
-			m_pGameObject->Set_Transform(m_pRectTransform);
+			if (m_pGameObject->GetTransform() != m_pRectTransform)
+				m_pGameObject->Set_Transform(m_pRectTransform);
+
 			m_pRectTransform->Set_UI(this);
 			m_pRectTransform->AddRef();
 		}
@@ -73,15 +78,25 @@ HRESULT CUI::Initialize()
 void CUI::OnDestroy()
 {
 	Safe_Release(m_pRectGizmoMesh);
+	m_pRectGizmoMesh = nullptr;
+
 	Safe_Release(m_pLineMat);
+	m_pLineMat = nullptr;
 
 	Safe_Release(m_pRectTransform);
+	m_pRectTransform = nullptr;
+
 	Safe_Release(m_pRectMesh);
+	m_pRectMesh = nullptr;
+
 	Safe_Release(m_pMaterial);
-	Safe_Release(m_pCanvas);
+	m_pMaterial = nullptr;
 
 	if (m_pCanvas)
 		m_pCanvas->Remove_UIObject(this);
+
+	Safe_Release(m_pCanvas);
+	m_pCanvas = nullptr;
 }
 
 void CUI::Set_Mesh(CMeshBuffer* _mesh)

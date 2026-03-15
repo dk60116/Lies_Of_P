@@ -1236,7 +1236,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 17;
+	const _uint version = 19;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -1363,6 +1363,36 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
             out.write(reinterpret_cast<const char*>(&info.navAgentCenter), sizeof(_float3));
             out.write(reinterpret_cast<const char*>(&info.navAgentGroundSnapOffset), sizeof(_float));
         }
+
+		out.write(reinterpret_cast<const char*>(&info.horizontalLayoutGroupInfo.hasHorizontalLayoutGroup), sizeof(_bool));
+		if (info.horizontalLayoutGroupInfo.hasHorizontalLayoutGroup)
+		{
+			out.write(reinterpret_cast<const char*>(&info.horizontalLayoutGroupInfo.paddingLeft), sizeof(_float));
+			out.write(reinterpret_cast<const char*>(&info.horizontalLayoutGroupInfo.paddingRight), sizeof(_float));
+			out.write(reinterpret_cast<const char*>(&info.horizontalLayoutGroupInfo.paddingTop), sizeof(_float));
+			out.write(reinterpret_cast<const char*>(&info.horizontalLayoutGroupInfo.paddingBottom), sizeof(_float));
+			out.write(reinterpret_cast<const char*>(&info.horizontalLayoutGroupInfo.spacing), sizeof(_float));
+			out.write(reinterpret_cast<const char*>(&info.horizontalLayoutGroupInfo.childAlignment), sizeof(_int));
+			out.write(reinterpret_cast<const char*>(&info.horizontalLayoutGroupInfo.controlChildSizeWidth), sizeof(_bool));
+			out.write(reinterpret_cast<const char*>(&info.horizontalLayoutGroupInfo.controlChildSizeHeight), sizeof(_bool));
+			out.write(reinterpret_cast<const char*>(&info.horizontalLayoutGroupInfo.forceExpandWidth), sizeof(_bool));
+			out.write(reinterpret_cast<const char*>(&info.horizontalLayoutGroupInfo.forceExpandHeight), sizeof(_bool));
+		}
+
+		out.write(reinterpret_cast<const char*>(&info.verticalLayoutGroupInfo.hasVerticalLayoutGroup), sizeof(_bool));
+		if (info.verticalLayoutGroupInfo.hasVerticalLayoutGroup)
+		{
+			out.write(reinterpret_cast<const char*>(&info.verticalLayoutGroupInfo.paddingLeft), sizeof(_float));
+			out.write(reinterpret_cast<const char*>(&info.verticalLayoutGroupInfo.paddingRight), sizeof(_float));
+			out.write(reinterpret_cast<const char*>(&info.verticalLayoutGroupInfo.paddingTop), sizeof(_float));
+			out.write(reinterpret_cast<const char*>(&info.verticalLayoutGroupInfo.paddingBottom), sizeof(_float));
+			out.write(reinterpret_cast<const char*>(&info.verticalLayoutGroupInfo.spacing), sizeof(_float));
+			out.write(reinterpret_cast<const char*>(&info.verticalLayoutGroupInfo.childAlignment), sizeof(_int));
+			out.write(reinterpret_cast<const char*>(&info.verticalLayoutGroupInfo.controlChildSizeWidth), sizeof(_bool));
+			out.write(reinterpret_cast<const char*>(&info.verticalLayoutGroupInfo.controlChildSizeHeight), sizeof(_bool));
+			out.write(reinterpret_cast<const char*>(&info.verticalLayoutGroupInfo.forceExpandWidth), sizeof(_bool));
+			out.write(reinterpret_cast<const char*>(&info.verticalLayoutGroupInfo.forceExpandHeight), sizeof(_bool));
+		}
 	}
 
 	out.close();
@@ -1630,6 +1660,42 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
                 in.read(reinterpret_cast<char*>(&info.navAgentGroundSnapOffset), sizeof(_float));
             }
         }
+
+		if (version >= 18)
+		{
+			in.read(reinterpret_cast<char*>(&info.horizontalLayoutGroupInfo.hasHorizontalLayoutGroup), sizeof(_bool));
+			if (info.horizontalLayoutGroupInfo.hasHorizontalLayoutGroup)
+			{
+				in.read(reinterpret_cast<char*>(&info.horizontalLayoutGroupInfo.paddingLeft), sizeof(_float));
+				in.read(reinterpret_cast<char*>(&info.horizontalLayoutGroupInfo.paddingRight), sizeof(_float));
+				in.read(reinterpret_cast<char*>(&info.horizontalLayoutGroupInfo.paddingTop), sizeof(_float));
+				in.read(reinterpret_cast<char*>(&info.horizontalLayoutGroupInfo.paddingBottom), sizeof(_float));
+				in.read(reinterpret_cast<char*>(&info.horizontalLayoutGroupInfo.spacing), sizeof(_float));
+				in.read(reinterpret_cast<char*>(&info.horizontalLayoutGroupInfo.childAlignment), sizeof(_int));
+				in.read(reinterpret_cast<char*>(&info.horizontalLayoutGroupInfo.controlChildSizeWidth), sizeof(_bool));
+				in.read(reinterpret_cast<char*>(&info.horizontalLayoutGroupInfo.controlChildSizeHeight), sizeof(_bool));
+				in.read(reinterpret_cast<char*>(&info.horizontalLayoutGroupInfo.forceExpandWidth), sizeof(_bool));
+				in.read(reinterpret_cast<char*>(&info.horizontalLayoutGroupInfo.forceExpandHeight), sizeof(_bool));
+			}
+		}
+
+		if (version >= 19)
+		{
+			in.read(reinterpret_cast<char*>(&info.verticalLayoutGroupInfo.hasVerticalLayoutGroup), sizeof(_bool));
+			if (info.verticalLayoutGroupInfo.hasVerticalLayoutGroup)
+			{
+				in.read(reinterpret_cast<char*>(&info.verticalLayoutGroupInfo.paddingLeft), sizeof(_float));
+				in.read(reinterpret_cast<char*>(&info.verticalLayoutGroupInfo.paddingRight), sizeof(_float));
+				in.read(reinterpret_cast<char*>(&info.verticalLayoutGroupInfo.paddingTop), sizeof(_float));
+				in.read(reinterpret_cast<char*>(&info.verticalLayoutGroupInfo.paddingBottom), sizeof(_float));
+				in.read(reinterpret_cast<char*>(&info.verticalLayoutGroupInfo.spacing), sizeof(_float));
+				in.read(reinterpret_cast<char*>(&info.verticalLayoutGroupInfo.childAlignment), sizeof(_int));
+				in.read(reinterpret_cast<char*>(&info.verticalLayoutGroupInfo.controlChildSizeWidth), sizeof(_bool));
+				in.read(reinterpret_cast<char*>(&info.verticalLayoutGroupInfo.controlChildSizeHeight), sizeof(_bool));
+				in.read(reinterpret_cast<char*>(&info.verticalLayoutGroupInfo.forceExpandWidth), sizeof(_bool));
+				in.read(reinterpret_cast<char*>(&info.verticalLayoutGroupInfo.forceExpandHeight), sizeof(_bool));
+			}
+		}
 		}
 
 		resultInfo.push_back(info);

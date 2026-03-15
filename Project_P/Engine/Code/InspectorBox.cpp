@@ -2148,6 +2148,98 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 }
             }
 
+			if (CHorizontalLayoutGroup* horizontalLayout = dynamic_cast<CHorizontalLayoutGroup*>(component))
+			{
+				static const char* alignmentLabels[] =
+				{
+					"Upper Left", "Upper Center", "Upper Right",
+					"Middle Left", "Middle Center", "Middle Right",
+					"Lower Left", "Lower Center", "Lower Right"
+				};
+
+				const string layoutId = to_string(reinterpret_cast<uintptr_t>(horizontalLayout));
+				CLayoutGroup::Padding padding = horizontalLayout->GetPadding();
+				_float paddingValues[4] = { padding.left, padding.right, padding.top, padding.bottom };
+				if (ImGui::InputFloat4(("Padding (L,R,T,B)##" + layoutId).c_str(), paddingValues))
+				{
+					horizontalLayout->SetPadding(paddingValues[0], paddingValues[1], paddingValues[2], paddingValues[3]);
+				}
+
+				_float spacing = horizontalLayout->GetSpacing();
+				if (ImGui::DragFloat(("Spacing##" + layoutId).c_str(), &spacing, 0.1f, 0.f, 1000.f, "%.2f"))
+					horizontalLayout->SetSpacing(spacing);
+
+				_int alignmentIndex = static_cast<_int>(horizontalLayout->GetChildAlignment());
+				if (ImGui::Combo(("Child Alignment##" + layoutId).c_str(), &alignmentIndex, alignmentLabels, IM_ARRAYSIZE(alignmentLabels)))
+					horizontalLayout->SetChildAlignment(static_cast<CLayoutGroup::ChildAlignment>(alignmentIndex));
+
+				_bool controlWidth = horizontalLayout->GetControlChildSizeWidth();
+				_bool controlHeight = horizontalLayout->GetControlChildSizeHeight();
+				_bool controlChanged = false;
+				controlChanged |= ImGui::Checkbox(("Control Child Width##" + layoutId).c_str(), &controlWidth);
+				controlChanged |= ImGui::Checkbox(("Control Child Height##" + layoutId).c_str(), &controlHeight);
+				if (controlChanged)
+				{
+					horizontalLayout->SetControlChildSize(controlWidth, controlHeight);
+				}
+
+				_bool forceWidth = horizontalLayout->GetForceExpandWidth();
+				_bool forceHeight = horizontalLayout->GetForceExpandHeight();
+				_bool forceChanged = false;
+				forceChanged |= ImGui::Checkbox(("Force Expand Width##" + layoutId).c_str(), &forceWidth);
+				forceChanged |= ImGui::Checkbox(("Force Expand Height##" + layoutId).c_str(), &forceHeight);
+				if (forceChanged)
+				{
+					horizontalLayout->SetForceExpand(forceWidth, forceHeight);
+				}
+			}
+
+			if (CVerticalLayoutGroup* verticalLayout = dynamic_cast<CVerticalLayoutGroup*>(component))
+			{
+				static const char* alignmentLabels[] =
+				{
+					"Upper Left", "Upper Center", "Upper Right",
+					"Middle Left", "Middle Center", "Middle Right",
+					"Lower Left", "Lower Center", "Lower Right"
+				};
+
+				const string layoutId = to_string(reinterpret_cast<uintptr_t>(verticalLayout));
+				CLayoutGroup::Padding padding = verticalLayout->GetPadding();
+				_float paddingValues[4] = { padding.left, padding.right, padding.top, padding.bottom };
+				if (ImGui::InputFloat4(("Padding (L,R,T,B)##" + layoutId).c_str(), paddingValues))
+				{
+					verticalLayout->SetPadding(paddingValues[0], paddingValues[1], paddingValues[2], paddingValues[3]);
+				}
+
+				_float spacing = verticalLayout->GetSpacing();
+				if (ImGui::DragFloat(("Spacing##" + layoutId).c_str(), &spacing, 0.1f, 0.f, 1000.f, "%.2f"))
+					verticalLayout->SetSpacing(spacing);
+
+				_int alignmentIndex = static_cast<_int>(verticalLayout->GetChildAlignment());
+				if (ImGui::Combo(("Child Alignment##" + layoutId).c_str(), &alignmentIndex, alignmentLabels, IM_ARRAYSIZE(alignmentLabels)))
+					verticalLayout->SetChildAlignment(static_cast<CLayoutGroup::ChildAlignment>(alignmentIndex));
+
+				_bool controlWidth = verticalLayout->GetControlChildSizeWidth();
+				_bool controlHeight = verticalLayout->GetControlChildSizeHeight();
+				_bool controlChanged = false;
+				controlChanged |= ImGui::Checkbox(("Control Child Width##" + layoutId).c_str(), &controlWidth);
+				controlChanged |= ImGui::Checkbox(("Control Child Height##" + layoutId).c_str(), &controlHeight);
+				if (controlChanged)
+				{
+					verticalLayout->SetControlChildSize(controlWidth, controlHeight);
+				}
+
+				_bool forceWidth = verticalLayout->GetForceExpandWidth();
+				_bool forceHeight = verticalLayout->GetForceExpandHeight();
+				_bool forceChanged = false;
+				forceChanged |= ImGui::Checkbox(("Force Expand Width##" + layoutId).c_str(), &forceWidth);
+				forceChanged |= ImGui::Checkbox(("Force Expand Height##" + layoutId).c_str(), &forceHeight);
+				if (forceChanged)
+				{
+					verticalLayout->SetForceExpand(forceWidth, forceHeight);
+				}
+			}
+
             if (CBoxCollider* boxCollider = dynamic_cast<CBoxCollider*>(component))
             {
                 _bool isTrigger = boxCollider->IsTrigger();
@@ -2991,6 +3083,18 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
             if (!_obj->GetComponent<CText>())
                 _obj->AddComponent<CText>();
         }
+
+		if (ImGui::MenuItem("HorizontalLayoutGroup"))
+		{
+			if (!_obj->GetComponent<CHorizontalLayoutGroup>())
+				_obj->AddComponent<CHorizontalLayoutGroup>();
+		}
+
+		if (ImGui::MenuItem("VerticalLayoutGroup"))
+		{
+			if (!_obj->GetComponent<CVerticalLayoutGroup>())
+				_obj->AddComponent<CVerticalLayoutGroup>();
+		}
 
         ImGui::EndMenu();
     }

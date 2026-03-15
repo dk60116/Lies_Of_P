@@ -96,8 +96,10 @@ HRESULT CRectTransform::Initialize()
 void CRectTransform::Update()
 {
     CCanvas* canvas = m_pUI ? m_pUI->Get_Canvas() : nullptr;
+    if (!canvas && m_pParent)
+        canvas = m_pParent->Find_ComponentParentRecursive<CCanvas>();
 
-    if (!canvas)
+    if (!canvas && !m_pParentRect)
     {
         __super::Update();
         return;
@@ -112,8 +114,10 @@ void CRectTransform::Update()
 void CRectTransform::Update_Editor()
 {
     CCanvas* canvas = m_pUI ? m_pUI->Get_Canvas() : nullptr;
+    if (!canvas && m_pParent)
+        canvas = m_pParent->Find_ComponentParentRecursive<CCanvas>();
 
-    if (!canvas)
+    if (!canvas && !m_pParentRect)
     {
         __super::Update_Editor();
         return;
@@ -127,23 +131,28 @@ void CRectTransform::Update_Editor()
 
 void CRectTransform::Render_Gizmo()
 {
-    if (CEditor::GetInstance().Get_SelectedGameObject() != m_pGameObject)
-        return;
+    CEditor& editor = CEditor::GetInstance();
+    const _bool isSelected = (editor.Get_SelectedGameObject() == m_pGameObject);
 
-    CCanvas* canvas = m_pUI->Get_Canvas();
+    CCanvas* canvas = m_pUI ? m_pUI->Get_Canvas() : nullptr;
+    if (!canvas && m_pParent)
+        canvas = m_pParent->Find_ComponentParentRecursive<CCanvas>();
 
     vector2 canvasSize = {};
 
     CCamera* editorCam = CSceneManager::GetInstance().Get_CrtScene()->Get_EditorCamera();
+    if (!editorCam)
+        return;
 
     _matrix viewMatrix = editorCam->GetViewMatrix();
     _matrix projMatrix = editorCam->GetProjectionMatrix();
 
-    _matrix worldMatrix = XMLoadFloat4x4(&m_vMatWorld);
+    const _matrix rectWorldMatrix = XMLoadFloat4x4(&m_vMatWorld);
+    _matrix gizmoWorldMatrix = rectWorldMatrix;
 
     vector2 pivotTrans = {};
 
-    if (m_pUI->Is_Canvas())
+    if (m_pUI && m_pUI->Is_Canvas())
     {
     }
     else if (!m_pParentRect)
@@ -153,17 +162,95 @@ void CRectTransform::Render_Gizmo()
 
         pivotTrans = vector2(m_vPivot.x * m_vScale.x * canvasSize.x - m_vAnchoredScale.x * 0.5f, m_vPivot.y * m_vScale.y * canvasSize.y - m_vAnchoredScale.y * 0.5f);
         _matrix translateMat = XMMatrixTranslation(pivotTrans.x, pivotTrans.y, 0.f);
-        worldMatrix *= translateMat;
+        gizmoWorldMatrix *= translateMat;
     }
     else
     {
         pivotTrans = vector2(m_vPivot.x * m_vScale.x * m_pParentRect->m_fWidth * 0.01f - m_vAnchoredScale.x * 0.5f, m_vPivot.y * m_vScale.y * m_pParentRect->m_fHeight * 0.01f - m_vAnchoredScale.y * 0.5f);
         _matrix translateMat = XMMatrixTranslation(pivotTrans.x, pivotTrans.y, 0.f);
-        worldMatrix *= translateMat;
+        gizmoWorldMatrix *= translateMat;
     }
 
+    const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_CurrentViewport();
+
+    auto projectPoint = [&](const vector2& localPoint, ImVec2& outScreenPoint) -> _bool
+    {
+        D3D11_VIEWPORT viewport = {};
+        if (vp)
+        {
+            viewport = *vp;
+        }
+        else
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            viewport.TopLeftX = 0.f;
+            viewport.TopLeftY = 0.f;
+            viewport.Width = io.DisplaySize.x;
+            viewport.Height = io.DisplaySize.y;
+            viewport.MinDepth = 0.f;
+            viewport.MaxDepth = 1.f;
+        }
+
+        const _vector local = XMVectorSet(localPoint.x, localPoint.y, 0.f, 1.f);
+        const _vector world = XMVector3TransformCoord(local, rectWorldMatrix);
+        const _vector projected = XMVector3Project
+        (
+            world,
+            viewport.TopLeftX,
+            viewport.TopLeftY,
+            viewport.Width,
+            viewport.Height,
+            viewport.MinDepth,
+            viewport.MaxDepth,
+            projMatrix,
+            viewMatrix,
+            XMMatrixIdentity()
+        );
+
+        const _float depth = XMVectorGetZ(projected);
+        if (depth < 0.f || depth > 1.f)
+            return false;
+
+        outScreenPoint = ImVec2(XMVectorGetX(projected), XMVectorGetY(projected));
+        return true;
+    };
+
+    ImVec2 corners[4] = {};
+    const vector2 localCorners[4] =
+    {
+        vector2(-0.5f, -0.5f),
+        vector2(0.5f, -0.5f),
+        vector2(0.5f, 0.5f),
+        vector2(-0.5f, 0.5f)
+    };
+
+    _bool allCornersVisible = true;
+    for (_uint i = 0; i < 4; ++i)
+    {
+        if (!projectPoint(localCorners[i], corners[i]))
+        {
+            allCornersVisible = false;
+            break;
+        }
+    }
+
+    if (allCornersVisible)
+    {
+        ImDrawList* drawList = ImGui::GetBackgroundDrawList();
+        const ImU32 lineColor = isSelected
+            ? IM_COL32(255, 220, 120, 255)
+            : IM_COL32(180, 220, 255, 190);
+        const _float thickness = isSelected ? 2.f : 1.f;
+
+        for (_uint i = 0; i < 4; ++i)
+            drawList->AddLine(corners[i], corners[(i + 1u) % 4u], lineColor, thickness);
+    }
+
+    if (!isSelected)
+        return;
+
     _float world[16];
-    memcpy(world, &worldMatrix, sizeof(float) * 16);
+    memcpy(world, &gizmoWorldMatrix, sizeof(float) * 16);
 
     _float view[16];
     memcpy(view, &viewMatrix, sizeof(float) * 16);
@@ -175,8 +262,6 @@ void CRectTransform::Render_Gizmo()
     ImGuizmo::BeginFrame();
     ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
     ImGuizmo::AllowAxisFlip(false);
-
-    const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_CurrentViewport();
 
     if (vp)
     {
@@ -196,7 +281,6 @@ void CRectTransform::Render_Gizmo()
 
     static ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;
 
-    CEditor& editor = CEditor::GetInstance();
     CEditor::TransformControleTool mode = editor.Get_ControleTool();
 
     if (mode == CEditor::TransformControleTool::MOVE)
@@ -298,13 +382,41 @@ void CRectTransform::OnDestroy()
     __super::OnDestroy();
 
     Safe_Release(m_pParentRect);
+    m_pParentRect = nullptr;
+
     Safe_Release(m_pUI);
+    m_pUI = nullptr;
 }
 
 void CRectTransform::Set_UI(CUI* _pUI)
 {
+    if (m_pUI == _pUI)
+        return;
+
+    CCanvas* prevCanvas = (m_pUI) ? m_pUI->Get_Canvas() : nullptr;
+    if (prevCanvas && m_pUI)
+        prevCanvas->Remove_UIObject(m_pUI);
+
+    if (m_pUI)
+        m_pUI->Set_Canvas(nullptr);
+
+    Safe_Release(m_pUI);
     m_pUI = _pUI;
+
+    if (!m_pUI)
+        return;
+
     m_pUI->AddRef();
+
+    CCanvas* canvas = nullptr;
+    if (m_pParent)
+        canvas = m_pParent->Find_ComponentParentRecursive<CCanvas>();
+
+    if (canvas)
+    {
+        m_pUI->Set_Canvas(canvas);
+        canvas->Add_UIObject(m_pUI);
+    }
 }
 
 void CRectTransform::SetParent(CTransform* _parent)
@@ -437,9 +549,8 @@ const vector2 CRectTransform::Get_AnchoredPosition() const
 
 void CRectTransform::Set_AnchoredPosition(const vector2 _pos)
 {
-    CCanvas* canvas = m_pUI ? m_pUI->Get_Canvas() : nullptr;
-
-    if (!canvas)
+    const vector2 referenceSize = GetReferenceSize();
+    if (!m_pParentRect && referenceSize == vector2::zero())
         return;
 
     RefreshSizeFromLayout();
@@ -478,13 +589,11 @@ const vector2 CRectTransform::Get_AnchoredSize() const
 
 void CRectTransform::Set_AnchoredSize(const vector2 _size)
 {
-    CCanvas* canvas = m_pUI ? m_pUI->Get_Canvas() : nullptr;
-
-    if (!canvas)
+    const vector2 referenceSize = GetReferenceSize();
+    if (!m_pParentRect && referenceSize == vector2::zero())
         return;
 
     const vector2 currentAnchoredPosition = m_vAnchoredPosition;
-    const vector2 referenceSize = GetReferenceSize();
     const vector2 anchorSpan = GetAnchorSpan();
 
     m_vStaticWH = vector2
@@ -513,9 +622,9 @@ void CRectTransform::Set_SizeScale(const vector3& _scale)
 {
     m_vSizeScale = _scale;
 
-    CCanvas* canvas = m_pUI ? m_pUI->Get_Canvas() : nullptr;
+    const vector2 referenceSize = GetReferenceSize();
 
-    if (!canvas)
+    if (!m_pParentRect && referenceSize == vector2::zero())
     {
         __super::Set_LocalScale(_scale);
         return;
@@ -611,12 +720,12 @@ void CRectTransform::Set_AnchorsMin(const vector2 _pivot)
     const vector2 currentAnchoredPosition = Get_AnchoredPosition();
     const _float sizeScaleX = (fabsf(m_vSizeScale.x) > 1e-4f) ? m_vSizeScale.x : 1.f;
     const _float sizeScaleY = (fabsf(m_vSizeScale.y) > 1e-4f) ? m_vSizeScale.y : 1.f;
+    const vector2 referenceSize = GetReferenceSize();
 
     m_sAnchors.min = _pivot;
 
-    if (m_pUI && m_pUI->Get_Canvas())
+    if (m_pParentRect || referenceSize != vector2::zero())
     {
-        const vector2 referenceSize = GetReferenceSize();
         const vector2 anchorSpan = GetAnchorSpan();
 
         m_vStaticWH = vector2
@@ -643,12 +752,12 @@ void CRectTransform::Set_AnchorsMax(const vector2 _pivot)
     const vector2 currentAnchoredPosition = Get_AnchoredPosition();
     const _float sizeScaleX = (fabsf(m_vSizeScale.x) > 1e-4f) ? m_vSizeScale.x : 1.f;
     const _float sizeScaleY = (fabsf(m_vSizeScale.y) > 1e-4f) ? m_vSizeScale.y : 1.f;
+    const vector2 referenceSize = GetReferenceSize();
 
     m_sAnchors.max = _pivot;
 
-    if (m_pUI && m_pUI->Get_Canvas())
+    if (m_pParentRect || referenceSize != vector2::zero())
     {
-        const vector2 referenceSize = GetReferenceSize();
         const vector2 anchorSpan = GetAnchorSpan();
 
         m_vStaticWH = vector2
@@ -671,13 +780,11 @@ void CRectTransform::Set_AnchorsMax(const _float _x, const _float _y)
 
 void CRectTransform::Set_WidthHeight(const vector2 _rect)
 {
-    CCanvas* canvas = m_pUI ? m_pUI->Get_Canvas() : nullptr;
-
-    if (!canvas)
+    const vector2 referenceSize = GetReferenceSize();
+    if (!m_pParentRect && referenceSize == vector2::zero())
         return;
 
     const vector2 currentAnchoredPosition = m_vAnchoredPosition;
-    const vector2 referenceSize = GetReferenceSize();
     const vector2 anchorSpan = GetAnchorSpan();
     const _float sizeScaleX = (fabsf(m_vSizeScale.x) > 1e-4f) ? m_vSizeScale.x : 1.f;
     const _float sizeScaleY = (fabsf(m_vSizeScale.y) > 1e-4f) ? m_vSizeScale.y : 1.f;
@@ -734,10 +841,13 @@ vector2 CRectTransform::GetReferenceSize() const
     if (m_pParentRect)
         return vector2(m_pParentRect->m_fWidth, m_pParentRect->m_fHeight);
 
-    if (!m_pUI)
-        return vector2::zero();
+    CCanvas* canvas = nullptr;
+    if (m_pUI)
+        canvas = m_pUI->Get_Canvas();
 
-    CCanvas* canvas = m_pUI->Get_Canvas();
+    if (!canvas && m_pParent)
+        canvas = m_pParent->Find_ComponentParentRecursive<CCanvas>();
+
     if (!canvas)
         return vector2::zero();
 

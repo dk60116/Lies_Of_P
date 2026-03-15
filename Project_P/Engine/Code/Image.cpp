@@ -50,27 +50,6 @@ HRESULT CImage::Initialize()
 
 void CImage::Render_Editor()
 {
-	CCamera* cam = CSceneManager::GetInstance().Get_EditorCamera();
-
-	if (!cam)
-		return;
-
-	_float3 camPos = _float3();
-	_matrix matWorld = GetTransform()->Get_WorldMatrix();
-	_matrix matView = cam->GetViewMatrix();
-	_matrix matProj = cam->GetProjectionMatrix();
-
-	if (m_pGameObject != CEditor::GetInstance().Get_SelectedGameObject())
-		return;
-
-	if (m_pLineMat)
-	{
-		m_pLineMat->Bind_Matrix(matWorld);
-		m_pLineMat->Bind_Camera(camPos, matView, matProj, 0);
-	}
-
-	if (m_pRectGizmoMesh)
-		m_pRectGizmoMesh->Render();
 }
 
 void CImage::Render()

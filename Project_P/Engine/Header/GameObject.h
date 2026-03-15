@@ -5,8 +5,12 @@
 #include "Scene.h"
 #include "EditorCamera.h"
 #include "SkinnedMeshBuffer.h"
+#include <type_traits>
 
 NS_BEGIN(Engine)
+
+class CTransform;
+class CRectTransform;
 
 class ENGINE_DLL CGameObject final : public UObject
 {
@@ -134,6 +138,7 @@ public:
 
 private:
 	void Set_RecursiveActive(const _bool _active);
+	void FinalizeAddedComponent(CComponent* _component);
 
 private:
 	ID3D11Device* m_pDevice;
@@ -169,6 +174,12 @@ NS_END
 template<typename T>
 inline T* CGameObject::AddComponent()
 {
+	if constexpr (std::is_same_v<T, CTransform> || std::is_same_v<T, CRectTransform>)
+	{
+		if (T* existingComponent = GetComponent<T>())
+			return existingComponent;
+	}
+
 	T* newComponent = T::Create();
 	if (!newComponent)
 		return nullptr;
@@ -215,6 +226,8 @@ inline T* CGameObject::AddComponent()
 		{
 			return a->GetSortIndex() < b->GetSortIndex();
 		});
+
+	FinalizeAddedComponent(newComponent);
 
 	return newComponent;
 }

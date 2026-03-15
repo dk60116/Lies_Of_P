@@ -235,6 +235,18 @@
     <ClInclude Include="..\Header\BTCondition.h">
       <Filter>AI\BT</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\LayoutGroup.h">
+      <Filter>Components\UI\Layout</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\HorizontalLayoutGroup.h">
+      <Filter>Components\UI\Layout</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\VerticalLayoutGroup.h">
+      <Filter>Components\UI\Layout</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\GridLayoutGroup.h">
+      <Filter>Components\UI\Layout</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Engine">
@@ -368,6 +380,9 @@
     </Filter>
     <Filter Include="AI\BT">
       <UniqueIdentifier>{7ebd3bbc-7ac6-483c-b581-746b2f591a07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\UI\Layout">
+      <UniqueIdentifier>{1b63fcd4-8470-41ad-bfa1-818025e56282}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -670,6 +685,18 @@
     </ClCompile>
     <ClCompile Include="..\Code\BTSelector.cpp">
       <Filter>AI\BT</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\LayoutGroup.cpp">
+      <Filter>Components\UI\Layout</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\HorizontalLayoutGroup.cpp">
+      <Filter>Components\UI\Layout</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\VerticalLayoutGroup.cpp">
+      <Filter>Components\UI\Layout</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\GridLayoutGroup.cpp">
+      <Filter>Components\UI\Layout</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

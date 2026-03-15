@@ -3,6 +3,176 @@
 
 namespace
 {
+    constexpr _float kDefaultTrackingScale = 0.92f;
+
+    struct TextLineLayout
+    {
+        wstring text = L"";
+        _float width = 0.f;
+    };
+
+    struct TextLayoutInfo
+    {
+        vector<TextLineLayout> lines = {};
+        _float maxWidth = 0.f;
+        _float lineHeight = 0.f;
+        _float totalHeight = 0.f;
+    };
+
+    _float2 RotateScreenOffset(const _float2& offset, const _float rotation);
+
+    _float MeasureGlyphAdvance(SpriteFont* font, const wchar_t character)
+    {
+        if (!font)
+            return 0.f;
+
+        if (const SpriteFont::Glyph* glyph = font->FindGlyph(character))
+            return glyph->XAdvance;
+
+        const wchar_t fallback = font->GetDefaultCharacter();
+        if (fallback != 0)
+        {
+            if (const SpriteFont::Glyph* fallbackGlyph = font->FindGlyph(fallback))
+                return fallbackGlyph->XAdvance;
+        }
+
+        _float2 measure = {};
+        XMStoreFloat2(&measure, font->MeasureString(wstring(1, character).c_str(), false));
+        return measure.x;
+    }
+
+    TextLayoutInfo BuildTextLayout(
+        SpriteFont* font,
+        const wstring& text,
+        const _float2& fontScale)
+    {
+        TextLayoutInfo info = {};
+        if (!font)
+            return info;
+
+        info.lineHeight = max(0.f, font->GetLineSpacing() * fontScale.y);
+        info.totalHeight = info.lineHeight;
+
+        TextLineLayout currentLine = {};
+        auto commitLine = [&]()
+        {
+            info.maxWidth = max(info.maxWidth, currentLine.width);
+            info.lines.push_back(currentLine);
+            currentLine = {};
+        };
+
+        for (const wchar_t ch : text)
+        {
+            if (ch == L'\r')
+                continue;
+
+            if (ch == L'\n')
+            {
+                commitLine();
+                info.totalHeight += info.lineHeight;
+                continue;
+            }
+
+            currentLine.text.push_back(ch);
+            currentLine.width += MeasureGlyphAdvance(font, ch) * fontScale.x * kDefaultTrackingScale;
+        }
+
+        commitLine();
+
+        if (info.lines.empty())
+        {
+            info.lines.push_back({});
+            info.totalHeight = info.lineHeight;
+        }
+
+        return info;
+    }
+
+    void DrawTrackedTextScreen(
+        SpriteFont* font,
+        SpriteBatch* batch,
+        const TextLayoutInfo& layout,
+        const wstring& text,
+        const _float2& blockCenter,
+        FXMVECTOR color,
+        const _float rotation,
+        const _float2& fontScale)
+    {
+        if (!font || !batch || text.empty())
+            return;
+
+        const _float2 topLeftOffset =
+        {
+            -layout.maxWidth * 0.5f,
+            -layout.totalHeight * 0.5f
+        };
+
+        for (size_t lineIndex = 0; lineIndex < layout.lines.size(); ++lineIndex)
+        {
+            const TextLineLayout& line = layout.lines[lineIndex];
+            _float penX = 0.f;
+            const _float penY = static_cast<_float>(lineIndex) * layout.lineHeight;
+
+            for (const wchar_t ch : line.text)
+            {
+                const _float2 localPos =
+                {
+                    topLeftOffset.x + penX,
+                    topLeftOffset.y + penY
+                };
+                const _float2 rotatedPos = RotateScreenOffset(localPos, rotation);
+                const _float2 drawPos =
+                {
+                    blockCenter.x + rotatedPos.x,
+                    blockCenter.y + rotatedPos.y
+                };
+
+                const wchar_t glyphText[2] = { ch, L'\0' };
+                font->DrawString(batch, glyphText, drawPos, color, rotation, _float2(0.f, 0.f), fontScale);
+                penX += MeasureGlyphAdvance(font, ch) * fontScale.x * kDefaultTrackingScale;
+            }
+        }
+    }
+
+    void DrawTrackedTextLocal(
+        SpriteFont* font,
+        SpriteBatch* batch,
+        const TextLayoutInfo& layout,
+        const wstring& text,
+        const _float2& blockCenter,
+        FXMVECTOR color,
+        const _float2& fontScale)
+    {
+        if (!font || !batch || text.empty())
+            return;
+
+        const _float2 topLeftOffset =
+        {
+            -layout.maxWidth * 0.5f,
+            -layout.totalHeight * 0.5f
+        };
+
+        for (size_t lineIndex = 0; lineIndex < layout.lines.size(); ++lineIndex)
+        {
+            const TextLineLayout& line = layout.lines[lineIndex];
+            _float penX = 0.f;
+            const _float penY = static_cast<_float>(lineIndex) * layout.lineHeight;
+
+            for (const wchar_t ch : line.text)
+            {
+                const _float2 drawPos =
+                {
+                    blockCenter.x + topLeftOffset.x + penX,
+                    blockCenter.y + topLeftOffset.y + penY
+                };
+
+                const wchar_t glyphText[2] = { ch, L'\0' };
+                font->DrawString(batch, glyphText, drawPos, color, 0.f, _float2(0.f, 0.f), fontScale);
+                penX += MeasureGlyphAdvance(font, ch) * fontScale.x * kDefaultTrackingScale;
+            }
+        }
+    }
+
     _float GetAlignedOffsetX(
         const CText::TextAligmentHorizontal horizontal,
         const _float rectWidth,
@@ -158,30 +328,6 @@ void CText::Render_Editor()
 
 void CText::Render_Gizmo()
 {
-    if (m_pGameObject != CEditor::GetInstance().Get_SelectedGameObject())
-        return;
-
-    CCamera* cam = CSceneManager::GetInstance().Get_EditorCamera();
-    CScene* scene = CSceneManager::GetInstance().Get_CrtScene();
-
-    if (!cam || !scene)
-        return;
-
-    _float3 camPos = _float3();
-    _matrix matWorld = GetTransform()->Get_WorldMatrix();
-    _matrix matView = cam->GetViewMatrix();
-    _matrix matProj = cam->GetProjectionMatrix();
-
-    m_pContext->OMSetDepthStencilState(scene->Get_UIStencillState(), 0);
-
-    if (m_pLineMat)
-    {
-        m_pLineMat->Bind_Matrix(matWorld);
-        m_pLineMat->Bind_Camera(camPos, matView, matProj, 0);
-    }
-
-    if (m_pRectGizmoMesh)
-        m_pRectGizmoMesh->Render();
 }
 
 void CText::RenderText()
@@ -201,17 +347,10 @@ void CText::RenderText()
     const vector3 sizeScale3 = rect->Get_SizeScale();
     const vector2 scale = vector2(m_fFontSize * sizeScale3.x, m_fFontSize * sizeScale3.y);
     const _float rotation = rect->Get_LocalEulerAngles().z;
-    const _vector textSizeVec = m_pFont->Get_SpriteFont()->MeasureString(m_strText.c_str());
-    _float2 textSize = {};
-
-    XMStoreFloat2(&textSize, textSizeVec);
 
     const _float2 fontScale = _float2(scale.x, scale.y) * 0.1f;
-    const _float2 drawSize =
-    {
-        textSize.x * fontScale.x,
-        textSize.y * fontScale.y
-    };
+    const TextLayoutInfo layout = BuildTextLayout(m_pFont->Get_SpriteFont(), m_strText, fontScale);
+    const _float2 drawSize = { layout.maxWidth, layout.totalHeight };
     const _float2 alignmentOffset = GetAlignedTextCenterOffset(
         m_eAlignmentHorizontal,
         m_eAlignmentVertical,
@@ -227,13 +366,14 @@ void CText::RenderText()
 
     batch->Begin();
 
-    m_pFont->Get_SpriteFont()->DrawString(
+    DrawTrackedTextScreen(
+        m_pFont->Get_SpriteFont(),
         batch,
-        m_strText.c_str(),
+        layout,
+        m_strText,
         pos,
         m_vColor.toXMVector(),
         rotation,
-        _float2(textSize.x * 0.5f, textSize.y * 0.5f),
         fontScale);
 
     batch->End();
@@ -295,20 +435,13 @@ void CText::RenderText_Editor()
     if (axisXLength <= 1e-4f || axisYLength <= 1e-4f)
         return;
 
-    const _vector textSizeVec = m_pFont->Get_SpriteFont()->MeasureString(m_strText.c_str());
-    _float2 textSize = {};
-    XMStoreFloat2(&textSize, textSizeVec);
-
     const _float2 fontScale =
     {
         m_fFontSize * sizeScale3.x * 0.1f,
         m_fFontSize * sizeScale3.y * 0.1f
     };
-    const _float2 drawSize =
-    {
-        textSize.x * fontScale.x,
-        textSize.y * fontScale.y
-    };
+    const TextLayoutInfo layout = BuildTextLayout(m_pFont->Get_SpriteFont(), m_strText, fontScale);
+    const _float2 drawSize = { layout.maxWidth, layout.totalHeight };
     const _float2 alignmentOffset = GetAlignedTextCenterOffset
     (
         m_eAlignmentHorizontal,
@@ -328,13 +461,13 @@ void CText::RenderText_Editor()
 
     batch->Begin(SpriteSortMode_Deferred, nullptr, nullptr, nullptr, nullptr, nullptr, transformMatrix);
 
-    m_pFont->Get_SpriteFont()->DrawString(
+    DrawTrackedTextLocal(
+        m_pFont->Get_SpriteFont(),
         batch,
-        m_strText.c_str(),
+        layout,
+        m_strText,
         alignmentOffset,
         m_vColor.toXMVector(),
-        0.f,
-        _float2(textSize.x * 0.5f, textSize.y * 0.5f),
         fontScale);
 
     batch->End();

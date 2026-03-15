@@ -1,6 +1,8 @@
 #include "epch.h"
 #include "GameObject.h"
 #include "Collider.h"
+#include "RectTransform.h"
+#include "UI.h"
 #include <objbase.h>
 
 namespace
@@ -438,6 +440,9 @@ CTransform* CGameObject::GetTransform() const
 
 void CGameObject::Set_Transform(CTransform* _transform)
 {
+	if (m_pTransform == _transform)
+		return;
+
 	m_lComponentList.remove(m_pTransform);
 	Safe_Release(m_pTransform);
 
@@ -447,8 +452,30 @@ void CGameObject::Set_Transform(CTransform* _transform)
 
 	if (m_pTransform)
 	{
-		m_lComponentList.push_back(m_pTransform);
-		m_pTransform->AddRef();
+		if (find(m_lComponentList.begin(), m_lComponentList.end(), m_pTransform) == m_lComponentList.end())
+		{
+			m_lComponentList.push_back(m_pTransform);
+			m_pTransform->AddRef();
+		}
+	}
+}
+
+void CGameObject::FinalizeAddedComponent(CComponent* _component)
+{
+	if (!_component)
+		return;
+
+	if (CTransform* transform = dynamic_cast<CTransform*>(_component))
+	{
+		const _bool isRectTransform = (dynamic_cast<CRectTransform*>(transform) != nullptr);
+		if (!m_pTransform || isRectTransform)
+			Set_Transform(transform);
+	}
+
+	if (dynamic_cast<CRectTransform*>(_component))
+	{
+		if (!GetComponent<CUI>())
+			AddComponent<CUI>();
 	}
 }
 

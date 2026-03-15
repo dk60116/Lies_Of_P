@@ -29,7 +29,10 @@ private:
 	void CreateAim();
 	void CreatePotions();
 	void CreateGauge();
+	CRectTransform* CreateGauge_Default(const wstring& _name, CRectTransform* _parent);
 	void CreateGauge_BE(CRectTransform* _parent);
+	void CreateGauge_HP(CRectTransform* _parent);
+	void CreateGauge_SH(CRectTransform* _parent);
 
 private:
 	CPlayer* m_pPlayer;
@@ -41,6 +44,6 @@ private:
 	CImage* m_pPotionHolderImage;
 	CImage* m_pPCBtnImage;
 	CText* m_pTextPotionCount;
-	vector<CTexture*> m_vGaugeTexts;
+	vector<CText*> m_vGaugeTexts;
 };
 

@@ -24,6 +24,36 @@ public:
 
     typedef struct ObjectsTransformInfo
     {
+        typedef struct HorizontalLayoutGroupInfo
+        {
+            _bool hasHorizontalLayoutGroup = false;
+            _float paddingLeft = 0.f;
+            _float paddingRight = 0.f;
+            _float paddingTop = 0.f;
+            _float paddingBottom = 0.f;
+            _float spacing = 0.f;
+            _int childAlignment = 0;
+            _bool controlChildSizeWidth = false;
+            _bool controlChildSizeHeight = false;
+            _bool forceExpandWidth = false;
+            _bool forceExpandHeight = false;
+        }HORIZONTALLAYOUTGROUPINFO;
+
+        typedef struct VerticalLayoutGroupInfo
+        {
+            _bool hasVerticalLayoutGroup = false;
+            _float paddingLeft = 0.f;
+            _float paddingRight = 0.f;
+            _float paddingTop = 0.f;
+            _float paddingBottom = 0.f;
+            _float spacing = 0.f;
+            _int childAlignment = 0;
+            _bool controlChildSizeWidth = false;
+            _bool controlChildSizeHeight = false;
+            _bool forceExpandWidth = false;
+            _bool forceExpandHeight = false;
+        }VERTICALLAYOUTGROUPINFO;
+
         typedef struct MaterialTextureInfo
         {
             wstring name = L"";
@@ -66,6 +96,8 @@ public:
         _float navAgentGroundSnapOffset = 0.02f;
         _bool isRect = false;
         SCENERECTINFO rectInfo = {};
+        HORIZONTALLAYOUTGROUPINFO horizontalLayoutGroupInfo = {};
+        VERTICALLAYOUTGROUPINFO verticalLayoutGroupInfo = {};
         vector<wstring> componentNames = {};
         vector<_bool> componentEnabledStates = {};
         wstring meshBufferName = L"";
@@ -229,5 +261,3 @@ protected:
 };
 
 NS_END
-
-
