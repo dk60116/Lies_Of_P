@@ -7,6 +7,8 @@ class CPlayerHUD final : public CComponent
 public:
 	struct PlayerHUDOptions
 	{
+		_float gaugeFontWidth = 40.f;
+		_float gaugeWidthMax = 1000.f;
 	};
 
 private:

@@ -52,6 +52,8 @@ public:
 	const vector2 Get_AnchoredSize() const;
 	void Set_AnchoredSize(const vector2 _size);
 	void Set_AnchoredSize(const _float _x, const _float _y);
+	void Set_AnchoredSizeX(const _float _x);
+	void Set_AnchoredSizeY(const _float _y);
 	const vector3 Get_SizeScale() const;
 	void Set_SizeScale(const vector3& _scale);
 	void Set_SizeScale(const _float _x, const _float _y, const _float _z);

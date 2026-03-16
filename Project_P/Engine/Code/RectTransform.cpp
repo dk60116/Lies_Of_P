@@ -611,6 +611,18 @@ void CRectTransform::Set_AnchoredSize(const vector2 _size)
 void CRectTransform::Set_AnchoredSize(const _float _x, const _float _y)
 {
     Set_AnchoredSize(vector2(_x, _y));
+
+    Update();
+}
+
+void CRectTransform::Set_AnchoredSizeX(const _float _x)
+{
+    Set_AnchoredSize(vector2(_x, m_fHeight));
+}
+
+void CRectTransform::Set_AnchoredSizeY(const _float _y)
+{
+    Set_AnchoredSize(vector2(m_fWidth, _y));
 }
 
 const vector3 CRectTransform::Get_SizeScale() const

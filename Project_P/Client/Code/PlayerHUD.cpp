@@ -112,8 +112,8 @@ void CPlayerHUD::CreateGauge()
 	gaugeObj->GetTransform()->SetParent(GetTransform());
 	rect->Set_Pivot(0.f, 0.f);
 	rect->Set_AnchorsMin(0.f, 0.f);
-	rect->Set_AnchoredPosition(110.f, 40.f);
-	rect->Set_AnchoredSize(200.f, 60.f);
+	rect->Set_AnchoredPosition(110.f, 55.f);
+	rect->Set_AnchoredSize(m_sOptions.gaugeWidthMax, 75.f);
 
 	CGameObject* beObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Gauge_BE");
 	CRectTransform* rect_be = beObj->AddComponent<CRectTransform>();
@@ -124,15 +124,18 @@ void CPlayerHUD::CreateGauge()
 	CGameObject* hpObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Gauge_HP");
 	CRectTransform* rect_hp = hpObj->AddComponent<CRectTransform>();
 	rect_hp->GetTransform()->SetParent(rect);
-	CreateGauge_Default(L"HP", rect_hp);
+	CRectTransform* hpGR = CreateGauge_Default(L"HP", rect_hp);
+	CreateGauge_HP(hpGR);
 
 	CGameObject* shObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Gauge_SH");
 	CRectTransform* rect_sh = shObj->AddComponent<CRectTransform>();
 	rect_sh->GetTransform()->SetParent(rect);
-	CreateGauge_Default(L"SH", rect_sh);
+	CRectTransform* shGR = CreateGauge_Default(L"SH", rect_sh);
+	CreateGauge_SH(shGR);
 
 	CVerticalLayoutGroup* vlg = rect->Get_GameObject()->AddComponent<CVerticalLayoutGroup>();
 	vlg->SetControlChildSize(true, true);
+	vlg->SetSpacing(8.f);
 }
 
 CRectTransform* CPlayerHUD::CreateGauge_Default(const wstring& _name, CRectTransform* _parent)
@@ -150,7 +153,7 @@ CRectTransform* CPlayerHUD::CreateGauge_Default(const wstring& _name, CRectTrans
 	CGameObject* gaugeRect = m_pGameObject->Get_Scene()->Add_GameObject(_name + L"_Gauge");
 	CRectTransform* gr = gaugeRect->AddComponent<CRectTransform>();
 	gr->SetParent(_parent);
-	gr->Set_Width(200.f - 40.f);
+	gr->Set_Width(m_sOptions.gaugeWidthMax - m_sOptions.gaugeFontWidth);
 
 	CHorizontalLayoutGroup* hlg = _parent->Get_GameObject()->AddComponent<CHorizontalLayoutGroup>();
 	hlg->SetControlChildSize(false, true);
@@ -165,29 +168,98 @@ void CPlayerHUD::CreateGauge_BE(CRectTransform* _parent)
 	CTexture* emptyTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Beta_Cube_Empty (Texture)");
 	CTexture* fullTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Beta_Cube_Full (Texture)");
 
-	for (_int i = 0; i < 5; ++i)
+	for (_int i = 0; i < 10; ++i)
 	{
 		CGameObject* gaugeImageObj = m_pGameObject->Get_Scene()->Add_GameObject(L"BE_GaugeImage_Empty_" + to_wstring(i));
 		CImage* empty = gaugeImageObj->AddComponent<CImage>();
 		gaugeImageObj->GetTransform()->SetParent(_parent);
 		empty->SetTexture(emptyTex);
-		empty->GetRectTransform()->Set_AnchoredSize(20.f, 20.f);
+		empty->GetRectTransform()->Set_AnchoredSize(14.f, 14.f);
 
 		CGameObject* fullImageObj = m_pGameObject->Get_Scene()->Add_GameObject(L"BE_GaugeImage_Full_" + to_wstring(i));
 		CImage* full = fullImageObj->AddComponent<CImage>();
 		fullImageObj->GetTransform()->SetParent(gaugeImageObj->GetTransform());
 		full->SetTexture(fullTex);
+		full->SetColor(ColorValue(204, 233, 244));
 		full->GetRectTransform()->Set_AnchoredSize(empty->GetRectTransform()->Get_AnchoredSize());
 	}
 
 	CHorizontalLayoutGroup* hlg = _parent->Get_GameObject()->AddComponent<CHorizontalLayoutGroup>();
 	hlg->SetControlChildSize(false, true);
+	const CLayoutGroup::Padding p = { 0.f, 0.f, 3.f, 3.f };
+	hlg->SetChildAlignment(CLayoutGroup::ChildAlignment::MiddleLeft);
+	hlg->SetPadding(p);
+	hlg->SetSpacing(4.f);
 }
 
 void CPlayerHUD::CreateGauge_HP(CRectTransform* _parent)
 {
+	CTexture* emptyTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Beta_Cube_Empty (Texture)");
+	CTexture* fullTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Beta_Cube_Full (Texture)");
+
+	for (_int i = 0; i < 65; ++i)
+	{
+		CGameObject* hpRectObj = m_pGameObject->Get_Scene()->Add_GameObject(L"HP_Rect_" + to_wstring(i));
+		CRectTransform* rect = hpRectObj->AddComponent<CRectTransform>();
+		rect->SetParent(_parent);
+		rect->Set_AnchoredSizeX(7.f);
+
+		for (_int j = 0; j < 3; ++j)
+		{
+			CGameObject* hpObj = m_pGameObject->Get_Scene()->Add_GameObject(L"HP_Rect_Dot_" + to_wstring(j));
+			CImage* hpRect = hpObj->AddComponent<CImage>();
+			hpRect->GetTransform()->SetParent(rect);
+			hpRect->GetRectTransform()->Set_AnchoredSize(5.f, 5.f);
+		}
+
+		CVerticalLayoutGroup* vlg = hpRectObj->AddComponent<CVerticalLayoutGroup>();
+		vlg->SetChildAlignment(CLayoutGroup::ChildAlignment::MiddleCenter);
+		vlg->SetSpacing(2.f);
+	}
+
+	CHorizontalLayoutGroup* hlg = _parent->Get_GameObject()->AddComponent<CHorizontalLayoutGroup>();
+	hlg->SetControlChildSize(false, true);
+	hlg->SetSpacing(2.f);
+	hlg->SetControlChildSize(false, true);
 }
 
 void CPlayerHUD::CreateGauge_SH(CRectTransform* _parent)
 {
+	CTexture* emptyTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Beta_Cube_Empty (Texture)");
+	CTexture* fullTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Beta_Cube_Full (Texture)");
+
+	for (_int i = 0; i < 5; ++i)
+	{
+		CGameObject* hpRectObj = m_pGameObject->Get_Scene()->Add_GameObject(L"SH_Rect_" + to_wstring(i));
+		CRectTransform* rect = hpRectObj->AddComponent<CRectTransform>();
+		rect->SetParent(_parent);
+		rect->Set_AnchoredSizeX(68.f);
+
+		for (_int j = 0; j < 5; ++j)
+		{
+			CGameObject* gaugeImageObj = m_pGameObject->Get_Scene()->Add_GameObject(L"SH_GaugeImage_Empty_" + to_wstring(i));
+			CImage* empty = gaugeImageObj->AddComponent<CImage>();
+			gaugeImageObj->GetTransform()->SetParent(rect);
+			empty->SetTexture(emptyTex);
+			empty->GetRectTransform()->Set_AnchoredSize(12.f, 12.f);
+
+			CGameObject* fullImageObj = m_pGameObject->Get_Scene()->Add_GameObject(L"SH_GaugeImage_Full_" + to_wstring(i));
+			CImage* full = fullImageObj->AddComponent<CImage>();
+			fullImageObj->GetTransform()->SetParent(gaugeImageObj->GetTransform());
+			full->SetTexture(fullTex);
+			full->SetColor(ColorValue(173, 209, 196));
+			full->GetRectTransform()->Set_AnchoredSize(empty->GetRectTransform()->Get_AnchoredSize());
+
+			CHorizontalLayoutGroup* hlg = hpRectObj->AddComponent<CHorizontalLayoutGroup>();
+			hlg->SetChildAlignment(CLayoutGroup::ChildAlignment::MiddleCenter);
+			hlg->SetSpacing(2.f);
+		}
+	}
+
+	CHorizontalLayoutGroup* hlg = _parent->Get_GameObject()->AddComponent<CHorizontalLayoutGroup>();
+	hlg->SetControlChildSize(false, true);
+	const CLayoutGroup::Padding p = { 0.f, 0.f, 3.f, 3.f };
+	hlg->SetChildAlignment(CLayoutGroup::ChildAlignment::MiddleLeft);
+	hlg->SetPadding(p);
+	hlg->SetSpacing(10.f);
 }

@@ -17,8 +17,16 @@ public:
 
 	struct PlayerStatus
 	{
-		_int maxHp = 6;
+		_int maxBetaEnergy = 0;
+		_int currentBeatEnergy = 0;
+		_int maxHp = 400;
 		_int crtHp = 0;
+		_int maxShield;
+		_int currentShield = 0;
+		_int attackPower = 0;
+		_int shAttack = 0;
+		_int criticalChance = 0;
+		_float criticalDamage = 0.f;
 		_float runSpeed = 3.f;
 		_float sprintSpeed = 4.2f;
 		_float backWalkRatio = 0.7f;
@@ -27,10 +35,20 @@ public:
 		_float turnSpeed = 8.f;
 		_float bigTurnStopSec = 0.28f;
 		_float focusTurnRatio = 8.f;
-		_int attackPower = 1;
 		_float evadeLength = 5.f;
 		_float jumpPower = 340.f;
 		_float hitKnockbackSpeed = 3.f;
+	};
+
+	struct EquipStatus
+	{
+		_int be = 1000;
+		_int hp = 2000;
+		_int sh = 500;
+		_int attack = 450;
+		_int shAttack = 100;
+		_float criticalChance = 5.f;
+		_float criticalDamageRate = 150.f;
 	};
 
 protected:
@@ -54,6 +72,7 @@ public:
 
 public:
 	const PlayerStatus& Get_PlayerStatus();
+	const PlayerStatus Get_PlayerEquipStat();
 	void RecoverHp(const _uint _value);
 	void GetDamage(const _uint _damage);
 
@@ -82,6 +101,7 @@ private:
 	class CWeapon* m_pEquipWeapon;
 
 	PlayerStatus m_sPlayerStatus;
+	EquipStatus m_sEquipStatus;
 
 	vector<CSkinnedMeshRenderer*> m_vBodySuits, m_vFaces, m_vHairs, m_vPonyTailas;
 

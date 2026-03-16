@@ -2831,6 +2831,16 @@ void CResources::Ready_GameResources()
 		LoadResourceComplete_Game<CMaterial>(L"DefaultUIMaterial (Material)", L"", &duiMatDesc);
 	}
 
+	{
+		CShader::SHADERDESC uiObjectIDShaderDesc = { L"../EngineResources/Shader/UIObjectID.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"UIObjectID (Shader)", L"", &uiObjectIDShaderDesc);
+
+		CShader* uiObjectIDShader = LoadOnGame<CShader>(L"UIObjectID (Shader)");
+		CMaterial::MATERIALDESC uiObjectIDMatDesc = { uiObjectIDShader, false, false };
+		uiObjectIDMatDesc.customIntValues.push_back({ L"gObjectID", 0 });
+		LoadResourceComplete_Game<CMaterial>(L"UIObjectID (Material)", L"", &uiObjectIDMatDesc);
+	}
+
 	wstring dfPath = L"BinaryAssets/FontData/LiberationSans.spritefont";
 	LoadResourceComplete_Game<CFont>(L"Sans (Font)", L"", &dfPath);
 }

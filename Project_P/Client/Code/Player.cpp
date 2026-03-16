@@ -15,6 +15,7 @@ CPlayer::CPlayer()
 	, m_pPonyTailObj(nullptr)
 	, m_pEquipWeapon(nullptr)
 	, m_sPlayerStatus({})
+	, m_sEquipStatus({})
 	, m_vBodySuits({})
 	, m_vFaces({})
 	, m_vHairs({})
@@ -236,6 +237,21 @@ CPlayerController* CPlayer::Get_Controller()
 const CPlayer::PlayerStatus& CPlayer::Get_PlayerStatus()
 {
 	return m_sPlayerStatus;
+}
+
+const CPlayer::PlayerStatus CPlayer::Get_PlayerEquipStat()
+{
+	PlayerStatus result = m_sPlayerStatus;
+
+	result.maxHp += m_sEquipStatus.hp;
+	result.maxBetaEnergy += m_sEquipStatus.be;
+	result.maxShield += m_sEquipStatus.sh;
+	result.attackPower += m_sEquipStatus.attack;
+	result.shAttack += m_sEquipStatus.shAttack;
+	result.criticalChance += m_sEquipStatus.criticalChance;
+	result.criticalDamage += m_sEquipStatus.criticalDamageRate;
+
+	return result;
 }
 
 void CPlayer::RecoverHp(const _uint _value)

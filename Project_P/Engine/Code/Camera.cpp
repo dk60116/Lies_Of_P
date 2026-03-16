@@ -1440,6 +1440,88 @@ void CCamera::RenderRTDebugDisplay(const _bool _renderingEditorPass)
 
 void CCamera::RenderObjectIDPass(const D3D11_VIEWPORT* vp)
 {
+	if (!m_bIsEditor || m_vUIList.empty())
+		return;
+
+	ID3D11DeviceContext* ctx = CGraphicDevice::GetInstance().Get_Context();
+	if (!ctx)
+		return;
+
+	auto& rtm = CRenderTargetManager::GetInstance();
+	ID3D11RenderTargetView* objectRTV = rtm.GetRTV(CRenderTarget::RTType::Object, m_bIsEditor);
+	CMaterial* uiObjectIDMat = CResources::GetInstance().LoadOnGame<CMaterial>(L"UIObjectID (Material)");
+
+	if (!objectRTV || !uiObjectIDMat)
+		return;
+
+	ID3D11RenderTargetView* prevRTV = nullptr;
+	ID3D11DepthStencilView* prevDSV = nullptr;
+	ctx->OMGetRenderTargets(1, &prevRTV, &prevDSV);
+
+	D3D11_VIEWPORT prevVP = {};
+	_uint prevVPCount = 1;
+	ctx->RSGetViewports(&prevVPCount, &prevVP);
+
+	ID3D11DepthStencilState* prevDS = nullptr;
+	_uint prevStencilRef = 0;
+	ID3D11RasterizerState* prevRS = nullptr;
+	ID3D11BlendState* prevBS = nullptr;
+	_float prevBlendFactor[4] = {};
+	_uint prevSampleMask = 0;
+
+	ctx->OMGetDepthStencilState(&prevDS, &prevStencilRef);
+	ctx->RSGetState(&prevRS);
+	ctx->OMGetBlendState(&prevBS, prevBlendFactor, &prevSampleMask);
+
+	const D3D11_VIEWPORT* useVP = vp ? vp : ResolveViewport();
+	if (!useVP)
+		useVP = CGraphicDevice::GetInstance().Get_CurrentViewport();
+
+	ctx->OMSetRenderTargets(1, &objectRTV, nullptr);
+
+	if (useVP)
+		ctx->RSSetViewports(1, useVP);
+
+	if (m_pRTDebugDS)
+		ctx->OMSetDepthStencilState(m_pRTDebugDS, 0);
+	if (m_pRTDebugRS)
+		ctx->RSSetState(m_pRTDebugRS);
+
+	const _float blendFactor[4] = { 0.f, 0.f, 0.f, 0.f };
+	ctx->OMSetBlendState(nullptr, blendFactor, 0xFFFFFFFF);
+
+	const _matrix viewMat = GetViewMatrix();
+	const _matrix projMat = GetProjectionMatrix();
+
+	for (TRAVERSAL_ITER(m_vUIList, it))
+	{
+		CUI* ui = *it;
+		if (!ui || !ui->Get_GameObject())
+			continue;
+		if (!ui->Get_GameObject()->IsRecursiveActive() || !ui->Get_Enable())
+			continue;
+		if (ui->GetColor().a == 0)
+			continue;
+
+		uiObjectIDMat->Set_IntValue(L"gObjectID", ui->Get_GameObject()->Get_UniqueID());
+		uiObjectIDMat->Bind_Matrix(ui->GetTransform()->Get_WorldMatrix());
+		uiObjectIDMat->Bind_Camera(_float3(), viewMat, projMat);
+		ui->Bind_Mesh();
+	}
+
+	ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
+	if (prevVPCount > 0)
+		ctx->RSSetViewports(1, &prevVP);
+
+	ctx->OMSetDepthStencilState(prevDS, prevStencilRef);
+	ctx->RSSetState(prevRS);
+	ctx->OMSetBlendState(prevBS, prevBlendFactor, prevSampleMask);
+
+	Safe_Release(prevRTV);
+	Safe_Release(prevDSV);
+	Safe_Release(prevDS);
+	Safe_Release(prevRS);
+	Safe_Release(prevBS);
 }
 
 void CCamera::RenderLightingCombined(const D3D11_VIEWPORT* vp)
