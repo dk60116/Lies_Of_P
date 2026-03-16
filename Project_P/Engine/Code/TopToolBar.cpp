@@ -747,6 +747,8 @@ void CTopToolBar::ShowGameStatusWindow()
 	ImGui::Text("Batches: %u", stats.batches);
 	ImGui::Text("Tris: %u", stats.tris);
 	ImGui::Text("Verts: %u", stats.verts);
+	ImGui::Text("UIImageBatches: %u", stats.uiImageBatches);
+	ImGui::Text("UIImageInstances: %u", stats.uiImageInstances);
 	ImGui::Text("Screen: %u x %u", screenWidth, screenHeight);
 	ImGui::Text("VisibleSkinnedMeshes: %u", stats.visibleSkinnedMeshes);
 

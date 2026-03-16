@@ -5,11 +5,18 @@ CPlayerHUD::CPlayerHUD()
 	: m_pPlayer(nullptr)
 	, m_pCanvas(nullptr)
 	, m_sOptions({})
+	, m_sCachedStatus({})
+	, m_fDisplayedHp(0.f)
+	, m_bHpDisplayInitialized(false)
 	, m_pAimImage(nullptr)
 	, m_pPotionHolderImage(nullptr)
+	, m_vPotionStacks({})
 	, m_pPCBtnImage(nullptr)
 	, m_pTextPotionCount(nullptr)
 	, m_vGaugeTexts({})
+	, m_vBEBox({})
+	, m_vHPBox({})
+	, m_vSHBox({})
 {
 }
 
@@ -40,18 +47,37 @@ HRESULT CPlayerHUD::Initialize()
 
 void CPlayerHUD::Awake()
 {
+	m_pPlayer = CGameManager::GetInstance().Get_Player();
+	CGameManager::GetInstance().Set_PlayerHUD(this);
 }
 
 void CPlayerHUD::Start()
 {
+	Update_Status(m_pPlayer->Get_PlayerEquipStat());
 }
 
 void CPlayerHUD::Update()
 {
+	if (!m_bHpDisplayInitialized)
+		return;
+
+	const _float targetHp = static_cast<_float>(m_sCachedStatus.crtHp);
+	const _float dt = std::clamp(DELTA_TIME, 0.f, 0.05f);
+	const _float followSpeed = 10.f;
+	const _float t = 1.f - std::exp(-followSpeed * dt);
+
+	m_fDisplayedHp += (targetHp - m_fDisplayedHp) * t;
+
+	if (fabsf(targetHp - m_fDisplayedHp) < 0.05f)
+		m_fDisplayedHp = targetHp;
+
+	Update_HP(m_sCachedStatus.maxHp, static_cast<_uint>(std::round(m_fDisplayedHp)));
 }
 
 void CPlayerHUD::OnDestroy()
 {
+	if (CGameManager::GetInstance().Get_PlayerHUD() == this)
+		CGameManager::GetInstance().Set_PlayerHUD(nullptr);
 }
 
 void CPlayerHUD::CreateAim()
@@ -103,6 +129,26 @@ void CPlayerHUD::CreatePotions()
 	m_pTextPotionCount->SetFontSize(2.5f);
 	m_pTextPotionCount->SetAligmentHorizontal(CText::TextAligmentHorizontal::Left);
 	m_pTextPotionCount->SetAligmentVertical(CText::TexAligmentVertical::Bottom);
+
+	CGameObject* stackRectObj = m_pGameObject->Get_Scene()->Add_GameObject(L"PotionStackRect");
+	CRectTransform* stackRect = stackRectObj->AddComponent<CRectTransform>();
+	stackRect->SetParent(potionHolderObj->GetTransform());
+	stackRect->Set_AnchorsMin(0.5f, 0.f);
+	stackRect->Set_PivotY(0.f);
+	stackRect->Set_AnchoredPositonY(26.f);
+	stackRect->Set_WidthHeight(27.f, 43.f);
+
+	for (_int i = 0; i < m_sOptions.maxPotionStack; ++i)
+	{
+		CGameObject* stackObj = m_pGameObject->Get_Scene()->Add_GameObject(L"PotionStack_" + to_wstring(i));
+		m_vPotionStacks.push_back(stackObj->AddComponent<CImage>());
+		m_vPotionStacks.back()->GetRectTransform()->SetParent(stackRect);
+		m_vPotionStacks.back()->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Potion_Stack (Texture)"));
+	}
+
+	CVerticalLayoutGroup* vlg =  stackRect->Get_GameObject()->AddComponent<CVerticalLayoutGroup>();
+	vlg->SetControlChildSize(true, true);
+	vlg->SetSpacing(2.f);
 }
 
 void CPlayerHUD::CreateGauge()
@@ -113,29 +159,32 @@ void CPlayerHUD::CreateGauge()
 	rect->Set_Pivot(0.f, 0.f);
 	rect->Set_AnchorsMin(0.f, 0.f);
 	rect->Set_AnchoredPosition(110.f, 55.f);
-	rect->Set_AnchoredSize(m_sOptions.gaugeWidthMax, 75.f);
+	rect->Set_AnchoredSize(m_sOptions.gaugeWidthMax, 73.f);
 
 	CGameObject* beObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Gauge_BE");
 	CRectTransform* rect_be = beObj->AddComponent<CRectTransform>();
 	beObj->GetTransform()->SetParent(rect);
 	CRectTransform* beGR = CreateGauge_Default(L"BE", rect_be);
 	CreateGauge_BE(beGR);
+	rect_be->Set_Height(20.f);
 
 	CGameObject* hpObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Gauge_HP");
 	CRectTransform* rect_hp = hpObj->AddComponent<CRectTransform>();
 	rect_hp->GetTransform()->SetParent(rect);
 	CRectTransform* hpGR = CreateGauge_Default(L"HP", rect_hp);
 	CreateGauge_HP(hpGR);
+	rect_hp->Set_Height(25.f);
 
 	CGameObject* shObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Gauge_SH");
 	CRectTransform* rect_sh = shObj->AddComponent<CRectTransform>();
 	rect_sh->GetTransform()->SetParent(rect);
 	CRectTransform* shGR = CreateGauge_Default(L"SH", rect_sh);
 	CreateGauge_SH(shGR);
+	rect_sh->Set_Height(20.f);
 
 	CVerticalLayoutGroup* vlg = rect->Get_GameObject()->AddComponent<CVerticalLayoutGroup>();
-	vlg->SetControlChildSize(true, true);
-	vlg->SetSpacing(8.f);
+	vlg->SetControlChildSize(true, false);
+	vlg->SetSpacing(4.f);
 }
 
 CRectTransform* CPlayerHUD::CreateGauge_Default(const wstring& _name, CRectTransform* _parent)
@@ -168,24 +217,26 @@ void CPlayerHUD::CreateGauge_BE(CRectTransform* _parent)
 	CTexture* emptyTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Beta_Cube_Empty (Texture)");
 	CTexture* fullTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Beta_Cube_Full (Texture)");
 
-	for (_int i = 0; i < 10; ++i)
+	for (_int i = 0; i < 14; ++i)
 	{
 		CGameObject* gaugeImageObj = m_pGameObject->Get_Scene()->Add_GameObject(L"BE_GaugeImage_Empty_" + to_wstring(i));
 		CImage* empty = gaugeImageObj->AddComponent<CImage>();
 		gaugeImageObj->GetTransform()->SetParent(_parent);
 		empty->SetTexture(emptyTex);
-		empty->GetRectTransform()->Set_AnchoredSize(14.f, 14.f);
+		empty->GetRectTransform()->Set_WidthHeight(14.f, 14.f);
 
 		CGameObject* fullImageObj = m_pGameObject->Get_Scene()->Add_GameObject(L"BE_GaugeImage_Full_" + to_wstring(i));
 		CImage* full = fullImageObj->AddComponent<CImage>();
 		fullImageObj->GetTransform()->SetParent(gaugeImageObj->GetTransform());
 		full->SetTexture(fullTex);
+		full->Set_FillMethod(CImage::FillMethod::Horizontal);
 		full->SetColor(ColorValue(204, 233, 244));
-		full->GetRectTransform()->Set_AnchoredSize(empty->GetRectTransform()->Get_AnchoredSize());
+		full->GetRectTransform()->Set_AnchoredSize(empty->GetRectTransform()->Get_WidthHeight());
+		
+		m_vBEBox.push_back({ empty, full });
 	}
 
 	CHorizontalLayoutGroup* hlg = _parent->Get_GameObject()->AddComponent<CHorizontalLayoutGroup>();
-	hlg->SetControlChildSize(false, true);
 	const CLayoutGroup::Padding p = { 0.f, 0.f, 3.f, 3.f };
 	hlg->SetChildAlignment(CLayoutGroup::ChildAlignment::MiddleLeft);
 	hlg->SetPadding(p);
@@ -194,72 +245,169 @@ void CPlayerHUD::CreateGauge_BE(CRectTransform* _parent)
 
 void CPlayerHUD::CreateGauge_HP(CRectTransform* _parent)
 {
-	CTexture* emptyTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Beta_Cube_Empty (Texture)");
-	CTexture* fullTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Beta_Cube_Full (Texture)");
+	CTexture* emptyTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_HP_Cube_Empty (Texture)");
+	CTexture* fullTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_HP_Cube_Full (Texture)");
+
+	const _float rectSize = 7.f;
 
 	for (_int i = 0; i < 65; ++i)
 	{
 		CGameObject* hpRectObj = m_pGameObject->Get_Scene()->Add_GameObject(L"HP_Rect_" + to_wstring(i));
 		CRectTransform* rect = hpRectObj->AddComponent<CRectTransform>();
 		rect->SetParent(_parent);
-		rect->Set_AnchoredSizeX(7.f);
+		rect->Set_Width(rectSize);
+
+		HPGaugeSet set = {};
+		set.rect = rect;
 
 		for (_int j = 0; j < 3; ++j)
 		{
-			CGameObject* hpObj = m_pGameObject->Get_Scene()->Add_GameObject(L"HP_Rect_Dot_" + to_wstring(j));
-			CImage* hpRect = hpObj->AddComponent<CImage>();
+			CGameObject* hpEmptyObj = m_pGameObject->Get_Scene()->Add_GameObject(L"HP_Rect_Empty_" + to_wstring(j));
+			CImage* hpRect = hpEmptyObj->AddComponent<CImage>();
 			hpRect->GetTransform()->SetParent(rect);
-			hpRect->GetRectTransform()->Set_AnchoredSize(5.f, 5.f);
+			hpRect->SetTexture(emptyTex);
+			hpRect->GetRectTransform()->Set_WidthHeight(rectSize, rectSize);
+			set.bg.push_back(hpRect);
+
+			CGameObject* hpFullObj = m_pGameObject->Get_Scene()->Add_GameObject(L"HP_Rect_Dot_" + to_wstring(j));
+			CImage* hpFullRect = hpFullObj->AddComponent<CImage>();
+			hpFullRect->GetTransform()->SetParent(hpRect->GetRectTransform());
+			hpFullRect->SetTexture(fullTex);
+			hpFullRect->Set_FillMethod(CImage::FillMethod::Horizontal);
+			hpFullRect->GetRectTransform()->Set_WidthHeight(hpRect->GetRectTransform()->Get_WidthHeight());
+			set.fill.push_back(hpFullRect);
 		}
+
+		m_vHPBox.push_back(set);
 
 		CVerticalLayoutGroup* vlg = hpRectObj->AddComponent<CVerticalLayoutGroup>();
 		vlg->SetChildAlignment(CLayoutGroup::ChildAlignment::MiddleCenter);
-		vlg->SetSpacing(2.f);
+		vlg->SetSpacing(0.f);
 	}
 
 	CHorizontalLayoutGroup* hlg = _parent->Get_GameObject()->AddComponent<CHorizontalLayoutGroup>();
 	hlg->SetControlChildSize(false, true);
-	hlg->SetSpacing(2.f);
+	hlg->SetSpacing(0.f);
 	hlg->SetControlChildSize(false, true);
 }
 
 void CPlayerHUD::CreateGauge_SH(CRectTransform* _parent)
 {
-	CTexture* emptyTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Beta_Cube_Empty (Texture)");
-	CTexture* fullTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Beta_Cube_Full (Texture)");
+	CTexture* emptyTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SH_Cube_Empty (Texture)");
+	CTexture* fullTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SH_Cube_Full (Texture)");
 
-	for (_int i = 0; i < 5; ++i)
+	const _float rectSize = 7.f;
+	const _int rectCount = 11;
+	const _float boxSize = rectSize * rectCount;
+
+	for (_int i = 0; i < 5; i++)
 	{
-		CGameObject* hpRectObj = m_pGameObject->Get_Scene()->Add_GameObject(L"SH_Rect_" + to_wstring(i));
-		CRectTransform* rect = hpRectObj->AddComponent<CRectTransform>();
-		rect->SetParent(_parent);
-		rect->Set_AnchoredSizeX(68.f);
+		CGameObject* boxObj = m_pGameObject->Get_Scene()->Add_GameObject(L"SH_Box_" + to_wstring(i));
+		CRectTransform* boxRect = boxObj->AddComponent<CRectTransform>();
+		boxRect->SetParent(_parent);
+		boxRect->Set_Width(boxSize);
 
-		for (_int j = 0; j < 5; ++j)
+		for (_int j = 0; j < rectCount; ++j)
 		{
-			CGameObject* gaugeImageObj = m_pGameObject->Get_Scene()->Add_GameObject(L"SH_GaugeImage_Empty_" + to_wstring(i));
-			CImage* empty = gaugeImageObj->AddComponent<CImage>();
-			gaugeImageObj->GetTransform()->SetParent(rect);
-			empty->SetTexture(emptyTex);
-			empty->GetRectTransform()->Set_AnchoredSize(12.f, 12.f);
+			CGameObject* hpRectObj = m_pGameObject->Get_Scene()->Add_GameObject(L"SH_Rect_" + to_wstring(j));
+			CRectTransform* rect = hpRectObj->AddComponent<CRectTransform>();
+			rect->SetParent(boxRect);
+			rect->Set_WidthHeight(rectSize, rectSize * 2.f);
 
-			CGameObject* fullImageObj = m_pGameObject->Get_Scene()->Add_GameObject(L"SH_GaugeImage_Full_" + to_wstring(i));
-			CImage* full = fullImageObj->AddComponent<CImage>();
-			fullImageObj->GetTransform()->SetParent(gaugeImageObj->GetTransform());
-			full->SetTexture(fullTex);
-			full->SetColor(ColorValue(173, 209, 196));
-			full->GetRectTransform()->Set_AnchoredSize(empty->GetRectTransform()->Get_AnchoredSize());
+			SEGaugeSet set = {};
+			set.rect = rect;
 
-			CHorizontalLayoutGroup* hlg = hpRectObj->AddComponent<CHorizontalLayoutGroup>();
-			hlg->SetChildAlignment(CLayoutGroup::ChildAlignment::MiddleCenter);
-			hlg->SetSpacing(2.f);
+			for (_int k = 0; k < 2; ++k)
+			{
+				CGameObject* hpEmptyObj = m_pGameObject->Get_Scene()->Add_GameObject(L"SH_Rect_Empty_" + to_wstring(k));
+				CImage* hpRect = hpEmptyObj->AddComponent<CImage>();
+				hpRect->GetTransform()->SetParent(rect);
+				hpRect->SetTexture(emptyTex);
+				hpRect->GetRectTransform()->Set_WidthHeight(rectSize, rectSize);
+				set.bg.push_back(hpRect);
+
+				CGameObject* hpFullObj = m_pGameObject->Get_Scene()->Add_GameObject(L"SH_Rect_Dot_" + to_wstring(k));
+				CImage * hpFullRect = hpFullObj->AddComponent<CImage>();
+				hpFullRect->GetTransform()->SetParent(hpRect->GetRectTransform());
+				hpFullRect->SetTexture(fullTex);
+				hpFullRect->SetColor(ColorValue(173, 209, 196));
+				hpFullRect->Set_FillMethod(CImage::FillMethod::Horizontal);
+				hpFullRect->GetRectTransform()->Set_WidthHeight(hpRect->GetRectTransform()->Get_WidthHeight());
+				set.fill.push_back(hpFullRect);
+			}
+
+			m_vSHBox.push_back(set);
+
+			CVerticalLayoutGroup* vlg = hpRectObj->AddComponent<CVerticalLayoutGroup>();
+			vlg->SetChildAlignment(CLayoutGroup::ChildAlignment::MiddleCenter);
 		}
+
+		CHorizontalLayoutGroup* hlg = boxRect->Get_GameObject()->AddComponent<CHorizontalLayoutGroup>();
+		hlg->SetControlChildSize(false, false);
+		hlg->SetChildAlignment(CLayoutGroup::ChildAlignment::MiddleLeft);
 	}
 
 	CHorizontalLayoutGroup* hlg = _parent->Get_GameObject()->AddComponent<CHorizontalLayoutGroup>();
 	hlg->SetControlChildSize(false, true);
-	const CLayoutGroup::Padding p = { 0.f, 0.f, 3.f, 3.f };
-	hlg->SetChildAlignment(CLayoutGroup::ChildAlignment::MiddleLeft);
-	hlg->SetPadding(p);
-	hlg->SetSpacing(10.f);
+	hlg->SetControlChildSize(false, true);
+	hlg->SetSpacing(rectSize + 0.5f);
+}
+
+void CPlayerHUD::Update_Status(const CPlayer::PlayerStatus& _status)
+{
+	m_sCachedStatus = _status;
+
+	if (!m_bHpDisplayInitialized)
+	{
+		m_fDisplayedHp = static_cast<_float>(_status.crtHp);
+		m_bHpDisplayInitialized = true;
+	}
+
+	Update_BE(_status.maxBetaEnergy, _status.crtBeatEnergy);
+	Update_SH(_status.maxShield, _status.crtShield);
+	Update_HP(_status.maxHp, static_cast<_uint>(std::round(m_fDisplayedHp)));
+}
+
+void CPlayerHUD::Update_BE(const _uint _maxValue, const _uint _current)
+{
+	for (size_t i = 0; i < m_vBEBox.size(); ++i)
+	{
+		m_vBEBox[i].bg->Get_GameObject()->SetActive(i < _maxValue / 200);
+	}
+}
+
+void CPlayerHUD::Update_HP(const _uint _maxValue, const _uint _current)
+{
+	const _float rectCapacity = 100.f;
+
+	for (size_t i = 0; i < m_vHPBox.size(); ++i)
+	{
+		HPGaugeSet& set = m_vHPBox[i];
+		const _float rectStart = static_cast<_float>(i) * rectCapacity;
+		const _float rectMax = std::clamp(static_cast<_float>(_maxValue) - rectStart, 0.f, rectCapacity);
+		const _float rectCurrent = std::clamp(static_cast<_float>(_current) - rectStart, 0.f, rectCapacity);
+		const _bool rectActive = rectMax > 0.f;
+		const _float rectFillAmount = (rectCapacity > 0.f) ? (rectCurrent / rectCapacity) : 0.f;
+
+		set.rect->Get_GameObject()->SetActive(rectActive);
+		if (!rectActive || set.fill.empty())
+			continue;
+
+		for (CImage* fillImage : set.fill)
+		{
+			if (!fillImage)
+				continue;
+
+			fillImage->SetFillAmount(rectFillAmount);
+			fillImage->Get_GameObject()->SetActive(rectFillAmount > 0.f);
+		}
+	}
+}
+
+void CPlayerHUD::Update_SH(const _uint _maxValue, const _uint _current)
+{
+	for (size_t i = 0; i < m_vSHBox.size(); ++i)
+	{
+		m_vSHBox[i].rect->Get_GameObject()->SetActive(i < _maxValue / (500.f / 22.f));
+	}
 }

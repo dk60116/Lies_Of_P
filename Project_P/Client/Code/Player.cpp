@@ -158,8 +158,6 @@ HRESULT CPlayer::Initialize()
 	m_pPonyTailObj->GetTransform()->Set_LocalPosition(-0.086f, -3.039f, 0.f);
 	m_pHairObj->GetTransform()->Set_LocalEulerAngles(vector3::zero());
 
-	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp;
-
 	CGameManager::GetInstance().Set_Player(this);
 
 	m_pWeaponHolder = GetTransform()->Find_ChildRecursive(L"SC_WeaponConstraint");
@@ -182,6 +180,8 @@ HRESULT CPlayer::Initialize()
 	m_pRigidBody->SetConstRotationZ(true);
 	m_pRigidBody->SetUseGravity(true);
 
+	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp + m_sEquipStatus.hp;
+
 	return S_OK;
 }
 
@@ -195,6 +195,7 @@ void CPlayer::Awake()
 void CPlayer::Start()
 {
 	__super::Start();
+	SyncHUDStatus();
 }
 
 void CPlayer::Update()
@@ -258,12 +259,14 @@ void CPlayer::RecoverHp(const _uint _value)
 {
 	m_sPlayerStatus.crtHp += _value;
 	m_sPlayerStatus.crtHp = min(m_sPlayerStatus.crtHp, m_sPlayerStatus.maxHp);
+	SyncHUDStatus();
 }
 
 void CPlayer::GetDamage(const _uint _damage)
 {
 	m_sPlayerStatus.crtHp -= _damage;
 	m_sPlayerStatus.crtHp = max(m_sPlayerStatus.crtHp, 0);
+	SyncHUDStatus();
 }
 
 const _float CPlayer::GetRadius() const
@@ -357,5 +360,11 @@ _bool CPlayer::TryGuardHit(const HurtDescription& _hurtDesc)
 
 	m_pController->PlayGuardHit(knockbackDir);
 	return true;
+}
+
+void CPlayer::SyncHUDStatus()
+{
+	if (CPlayerHUD* hud = CGameManager::GetInstance().Get_PlayerHUD())
+		hud->Update_Status(Get_PlayerEquipStat());
 }
 

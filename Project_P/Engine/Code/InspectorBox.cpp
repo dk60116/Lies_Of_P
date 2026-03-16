@@ -198,6 +198,7 @@ struct TexturePickerState
 {
     _bool open = false;
     CMaterial* material = nullptr;
+    CImage* image = nullptr;
     _int slotIndex = -1;
     string selectedFolder = "All";
     string searchText;
@@ -214,7 +215,19 @@ static void OpenTexturePicker(CMaterial* material, const _int slotIndex)
 
     g_texturePickerState.open = true;
     g_texturePickerState.material = material;
+    g_texturePickerState.image = nullptr;
     g_texturePickerState.slotIndex = slotIndex;
+}
+
+static void OpenTexturePicker(CImage* image)
+{
+    if (!image || !image->Get_Material())
+        return;
+
+    g_texturePickerState.open = true;
+    g_texturePickerState.material = image->Get_Material();
+    g_texturePickerState.image = image;
+    g_texturePickerState.slotIndex = 0;
 }
 
 static string NormalizeAnimatorControllerName(const wstring& resourceName)
@@ -384,7 +397,7 @@ static void RenderTexturePickerWindow()
         return;
     }
 
-    if (!g_texturePickerState.material || g_texturePickerState.slotIndex < 0)
+    if ((!g_texturePickerState.material && !g_texturePickerState.image) || g_texturePickerState.slotIndex < 0)
     {
         g_texturePickerState.open = false;
         ImGui::End();
@@ -481,8 +494,13 @@ static void RenderTexturePickerWindow()
 
                     if (selected)
                     {
-                        g_texturePickerState.material->Set_Texture(texture, g_texturePickerState.slotIndex);
+                        if (g_texturePickerState.image)
+                            g_texturePickerState.image->SetTexture(texture);
+                        else
+                            g_texturePickerState.material->Set_Texture(texture, g_texturePickerState.slotIndex);
+
                         g_texturePickerState.open = false;
+                        g_texturePickerState.image = nullptr;
                         ImGui::PopID();
                         clipper.End();
                         ImGui::EndTable();
@@ -2146,6 +2164,73 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                         static_cast<BYTE>(std::clamp(textColor[2], 0.f, 1.f) * 255.f),
                         static_cast<BYTE>(std::clamp(textColor[3], 0.f, 1.f) * 255.f)));
                 }
+            }
+
+            if (CImage* image = dynamic_cast<CImage*>(component))
+            {
+                static const char* fillMethodLabels[] =
+                {
+                    "None",
+                    "Horizontal",
+                    "Vertical",
+                    "Radial90",
+                    "Radial180",
+                    "Radial360"
+                };
+
+                const string imageId = to_string(reinterpret_cast<uintptr_t>(image));
+                CTexture* texture = image->GetTexture();
+                const string textureName = texture ? CEngineString::WStringToString(texture->Get_ResourceName()) : "None";
+
+                ImGui::TextUnformatted("Texture");
+                ImGui::SameLine();
+
+                _bool openPicker = false;
+                if (texture && texture->Get_SRV())
+                    openPicker = ImGui::ImageButton(("##ImageTextureThumb" + imageId).c_str(), ImTextureRef((ImTextureID)(intptr_t)texture->Get_SRV()), ImVec2(36.f, 36.f));
+                else
+                    openPicker = ImGui::Button(("Select##ImageTexture" + imageId).c_str(), ImVec2(64.f, 36.f));
+
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("%s", textureName.c_str());
+
+                if (openPicker)
+                    OpenTexturePicker(image);
+
+                ImGui::SameLine();
+                ImGui::Text("%s", BuildShortLabel(textureName, 28).c_str());
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("%s", textureName.c_str());
+
+                ImGui::SameLine();
+                if (ImGui::Button(("Empty##ImageTexture" + imageId).c_str()))
+                    image->SetTexture(nullptr);
+
+                ColorValue colorValue = image->GetColor();
+                _float imageColor[4] =
+                {
+                    colorValue.r / 255.f,
+                    colorValue.g / 255.f,
+                    colorValue.b / 255.f,
+                    colorValue.a / 255.f
+                };
+
+                if (ImGui::ColorEdit4(("Color##Image" + imageId).c_str(), imageColor))
+                {
+                    image->SetColor(ColorValue(
+                        static_cast<BYTE>(std::clamp(imageColor[0], 0.f, 1.f) * 255.f),
+                        static_cast<BYTE>(std::clamp(imageColor[1], 0.f, 1.f) * 255.f),
+                        static_cast<BYTE>(std::clamp(imageColor[2], 0.f, 1.f) * 255.f),
+                        static_cast<BYTE>(std::clamp(imageColor[3], 0.f, 1.f) * 255.f)));
+                }
+
+                _int fillMethodIndex = static_cast<_int>(image->Get_FillMethod());
+                if (ImGui::Combo(("Fill Method##Image" + imageId).c_str(), &fillMethodIndex, fillMethodLabels, IM_ARRAYSIZE(fillMethodLabels)))
+                    image->Set_FillMethod(static_cast<CImage::FillMethod>(fillMethodIndex));
+
+                _float fillAmount = image->GetFillAmount();
+                if (ImGui::SliderFloat(("Fill Amount##Image" + imageId).c_str(), &fillAmount, 0.f, 1.f, "%.3f"))
+                    image->SetFillAmount(fillAmount);
             }
 
 			if (CHorizontalLayoutGroup* horizontalLayout = dynamic_cast<CHorizontalLayoutGroup*>(component))

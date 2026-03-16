@@ -2823,7 +2823,7 @@ void CResources::Ready_GameResources()
 	LoadResourceComplete_Game<CShader>(L"Outline (Shader)", L"", &outlineShaderDesc);
 	
 	{
-		CShader::SHADERDESC dUIShaderDesc = { L"../EngineResources/Shader/DefaultUI.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
+		CShader::SHADERDESC dUIShaderDesc = { L"../EngineResources/Shader/DefaultUIInstanced.hlsl", L"",  VertexTexColorBuffer::numElements, VertexTexColorBuffer::elementDesc };
 		LoadResourceComplete_Game<CShader>(L"DefaultUI (Shader)", L"", &dUIShaderDesc);
 
 		CShader* duiShader = LoadOnGame<CShader>(L"DefaultUI (Shader)");

@@ -18,14 +18,14 @@ public:
 	struct PlayerStatus
 	{
 		_int maxBetaEnergy = 0;
-		_int currentBeatEnergy = 0;
-		_int maxHp = 400;
+		_int crtBeatEnergy = 0;
+		_int maxHp = 300;
 		_int crtHp = 0;
 		_int maxShield;
-		_int currentShield = 0;
+		_int crtShield = 0;
 		_int attackPower = 0;
 		_int shAttack = 0;
-		_int criticalChance = 0;
+		_float criticalChance = 0.f;
 		_float criticalDamage = 0.f;
 		_float runSpeed = 3.f;
 		_float sprintSpeed = 4.2f;
@@ -93,6 +93,7 @@ protected:
 private:
 	_bool CanGuardHit(const HurtDescription& _hurtDesc);
 	_bool TryGuardHit(const HurtDescription& _hurtDesc);
+	void SyncHUDStatus();
 
 private:
 	class CPlayerController* m_pController;

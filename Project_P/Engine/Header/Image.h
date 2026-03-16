@@ -56,6 +56,7 @@ public:
 	
 public:
 	void SetTexture(CTexture* _texture);
+	CTexture* GetTexture() const;
 
 private:
 	class CTexture* m_pTexture;

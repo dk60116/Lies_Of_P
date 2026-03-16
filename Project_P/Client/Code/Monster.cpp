@@ -1,6 +1,7 @@
 #include "cpch.h"
 #include "Monster.h"
 #include "MonsterController.h"
+#include "HurtBox.h"
 
 CMonster::CMonster()
 	: m_iCurrentState(0)
@@ -43,6 +44,12 @@ void CMonster::Awake()
 void CMonster::Start()
 {
 	__super::Start();
+
+	for (const auto& hurtBoxPair : m_mHurtBoxList)
+	{
+		if (hurtBoxPair.second)
+			hurtBoxPair.second->SetDamage(m_sStatus.attackPower);
+	}
 }
 
 void CMonster::Update()

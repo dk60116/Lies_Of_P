@@ -58,13 +58,23 @@ void CHurtBox::OnTriggerEnter(CCollider* _other)
         if (_other->Get_GameObject()->CompareTag(L"PlayerBody"))
         {
             OnHitEvent(_other->Get_GameObject()->GetComponent<CPlayer>());
+            RequestDisableBox();
         }
     }
 }
 
 void CHurtBox::OnTriggerStay(CCollider* _other)
 {
-    OnTriggerEnter(_other);
+}
+
+void CHurtBox::SetDamage(const _int damage)
+{
+    m_sHurtDesc.damage = max(0, damage);
+}
+
+const _int CHurtBox::GetDamage() const
+{
+    return m_sHurtDesc.damage;
 }
 
 void CHurtBox::OnHitEvent(CCharacter* _target)

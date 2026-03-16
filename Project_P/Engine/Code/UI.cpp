@@ -179,6 +179,16 @@ CRectTransform* CUI::GetRectTransform() const
 	return m_pRectTransform;
 }
 
+CMeshBuffer* CUI::Get_Mesh() const
+{
+	return m_pRectMesh;
+}
+
+CMaterial* CUI::Get_Material() const
+{
+	return m_pMaterial;
+}
+
 void CUI::SetColor(ColorValue _color)
 {
 	m_vColor = _color;

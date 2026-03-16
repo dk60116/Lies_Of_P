@@ -29,7 +29,7 @@ HRESULT CMon_Creeper::Initialize()
 {
 	m_vMaterialTransparent = { false, true };
 
-	m_vHurtBoxInfoList.push_back({ L"FX_Tail_04_end", vector3::one() * 10.f });
+	m_vHurtBoxInfoList.push_back({ L"FX_Tail_04_end", vector3::one() * 30.f });
 
 	m_vHitBoxInfoList.push_back({ L"Bip001-Pelvis", vector3::one() * 30.f, vector3::up() * 20.f });
 
@@ -46,6 +46,7 @@ HRESULT CMon_Creeper::Initialize()
 
 	m_sStatus.moveSpeed = 6.f;
 	m_sStatus.attackRange = 0.5f;
+	m_sStatus.attackPower = 80;
 
 	return S_OK;
 }
@@ -83,7 +84,7 @@ void CMon_Creeper::SetAnimationAction()
 		const _uint end = ac->Get_NormalizedFrameIndex(0.78f);
 
 		{
-			CAnimationClip::ActionTrigger at = { 17, L"AttackBase_Start" };
+			CAnimationClip::ActionTrigger at = { 19, L"AttackBase_Start" };
 
 			ac->Add_ActionTrigger(at);
 			m_pAnimator->RegisterActionHandler(L"AttackBase_Start", [this]()

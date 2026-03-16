@@ -171,83 +171,22 @@ void CRectTransform::Render_Gizmo()
         gizmoWorldMatrix *= translateMat;
     }
 
-    const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_CurrentViewport();
-
-    auto projectPoint = [&](const vector2& localPoint, ImVec2& outScreenPoint) -> _bool
+    if (m_pUI && m_pUI->m_pLineMat && m_pUI->m_pRectGizmoMesh)
     {
-        D3D11_VIEWPORT viewport = {};
-        if (vp)
-        {
-            viewport = *vp;
-        }
-        else
-        {
-            ImGuiIO& io = ImGui::GetIO();
-            viewport.TopLeftX = 0.f;
-            viewport.TopLeftY = 0.f;
-            viewport.Width = io.DisplaySize.x;
-            viewport.Height = io.DisplaySize.y;
-            viewport.MinDepth = 0.f;
-            viewport.MaxDepth = 1.f;
-        }
+        const _float4 lineColor = isSelected
+            ? _float4(1.f, 220.f / 255.f, 120.f / 255.f, 1.f)
+            : _float4(180.f / 255.f, 220.f / 255.f, 1.f, 190.f / 255.f);
 
-        const _vector local = XMVectorSet(localPoint.x, localPoint.y, 0.f, 1.f);
-        const _vector world = XMVector3TransformCoord(local, rectWorldMatrix);
-        const _vector projected = XMVector3Project
-        (
-            world,
-            viewport.TopLeftX,
-            viewport.TopLeftY,
-            viewport.Width,
-            viewport.Height,
-            viewport.MinDepth,
-            viewport.MaxDepth,
-            projMatrix,
-            viewMatrix,
-            XMMatrixIdentity()
-        );
-
-        const _float depth = XMVectorGetZ(projected);
-        if (depth < 0.f || depth > 1.f)
-            return false;
-
-        outScreenPoint = ImVec2(XMVectorGetX(projected), XMVectorGetY(projected));
-        return true;
-    };
-
-    ImVec2 corners[4] = {};
-    const vector2 localCorners[4] =
-    {
-        vector2(-0.5f, -0.5f),
-        vector2(0.5f, -0.5f),
-        vector2(0.5f, 0.5f),
-        vector2(-0.5f, 0.5f)
-    };
-
-    _bool allCornersVisible = true;
-    for (_uint i = 0; i < 4; ++i)
-    {
-        if (!projectPoint(localCorners[i], corners[i]))
-        {
-            allCornersVisible = false;
-            break;
-        }
-    }
-
-    if (allCornersVisible)
-    {
-        ImDrawList* drawList = ImGui::GetBackgroundDrawList();
-        const ImU32 lineColor = isSelected
-            ? IM_COL32(255, 220, 120, 255)
-            : IM_COL32(180, 220, 255, 190);
-        const _float thickness = isSelected ? 2.f : 1.f;
-
-        for (_uint i = 0; i < 4; ++i)
-            drawList->AddLine(corners[i], corners[(i + 1u) % 4u], lineColor, thickness);
+        m_pUI->m_pLineMat->Set_BaseColor(lineColor);
+        m_pUI->m_pLineMat->Bind_Matrix(rectWorldMatrix);
+        m_pUI->m_pLineMat->Bind_Camera(_float3(), viewMatrix, projMatrix, 0);
+        m_pUI->m_pRectGizmoMesh->Render();
     }
 
     if (!isSelected)
         return;
+
+    const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_CurrentViewport();
 
     _float world[16];
     memcpy(world, &gizmoWorldMatrix, sizeof(float) * 16);

@@ -19,6 +19,10 @@ public:
 	void OnTriggerEnter(CCollider* _other) override;
 	void OnTriggerStay(CCollider* _other) override;
 
+public:
+	void SetDamage(const _int damage);
+	const _int GetDamage() const;
+
 private:
 	void OnHitEvent(CCharacter* _target);
 

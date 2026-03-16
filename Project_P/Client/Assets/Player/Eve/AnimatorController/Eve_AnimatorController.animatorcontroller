@@ -31,6 +31,7 @@ bool isStrongAttack=false
 trigger Hit
 int HitDirection=0
 int hitDir=0
+bool isEvade=false
 
 [state Run_Forward_Start]
 blendTree=2d
@@ -730,8 +731,8 @@ transitionOffset=0.000000
 
 [transition Evade->Idle]
 blend=0.150000
-exitTime=0.600000
-fixedDuration=true
+cond=speed==0.000000 && isEvade==false
+fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000
 
@@ -1233,6 +1234,13 @@ transitionOffset=0.000000
 blend=0.150000
 cond=isGuard==true
 exitTime=0.800000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Evade->Run_Forward]
+blend=0.150000
+cond=speed>0.100000 && isEvade==false
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

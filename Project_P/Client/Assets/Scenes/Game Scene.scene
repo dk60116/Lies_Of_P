@@ -131,13 +131,16 @@ Anim_Mon_Creeper_BaseAttack : Monster/Creeper/Animations/Mon_Creeper_BaseAttack.
 Anim_Mon_Creeper_Hit_Fw.fbx : Monster/Creeper/Animations/Mon_Creeper_Hit_Fw.fbx : [Animation Clip]
 // UI
 // HUD
-HUD_Aim : UI/Client/HUDUI/HUD_Aim.png : [Texture]
-HUD_Potion_Holder : UI/Client/HUDUI/HUD_Potion_Holder.png : [Texture]
-HUD_Btn_PcEmpty : UI/Client/HUDUI/HUD_Btn_PcEmpty.png : [Texture]
-HUD_Beta_Cube_Empty : UI/Client/HUDUI/HUD_Beta_Cube_00.png : [Texture]
-HUD_Beta_Cube_Full : UI/Client/HUDUI/HUD_Beta_Cube_05.png : [Texture]
-HUD_HP_Cube_Empty : UI/Client/HUDUI/HUD_Hp_Dot1_5x_bg.png : [Texture]
-HUD_HP_Cube_Full : UI/Client/HUDUI/HUD_Hp_Dot1_5x.png : [Texture]
+HUD_Aim : UI/HUDUI/HUD_Aim.png : [Texture]
+HUD_Potion_Holder : UI/HUDUI/HUD_Potion_Holder.png : [Texture]
+HUD_Potion_Stack : UI/HUDUI/HUD_potion_stack.png : [Texture]
+HUD_Btn_PcEmpty : UI/HUDUI/HUD_Btn_PcEmpty.png : [Texture]
+HUD_Beta_Cube_Empty : UI/HUDUI/HUD_Beta_Cube_00.png : [Texture]
+HUD_Beta_Cube_Full : UI/HUDUI/HUD_Beta_Cube_05.png : [Texture]
+HUD_HP_Cube_Empty : UI/HUDUI/HUD_Hp_Dot1_5x_bg.png : [Texture]
+HUD_HP_Cube_Full : UI/HUDUI/HUD_Hp_Dot1_5x.png : [Texture]
+HUD_SH_Cube_Empty : UI/HUDUI/HUD_Shield_Dot1_5x_Bg.png : [Texture]
+HUD_SH_Cube_Full : UI/HUDUI/HUD_Shield_Dot1_5x.png : [Texture]
 //
 Building_0_Stage01_Building_00_Auto_1770865212651 : Map/Map01/Building_0/Stage01_Building_00.fbx : [Mesh]
 Building_1_Stage01_Building_01_Auto_1770868093590 : Map/Map01/Building_1/Stage01_Building_01.fbx : [Mesh]

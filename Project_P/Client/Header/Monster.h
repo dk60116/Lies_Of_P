@@ -14,6 +14,7 @@ public:
 		_float moveSpeed = 5.f;
 		_float detectionRange = 30.f;
 		_float turnSpeed = 180.f;
+		_int attackPower = 100;
 		_float attackRange = 1.f;
 		_float attackSpeed = 0.2f;
 		_float hitKnockbackSpeed = 8.f;

@@ -31,6 +31,8 @@ public:
 	void Bind_Matrix();
 	void Bind_Camera(const _fmatrix _view, const _cmatrix _projection);
 	CRectTransform* GetRectTransform() const;
+	CMeshBuffer* Get_Mesh() const;
+	CMaterial* Get_Material() const;
 
 public:
 	CCanvas* Get_Canvas() const;

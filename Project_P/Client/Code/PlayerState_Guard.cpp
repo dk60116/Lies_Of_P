@@ -110,7 +110,7 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 					if (m_bExit)
 					{
 						m_pCtx->StopMoveImmediate();
-						m_pCtx->SetActionActive(CPlayerController::PlayerState::Guard, false);
+						Exit();
 					}
 				});
 		}
@@ -121,12 +121,9 @@ void CPlayerState_Guard::Enter()
 {
 	__super::Enter();
 
-	m_pCtx->StopMoveImmediate();
-
 	m_pCtx->SetCanMove(false);
 	m_pCtx->SetCanTurn(true);
 
-	m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, false);
 	m_pCtx->SetBattle(true);
 	m_pCtx->SetAnimMoveSpeed(0.f);
 	m_pCtx->Animator()->SetTrigger(L"guard");

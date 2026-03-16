@@ -96,6 +96,86 @@ namespace
 
 		return true;
 	}
+
+	UINT32 PackColorValue(const ColorValue& color)
+	{
+		return
+			(static_cast<UINT32>(color.r)) |
+			(static_cast<UINT32>(color.g) << 8) |
+			(static_cast<UINT32>(color.b) << 16) |
+			(static_cast<UINT32>(color.a) << 24);
+	}
+
+	UINT32 PackFloatBits(const _float value)
+	{
+		UINT32 bits = 0;
+		memcpy(&bits, &value, sizeof(UINT32));
+		return bits;
+	}
+
+	struct UIImageBatchKey
+	{
+		CMeshBuffer* mesh = nullptr;
+		CTexture* texture = nullptr;
+		UINT32 color = 0;
+		CImage::FillMethod fillMethod = CImage::FillMethod::None;
+		UINT32 fillAmountBits = 0;
+
+		bool operator==(const UIImageBatchKey& rhs) const
+		{
+			return mesh == rhs.mesh
+				&& texture == rhs.texture
+				&& color == rhs.color
+				&& fillMethod == rhs.fillMethod
+				&& fillAmountBits == rhs.fillAmountBits;
+		}
+	};
+
+	UIImageBatchKey BuildUIImageBatchKey(CImage* image)
+	{
+		UIImageBatchKey key = {};
+		if (!image)
+			return key;
+
+		key.mesh = image->Get_Mesh();
+		key.texture = image->GetTexture();
+		key.color = PackColorValue(image->GetColor());
+		key.fillMethod = image->Get_FillMethod();
+		key.fillAmountBits = PackFloatBits(image->GetFillAmount());
+		return key;
+	}
+
+	void BindUIInstanceBuffer(ID3D11DeviceContext* context, ID3D11Buffer* instanceBuffer, const vector<CImage*>& images)
+	{
+		if (!context || !instanceBuffer)
+			return;
+
+		InstanceCB cb = {};
+		const size_t count = min<size_t>(images.size(), 128);
+
+		for (size_t i = 0; i < count; ++i)
+		{
+			CImage* image = images[i];
+			if (!image || !image->GetTransform())
+				continue;
+
+			cb.worlds[i] = XMMatrixTranspose(image->GetTransform()->Get_WorldMatrix());
+		}
+
+		cb.instanceCount = static_cast<_uint>(count);
+		context->UpdateSubresource(instanceBuffer, 0, nullptr, &cb, 0, 0);
+		context->VSSetConstantBuffers(4, 1, &instanceBuffer);
+	}
+
+	void BindUIInstanceBufferEmpty(ID3D11DeviceContext* context, ID3D11Buffer* instanceBuffer)
+	{
+		if (!context || !instanceBuffer)
+			return;
+
+		InstanceCB cb = {};
+		context->UpdateSubresource(instanceBuffer, 0, nullptr, &cb, 0, 0);
+		context->VSSetConstantBuffers(4, 1, &instanceBuffer);
+	}
 }
 const ColorValue CCamera::s_vDefaultCameraColor = ColorValue(49, 77, 121, 255);
 
@@ -130,6 +210,7 @@ CCamera::CCamera()
 	, m_pRTDebugBS(nullptr)
 	, m_pInvViewProjCB(nullptr)
 	, m_pShadowCB(nullptr)
+	, m_pUIInstanceBuffer(nullptr)
 	, m_pMainLight(nullptr)
 	, m_sMainLightMatrix()
 	, m_pPickStaging(nullptr)
@@ -302,6 +383,13 @@ HRESULT CCamera::Initialize()
 		return E_FAIL;
 	m_pShadowCB->AddRef();
 
+	D3D11_BUFFER_DESC ibd = {};
+	ibd.Usage = D3D11_USAGE_DEFAULT;
+	ibd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	ibd.ByteWidth = sizeof(InstanceCB);
+	if (FAILED(device->CreateBuffer(&ibd, nullptr, &m_pUIInstanceBuffer)))
+		return E_FAIL;
+
 	return S_OK;
 }
 
@@ -358,6 +446,7 @@ void CCamera::OnDestroy()
 
 	Safe_Release(m_pInvViewProjCB);
 	Safe_Release(m_pShadowCB);
+	Safe_Release(m_pUIInstanceBuffer);
 
 	Safe_Release(m_pPickStaging);
 	Safe_Release(m_pMainLight);
@@ -1141,23 +1230,83 @@ void CCamera::RenderUI()
 	if (m_vUIList.size() <= 0)
 		return;
 
+	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
+	if (!context)
+		return;
+
+	BindUIInstanceBufferEmpty(context, m_pUIInstanceBuffer);
+
+	vector<CImage*> imageBatch = {};
+	UIImageBatchKey batchKey = {};
+	_bool hasBatchKey = false;
+
+	auto renderSingleImage = [&](CImage* img)
+	{
+		if (!img)
+			return;
+
+		BindUIInstanceBufferEmpty(context, m_pUIInstanceBuffer);
+		img->Bind_UIMaterial();
+		img->Bind_Matrix();
+		img->Bind_Camera(inverseMat, projMat);
+		img->Bind_Mesh();
+	};
+
+	auto flushImageBatch = [&]()
+	{
+		if (imageBatch.empty())
+			return;
+
+		m_sRenderStats.uiImageBatches += 1u;
+		m_sRenderStats.uiImageInstances += static_cast<_uint>(imageBatch.size());
+
+		if (imageBatch.size() == 1)
+		{
+			renderSingleImage(imageBatch.front());
+		}
+		else
+		{
+			CImage* leader = imageBatch.front();
+			BindUIInstanceBuffer(context, m_pUIInstanceBuffer, imageBatch);
+			leader->Bind_UIMaterial();
+			leader->Bind_Matrix();
+			leader->Bind_Camera(inverseMat, projMat);
+			if (CMeshBuffer* mesh = leader->Get_Mesh())
+				mesh->Render_Instanced(static_cast<_uint>(imageBatch.size()));
+			BindUIInstanceBufferEmpty(context, m_pUIInstanceBuffer);
+		}
+
+		imageBatch.clear();
+		hasBatchKey = false;
+	};
+
 	for (TRAVERSAL_ITER(m_vUIList, it))
 	{
-		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
+		CUI* ui = *it;
+		if (!ui || !ui->Get_GameObject()->IsRecursiveActive() || !ui->Get_Enable())
+			continue;
+
+		if (CImage* img = dynamic_cast<CImage*>(ui))
 		{
-			if (CImage* img = dynamic_cast<CImage*>(*it))
+			const UIImageBatchKey nextKey = BuildUIImageBatchKey(img);
+			if (!hasBatchKey || !(batchKey == nextKey) || imageBatch.size() >= 128)
 			{
-				img->Bind_UIMaterial();
-				(*it)->Bind_Matrix();
-				(*it)->Bind_Camera(inverseMat, projMat);
-				(*it)->Bind_Mesh();
+				flushImageBatch();
+				batchKey = nextKey;
+				hasBatchKey = true;
 			}
-			else if (CText* txt = dynamic_cast<CText*>(*it))
-			{
-				txt->RenderText();
-			}
+
+			imageBatch.push_back(img);
+			continue;
 		}
+
+		flushImageBatch();
+
+		if (CText* txt = dynamic_cast<CText*>(ui))
+			txt->RenderText();
 	}
+
+	flushImageBatch();
 
 	m_vUIList.clear();
 }
@@ -1169,24 +1318,84 @@ void CCamera::RenderUI_Editor()
 
 	const _matrix viewMat = GetViewMatrix();
 	const _matrix projMat = GetProjectionMatrix();
+	ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
+	if (!context)
+		return;
+
+	BindUIInstanceBufferEmpty(context, m_pUIInstanceBuffer);
+
+	vector<CImage*> imageBatch = {};
+	UIImageBatchKey batchKey = {};
+	_bool hasBatchKey = false;
+
+	auto renderSingleImage = [&](CImage* img)
+	{
+		if (!img)
+			return;
+
+		BindUIInstanceBufferEmpty(context, m_pUIInstanceBuffer);
+		img->Bind_UIMaterial();
+		img->Bind_Matrix();
+		img->Bind_Camera(viewMat, projMat);
+		img->Bind_Mesh();
+	};
+
+	auto flushImageBatch = [&]()
+	{
+		if (imageBatch.empty())
+			return;
+
+		m_sRenderStats.uiImageBatches += 1u;
+		m_sRenderStats.uiImageInstances += static_cast<_uint>(imageBatch.size());
+
+		if (imageBatch.size() == 1)
+		{
+			renderSingleImage(imageBatch.front());
+		}
+		else
+		{
+			CImage* leader = imageBatch.front();
+			BindUIInstanceBuffer(context, m_pUIInstanceBuffer, imageBatch);
+			leader->Bind_UIMaterial();
+			leader->Bind_Matrix();
+			leader->Bind_Camera(viewMat, projMat);
+			if (CMeshBuffer* mesh = leader->Get_Mesh())
+				mesh->Render_Instanced(static_cast<_uint>(imageBatch.size()));
+			BindUIInstanceBufferEmpty(context, m_pUIInstanceBuffer);
+		}
+
+		imageBatch.clear();
+		hasBatchKey = false;
+	};
 
 	for (TRAVERSAL_ITER(m_vUIList, it))
 	{
-		if (!(*it)->Get_GameObject()->IsRecursiveActive() || !(*it)->Get_Enable())
+		CUI* ui = *it;
+		if (!ui || !ui->Get_GameObject()->IsRecursiveActive() || !ui->Get_Enable())
 			continue;
 
-		if (CImage* img = dynamic_cast<CImage*>(*it))
+		if (CImage* img = dynamic_cast<CImage*>(ui))
 		{
-			img->Bind_UIMaterial();
-			(*it)->Bind_Matrix();
-			(*it)->Bind_Camera(viewMat, projMat);
-			(*it)->Bind_Mesh();
+			const UIImageBatchKey nextKey = BuildUIImageBatchKey(img);
+			if (!hasBatchKey || !(batchKey == nextKey) || imageBatch.size() >= 128)
+			{
+				flushImageBatch();
+				batchKey = nextKey;
+				hasBatchKey = true;
+			}
+
+			imageBatch.push_back(img);
 		}
-		else if (CText* txt = dynamic_cast<CText*>(*it))
+		else
 		{
-			txt->RenderText_Editor();
+			flushImageBatch();
+
+			if (CText* txt = dynamic_cast<CText*>(ui))
+				txt->RenderText_Editor();
 		}
 	}
+
+	flushImageBatch();
 
 	m_vUIList.clear();
 }

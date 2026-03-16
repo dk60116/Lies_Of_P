@@ -42,11 +42,14 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 					{
 						m_pCtx->SetActionActive(CPlayerController::PlayerState::Guard, true);
 						Exit();
-						return;
 					}
-					if (m_bAttackBuffer)
+					else if (m_bAttackBuffer)
 					{
 						m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, true);
+						Exit();
+					}
+					else if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
+					{
 						Exit();
 					}
 				});
@@ -84,9 +87,13 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 						Exit();
 						return;
 					}
-					if (m_bAttackBuffer)
+					else if (m_bAttackBuffer)
 					{
 						m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, true);
+						Exit();
+					}
+					else if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
+					{
 						Exit();
 					}
 				});
@@ -116,6 +123,7 @@ void CPlayerState_Evade::Enter()
 	}
 
 	m_pCtx->Animator()->SetTrigger(L"evade");
+	m_pCtx->Animator()->SetBool(L"isEvade", true);
 
 	m_pCtx->SetCanMove(false);
 	m_pCtx->SetCanTurn(false);
@@ -147,14 +155,13 @@ void CPlayerState_Evade::Update()
 		m_bAttackBuffer = true;
 	if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Guard))
 		m_bGuardBffer = true;
-
-	if (m_pCtx->IsBigTurn())
-		Exit();
 }
 
 void CPlayerState_Evade::Exit()
 {
 	__super::Exit();
+
+	m_pCtx->Animator()->SetBool(L"isEvade", false);
 
 	m_pCtx->SetCanMove(true);
 	m_pCtx->SetCanTurn(true);

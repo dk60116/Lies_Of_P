@@ -188,11 +188,6 @@ void CPlayerCamera::Update()
     CTransform* tf = GetTransform();
     CTransform* playerTf = CGameManager::GetInstance().Get_Player()->GetTransform();
 
-    const vector3 playerPos = playerTf->Get_Position();
-
-    const vector3 playerRight = playerTf->Get_Directions().right;
-    const vector3 pivot = playerPos + vector3::up() * m_sOptions.heightOffset + playerRight * m_sOptions.xOffset;
-
     const _float dt = std::clamp(DELTA_TIME, 0.f, 0.05f);
     const _float speed = (m_sOptions.trackingSpeed > 0.f) ? m_sOptions.trackingSpeed : 10.f;
     const _float t = 1.f - std::exp(-speed * dt);
@@ -207,6 +202,10 @@ void CPlayerCamera::Update()
     const _float sy = sin(yawRad);
     const _float cp = cos(pitchRad);
     const _float sp = sin(pitchRad);
+
+    const vector3 playerPos = playerTf->Get_Position();
+    const vector3 cameraRight = vector3(cy, 0.f, -sy).normalized();
+    const vector3 pivot = playerPos + vector3::up() * m_sOptions.heightOffset + cameraRight * m_sOptions.xOffset;
 
     vector3 camForward;
     camForward.x = cp * sy;

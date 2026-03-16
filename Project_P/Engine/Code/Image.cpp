@@ -87,7 +87,7 @@ void CImage::SetFillAmount(_float _fill)
 
 void CImage::Bind_UIMaterial()
 {
-	ImageCB imageValue = { _float4(m_fFillAmount, 0, 0, 0) };
+	ImageCB imageValue = { _float4(m_fFillAmount, static_cast<_float>(m_eFillMethod), 0.f, 0.f) };
 	m_pContext->UpdateSubresource(m_pImageBuffer, 0, nullptr, &imageValue, 0, 0);
 	m_pContext->PSSetConstantBuffers(3, 1, &m_pImageBuffer);
 }
@@ -104,4 +104,9 @@ void CImage::SetTexture(CTexture* _texture)
 
 		m_pMaterial->Set_Texture(m_pTexture, 0);
 	}
+}
+
+CTexture* CImage::GetTexture() const
+{
+	return m_pTexture;
 }

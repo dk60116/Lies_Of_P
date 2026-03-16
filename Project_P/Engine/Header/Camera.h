@@ -44,6 +44,8 @@ public:
 		_uint tris = 0u;
 		_uint verts = 0u;
 		_uint visibleSkinnedMeshes = 0u;
+		_uint uiImageBatches = 0u;
+		_uint uiImageInstances = 0u;
 	};
 
 protected:
@@ -201,6 +203,7 @@ private:
 
 	ID3D11Buffer* m_pInvViewProjCB;
 	ID3D11Buffer* m_pShadowCB;
+	ID3D11Buffer* m_pUIInstanceBuffer;
 
 	CLight* m_pMainLight;
 	CLight::ShadowMatrices m_sMainLightMatrix;
