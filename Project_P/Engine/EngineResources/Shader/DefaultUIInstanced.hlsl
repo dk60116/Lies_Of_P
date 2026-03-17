@@ -83,5 +83,7 @@ float4 PSMain(VSOut input) : SV_TARGET
             discard;
     }
 
+    resultColor.rgb *= resultColor.a;
+
     return resultColor;
 }

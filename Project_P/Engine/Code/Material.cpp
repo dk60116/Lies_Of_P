@@ -6,6 +6,11 @@ namespace
 {
 	constexpr _uint kMaxPSTextureSlots = D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT;
 	_uint gLastBoundPSTextureSlotCount = 0;
+
+	bool IsUIResourceName(const wstring& resourceName)
+	{
+		return resourceName.find(L"UI") != wstring::npos;
+	}
 }
 
 CMaterial::CMaterial()
@@ -712,8 +717,9 @@ void CMaterial::Bind_Texture() const
 	}
 	gLastBoundPSTextureSlotCount = textureCount;
 
-	static ID3D11SamplerState* gSamplerState = nullptr;
-	if (!gSamplerState)
+	static ID3D11SamplerState* gWrapSamplerState = nullptr;
+	static ID3D11SamplerState* gClampSamplerState = nullptr;
+	if (!gWrapSamplerState || !gClampSamplerState)
 	{
 		D3D11_SAMPLER_DESC s = {};
 		s.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -724,12 +730,23 @@ void CMaterial::Bind_Texture() const
 		s.MinLOD = 0;
 		s.MaxLOD = D3D11_FLOAT32_MAX;
 
-		if (FAILED(CGraphicDevice::GetInstance().Get_Device()->CreateSamplerState(&s, &gSamplerState)))
+		if (!gWrapSamplerState && FAILED(CGraphicDevice::GetInstance().Get_Device()->CreateSamplerState(&s, &gWrapSamplerState)))
 		{
-			CDebug::LogError(L"Create failed SamplerState in Material");
+			CDebug::LogError(L"Create failed Wrap SamplerState in Material");
+			return;
+		}
+
+		s.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		s.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		s.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+
+		if (!gClampSamplerState && FAILED(CGraphicDevice::GetInstance().Get_Device()->CreateSamplerState(&s, &gClampSamplerState)))
+		{
+			CDebug::LogError(L"Create failed Clamp SamplerState in Material");
 			return;
 		}
 	}
 
-	context->PSSetSamplers(0, 1, &gSamplerState);
+	ID3D11SamplerState* samplerState = IsUIResourceName(m_strResourceName) ? gClampSamplerState : gWrapSamplerState;
+	context->PSSetSamplers(0, 1, &samplerState);
 }

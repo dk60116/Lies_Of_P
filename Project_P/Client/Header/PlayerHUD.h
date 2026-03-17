@@ -9,7 +9,7 @@ public:
 	{
 		_int maxPotionStack = 8;
 		_float gaugeFontWidth = 40.f;
-		_float gaugeWidthMax = 1000.f;
+		_float gaugeWidthMax = 700.f;
 	};
 
 	struct BEGaugeSet
@@ -30,6 +30,19 @@ public:
 		CRectTransform* rect;
 		vector<CImage*> bg;
 		vector<CImage*> fill;
+	};
+	
+	struct DashAttackFrameSet
+	{
+		CImage* frame;
+		CImage* cool;
+		CImage* icon;
+	};
+
+	struct SkillFrameSet
+	{
+		CImage* frame;
+		CImage* icon;
 	};
 
 private:
@@ -56,9 +69,11 @@ private:
 	void CreateGauge_BE(CRectTransform* _parent);
 	void CreateGauge_HP(CRectTransform* _parent);
 	void CreateGauge_SH(CRectTransform* _parent);
+	void CreateSkillFrame();
 
 public:
-	void Update_Status(const CPlayer::PlayerStatus& _status);
+	void Update_AllStatus(const CPlayer::PlayerStatus& _status);
+	void Update_Potions(const _uint _maxValue, _uint _current);
 	void Update_BE(const _uint _maxValue, const _uint _current);
 	void Update_HP(const _uint _maxValue, const _uint _current);
 	void Update_SH(const _uint _maxValue, const _uint _current);
@@ -81,5 +96,7 @@ private:
 	vector<BEGaugeSet> m_vBEBox;
 	vector<HPGaugeSet> m_vHPBox;
 	vector<SEGaugeSet> m_vSHBox;
+	DashAttackFrameSet m_sDashAttackFrame;
+	vector<SkillFrameSet> m_vSkillFrame;
 };
 

@@ -17,6 +17,8 @@ CPlayerHUD::CPlayerHUD()
 	, m_vBEBox({})
 	, m_vHPBox({})
 	, m_vSHBox({})
+	, m_sDashAttackFrame({})
+	, m_vSkillFrame({})
 {
 }
 
@@ -41,6 +43,7 @@ HRESULT CPlayerHUD::Initialize()
 	CreateAim();
 	CreatePotions();
 	CreateGauge();
+	CreateSkillFrame();
 
 	return S_OK;
 }
@@ -53,7 +56,7 @@ void CPlayerHUD::Awake()
 
 void CPlayerHUD::Start()
 {
-	Update_Status(m_pPlayer->Get_PlayerEquipStat());
+	Update_AllStatus(m_pPlayer->Get_PlayerEquipStat());
 }
 
 void CPlayerHUD::Update()
@@ -353,7 +356,43 @@ void CPlayerHUD::CreateGauge_SH(CRectTransform* _parent)
 	hlg->SetSpacing(rectSize + 0.5f);
 }
 
-void CPlayerHUD::Update_Status(const CPlayer::PlayerStatus& _status)
+void CPlayerHUD::CreateSkillFrame()
+{
+	CGameObject* rectObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Skill_Rect");
+	CRectTransform* rect = rectObj->AddComponent<CRectTransform>();
+	rect->SetParent(GetTransform());
+	rect->Set_AnchorsMin(0.f, 0.f);
+	rect->Set_AnchorsMax(1.f, 0.f);
+	rect->Set_Pivot(1.f, 0.f);
+	rect->Set_AnchoredPosition(-50.f, 50.f);
+	rect->Set_WidthHeight(180.f);
+
+	{
+		CGameObject* dashAttackFrameObj = m_pGameObject->Get_Scene()->Add_GameObject(L"DashAttack Frame");
+		CImage* imgFrame = dashAttackFrameObj->AddComponent<CImage>();
+		imgFrame->GetRectTransform()->SetParent(rect);
+		imgFrame->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_DashFrame (Texture)"));
+		imgFrame->GetRectTransform()->Set_PivotY(0.f);
+		imgFrame->GetRectTransform()->Set_AnchoredPositonY(110.f);
+		imgFrame->GetRectTransform()->Set_WidthHeight(50.f);
+
+		CGameObject* dashAttadckCoolObj = m_pGameObject->Get_Scene()->Add_GameObject(L"DashAttack Cool");
+		CImage* imgCool = dashAttadckCoolObj->AddComponent<CImage>();
+		imgCool->GetRectTransform()->SetParent(imgFrame->GetTransform());
+		imgCool->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
+		imgCool->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_DashFrame_Cool (Texture)"));
+		imgCool->Set_FillMethod(CImage::FillMethod::Radial360);
+
+		CGameObject* dashAttadckIconObj = m_pGameObject->Get_Scene()->Add_GameObject(L"DashAttack Icon");
+		CImage* imgIcon = dashAttadckIconObj->AddComponent<CImage>();
+		imgIcon->GetRectTransform()->SetParent(imgFrame->GetTransform());
+		imgIcon->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
+		imgIcon->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"DashAttack_Icon (Texture)"));
+		//m_vSkillFrame.push_back
+	}
+}
+
+void CPlayerHUD::Update_AllStatus(const CPlayer::PlayerStatus& _status)
 {
 	m_sCachedStatus = _status;
 
@@ -363,9 +402,18 @@ void CPlayerHUD::Update_Status(const CPlayer::PlayerStatus& _status)
 		m_bHpDisplayInitialized = true;
 	}
 
+	Update_Potions(_status.maxPotion, _status.crtPotion);
 	Update_BE(_status.maxBetaEnergy, _status.crtBeatEnergy);
 	Update_SH(_status.maxShield, _status.crtShield);
 	Update_HP(_status.maxHp, static_cast<_uint>(std::round(m_fDisplayedHp)));
+}
+
+void CPlayerHUD::Update_Potions(const _uint _maxValue, _uint _current)
+{
+	for (size_t i = 0; i < m_vPotionStacks.size(); ++i)
+	{
+		m_vPotionStacks[i]->Get_GameObject()->SetActive(i < _maxValue);
+	}
 }
 
 void CPlayerHUD::Update_BE(const _uint _maxValue, const _uint _current)

@@ -37,6 +37,8 @@ public:
 		_float focusTurnRatio = 8.f;
 		_float evadeLength = 5.f;
 		_float jumpPower = 340.f;
+		_int maxPotion = 3;
+		_int crtPotion = 0;
 		_float hitKnockbackSpeed = 3.f;
 	};
 

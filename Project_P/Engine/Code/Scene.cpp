@@ -513,6 +513,7 @@ CScene::CScene()
 	, m_pUIResterizerState(nullptr)
 	, m_pBlendingState(nullptr)
 	, m_pNoneBlendingState(nullptr)
+	, m_pUIBlendingState(nullptr)
 	, m_fPssedTime(0.f)
 	, m_vTempPickMousePos({-1, -1})
 	, m_bSaveRegistrationEnabled(true)
@@ -690,6 +691,25 @@ HRESULT CScene::Initialize()
 
 		// BLENDING state
 		if (FAILED(m_pDevice->CreateBlendState(&desc, &m_pBlendingState)))
+			return E_FAIL;
+	}
+
+	// UI Blending
+	{
+		D3D11_BLEND_DESC desc = {};
+		desc.AlphaToCoverageEnable = FALSE;
+		desc.IndependentBlendEnable = FALSE;
+		auto& rt = desc.RenderTarget[0];
+		rt.BlendEnable = TRUE;
+		rt.SrcBlend = D3D11_BLEND_ONE;
+		rt.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+		rt.BlendOp = D3D11_BLEND_OP_ADD;
+		rt.SrcBlendAlpha = D3D11_BLEND_ONE;
+		rt.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+		rt.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		rt.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+		if (FAILED(m_pDevice->CreateBlendState(&desc, &m_pUIBlendingState)))
 			return E_FAIL;
 	}
 
@@ -919,8 +939,11 @@ void CScene::Render_Editor()
 	m_pEditorCamera->RenderDisplay();
 	m_pContext->RSSetState(m_pUIResterizerState);
 	m_pContext->OMSetDepthStencilState(m_pUIDepthStencilState, 0);
+	const _float uiBlendFactor[4] = { 0.f, 0.f, 0.f, 0.f };
+	m_pContext->OMSetBlendState(m_pUIBlendingState, uiBlendFactor, 0xFFFFFFFF);
 	m_pEditorCamera->RenderUI_Editor();
 	DrawNavigationMeshOverlays(m_pEditorCamera, m_mResourceList, m_pMeshResterizerState, m_pUIDepthStencilState, m_pBlendingState);
+	m_pContext->OMSetBlendState(nullptr, uiBlendFactor, 0xFFFFFFFF);
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->Render_Gizmo();
@@ -1038,6 +1061,8 @@ void CScene::Render_Game()
 
 	m_pContext->RSSetState(m_pUIResterizerState);
 	m_pContext->OMSetDepthStencilState(m_pUIDepthStencilState, 0);
+	const _float uiBlendFactor[4] = { 0.f, 0.f, 0.f, 0.f };
+	m_pContext->OMSetBlendState(m_pUIBlendingState, uiBlendFactor, 0xFFFFFFFF);
 
 	for (TRAVERSAL_ITER(m_lCameraList, it))
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
@@ -1049,6 +1074,8 @@ void CScene::Render_Game()
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 		(*it)->OnPostRender();
+
+	m_pContext->OMSetBlendState(nullptr, uiBlendFactor, 0xFFFFFFFF);
 }
 
 void CScene::SceneRelease()
@@ -3429,7 +3456,6 @@ ID3D11BlendState* CScene::Get_NoneBlendingState() const
 {
 	return m_pNoneBlendingState;
 }
-
 
 
 

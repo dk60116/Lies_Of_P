@@ -181,6 +181,7 @@ HRESULT CPlayer::Initialize()
 	m_pRigidBody->SetUseGravity(true);
 
 	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp + m_sEquipStatus.hp;
+	m_sPlayerStatus.crtPotion = m_sPlayerStatus.maxPotion;
 
 	return S_OK;
 }
@@ -365,6 +366,6 @@ _bool CPlayer::TryGuardHit(const HurtDescription& _hurtDesc)
 void CPlayer::SyncHUDStatus()
 {
 	if (CPlayerHUD* hud = CGameManager::GetInstance().Get_PlayerHUD())
-		hud->Update_Status(Get_PlayerEquipStat());
+		hud->Update_AllStatus(Get_PlayerEquipStat());
 }
 

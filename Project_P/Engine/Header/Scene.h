@@ -250,7 +250,7 @@ protected:
 
     ID3D11DepthStencilState* m_pSkyBoxDepthStencillState, * m_pMeshDepthStencilState, * m_pUIDepthStencilState, * m_pTransparentDepthStencilState;
     ID3D11RasterizerState* m_pSkyBoxResterizerState, * m_pMeshResterizerState, * m_pUIResterizerState;
-    ID3D11BlendState* m_pBlendingState, * m_pNoneBlendingState;
+    ID3D11BlendState* m_pBlendingState, * m_pNoneBlendingState, * m_pUIBlendingState;
 
     vector<_matrix> m_vLightData;
 
