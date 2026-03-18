@@ -119,6 +119,8 @@ namespace
 		CTexture* texture = nullptr;
 		UINT32 color = 0;
 		CImage::FillMethod fillMethod = CImage::FillMethod::None;
+		_int fillOrigin = 0;
+		UINT32 fillClockwise = 0;
 		UINT32 fillAmountBits = 0;
 
 		bool operator==(const UIImageBatchKey& rhs) const
@@ -127,6 +129,8 @@ namespace
 				&& texture == rhs.texture
 				&& color == rhs.color
 				&& fillMethod == rhs.fillMethod
+				&& fillOrigin == rhs.fillOrigin
+				&& fillClockwise == rhs.fillClockwise
 				&& fillAmountBits == rhs.fillAmountBits;
 		}
 	};
@@ -141,6 +145,8 @@ namespace
 		key.texture = image->GetTexture();
 		key.color = PackColorValue(image->GetColor());
 		key.fillMethod = image->Get_FillMethod();
+		key.fillOrigin = image->Get_FillOrigin();
+		key.fillClockwise = image->Get_FillClockwise() ? 1u : 0u;
 		key.fillAmountBits = PackFloatBits(image->GetFillAmount());
 		return key;
 	}

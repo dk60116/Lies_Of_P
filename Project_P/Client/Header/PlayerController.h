@@ -49,6 +49,9 @@ public:
     void SetBattle(const _bool _value);
 
 private:
+    void HandleStrongAttackInput();
+    void QueueBufferedAttack(_bool _strong);
+    void ResetStrongAttackInput();
     void Update_Key();
 
 private:
@@ -70,5 +73,8 @@ private:
 
 private:
     _float m_fPrevSpeed;
+    _float m_fStrongAttackHoldTime = 0.f;
+    _bool m_bPendingStrongAttackRelease = false;
+    _bool m_bDashAttackQueuedFromHold = false;
 };
 

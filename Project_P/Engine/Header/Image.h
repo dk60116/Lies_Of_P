@@ -31,6 +31,30 @@ public:
 		Top
 	};
 
+	enum class Radial90_FillOrigin
+	{
+		BottomLeft,
+		TopLeft,
+		TopRight,
+		BottomRight
+	};
+
+	enum class Radial180_FillOrigin
+	{
+		Bottom,
+		Left,
+		Top,
+		Right
+	};
+
+	enum class Radial360_FillOrigin
+	{
+		Bottom,
+		Right,
+		Top,
+		Left
+	};
+
 private:
 	CImage();
 	~CImage();
@@ -48,6 +72,10 @@ public:
 public:
 	const FillMethod Get_FillMethod() const;
 	void Set_FillMethod(FillMethod _fillMethod);
+	_int Get_FillOrigin() const;
+	void Set_FillOrigin(_int _fillOrigin);
+	_bool Get_FillClockwise() const;
+	void Set_FillClockwise(_bool _fillClockwise);
 
 	const _float GetFillAmount() const;
 	void SetFillAmount(_float _fill);
@@ -61,6 +89,8 @@ public:
 private:
 	class CTexture* m_pTexture;
 	_float m_fFillAmount;
+	_int m_iFillOrigin;
+	_bool m_bFillClockwise;
 
 private:
 	FillMethod m_eFillMethod;

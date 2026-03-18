@@ -47,8 +47,8 @@ public:
 	const vector2 Get_AnchoredPosition() const;
 	void Set_AnchoredPosition(const vector2 _pos);
 	void Set_AnchoredPosition(const _float _x, const _float _y);
-	void Set_AnchoredPositonX(const _float _value);
-	void Set_AnchoredPositonY(const _float _value);
+	void Set_AnchoredPositionX(const _float _value);
+	void Set_AnchoredPositionY(const _float _value);
 	const vector2 Get_AnchoredSize() const;
 	void Set_AnchoredSize(const vector2 _size);
 	void Set_AnchoredSize(const _float _x, const _float _y);

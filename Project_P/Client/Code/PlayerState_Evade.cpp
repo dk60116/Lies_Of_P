@@ -19,7 +19,7 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 {
 	__super::Initialize(_ctx, _type);
 
-	const _uint stopTime = 12;
+	const _uint stopTime = 14;
 	const _uint endTime = 20;
 
 	{
@@ -50,6 +50,7 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 					}
 					else if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
 					{
+						m_pCtx->StopMoveImmediate();
 						Exit();
 					}
 				});
@@ -94,6 +95,7 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 					}
 					else if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
 					{
+						m_pCtx->StopMoveImmediate();
 						Exit();
 					}
 				});

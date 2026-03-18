@@ -51,7 +51,13 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
     {
         CAnimationClip::ActionTrigger at = { frame, triggerName };
         clip->Add_ActionTrigger(at);
-        m_pCtx->Animator()->RegisterActionHandler(triggerName, handler);
+        m_pCtx->Animator()->RegisterActionHandler(triggerName, [this, handler]()
+            {
+                if (!m_pCtx->IsActionActive(m_eStateType))
+                    return;
+
+                handler();
+            });
     };
 
     const auto beginCombo = [this](const _bool canTurnOnStart, const function<void()>& onStart)
@@ -203,7 +209,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
 
     CAnimationClip* thrustClip = registerComboClip
     (
-        L"Eve_Attack_Thrust (Animation Clip)",
+        L"Eve_Attack_LLSS34 (Animation Clip)",
         L"Eve_Attack_Thrust_Start",
         L"Eve_Attack_Thrust_Term",
         L"Eve_Attack_Thrust_Limit",
@@ -228,18 +234,23 @@ void CPlayerState_Attack::Enter()
 {
 	__super::Enter();
 
+    const _bool pendingStrongAttack = m_pCtx->ConsumePendingStrongAttack();
     const _bool isLeftClickEnter = m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack);
     const _bool isRightClickEnter = m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack_S);
 
-    if (isRightClickEnter && !isLeftClickEnter)
-        m_bStrong = true;
-    else if (isLeftClickEnter)
+    m_bStrong = pendingStrongAttack;
+
+    if (isLeftClickEnter)
         m_bStrong = false;
+    else if (pendingStrongAttack || (isRightClickEnter && !isLeftClickEnter))
+        m_bStrong = true;
 
     m_pCtx->SetBattle(true);
 
     m_pCtx->SetCanMove(false);
     m_pCtx->SetCanTurn(false);
+
+    m_pCtx->SetCanDashAttack(false);
     m_pCtx->SetCanJump(false);
 
     m_pCtx->Animator()->SetInt(L"attackCombo", 0);
@@ -312,6 +323,8 @@ void CPlayerState_Attack::Exit()
 
     m_pCtx->SetCanMove(true);
     m_pCtx->SetCanTurn(true);
+
+    m_pCtx->SetCanDashAttack(true);
     m_pCtx->SetCanJump(true);
 
     m_pCtx->Get_Player()->DisableSwordCollider();

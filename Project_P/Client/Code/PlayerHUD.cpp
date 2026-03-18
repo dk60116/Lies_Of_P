@@ -64,10 +64,12 @@ void CPlayerHUD::Update()
 	if (!m_bHpDisplayInitialized)
 		return;
 
+	Update_DashAttack(m_pPlayer->GetDashAttackCooldownRatio(), m_pPlayer->IsDashAttackReady());
+
 	const _float targetHp = static_cast<_float>(m_sCachedStatus.crtHp);
-	const _float dt = std::clamp(DELTA_TIME, 0.f, 0.05f);
+
 	const _float followSpeed = 10.f;
-	const _float t = 1.f - std::exp(-followSpeed * dt);
+	const _float t = 1.f - std::exp(-followSpeed * DELTA_TIME);
 
 	m_fDisplayedHp += (targetHp - m_fDisplayedHp) * t;
 
@@ -138,7 +140,7 @@ void CPlayerHUD::CreatePotions()
 	stackRect->SetParent(potionHolderObj->GetTransform());
 	stackRect->Set_AnchorsMin(0.5f, 0.f);
 	stackRect->Set_PivotY(0.f);
-	stackRect->Set_AnchoredPositonY(26.f);
+	stackRect->Set_AnchoredPositionY(26.f);
 	stackRect->Set_WidthHeight(27.f, 43.f);
 
 	for (_int i = 0; i < m_sOptions.maxPotionStack; ++i)
@@ -365,7 +367,7 @@ void CPlayerHUD::CreateSkillFrame()
 	rect->Set_AnchorsMax(1.f, 0.f);
 	rect->Set_Pivot(1.f, 0.f);
 	rect->Set_AnchoredPosition(-50.f, 50.f);
-	rect->Set_WidthHeight(180.f);
+	rect->Set_WidthHeight(180);
 
 	{
 		CGameObject* dashAttackFrameObj = m_pGameObject->Get_Scene()->Add_GameObject(L"DashAttack Frame");
@@ -373,8 +375,14 @@ void CPlayerHUD::CreateSkillFrame()
 		imgFrame->GetRectTransform()->SetParent(rect);
 		imgFrame->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_DashFrame (Texture)"));
 		imgFrame->GetRectTransform()->Set_PivotY(0.f);
-		imgFrame->GetRectTransform()->Set_AnchoredPositonY(110.f);
-		imgFrame->GetRectTransform()->Set_WidthHeight(50.f);
+		imgFrame->GetRectTransform()->Set_AnchoredPositionY(110.f);
+		imgFrame->GetRectTransform()->Set_WidthHeight(50);
+
+		CGameObject* dashAttadckGlowObj = m_pGameObject->Get_Scene()->Add_GameObject(L"DashAttack Glow");
+		CImage* imgGlow = dashAttadckGlowObj->AddComponent<CImage>();
+		imgGlow->GetRectTransform()->SetParent(imgFrame->GetTransform());
+		imgGlow->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
+		imgGlow->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SkillGlow (Texture)"));
 
 		CGameObject* dashAttadckCoolObj = m_pGameObject->Get_Scene()->Add_GameObject(L"DashAttack Cool");
 		CImage* imgCool = dashAttadckCoolObj->AddComponent<CImage>();
@@ -382,13 +390,50 @@ void CPlayerHUD::CreateSkillFrame()
 		imgCool->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
 		imgCool->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_DashFrame_Cool (Texture)"));
 		imgCool->Set_FillMethod(CImage::FillMethod::Radial360);
+		imgCool->Set_FillOrigin((_int)CImage::Radial360_FillOrigin::Top);
+		imgCool->Set_FillClockwise(false);
 
 		CGameObject* dashAttadckIconObj = m_pGameObject->Get_Scene()->Add_GameObject(L"DashAttack Icon");
 		CImage* imgIcon = dashAttadckIconObj->AddComponent<CImage>();
 		imgIcon->GetRectTransform()->SetParent(imgFrame->GetTransform());
 		imgIcon->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
 		imgIcon->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"DashAttack_Icon (Texture)"));
-		//m_vSkillFrame.push_back
+
+		CGameObject* blur_CirleObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Blur_Clrcle");
+		CImage* imgBlur_Circle = blur_CirleObj->AddComponent<CImage>();
+		imgBlur_Circle->GetRectTransform()->SetParent(imgFrame->GetTransform());
+		imgBlur_Circle->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
+		imgBlur_Circle->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SkillBlur_Circle (Texture)"));
+
+		CGameObject* blur_LineObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Blur_Line");
+		CImage* imgBlur_Line = blur_LineObj->AddComponent<CImage>();
+		imgBlur_Line->GetRectTransform()->SetParent(imgFrame->GetTransform());
+		imgBlur_Line->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
+		imgBlur_Line->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SkillBlur_Line (Texture)"));
+		
+		m_sDashAttackFrame = { imgFrame, imgGlow, imgCool, imgIcon, imgBlur_Circle, imgBlur_Line };
+	}
+
+	{
+		for (_int i = 0; i < 4; ++i)
+		{
+			CGameObject* skillFrameObject = m_pGameObject->Get_Scene()->Add_GameObject(L"SkillFrame_" + to_wstring(i));
+			CImage* skillFrameImg = skillFrameObject->AddComponent<CImage>();
+			skillFrameImg->GetRectTransform()->SetParent(rect);
+			skillFrameImg->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SkillFrame (Texture)"));
+
+			m_vSkillFrame.push_back({ skillFrameImg, nullptr });
+		}
+
+		m_vSkillFrame[0].frame->GetRectTransform()->Set_PivotY(0.f);
+		m_vSkillFrame[1].frame->GetRectTransform()->Set_PivotX(1.f);
+		m_vSkillFrame[2].frame->GetRectTransform()->Set_PivotX(0.f);
+		m_vSkillFrame[3].frame->GetRectTransform()->Set_PivotY(1.f);
+
+		m_vSkillFrame[0].frame->GetRectTransform()->Set_AnchoredPositionY(5.f);
+		m_vSkillFrame[1].frame->GetRectTransform()->Set_AnchoredPositionX(-5.f);
+		m_vSkillFrame[2].frame->GetRectTransform()->Set_AnchoredPositionX(5.f);
+		m_vSkillFrame[3].frame->GetRectTransform()->Set_AnchoredPositionY(-5.f);
 	}
 }
 
@@ -457,5 +502,74 @@ void CPlayerHUD::Update_SH(const _uint _maxValue, const _uint _current)
 	for (size_t i = 0; i < m_vSHBox.size(); ++i)
 	{
 		m_vSHBox[i].rect->Get_GameObject()->SetActive(i < _maxValue / (500.f / 22.f));
+	}
+}
+
+void CPlayerHUD::Update_DashAttack(const _float _coolRatio, const _bool _ready)
+{
+	if (!m_sDashAttackFrame.prevReady && _ready)
+	{
+		m_sDashAttackFrame.coolEndDuration = 0.f;
+		m_sDashAttackFrame.blur_Line->Get_GameObject()->SetActive(true);
+		m_sDashAttackFrame.blur_Circle->Get_GameObject()->SetActive(true);
+		m_sDashAttackFrame.blur_Circle->SetAlpha(1.f);
+		m_sDashAttackFrame.coolDown_Trigger = true;
+	}
+
+	if (m_sDashAttackFrame.coolDown_Trigger)
+	{
+		m_sDashAttackFrame.blur_Line->GetRectTransform()->Set_WidthHeight(150.f * (m_sDashAttackFrame.coolEndDuration / m_sDashAttackFrame.coolEndDest));
+
+		m_sDashAttackFrame.coolEndDuration += DELTA_TIME;
+
+		if (m_sDashAttackFrame.coolEndDuration >= m_sDashAttackFrame.coolEndDest)
+		{
+			m_sDashAttackFrame.blur_Circle->SetAlpha(1.f - (m_sDashAttackFrame.coolEndDuration * m_sDashAttackFrame.coolEndDest));
+		}
+
+		if (m_sDashAttackFrame.coolEndDuration >= m_sDashAttackFrame.coolEndDest)
+		{
+			m_sDashAttackFrame.blur_Line->Get_GameObject()->SetActive(false);
+		}
+
+		if (m_sDashAttackFrame.coolEndDuration >= m_sDashAttackFrame.coolEndDest * 2.f)
+		{
+			m_sDashAttackFrame.blur_Circle->Get_GameObject()->SetActive(false);
+			m_sDashAttackFrame.coolDown_Trigger = false;
+		}
+	}
+
+	CDebug::LogError(m_sDashAttackFrame.coolDown_Trigger);
+
+	m_sDashAttackFrame.prevReady = _ready;
+
+	m_sDashAttackFrame.usableGlow->Get_GameObject()->SetActive(_ready);
+	m_sDashAttackFrame.cool->SetFillAmount(_coolRatio);
+	m_sDashAttackFrame.cool->Get_GameObject()->SetActive(!_ready);
+
+	if (_ready)
+	{
+		m_sDashAttackFrame.usableGlow->SetAlpha(m_sDashAttackFrame.glowAlpa);
+
+		if (!m_sDashAttackFrame.glowAlbe)
+		{
+			m_sDashAttackFrame.glowAlpa -= DELTA_TIME * (1.f / m_sDashAttackFrame.glowBlinkTime);
+
+			if (m_sDashAttackFrame.glowAlpa <= 0.f)
+			{
+				m_sDashAttackFrame.glowAlpa = 0.f;
+				m_sDashAttackFrame.glowAlbe = true;
+			}
+		}
+		else
+		{
+			m_sDashAttackFrame.glowAlpa += DELTA_TIME * (1.f / m_sDashAttackFrame.glowBlinkTime);
+
+			if (m_sDashAttackFrame.glowAlpa >= 1.f)
+			{
+				m_sDashAttackFrame.glowAlpa = 1.f;
+				m_sDashAttackFrame.glowAlbe = false;
+			}
+		}
 	}
 }

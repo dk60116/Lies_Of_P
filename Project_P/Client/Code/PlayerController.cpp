@@ -6,6 +6,7 @@
 #include "PlayerState_Idle.h"
 #include "PlayerState_Move.h"
 #include "PlayerState_Attack.h"
+#include "PlayerState_DashAttack.h"
 #include "PlayerState_Guard.h"
 #include "PlayerState_Evade.h"
 #include "PlayerState_Jump.h"
@@ -47,6 +48,7 @@ HRESULT CPlayerController::Initialize()
 	m_mStateList.insert({ PlayerState::Idle, new CPlayerState_Idle() });
 	m_mStateList.insert({ PlayerState::Move, new CPlayerState_Move() });
 	m_mStateList.insert({ PlayerState::Attack, new CPlayerState_Attack() });
+	m_mStateList.insert({ PlayerState::DashAttack, new CPlayerState_DashAttack });
 	m_mStateList.insert({ PlayerState::Guard, new CPlayerState_Guard() });
 	m_mStateList.insert({ PlayerState::Evade, new CPlayerState_Evade() });
 	m_mStateList.insert({ PlayerState::Jump, new CPlayerState_Jump() });
@@ -102,12 +104,12 @@ void CPlayerController::Update()
 
 	m_pCtx->SetSprint(m_mKeyHold[Evade]);
 
+	HandleStrongAttackInput();
+
 	if (m_mKeyDown[Jump] && m_pCtx->IsCanJump())
 		m_pCtx->BufferAction(PlayerState::Jump);
     if (m_mKeyDown[Attack] && m_pCtx->IsCanAttack())
         m_pCtx->BufferAction(PlayerState::Attack);
-	if (m_mKeyDown[Attack_S] && m_pCtx->IsCanAttack())
-		m_pCtx->BufferAction(PlayerState::Attack);
 	if (m_mKeyHold[Guard] && m_pCtx->IsCanGuard() && !m_pCtx->IsActionActive(PlayerState::Guard))
 		m_pCtx->BufferAction(PlayerState::Guard);
 	if (m_mKeyDown[Evade] && m_pCtx->IsCanEvade())
@@ -265,6 +267,76 @@ void CPlayerController::SetBattle(const _bool _value)
 {
 	m_bBattleMode = _value;
 	m_pPlayer->GetAnimator()->SetBool(L"isBattle", m_bBattleMode);
+}
+
+void CPlayerController::HandleStrongAttackInput()
+{
+	if (!m_pCtx || !m_pPlayer)
+		return;
+
+	const _bool canStartAttack =
+		m_pCtx->IsCanAttack() &&
+		!m_pCtx->IsActionActive(PlayerState::Attack) &&
+		!m_pCtx->IsActionActive(PlayerState::DashAttack);
+
+	if (!canStartAttack)
+	{
+		if (!m_mKeyHold[Attack_S] || m_mKeyUp[Attack_S])
+			ResetStrongAttackInput();
+		return;
+	}
+
+	if (!m_pPlayer->IsDashAttackReady())
+	{
+		if (m_mKeyDown[Attack_S])
+			QueueBufferedAttack(true);
+
+		if (!m_mKeyHold[Attack_S] || m_mKeyUp[Attack_S])
+			ResetStrongAttackInput();
+		return;
+	}
+
+	if (m_mKeyDown[Attack_S])
+	{
+		m_fStrongAttackHoldTime = 0.f;
+		m_bPendingStrongAttackRelease = true;
+		m_bDashAttackQueuedFromHold = false;
+	}
+
+	if (m_mKeyHold[Attack_S] && m_bPendingStrongAttackRelease && !m_bDashAttackQueuedFromHold)
+	{
+		m_fStrongAttackHoldTime += DELTA_TIME;
+
+		if (m_fStrongAttackHoldTime >= 0.3f)
+		{
+			m_pCtx->BufferAction(PlayerState::DashAttack);
+			m_bDashAttackQueuedFromHold = true;
+			m_bPendingStrongAttackRelease = false;
+		}
+	}
+
+	if (m_mKeyUp[Attack_S])
+	{
+		if (m_bPendingStrongAttackRelease && !m_bDashAttackQueuedFromHold)
+			QueueBufferedAttack(true);
+
+		ResetStrongAttackInput();
+	}
+}
+
+void CPlayerController::QueueBufferedAttack(_bool _strong)
+{
+	if (!m_pCtx || !m_pCtx->IsCanAttack())
+		return;
+
+	m_pCtx->BufferAction(_strong ? PlayerState::Attack_S : PlayerState::Attack);
+}
+
+void CPlayerController::ResetStrongAttackInput()
+{
+	m_fStrongAttackHoldTime = 0.f;
+	m_bPendingStrongAttackRelease = false;
+	m_bDashAttackQueuedFromHold = false;
 }
 
 void CPlayerController::Update_Key()

@@ -94,17 +94,17 @@ _bool CInput::GetMouseButtonUp_Editor(_int _button)
 
 bool CInput::GetKey(_int _iKey)
 {
-    return m_bKeyState[_iKey] && !IsEditor();
+    return m_bKeyState[_iKey] && IsGame();
 }
 
 bool CInput::GetKeyDown(_int _iKey)
 {
-    return m_bKeyState[_iKey] && !m_bPrevKeyState[_iKey] && !IsEditor();
+    return m_bKeyState[_iKey] && !m_bPrevKeyState[_iKey] && IsGame();
 }
 
 bool CInput::GetKeyUp(_int _iKey)
 {
-    return !m_bKeyState[_iKey] && m_bPrevKeyState[_iKey] && !IsEditor();
+    return !m_bKeyState[_iKey] && m_bPrevKeyState[_iKey] && IsGame();
 }
 
 bool CInput::GetMouseButton(_int _button)
@@ -118,7 +118,7 @@ bool CInput::GetMouseButton(_int _button)
     else
         return false;
 
-    return m_bKeyState[_button] && !IsEditor();
+    return m_bKeyState[_button] && IsGame();
 }
 
 bool CInput::GetMouseButtonDown(_int _button)
@@ -132,7 +132,7 @@ bool CInput::GetMouseButtonDown(_int _button)
     else
         return false;
 
-    return m_bKeyState[_button] &&!m_bPrevKeyState[_button] && !IsEditor();
+    return m_bKeyState[_button] &&!m_bPrevKeyState[_button] && IsGame();
 }
 
 bool CInput::GetMouseButtonUp(_int _button)
@@ -146,7 +146,7 @@ bool CInput::GetMouseButtonUp(_int _button)
     else
         return false;
 
-    return !m_bKeyState[_button] && m_bPrevKeyState[_button] && !IsEditor();
+    return !m_bKeyState[_button] && m_bPrevKeyState[_button] && IsGame();
 }
 
 const vector2Int CInput::GetMousePos_Editor()
@@ -327,6 +327,10 @@ const _bool CInput::IsEditor() const
 #ifdef _CLIENT_BUILD
     return false;
 #endif
-
     return GetForegroundWindow() == CEditor::GetInstance().Get_EditorWindow();
+}
+
+const _bool CInput::IsGame() const
+{
+    return GetForegroundWindow() == CDisplay::GetInstance().Get_GameWindow();
 }

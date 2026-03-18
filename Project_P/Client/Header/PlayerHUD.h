@@ -35,8 +35,20 @@ public:
 	struct DashAttackFrameSet
 	{
 		CImage* frame;
+		CImage* usableGlow;
 		CImage* cool;
 		CImage* icon;
+		CImage* blur_Circle;
+		CImage* blur_Line;
+
+		_bool coolDown_Trigger = false;
+		_float coolEndDuration = 0.f;
+		_float coolEndDest = 0.3f;
+
+		_bool prevReady = false;
+		_bool glowAlbe = false;
+		_float glowAlpa = 1.f;
+		_float glowBlinkTime = 2.f;
 	};
 
 	struct SkillFrameSet
@@ -77,6 +89,7 @@ public:
 	void Update_BE(const _uint _maxValue, const _uint _current);
 	void Update_HP(const _uint _maxValue, const _uint _current);
 	void Update_SH(const _uint _maxValue, const _uint _current);
+	void Update_DashAttack(const _float _coolRatio, const _bool _ready);
 
 private:
 	CPlayer* m_pPlayer;

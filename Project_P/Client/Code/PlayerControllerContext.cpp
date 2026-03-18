@@ -554,6 +554,18 @@ void CPlayerControllerContext::TickActionBuffer(PlayerState state)
 	}
 }
 
+void CPlayerControllerContext::SetPendingStrongAttack(_bool _value)
+{
+	m_bPendingStrongAttack = _value;
+}
+
+_bool CPlayerControllerContext::ConsumePendingStrongAttack()
+{
+	const _bool isPending = m_bPendingStrongAttack;
+	m_bPendingStrongAttack = false;
+	return isPending;
+}
+
 CPlayerController* CPlayerControllerContext::Get_Controller()
 {
 	return m_pController;
@@ -628,6 +640,16 @@ void CPlayerControllerContext::SetCanAttack(const _bool _value)
 const _bool CPlayerControllerContext::IsCanGuard() const
 {
 	return m_Cv_Con.m_bCanGuard;
+}
+
+const _bool CPlayerControllerContext::IsCanDashAttack() const
+{
+	return m_Cv_Con.m_bCanDashAttack;
+}
+
+void CPlayerControllerContext::SetCanDashAttack(const _bool _value)
+{
+	m_Cv_Con.m_bCanDashAttack = _value;
 }
 
 void CPlayerControllerContext::SetCanGuard(const _bool _value)

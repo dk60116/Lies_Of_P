@@ -2177,6 +2177,11 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                     "Radial180",
                     "Radial360"
                 };
+                static const char* horizontalFillOriginLabels[] = { "Left", "Right" };
+                static const char* verticalFillOriginLabels[] = { "Bottom", "Top" };
+                static const char* radial90FillOriginLabels[] = { "Bottom Left", "Top Left", "Top Right", "Bottom Right" };
+                static const char* radial180FillOriginLabels[] = { "Bottom", "Left", "Top", "Right" };
+                static const char* radial360FillOriginLabels[] = { "Bottom", "Right", "Top", "Left" };
 
                 const string imageId = to_string(reinterpret_cast<uintptr_t>(image));
                 CTexture* texture = image->GetTexture();
@@ -2227,6 +2232,56 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 _int fillMethodIndex = static_cast<_int>(image->Get_FillMethod());
                 if (ImGui::Combo(("Fill Method##Image" + imageId).c_str(), &fillMethodIndex, fillMethodLabels, IM_ARRAYSIZE(fillMethodLabels)))
                     image->Set_FillMethod(static_cast<CImage::FillMethod>(fillMethodIndex));
+
+                const CImage::FillMethod fillMethod = image->Get_FillMethod();
+                if (fillMethod != CImage::FillMethod::None)
+                {
+                    const char* const* fillOriginLabels = nullptr;
+                    _int fillOriginLabelCount = 0;
+
+                    switch (fillMethod)
+                    {
+                    case CImage::FillMethod::Horizontal:
+                        fillOriginLabels = horizontalFillOriginLabels;
+                        fillOriginLabelCount = IM_ARRAYSIZE(horizontalFillOriginLabels);
+                        break;
+                    case CImage::FillMethod::Vertical:
+                        fillOriginLabels = verticalFillOriginLabels;
+                        fillOriginLabelCount = IM_ARRAYSIZE(verticalFillOriginLabels);
+                        break;
+                    case CImage::FillMethod::Radial90:
+                        fillOriginLabels = radial90FillOriginLabels;
+                        fillOriginLabelCount = IM_ARRAYSIZE(radial90FillOriginLabels);
+                        break;
+                    case CImage::FillMethod::Radial180:
+                        fillOriginLabels = radial180FillOriginLabels;
+                        fillOriginLabelCount = IM_ARRAYSIZE(radial180FillOriginLabels);
+                        break;
+                    case CImage::FillMethod::Radial360:
+                        fillOriginLabels = radial360FillOriginLabels;
+                        fillOriginLabelCount = IM_ARRAYSIZE(radial360FillOriginLabels);
+                        break;
+                    case CImage::FillMethod::None:
+                    default:
+                        break;
+                    }
+
+                    if (fillOriginLabels && fillOriginLabelCount > 0)
+                    {
+                        _int fillOrigin = image->Get_FillOrigin();
+                        if (ImGui::Combo(("Fill Origin##Image" + imageId).c_str(), &fillOrigin, fillOriginLabels, fillOriginLabelCount))
+                            image->Set_FillOrigin(fillOrigin);
+                    }
+
+                    if (fillMethod == CImage::FillMethod::Radial90
+                        || fillMethod == CImage::FillMethod::Radial180
+                        || fillMethod == CImage::FillMethod::Radial360)
+                    {
+                        _bool fillClockwise = image->Get_FillClockwise();
+                        if (ImGui::Checkbox(("Clockwise##Image" + imageId).c_str(), &fillClockwise))
+                            image->Set_FillClockwise(fillClockwise);
+                    }
+                }
 
                 _float fillAmount = image->GetFillAmount();
                 if (ImGui::SliderFloat(("Fill Amount##Image" + imageId).c_str(), &fillAmount, 0.f, 1.f, "%.3f"))

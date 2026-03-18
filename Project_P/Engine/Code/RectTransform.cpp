@@ -504,12 +504,12 @@ void CRectTransform::Set_AnchoredPosition(const _float _x, const _float _y)
     Set_AnchoredPosition(vector2(_x, _y));
 }
 
-void CRectTransform::Set_AnchoredPositonX(const _float _value)
+void CRectTransform::Set_AnchoredPositionX(const _float _value)
 {
     Set_AnchoredPosition(vector2(_value, m_vAnchoredPosition.y));
 }
 
-void CRectTransform::Set_AnchoredPositonY(const _float _value)
+void CRectTransform::Set_AnchoredPositionY(const _float _value)
 {
     Set_AnchoredPosition(vector2(m_vAnchoredPosition.x, _value));
 }

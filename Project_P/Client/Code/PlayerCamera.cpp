@@ -188,9 +188,8 @@ void CPlayerCamera::Update()
     CTransform* tf = GetTransform();
     CTransform* playerTf = CGameManager::GetInstance().Get_Player()->GetTransform();
 
-    const _float dt = std::clamp(DELTA_TIME, 0.f, 0.05f);
     const _float speed = (m_sOptions.trackingSpeed > 0.f) ? m_sOptions.trackingSpeed : 10.f;
-    const _float t = 1.f - std::exp(-speed * dt);
+    const _float t = 1.f - std::exp(-speed * DELTA_TIME);
 
     m_fCurYaw = LerpAngle(m_fCurYaw, m_fTargetYaw, t);
     m_fCurPitch = LerpAngle(m_fCurPitch, m_fTargetPitch, t);

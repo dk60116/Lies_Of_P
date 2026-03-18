@@ -57,6 +57,7 @@ private:
 
 private:
     const _bool IsEditor() const;
+    const _bool IsGame() const;
 
 private:
     map<int, bool> m_bKeyState;

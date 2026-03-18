@@ -67,11 +67,12 @@ void CPlayerState_Locomotion::Update()
 {
     __super::Update();
 
-    static const array<CPlayerController::PlayerState, 6> kTickStates =
+    static const array<CPlayerController::PlayerState, 7> kTickStates =
     {
         CPlayerController::PlayerState::Hit,
         CPlayerController::PlayerState::Attack,
         CPlayerController::PlayerState::Attack_S,
+        CPlayerController::PlayerState::DashAttack,
         CPlayerController::PlayerState::Guard,
         CPlayerController::PlayerState::Evade,
         CPlayerController::PlayerState::Jump
@@ -83,12 +84,13 @@ void CPlayerState_Locomotion::Update()
     CPlayerState* next = nullptr;
     bool handled = false;
 
-    static const array<CPlayerController::PlayerState, 6> kBufferedPriority =
+    static const array<CPlayerController::PlayerState, 7> kBufferedPriority =
     {
         CPlayerController::PlayerState::Hit,
         CPlayerController::PlayerState::Jump,
         CPlayerController::PlayerState::Evade,
         CPlayerController::PlayerState::Guard,
+        CPlayerController::PlayerState::DashAttack,
         CPlayerController::PlayerState::Attack_S,
         CPlayerController::PlayerState::Attack
     };
@@ -111,9 +113,20 @@ void CPlayerState_Locomotion::Update()
 
         m_pCtx->ConsumeActionBuffer(st);
 
-        auto f = m_mChildList.find(st);
-        if (f != m_mChildList.end())
-            next = f->second;
+        if (st == CPlayerController::PlayerState::Attack_S)
+        {
+            m_pCtx->SetPendingStrongAttack(true);
+
+            auto f = m_mChildList.find(CPlayerController::PlayerState::Attack);
+            if (f != m_mChildList.end())
+                next = f->second;
+        }
+        else
+        {
+            auto f = m_mChildList.find(st);
+            if (f != m_mChildList.end())
+                next = f->second;
+        }
 
         handled = true;
         break;
@@ -121,11 +134,12 @@ void CPlayerState_Locomotion::Update()
 
     if (!handled)
     {
-        static const array<CPlayerController::PlayerState, 6> kActivePriority =
+        static const array<CPlayerController::PlayerState, 7> kActivePriority =
         {
             CPlayerController::PlayerState::Hit,
             CPlayerController::PlayerState::Evade,
             CPlayerController::PlayerState::Guard,
+            CPlayerController::PlayerState::DashAttack,
             CPlayerController::PlayerState::Attack_S,
             CPlayerController::PlayerState::Attack,
             CPlayerController::PlayerState::Jump

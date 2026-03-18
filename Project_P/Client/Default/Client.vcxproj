@@ -153,6 +153,7 @@
     <ClInclude Include="..\Header\MonsterController.h" />
     <ClInclude Include="..\Header\Mon_Creeper.h" />
     <ClInclude Include="..\Header\PlayerState_Attack.h" />
+    <ClInclude Include="..\Header\PlayerState_DashAttack.h" />
     <ClInclude Include="..\Header\PlayerState_Evade.h" />
     <ClInclude Include="..\Header\PlayerState_Guard.h" />
     <ClInclude Include="..\Header\PlayerState_Hit.h" />
@@ -202,6 +203,7 @@
     <ClCompile Include="..\Code\PlayerHUD.cpp" />
     <ClCompile Include="..\Code\PlayerState.cpp" />
     <ClCompile Include="..\Code\PlayerState_Attack.cpp" />
+    <ClCompile Include="..\Code\PlayerState_DashAttack.cpp" />
     <ClCompile Include="..\Code\PlayerState_Evade.cpp" />
     <ClCompile Include="..\Code\PlayerState_Guard.cpp" />
     <ClCompile Include="..\Code\PlayerState_Hit.cpp" />

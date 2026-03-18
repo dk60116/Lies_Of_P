@@ -39,6 +39,7 @@ private:
 		_bool m_bCanMove = true;
 		_bool m_bCanTurn = true;
 		_bool m_bCanAttack = true;
+		_bool m_bCanDashAttack = true;
 		_bool m_bCanGuard = true;
 		_bool m_bCanEvade = true;
 		_bool m_bCanJump = true;
@@ -109,6 +110,8 @@ public:
 	void SetActionActive(PlayerState state, _bool v);
 	_bool IsActionActive(PlayerState state) const;
 	void TickActionBuffer(PlayerState state);
+	void SetPendingStrongAttack(_bool _value);
+	_bool ConsumePendingStrongAttack();
 
 public:
 	CPlayerController* Get_Controller();
@@ -125,6 +128,8 @@ public:
 	const _bool IsCanAttack() const;
 	void SetCanAttack(const _bool _value);
 	const _bool IsCanGuard() const;
+	const _bool IsCanDashAttack() const;
+	void SetCanDashAttack(const _bool _value);
 	void SetCanGuard(const _bool _value);
 	const _bool IsCanEvade() const;
 	void SetCanEvade(const _bool _value);
@@ -168,6 +173,7 @@ private:
 	vector3 m_vPendingHitKnockback;
 	vector3 m_vGuardKnockbackDir;
 	_float m_fGuardKnockbackRemain;
+	_bool m_bPendingStrongAttack = false;
 
 private:
 	_bool m_bSprint, m_bBigTurn;

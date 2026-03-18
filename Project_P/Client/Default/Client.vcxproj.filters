@@ -165,6 +165,9 @@
     <ClInclude Include="..\Header\InterfaceManager.h">
       <Filter>Scripts\Managers</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\PlayerState_DashAttack.h">
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Code\MainScene.cpp">
@@ -268,6 +271,9 @@
     </ClCompile>
     <ClCompile Include="..\Code\InterfaceManager.cpp">
       <Filter>Scripts\Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerState_DashAttack.cpp">
+      <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

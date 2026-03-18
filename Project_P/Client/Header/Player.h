@@ -40,6 +40,8 @@ public:
 		_int maxPotion = 3;
 		_int crtPotion = 0;
 		_float hitKnockbackSpeed = 3.f;
+		_float dashAttackCool = 4.f;
+		_float crtDashAttackCool = 0.f;
 	};
 
 	struct EquipStatus
@@ -77,6 +79,10 @@ public:
 	const PlayerStatus Get_PlayerEquipStat();
 	void RecoverHp(const _uint _value);
 	void GetDamage(const _uint _damage);
+	void TickDashAttackCooldown();
+	void StartDashAttackCooldown();
+	_bool IsDashAttackReady() const;
+	_float GetDashAttackCooldownRatio() const;
 
 	const _float GetRadius() const;
 

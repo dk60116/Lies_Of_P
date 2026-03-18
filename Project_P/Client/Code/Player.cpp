@@ -203,6 +203,8 @@ void CPlayer::Update()
 {
 	__super::Update();
 
+	TickDashAttackCooldown();
+
 	if (CInput::GetInstance().GetKeyDown(Y))
 	{
 		GetDamage(1);
@@ -268,6 +270,32 @@ void CPlayer::GetDamage(const _uint _damage)
 	m_sPlayerStatus.crtHp -= _damage;
 	m_sPlayerStatus.crtHp = max(m_sPlayerStatus.crtHp, 0);
 	SyncHUDStatus();
+}
+
+void CPlayer::TickDashAttackCooldown()
+{
+	if (m_sPlayerStatus.crtDashAttackCool <= 0.f)
+		return;
+
+	m_sPlayerStatus.crtDashAttackCool = max(0.f, m_sPlayerStatus.crtDashAttackCool - DELTA_TIME);
+}
+
+void CPlayer::StartDashAttackCooldown()
+{
+	m_sPlayerStatus.crtDashAttackCool = m_sPlayerStatus.dashAttackCool;
+}
+
+_bool CPlayer::IsDashAttackReady() const
+{
+	return m_sPlayerStatus.crtDashAttackCool <= 0.f;
+}
+
+_float CPlayer::GetDashAttackCooldownRatio() const
+{
+	if (m_sPlayerStatus.dashAttackCool <= 0.f)
+		return 0.f;
+
+	return std::clamp(m_sPlayerStatus.crtDashAttackCool / m_sPlayerStatus.dashAttackCool, 0.f, 1.f);
 }
 
 const _float CPlayer::GetRadius() const
