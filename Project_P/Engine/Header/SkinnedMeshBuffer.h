@@ -66,6 +66,8 @@ private:
 private:
 	vector<wstring> m_vBoneNames;
 	vector<_float4x4> m_vBoneOffsetMatrices;
+
+	vector<_float4> m_vBoneBoundSpheres;
 };
 
 NS_END

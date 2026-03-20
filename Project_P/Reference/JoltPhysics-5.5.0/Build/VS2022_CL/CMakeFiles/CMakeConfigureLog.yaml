@@ -4,66 +4,20 @@ events:
   -
     kind: "message-v1"
     backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineSystem.cmake:212 (message)"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.29/Modules/CMakeDetermineSystem.cmake:205 (message)"
       - "CMakeLists.txt:3 (project)"
     message: |
       The system is: Windows - 10.0.26200 - AMD64
-  -
-    kind: "find-v1"
-    backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:3 (project)"
-    mode: "file"
-    variable: "src_in"
-    description: "Path to a file."
-    settings:
-      SearchFramework: "NEVER"
-      SearchAppBundle: "NEVER"
-      CMAKE_FIND_USE_CMAKE_PATH: true
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "CMakeCXXCompilerId.cpp.in"
-    candidate_directories:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/"
-    found: "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeCXXCompilerId.cpp.in"
-    search_context:
-      ENV{PATH}:
-        - "C:\\WINDOWS\\system32"
-        - "C:\\WINDOWS"
-        - "C:\\WINDOWS\\System32\\Wbem"
-        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
-        - "C:\\WINDOWS\\System32\\OpenSSH\\"
-        - "C:\\Program Files\\dotnet\\"
-        - "C:\\Program Files\\Git\\cmd"
-        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
-        - "C:\\Program Files\\Common Files\\Autodesk Shared\\"
-        - "C:\\Program Files (x86)\\Autodesk\\Backburner\\"
-        - "C:\\Program Files\\PowerShell\\7\\"
-        - "C:\\Program Files\\CMake\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Launcher\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\ProgramData\\dk601\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Roaming\\Programs\\Zero Install"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+...
+
+---
+events:
   -
     kind: "message-v1"
     backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.29/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
       - "CMakeLists.txt:3 (project)"
     message: |
       Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
@@ -73,10 +27,10 @@ events:
       
       The output was:
       0
-      msbuild 踰꾩쟾 17.14.23+b0019275e(.NET Framework??
-      鍮뚮뱶 ?쒖옉: 2026-02-19 ?ㅽ썑 9:41:19
+      msbuild 踰꾩쟾 17.11.9+a69bbaaf5(.NET Framework??
+      鍮뚮뱶 ?쒖옉: 2026-03-20 ?ㅽ썑 8:17:47
       
-      1 ?몃뱶??"C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\4.2.3\\CompilerIdCXX\\CompilerIdCXX.vcxproj" ?꾨줈?앺듃(湲곕낯 ?\xc2\x80???낅땲??
+      1 ?몃뱶??"C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\3.29.5-msvc4\\CompilerIdCXX\\CompilerIdCXX.vcxproj" ?꾨줈?앺듃(湲곕낯 ?\xc2\x80???낅땲??
       PrepareForBuild:
         "Debug\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
         援ъ“??異쒕젰???ъ슜?????덉뒿?덈떎. 而댄뙆?쇰윭 吏꾨떒???쒖떇?\xc2\x80 ?ㅻ쪟 怨꾩링 援ъ“瑜?諛섏쁺?⑸땲?? ?먯꽭???댁슜?\xc2\x80 https://aka.ms/cpp/structured-output??李몄“?섏꽭??
@@ -85,30 +39,34 @@ events:
         "AlwaysCreate"??媛\xc2\x80) 吏\xc2\x80?뺣릺?덇린 ?뚮Ц??"Debug\\CompilerIdCXX.tlog\\unsuccessfulbuild"??瑜? 留뚮뱾怨??덉뒿?덈떎.
         "Debug\\CompilerIdCXX.tlog\\unsuccessfulbuild"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
       VcpkgTripletSelection:
-        Using triplet "x64-windows" from "C:\\vcpkg-master\\installed\\x64-windows\\"
+        Using triplet "x64-windows" from "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\"
         Using normalized configuration "Release"
       ClCompile:
-        C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\CL.exe /c /I"C:\\vcpkg-master\\installed\\x64-windows\\include" /nologo /W0 /WX- /diagnostics:column /Od /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\\\" /Fd"Debug\\vc143.pdb" /external:W0 /Gd /TP /FC /errorReport:queue CMakeCXXCompilerId.cpp
+        C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.41.34120\\bin\\HostX64\\x64\\CL.exe /c /I"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\include" /nologo /W0 /WX- /diagnostics:column /Od /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\\\" /Fd"Debug\\vc143.pdb" /external:W0 /Gd /TP /FC /errorReport:queue CMakeCXXCompilerId.cpp
         CMakeCXXCompilerId.cpp
       Link:
-        C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:".\\CompilerIdCXX.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:"C:\\vcpkg-master\\installed\\x64-windows\\lib" /LIBPATH:"C:\\vcpkg-master\\installed\\x64-windows\\lib\\manual-link" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib "C:\\vcpkg-master\\installed\\x64-windows\\lib\\*.lib" /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:".\\CompilerIdCXX.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:".\\CompilerIdCXX.lib" /MACHINE:X64 Debug\\CMakeCXXCompilerId.obj
-        CompilerIdCXX.vcxproj -> C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\4.2.3\\CompilerIdCXX\\CompilerIdCXX.exe
+        C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.41.34120\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:".\\CompilerIdCXX.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib" /LIBPATH:"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib\\manual-link" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib\\*.lib" /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:".\\CompilerIdCXX.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:".\\CompilerIdCXX.lib" /MACHINE:X64 Debug\\CMakeCXXCompilerId.obj
+        CompilerIdCXX.vcxproj -> C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\3.29.5-msvc4\\CompilerIdCXX\\CompilerIdCXX.exe
       AppLocalFromInstalled:
-        pwsh.exe -ExecutionPolicy Bypass -noprofile -File "C:\\vcpkg-master\\scripts\\buildsystems\\msbuild\\applocal.ps1" "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\4.2.3\\CompilerIdCXX\\CompilerIdCXX.exe" "C:\\vcpkg-master\\installed\\x64-windows\\bin" "Debug\\CompilerIdCXX.tlog\\CompilerIdCXX.write.1u.tlog" "Debug\\vcpkg.applocal.log"
+        pwsh.exe -ExecutionPolicy Bypass -noprofile -File "C:\\Users\\dk601\\Documents\\vcpkg\\scripts\\buildsystems\\msbuild\\applocal.ps1" "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\3.29.5-msvc4\\CompilerIdCXX\\CompilerIdCXX.exe" "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\bin" "Debug\\CompilerIdCXX.tlog\\CompilerIdCXX.write.1u.tlog" "Debug\\vcpkg.applocal.log"
+        'pwsh.exe'?\xc2\x80(?? ?대? ?먮뒗 ?몃? 紐낅졊, ?ㅽ뻾?????덈뒗 ?꾨줈洹몃옩, ?먮뒗
+        諛곗튂 ?뚯씪???꾨떃?덈떎.
+        "pwsh.exe -ExecutionPolicy Bypass -noprofile -File "C:\\Users\\dk601\\Documents\\vcpkg\\scripts\\buildsystems\\msbuild\\applocal.ps1" "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\3.29.5-msvc4\\CompilerIdCXX\\CompilerIdCXX.exe" "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\bin" "Debug\\CompilerIdCXX.tlog\\CompilerIdCXX.write.1u.tlog" "Debug\\vcpkg.applocal.log"" 紐낅졊??醫낅즺?섏뿀?듬땲??肄붾뱶: 9009).
+        "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -ExecutionPolicy Bypass -noprofile -File "C:\\Users\\dk601\\Documents\\vcpkg\\scripts\\buildsystems\\msbuild\\applocal.ps1" "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\3.29.5-msvc4\\CompilerIdCXX\\CompilerIdCXX.exe" "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\bin" "Debug\\CompilerIdCXX.tlog\\CompilerIdCXX.write.1u.tlog" "Debug\\vcpkg.applocal.log"
       PostBuildEvent:
         for %%i in (cl.exe) do @echo CMAKE_CXX_COMPILER=%%~$PATH:i
         :VCEnd
-        CMAKE_CXX_COMPILER=C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\Hostx64\\x64\\cl.exe
+        CMAKE_CXX_COMPILER=C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.41.34120\\bin\\Hostx64\\x64\\cl.exe
       FinalizeBuildStatus:
         "Debug\\CompilerIdCXX.tlog\\unsuccessfulbuild" ?뚯씪????젣?섍퀬 ?덉뒿?덈떎.
         "Debug\\CompilerIdCXX.tlog\\CompilerIdCXX.lastbuildstate"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
-      "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\4.2.3\\CompilerIdCXX\\CompilerIdCXX.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+      "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\3.29.5-msvc4\\CompilerIdCXX\\CompilerIdCXX.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
       
       鍮뚮뱶?덉뒿?덈떎.
           寃쎄퀬 0媛?
           ?ㅻ쪟 0媛?
       
-      寃쎄낵 ?쒓컙: 00:00:02.12
+      寃쎄낵 ?쒓컙: 00:00:04.17
       
       
       Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CompilerIdCXX.exe"
@@ -116,691 +74,19 @@ events:
       Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CompilerIdCXX.vcxproj"
       
       The CXX compiler identification is MSVC, found in:
-        C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/4.2.3/CompilerIdCXX/CompilerIdCXX.exe
+        C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/3.29.5-msvc4/CompilerIdCXX/CompilerIdCXX.exe
       
-  -
-    kind: "find-v1"
-    backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:37 (find_program)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:65 (__resolve_tool_path)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:103 (__resolve_linker_path)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:3 (project)"
-    mode: "program"
-    variable: "_CMAKE_TOOL_WITH_PATH"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "NEVER"
-      SearchAppBundle: "NEVER"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "link"
-    candidate_directories:
-      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/"
-      - "C:/Windows/System32/"
-      - "C:/Windows/"
-      - "C:/Windows/System32/wbem/"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
-      - "C:/Windows/System32/OpenSSH/"
-      - "C:/Program Files/dotnet/"
-      - "C:/Program Files/Git/cmd/"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "C:/Program Files/Common Files/Autodesk Shared/"
-      - "C:/Program Files (x86)/Autodesk/Backburner/"
-      - "C:/Program Files/PowerShell/7/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/"
-      - "C:/Users/dk601/.dotnet/tools/"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/"
-    searched_directories:
-      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/link.com"
-    found: "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/link.exe"
-    search_context:
-      ENV{PATH}:
-        - "C:\\WINDOWS\\system32"
-        - "C:\\WINDOWS"
-        - "C:\\WINDOWS\\System32\\Wbem"
-        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
-        - "C:\\WINDOWS\\System32\\OpenSSH\\"
-        - "C:\\Program Files\\dotnet\\"
-        - "C:\\Program Files\\Git\\cmd"
-        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
-        - "C:\\Program Files\\Common Files\\Autodesk Shared\\"
-        - "C:\\Program Files (x86)\\Autodesk\\Backburner\\"
-        - "C:\\Program Files\\PowerShell\\7\\"
-        - "C:\\Program Files\\CMake\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Launcher\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\ProgramData\\dk601\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Roaming\\Programs\\Zero Install"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:37 (find_program)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:65 (__resolve_tool_path)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:104 (__resolve_linker_path)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:3 (project)"
-    mode: "program"
-    variable: "_CMAKE_TOOL_WITH_PATH"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "NEVER"
-      SearchAppBundle: "NEVER"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "lld-link"
-    candidate_directories:
-      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/"
-      - "C:/Windows/System32/"
-      - "C:/Windows/"
-      - "C:/Windows/System32/wbem/"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
-      - "C:/Windows/System32/OpenSSH/"
-      - "C:/Program Files/dotnet/"
-      - "C:/Program Files/Git/cmd/"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "C:/Program Files/Common Files/Autodesk Shared/"
-      - "C:/Program Files (x86)/Autodesk/Backburner/"
-      - "C:/Program Files/PowerShell/7/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/"
-      - "C:/Users/dk601/.dotnet/tools/"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/"
-    searched_directories:
-      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/lld-link.com"
-      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/lld-link.exe"
-      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/lld-link"
-      - "C:/Windows/System32/lld-link.com"
-      - "C:/Windows/System32/lld-link.exe"
-      - "C:/Windows/System32/lld-link"
-      - "C:/Windows/lld-link.com"
-      - "C:/Windows/lld-link.exe"
-      - "C:/Windows/lld-link"
-      - "C:/Windows/System32/wbem/lld-link.com"
-      - "C:/Windows/System32/wbem/lld-link.exe"
-      - "C:/Windows/System32/wbem/lld-link"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/lld-link.com"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/lld-link.exe"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/lld-link"
-      - "C:/Windows/System32/OpenSSH/lld-link.com"
-      - "C:/Windows/System32/OpenSSH/lld-link.exe"
-      - "C:/Windows/System32/OpenSSH/lld-link"
-      - "C:/Program Files/dotnet/lld-link.com"
-      - "C:/Program Files/dotnet/lld-link.exe"
-      - "C:/Program Files/dotnet/lld-link"
-      - "C:/Program Files/Git/cmd/lld-link.com"
-      - "C:/Program Files/Git/cmd/lld-link.exe"
-      - "C:/Program Files/Git/cmd/lld-link"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/lld-link.com"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/lld-link.exe"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/lld-link"
-      - "C:/Program Files/Common Files/Autodesk Shared/lld-link.com"
-      - "C:/Program Files/Common Files/Autodesk Shared/lld-link.exe"
-      - "C:/Program Files/Common Files/Autodesk Shared/lld-link"
-      - "C:/Program Files (x86)/Autodesk/Backburner/lld-link.com"
-      - "C:/Program Files (x86)/Autodesk/Backburner/lld-link.exe"
-      - "C:/Program Files (x86)/Autodesk/Backburner/lld-link"
-      - "C:/Program Files/PowerShell/7/lld-link.com"
-      - "C:/Program Files/PowerShell/7/lld-link.exe"
-      - "C:/Program Files/PowerShell/7/lld-link"
-      - "C:/Program Files/CMake/bin/lld-link.com"
-      - "C:/Program Files/CMake/bin/lld-link.exe"
-      - "C:/Program Files/CMake/bin/lld-link"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/lld-link.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/lld-link.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/lld-link"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/lld-link.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/lld-link.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/lld-link"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/lld-link.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/lld-link.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/lld-link"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/lld-link.com"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/lld-link.exe"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/lld-link"
-      - "C:/Users/dk601/.dotnet/tools/lld-link.com"
-      - "C:/Users/dk601/.dotnet/tools/lld-link.exe"
-      - "C:/Users/dk601/.dotnet/tools/lld-link"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/lld-link.com"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/lld-link.exe"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/lld-link"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/lld-link.com"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/lld-link.exe"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/lld-link"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/lld-link.com"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/lld-link.exe"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/lld-link"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/lld-link.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/lld-link.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/lld-link"
-    found: false
-    search_context:
-      ENV{PATH}:
-        - "C:\\WINDOWS\\system32"
-        - "C:\\WINDOWS"
-        - "C:\\WINDOWS\\System32\\Wbem"
-        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
-        - "C:\\WINDOWS\\System32\\OpenSSH\\"
-        - "C:\\Program Files\\dotnet\\"
-        - "C:\\Program Files\\Git\\cmd"
-        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
-        - "C:\\Program Files\\Common Files\\Autodesk Shared\\"
-        - "C:\\Program Files (x86)\\Autodesk\\Backburner\\"
-        - "C:\\Program Files\\PowerShell\\7\\"
-        - "C:\\Program Files\\CMake\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Launcher\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\ProgramData\\dk601\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Roaming\\Programs\\Zero Install"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:3 (project)"
-    mode: "program"
-    variable: "CMAKE_LINKER"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "NEVER"
-      SearchAppBundle: "NEVER"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "link"
-    candidate_directories:
-      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/"
-      - "C:/Windows/System32/"
-      - "C:/Windows/"
-      - "C:/Windows/System32/wbem/"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
-      - "C:/Windows/System32/OpenSSH/"
-      - "C:/Program Files/dotnet/"
-      - "C:/Program Files/Git/cmd/"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "C:/Program Files/Common Files/Autodesk Shared/"
-      - "C:/Program Files (x86)/Autodesk/Backburner/"
-      - "C:/Program Files/PowerShell/7/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/"
-      - "C:/Users/dk601/.dotnet/tools/"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/"
-    searched_directories:
-      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/link.com"
-    found: "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/link.exe"
-    search_context:
-      ENV{PATH}:
-        - "C:\\WINDOWS\\system32"
-        - "C:\\WINDOWS"
-        - "C:\\WINDOWS\\System32\\Wbem"
-        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
-        - "C:\\WINDOWS\\System32\\OpenSSH\\"
-        - "C:\\Program Files\\dotnet\\"
-        - "C:\\Program Files\\Git\\cmd"
-        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
-        - "C:\\Program Files\\Common Files\\Autodesk Shared\\"
-        - "C:\\Program Files (x86)\\Autodesk\\Backburner\\"
-        - "C:\\Program Files\\PowerShell\\7\\"
-        - "C:\\Program Files\\CMake\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Launcher\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\ProgramData\\dk601\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Roaming\\Programs\\Zero Install"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:3 (project)"
-    mode: "program"
-    variable: "CMAKE_MT"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "NEVER"
-      SearchAppBundle: "NEVER"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "mt"
-    candidate_directories:
-      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/"
-      - "C:/Windows/System32/"
-      - "C:/Windows/"
-      - "C:/Windows/System32/wbem/"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
-      - "C:/Windows/System32/OpenSSH/"
-      - "C:/Program Files/dotnet/"
-      - "C:/Program Files/Git/cmd/"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "C:/Program Files/Common Files/Autodesk Shared/"
-      - "C:/Program Files (x86)/Autodesk/Backburner/"
-      - "C:/Program Files/PowerShell/7/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/"
-      - "C:/Users/dk601/.dotnet/tools/"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/"
-    searched_directories:
-      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/mt.com"
-      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/mt.exe"
-      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/mt"
-      - "C:/Windows/System32/mt.com"
-      - "C:/Windows/System32/mt.exe"
-      - "C:/Windows/System32/mt"
-      - "C:/Windows/mt.com"
-      - "C:/Windows/mt.exe"
-      - "C:/Windows/mt"
-      - "C:/Windows/System32/wbem/mt.com"
-      - "C:/Windows/System32/wbem/mt.exe"
-      - "C:/Windows/System32/wbem/mt"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/mt.com"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/mt.exe"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/mt"
-      - "C:/Windows/System32/OpenSSH/mt.com"
-      - "C:/Windows/System32/OpenSSH/mt.exe"
-      - "C:/Windows/System32/OpenSSH/mt"
-      - "C:/Program Files/dotnet/mt.com"
-      - "C:/Program Files/dotnet/mt.exe"
-      - "C:/Program Files/dotnet/mt"
-      - "C:/Program Files/Git/cmd/mt.com"
-      - "C:/Program Files/Git/cmd/mt.exe"
-      - "C:/Program Files/Git/cmd/mt"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/mt.com"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/mt.exe"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/mt"
-      - "C:/Program Files/Common Files/Autodesk Shared/mt.com"
-      - "C:/Program Files/Common Files/Autodesk Shared/mt.exe"
-      - "C:/Program Files/Common Files/Autodesk Shared/mt"
-      - "C:/Program Files (x86)/Autodesk/Backburner/mt.com"
-      - "C:/Program Files (x86)/Autodesk/Backburner/mt.exe"
-      - "C:/Program Files (x86)/Autodesk/Backburner/mt"
-      - "C:/Program Files/PowerShell/7/mt.com"
-      - "C:/Program Files/PowerShell/7/mt.exe"
-      - "C:/Program Files/PowerShell/7/mt"
-      - "C:/Program Files/CMake/bin/mt.com"
-      - "C:/Program Files/CMake/bin/mt.exe"
-      - "C:/Program Files/CMake/bin/mt"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/mt.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/mt.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/mt"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/mt.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/mt.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/mt"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/mt.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/mt.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/mt"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/mt.com"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/mt.exe"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/mt"
-      - "C:/Users/dk601/.dotnet/tools/mt.com"
-      - "C:/Users/dk601/.dotnet/tools/mt.exe"
-      - "C:/Users/dk601/.dotnet/tools/mt"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/mt.com"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/mt.exe"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/mt"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/mt.com"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/mt.exe"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/mt"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/mt.com"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/mt.exe"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/mt"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/mt.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/mt.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/mt"
-    found: false
-    search_context:
-      ENV{PATH}:
-        - "C:\\WINDOWS\\system32"
-        - "C:\\WINDOWS"
-        - "C:\\WINDOWS\\System32\\Wbem"
-        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
-        - "C:\\WINDOWS\\System32\\OpenSSH\\"
-        - "C:\\Program Files\\dotnet\\"
-        - "C:\\Program Files\\Git\\cmd"
-        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
-        - "C:\\Program Files\\Common Files\\Autodesk Shared\\"
-        - "C:\\Program Files (x86)\\Autodesk\\Backburner\\"
-        - "C:\\Program Files\\PowerShell\\7\\"
-        - "C:\\Program Files\\CMake\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Launcher\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\ProgramData\\dk601\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Roaming\\Programs\\Zero Install"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:3 (project)"
-    mode: "program"
-    variable: "CMAKE_AR"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "NEVER"
-      SearchAppBundle: "NEVER"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "lib"
-    candidate_directories:
-      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/"
-      - "C:/Windows/System32/"
-      - "C:/Windows/"
-      - "C:/Windows/System32/wbem/"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
-      - "C:/Windows/System32/OpenSSH/"
-      - "C:/Program Files/dotnet/"
-      - "C:/Program Files/Git/cmd/"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "C:/Program Files/Common Files/Autodesk Shared/"
-      - "C:/Program Files (x86)/Autodesk/Backburner/"
-      - "C:/Program Files/PowerShell/7/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/"
-      - "C:/Users/dk601/.dotnet/tools/"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/"
-    searched_directories:
-      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/lib.com"
-    found: "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/lib.exe"
-    search_context:
-      ENV{PATH}:
-        - "C:\\WINDOWS\\system32"
-        - "C:\\WINDOWS"
-        - "C:\\WINDOWS\\System32\\Wbem"
-        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
-        - "C:\\WINDOWS\\System32\\OpenSSH\\"
-        - "C:\\Program Files\\dotnet\\"
-        - "C:\\Program Files\\Git\\cmd"
-        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
-        - "C:\\Program Files\\Common Files\\Autodesk Shared\\"
-        - "C:\\Program Files (x86)\\Autodesk\\Backburner\\"
-        - "C:\\Program Files\\PowerShell\\7\\"
-        - "C:\\Program Files\\CMake\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Launcher\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\ProgramData\\dk601\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Roaming\\Programs\\Zero Install"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineRCCompiler.cmake:40 (find_program)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/Platform/Windows-MSVC.cmake:580 (enable_language)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/Platform/Windows-MSVC.cmake:553 (__windows_compiler_msvc_enable_rc)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/Platform/Windows-MSVC-CXX.cmake:6 (__windows_compiler_msvc)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)"
-      - "CMakeLists.txt:3 (project)"
-    mode: "program"
-    variable: "CMAKE_RC_COMPILER"
-    description: "RC compiler"
-    settings:
-      SearchFramework: "NEVER"
-      SearchAppBundle: "NEVER"
-      CMAKE_FIND_USE_CMAKE_PATH: true
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "rc"
-    candidate_directories:
-      - "C:/Windows/System32/"
-      - "C:/Windows/"
-      - "C:/Windows/System32/wbem/"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
-      - "C:/Windows/System32/OpenSSH/"
-      - "C:/Program Files/dotnet/"
-      - "C:/Program Files/Git/cmd/"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "C:/Program Files/Common Files/Autodesk Shared/"
-      - "C:/Program Files (x86)/Autodesk/Backburner/"
-      - "C:/Program Files/PowerShell/7/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/"
-      - "C:/Users/dk601/.dotnet/tools/"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/"
-      - "C:/Program Files/bin/"
-      - "C:/Program Files/sbin/"
-      - "C:/Program Files/"
-      - "C:/Program Files (x86)/bin/"
-      - "C:/Program Files (x86)/sbin/"
-      - "C:/Program Files (x86)/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Program Files/CMake/sbin/"
-      - "C:/Program Files/CMake/"
-      - "C:/Program Files/JoltPhysics/bin/"
-      - "C:/Program Files/JoltPhysics/sbin/"
-      - "C:/Program Files/JoltPhysics/"
-    searched_directories:
-      - "C:/Windows/System32/rc.com"
-      - "C:/Windows/System32/rc.exe"
-      - "C:/Windows/System32/rc"
-      - "C:/Windows/rc.com"
-      - "C:/Windows/rc.exe"
-      - "C:/Windows/rc"
-      - "C:/Windows/System32/wbem/rc.com"
-      - "C:/Windows/System32/wbem/rc.exe"
-      - "C:/Windows/System32/wbem/rc"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/rc.com"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/rc.exe"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/rc"
-      - "C:/Windows/System32/OpenSSH/rc.com"
-      - "C:/Windows/System32/OpenSSH/rc.exe"
-      - "C:/Windows/System32/OpenSSH/rc"
-      - "C:/Program Files/dotnet/rc.com"
-      - "C:/Program Files/dotnet/rc.exe"
-      - "C:/Program Files/dotnet/rc"
-      - "C:/Program Files/Git/cmd/rc.com"
-      - "C:/Program Files/Git/cmd/rc.exe"
-      - "C:/Program Files/Git/cmd/rc"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/rc.com"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/rc.exe"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/rc"
-      - "C:/Program Files/Common Files/Autodesk Shared/rc.com"
-      - "C:/Program Files/Common Files/Autodesk Shared/rc.exe"
-      - "C:/Program Files/Common Files/Autodesk Shared/rc"
-      - "C:/Program Files (x86)/Autodesk/Backburner/rc.com"
-      - "C:/Program Files (x86)/Autodesk/Backburner/rc.exe"
-      - "C:/Program Files (x86)/Autodesk/Backburner/rc"
-      - "C:/Program Files/PowerShell/7/rc.com"
-      - "C:/Program Files/PowerShell/7/rc.exe"
-      - "C:/Program Files/PowerShell/7/rc"
-      - "C:/Program Files/CMake/bin/rc.com"
-      - "C:/Program Files/CMake/bin/rc.exe"
-      - "C:/Program Files/CMake/bin/rc"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/rc.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/rc.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/rc"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/rc.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/rc.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/rc"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/rc.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/rc.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/rc"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/rc.com"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/rc.exe"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/rc"
-      - "C:/Users/dk601/.dotnet/tools/rc.com"
-      - "C:/Users/dk601/.dotnet/tools/rc.exe"
-      - "C:/Users/dk601/.dotnet/tools/rc"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/rc.com"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/rc.exe"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/rc"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/rc.com"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/rc.exe"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/rc"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/rc.com"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/rc.exe"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/rc"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/rc.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/rc.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/rc"
-      - "C:/Program Files/bin/rc.com"
-      - "C:/Program Files/bin/rc.exe"
-      - "C:/Program Files/bin/rc"
-      - "C:/Program Files/sbin/rc.com"
-      - "C:/Program Files/sbin/rc.exe"
-      - "C:/Program Files/sbin/rc"
-      - "C:/Program Files/rc.com"
-      - "C:/Program Files/rc.exe"
-      - "C:/Program Files/rc"
-      - "C:/Program Files (x86)/bin/rc.com"
-      - "C:/Program Files (x86)/bin/rc.exe"
-      - "C:/Program Files (x86)/bin/rc"
-      - "C:/Program Files (x86)/sbin/rc.com"
-      - "C:/Program Files (x86)/sbin/rc.exe"
-      - "C:/Program Files (x86)/sbin/rc"
-      - "C:/Program Files (x86)/rc.com"
-      - "C:/Program Files (x86)/rc.exe"
-      - "C:/Program Files (x86)/rc"
-      - "C:/Program Files/CMake/bin/rc.com"
-      - "C:/Program Files/CMake/bin/rc.exe"
-      - "C:/Program Files/CMake/bin/rc"
-      - "C:/Program Files/CMake/sbin/rc.com"
-      - "C:/Program Files/CMake/sbin/rc.exe"
-      - "C:/Program Files/CMake/sbin/rc"
-      - "C:/Program Files/CMake/rc.com"
-      - "C:/Program Files/CMake/rc.exe"
-      - "C:/Program Files/CMake/rc"
-      - "C:/Program Files/JoltPhysics/bin/rc.com"
-      - "C:/Program Files/JoltPhysics/bin/rc.exe"
-      - "C:/Program Files/JoltPhysics/bin/rc"
-      - "C:/Program Files/JoltPhysics/sbin/rc.com"
-      - "C:/Program Files/JoltPhysics/sbin/rc.exe"
-      - "C:/Program Files/JoltPhysics/sbin/rc"
-      - "C:/Program Files/JoltPhysics/rc.com"
-      - "C:/Program Files/JoltPhysics/rc.exe"
-      - "C:/Program Files/JoltPhysics/rc"
-    found: false
-    search_context:
-      ENV{PATH}:
-        - "C:\\WINDOWS\\system32"
-        - "C:\\WINDOWS"
-        - "C:\\WINDOWS\\System32\\Wbem"
-        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
-        - "C:\\WINDOWS\\System32\\OpenSSH\\"
-        - "C:\\Program Files\\dotnet\\"
-        - "C:\\Program Files\\Git\\cmd"
-        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
-        - "C:\\Program Files\\Common Files\\Autodesk Shared\\"
-        - "C:\\Program Files (x86)\\Autodesk\\Backburner\\"
-        - "C:\\Program Files\\PowerShell\\7\\"
-        - "C:\\Program Files\\CMake\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Launcher\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\ProgramData\\dk601\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Roaming\\Programs\\Zero Install"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
-      CMAKE_INSTALL_PREFIX: "C:/Program Files/JoltPhysics"
-      CMAKE_SYSTEM_PREFIX_PATH:
-        - "C:/Program Files"
-        - "C:/Program Files (x86)"
-        - "C:/Program Files/CMake"
-        - "C:/Program Files/JoltPhysics"
   -
     kind: "try_compile-v1"
     backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerABI.cmake:83 (try_compile)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:67 (try_compile)"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.29/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
       - "CMakeLists.txt:3 (project)"
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/CMakeScratch/TryCompile-f9qfd7"
-      binary: "C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/CMakeScratch/TryCompile-f9qfd7"
+      source: "C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/CMakeScratch/TryCompile-m3n800"
+      binary: "C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/CMakeScratch/TryCompile-m3n800"
     cmakeVariables:
       CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /EHsc"
       CMAKE_CXX_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
@@ -810,57 +96,62 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: 'C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/CMakeScratch/TryCompile-f9qfd7'
+        Change Dir: 'C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/CMakeScratch/TryCompile-m3n800'
         
-        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_7ac00.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
-        msbuild 踰꾩쟾 17.14.23+b0019275e(.NET Framework??
-        鍮뚮뱶 ?쒖옉: 2026-02-19 ?ㅽ썑 9:41:22
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_cf83a.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        msbuild 踰꾩쟾 17.11.9+a69bbaaf5(.NET Framework??
+        鍮뚮뱶 ?쒖옉: 2026-03-20 ?ㅽ썑 8:17:52
         
-        1 ?몃뱶??"C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\CMakeScratch\\TryCompile-f9qfd7\\cmTC_7ac00.vcxproj" ?꾨줈?앺듃(湲곕낯 ?\xc2\x80???낅땲??
+        1 ?몃뱶??"C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\CMakeScratch\\TryCompile-m3n800\\cmTC_cf83a.vcxproj" ?꾨줈?앺듃(湲곕낯 ?\xc2\x80???낅땲??
         PrepareForBuild:
+          "cmTC_cf83a.dir\\Debug\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
           援ъ“??異쒕젰???ъ슜?????덉뒿?덈떎. 而댄뙆?쇰윭 吏꾨떒???쒖떇?\xc2\x80 ?ㅻ쪟 怨꾩링 援ъ“瑜?諛섏쁺?⑸땲?? ?먯꽭???댁슜?\xc2\x80 https://aka.ms/cpp/structured-output??李몄“?섏꽭??
-          "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\CMakeScratch\\TryCompile-f9qfd7\\Debug\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
-          "cmTC_7ac00.dir\\Debug\\cmTC_7ac00.tlog\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
+          "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\CMakeScratch\\TryCompile-m3n800\\Debug\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
+          "cmTC_cf83a.dir\\Debug\\cmTC_cf83a.tlog\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
         InitializeBuildStatus:
-          "AlwaysCreate"??媛\xc2\x80) 吏\xc2\x80?뺣릺?덇린 ?뚮Ц??"cmTC_7ac00.dir\\Debug\\cmTC_7ac00.tlog\\unsuccessfulbuild"??瑜? 留뚮뱾怨??덉뒿?덈떎.
-          "cmTC_7ac00.dir\\Debug\\cmTC_7ac00.tlog\\unsuccessfulbuild"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
+          "AlwaysCreate"??媛\xc2\x80) 吏\xc2\x80?뺣릺?덇린 ?뚮Ц??"cmTC_cf83a.dir\\Debug\\cmTC_cf83a.tlog\\unsuccessfulbuild"??瑜? 留뚮뱾怨??덉뒿?덈떎.
+          "cmTC_cf83a.dir\\Debug\\cmTC_cf83a.tlog\\unsuccessfulbuild"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
         VcpkgTripletSelection:
-          Using triplet "x64-windows" from "C:\\vcpkg-master\\installed\\x64-windows\\"
-          Using normalized configuration "Debug"
+          Using triplet "x64-windows" from "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\"
+          Using normalized configuration "Release"
         ClCompile:
-          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\CL.exe /c /I"C:\\vcpkg-master\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /Fo"cmTC_7ac00.dir\\Debug\\\\" /Fd"cmTC_7ac00.dir\\Debug\\vc143.pdb" /external:W1 /TP /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-4.2\\Modules\\CMakeCXXCompilerABI.cpp"
-          Microsoft (R) C/C++ 理쒖쟻??而댄뙆?쇰윭 踰꾩쟾 19.38.33145(x64)
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.41.34120\\bin\\HostX64\\x64\\CL.exe /c /I"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_cf83a.dir\\Debug\\\\" /Fd"cmTC_cf83a.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TP /errorReport:queue "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-3.29\\Modules\\CMakeCXXCompilerABI.cpp"
+          Microsoft (R) C/C++ 理쒖쟻??而댄뙆?쇰윭 踰꾩쟾 19.41.34123(x64)
           Copyright (c) Microsoft Corporation. All rights reserved.
-          cl /c /I"C:\\vcpkg-master\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /Fo"cmTC_7ac00.dir\\Debug\\\\" /Fd"cmTC_7ac00.dir\\Debug\\vc143.pdb" /external:W1 /TP /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-4.2\\Modules\\CMakeCXXCompilerABI.cpp"
+          cl /c /I"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_cf83a.dir\\Debug\\\\" /Fd"cmTC_cf83a.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TP /errorReport:queue "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-3.29\\Modules\\CMakeCXXCompilerABI.cpp"
           CMakeCXXCompilerABI.cpp
         Link:
-          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\link.exe /OUT:"C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\CMakeScratch\\TryCompile-f9qfd7\\Debug\\cmTC_7ac00.exe" /INCREMENTAL /ILK:"cmTC_7ac00.dir\\Debug\\cmTC_7ac00.ilk" /NOLOGO /LIBPATH:"C:\\vcpkg-master\\installed\\x64-windows\\debug\\lib" /LIBPATH:"C:\\vcpkg-master\\installed\\x64-windows\\debug\\lib\\manual-link" kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib "C:\\vcpkg-master\\installed\\x64-windows\\debug\\lib\\*.lib" /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/CMakeScratch/TryCompile-f9qfd7/Debug/cmTC_7ac00.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/CMakeScratch/TryCompile-f9qfd7/Debug/cmTC_7ac00.lib" /MACHINE:X64  /machine:x64 cmTC_7ac00.dir\\Debug\\CMakeCXXCompilerABI.obj
-          cmTC_7ac00.vcxproj -> C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\CMakeScratch\\TryCompile-f9qfd7\\Debug\\cmTC_7ac00.exe
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.41.34120\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\CMakeScratch\\TryCompile-m3n800\\Debug\\cmTC_cf83a.exe" /INCREMENTAL /ILK:"cmTC_cf83a.dir\\Debug\\cmTC_cf83a.ilk" /NOLOGO /LIBPATH:"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib" /LIBPATH:"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib\\manual-link" kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib\\*.lib" /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/CMakeScratch/TryCompile-m3n800/Debug/cmTC_cf83a.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/CMakeScratch/TryCompile-m3n800/Debug/cmTC_cf83a.lib" /MACHINE:X64  /machine:x64 cmTC_cf83a.dir\\Debug\\CMakeCXXCompilerABI.obj
+          cmTC_cf83a.vcxproj -> C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\CMakeScratch\\TryCompile-m3n800\\Debug\\cmTC_cf83a.exe
         AppLocalFromInstalled:
-          pwsh.exe -ExecutionPolicy Bypass -noprofile -File "C:\\vcpkg-master\\scripts\\buildsystems\\msbuild\\applocal.ps1" "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\CMakeScratch\\TryCompile-f9qfd7\\Debug\\cmTC_7ac00.exe" "C:\\vcpkg-master\\installed\\x64-windows\\debug\\bin" "cmTC_7ac00.dir\\Debug\\cmTC_7ac00.tlog\\cmTC_7ac00.write.1u.tlog" "cmTC_7ac00.dir\\Debug\\vcpkg.applocal.log"
+          pwsh.exe -ExecutionPolicy Bypass -noprofile -File "C:\\Users\\dk601\\Documents\\vcpkg\\scripts\\buildsystems\\msbuild\\applocal.ps1" "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\CMakeScratch\\TryCompile-m3n800\\Debug\\cmTC_cf83a.exe" "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\bin" "cmTC_cf83a.dir\\Debug\\cmTC_cf83a.tlog\\cmTC_cf83a.write.1u.tlog" "cmTC_cf83a.dir\\Debug\\vcpkg.applocal.log"
+          'pwsh.exe'?\xc2\x80(?? ?대? ?먮뒗 ?몃? 紐낅졊, ?ㅽ뻾?????덈뒗 ?꾨줈洹몃옩, ?먮뒗
+          諛곗튂 ?뚯씪???꾨떃?덈떎.
+          "pwsh.exe -ExecutionPolicy Bypass -noprofile -File "C:\\Users\\dk601\\Documents\\vcpkg\\scripts\\buildsystems\\msbuild\\applocal.ps1" "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\CMakeScratch\\TryCompile-m3n800\\Debug\\cmTC_cf83a.exe" "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\bin" "cmTC_cf83a.dir\\Debug\\cmTC_cf83a.tlog\\cmTC_cf83a.write.1u.tlog" "cmTC_cf83a.dir\\Debug\\vcpkg.applocal.log"" 紐낅졊??醫낅즺?섏뿀?듬땲??肄붾뱶: 9009).
+          "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -ExecutionPolicy Bypass -noprofile -File "C:\\Users\\dk601\\Documents\\vcpkg\\scripts\\buildsystems\\msbuild\\applocal.ps1" "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\CMakeScratch\\TryCompile-m3n800\\Debug\\cmTC_cf83a.exe" "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\bin" "cmTC_cf83a.dir\\Debug\\cmTC_cf83a.tlog\\cmTC_cf83a.write.1u.tlog" "cmTC_cf83a.dir\\Debug\\vcpkg.applocal.log"
         FinalizeBuildStatus:
-          "cmTC_7ac00.dir\\Debug\\cmTC_7ac00.tlog\\unsuccessfulbuild" ?뚯씪????젣?섍퀬 ?덉뒿?덈떎.
-          "cmTC_7ac00.dir\\Debug\\cmTC_7ac00.tlog\\cmTC_7ac00.lastbuildstate"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
-        "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\CMakeScratch\\TryCompile-f9qfd7\\cmTC_7ac00.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+          "cmTC_cf83a.dir\\Debug\\cmTC_cf83a.tlog\\unsuccessfulbuild" ?뚯씪????젣?섍퀬 ?덉뒿?덈떎.
+          "cmTC_cf83a.dir\\Debug\\cmTC_cf83a.tlog\\cmTC_cf83a.lastbuildstate"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
+        "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\CMakeScratch\\TryCompile-m3n800\\cmTC_cf83a.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
         
         鍮뚮뱶?덉뒿?덈떎.
             寃쎄퀬 0媛?
             ?ㅻ쪟 0媛?
         
-        寃쎄낵 ?쒓컙: 00:00:01.70
+        寃쎄낵 ?쒓컙: 00:00:02.95
         
       exitCode: 0
   -
     kind: "message-v1"
     backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerABI.cmake:253 (message)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:173 (message)"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.29/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
       - "CMakeLists.txt:3 (project)"
     message: |
       Parsed CXX implicit link information:
-        link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|link\\.exe|lld-link(\\.exe)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
-        linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|link\\.exe|lld-link(\\.exe)?))("|,| |$)]
-        linker tool for 'CXX': C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/HostX64/x64/link.exe
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(\\.[a-z]+)?|link\\.exe|lld-link(\\.exe)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(\\.[a-z]+)?|link\\.exe|lld-link(\\.exe)?))("|,| |$)]
+        linker tool for 'CXX': C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.41.34120/bin/HostX64/x64/link.exe
         implicit libs: []
         implicit objs: []
         implicit dirs: []
@@ -870,36 +161,36 @@ events:
   -
     kind: "message-v1"
     backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/Internal/CMakeDetermineLinkerId.cmake:38 (message)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerABI.cmake:299 (cmake_determine_linker_id)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.29/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:210 (cmake_determine_linker_id)"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.29/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
       - "CMakeLists.txt:3 (project)"
     message: |
-      Running the CXX compiler's linker: "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/HostX64/x64/link.exe" "-v"
-      Microsoft (R) Incremental Linker Version 14.38.33145.0
+      Running the CXX compiler's linker: "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.41.34120/bin/HostX64/x64/link.exe" "-v"
+      Microsoft (R) Incremental Linker Version 14.41.34123.0
       Copyright (C) Microsoft Corporation.  All rights reserved.
   -
     kind: "try_compile-v1"
     backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CheckIPOSupported.cmake:197 (try_compile)"
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CheckIPOSupported.cmake:320 (_ipo_run_language_check)"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.29/Modules/CheckIPOSupported.cmake:138 (try_compile)"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.29/Modules/CheckIPOSupported.cmake:266 (_ipo_run_language_check)"
       - "CMakeLists.txt:293 (check_ipo_supported)"
       - "CMakeLists.txt:304 (SET_INTERPROCEDURAL_OPTIMIZATION)"
     directories:
-      source: "C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src"
-      binary: "C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin"
+      source: "C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src"
+      binary: "C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin"
     buildResult:
       variable: "_IPO_LANGUAGE_CHECK_RESULT"
       cached: true
       stdout: |
-        Change Dir: 'C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        Change Dir: 'C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin'
         
         Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
-        msbuild 踰꾩쟾 17.14.23+b0019275e(.NET Framework??
-        鍮뚮뱶 ?쒖옉: 2026-02-19 ?ㅽ썑 9:41:24
+        msbuild 踰꾩쟾 17.11.9+a69bbaaf5(.NET Framework??
+        鍮뚮뱶 ?쒖옉: 2026-03-20 ?ㅽ썑 8:17:56
         
-        1 ?몃뱶??"C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ALL_BUILD.vcxproj" ?꾨줈?앺듃(湲곕낯 ?\xc2\x80???낅땲??
-        "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ALL_BUILD.vcxproj"(1) ?꾨줈?앺듃媛\xc2\x80 1 ?몃뱶?먯꽌 "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ZERO_CHECK.vcxproj"(2)??瑜? 鍮뚮뱶?섍퀬 ?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+        1 ?몃뱶??"C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ALL_BUILD.vcxproj" ?꾨줈?앺듃(湲곕낯 ?\xc2\x80???낅땲??
+        "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ALL_BUILD.vcxproj"(1) ?꾨줈?앺듃媛\xc2\x80 1 ?몃뱶?먯꽌 "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ZERO_CHECK.vcxproj"(2)??瑜? 鍮뚮뱶?섍퀬 ?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
         PrepareForBuild:
           "x64\\Debug\\ZERO_CHECK\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
           援ъ“??異쒕젰???ъ슜?????덉뒿?덈떎. 而댄뙆?쇰윭 吏꾨떒???쒖떇?\xc2\x80 ?ㅻ쪟 怨꾩링 援ъ“瑜?諛섏쁺?⑸땲?? ?먯꽭???댁슜?\xc2\x80 https://aka.ms/cpp/structured-output??李몄“?섏꽭??
@@ -912,63 +203,69 @@ events:
         FinalizeBuildStatus:
           "x64\\Debug\\ZERO_CHECK\\ZERO_CHECK.tlog\\unsuccessfulbuild" ?뚯씪????젣?섍퀬 ?덉뒿?덈떎.
           "x64\\Debug\\ZERO_CHECK\\ZERO_CHECK.tlog\\ZERO_CHECK.lastbuildstate"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
-        "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ZERO_CHECK.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
-        "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ALL_BUILD.vcxproj"(1) ?꾨줈?앺듃媛\xc2\x80 1 ?몃뱶?먯꽌 "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\boo.vcxproj"(3)??瑜? 鍮뚮뱶?섍퀬 ?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
-        "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\boo.vcxproj"(3) ?꾨줈?앺듃媛\xc2\x80 1 ?몃뱶?먯꽌 "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\foo.vcxproj"(4)??瑜? 鍮뚮뱶?섍퀬 ?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+        "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ZERO_CHECK.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+        "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ALL_BUILD.vcxproj"(1) ?꾨줈?앺듃媛\xc2\x80 1 ?몃뱶?먯꽌 "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\boo.vcxproj"(3)??瑜? 鍮뚮뱶?섍퀬 ?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+        "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\boo.vcxproj"(3) ?꾨줈?앺듃媛\xc2\x80 1 ?몃뱶?먯꽌 "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\foo.vcxproj"(4)??瑜? 鍮뚮뱶?섍퀬 ?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
         PrepareForBuild:
+          "foo.dir\\Debug\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
           援ъ“??異쒕젰???ъ슜?????덉뒿?덈떎. 而댄뙆?쇰윭 吏꾨떒???쒖떇?\xc2\x80 ?ㅻ쪟 怨꾩링 援ъ“瑜?諛섏쁺?⑸땲?? ?먯꽭???댁슜?\xc2\x80 https://aka.ms/cpp/structured-output??李몄“?섏꽭??
-          "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
+          "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
           "foo.dir\\Debug\\foo.tlog\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
         InitializeBuildStatus:
           "AlwaysCreate"??媛\xc2\x80) 吏\xc2\x80?뺣릺?덇린 ?뚮Ц??"foo.dir\\Debug\\foo.tlog\\unsuccessfulbuild"??瑜? 留뚮뱾怨??덉뒿?덈떎.
           "foo.dir\\Debug\\foo.tlog\\unsuccessfulbuild"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
         CustomBuild:
-          Building Custom Rule C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt
+          Building Custom Rule C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt
         VcpkgTripletSelection:
-          Using triplet "x64-windows" from "C:\\vcpkg-master\\installed\\x64-windows\\"
-          Using normalized configuration "Debug"
+          Using triplet "x64-windows" from "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\"
+          Using normalized configuration "Release"
         ClCompile:
-          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\CL.exe /c /I"C:\\vcpkg-master\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /Fo"foo.dir\\Debug\\\\" /Fd"C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\foo.pdb" /external:W1 /TP /errorReport:queue "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\src\\foo.cpp"
-          Microsoft (R) C/C++ 理쒖쟻??而댄뙆?쇰윭 踰꾩쟾 19.38.33145(x64)
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.41.34120\\bin\\HostX64\\x64\\CL.exe /c /I"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"foo.dir\\Debug\\\\" /Fd"C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\foo.pdb" /external:W1 /Gd /TP /errorReport:queue "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\src\\foo.cpp"
+          Microsoft (R) C/C++ 理쒖쟻??而댄뙆?쇰윭 踰꾩쟾 19.41.34123(x64)
           Copyright (c) Microsoft Corporation. All rights reserved.
-          cl /c /I"C:\\vcpkg-master\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /Fo"foo.dir\\Debug\\\\" /Fd"C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\foo.pdb" /external:W1 /TP /errorReport:queue "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\src\\foo.cpp"
+          cl /c /I"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"foo.dir\\Debug\\\\" /Fd"C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\foo.pdb" /external:W1 /Gd /TP /errorReport:queue "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\src\\foo.cpp"
           foo.cpp
         Lib:
-          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\Lib.exe /OUT:"C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\foo.lib" /LIBPATH:"C:\\vcpkg-master\\installed\\x64-windows\\debug\\lib" /LIBPATH:"C:\\vcpkg-master\\installed\\x64-windows\\debug\\lib\\manual-link" /NOLOGO /MACHINE:X64 /LTCG foo.dir\\Debug\\foo.obj
-          foo.vcxproj -> C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\foo.lib
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.41.34120\\bin\\HostX64\\x64\\Lib.exe /OUT:"C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\foo.lib" /LIBPATH:"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib" /LIBPATH:"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib\\manual-link" /NOLOGO /MACHINE:X64 /LTCG  /machine:x64 foo.dir\\Debug\\foo.obj
+          foo.vcxproj -> C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\foo.lib
         FinalizeBuildStatus:
           "foo.dir\\Debug\\foo.tlog\\unsuccessfulbuild" ?뚯씪????젣?섍퀬 ?덉뒿?덈떎.
           "foo.dir\\Debug\\foo.tlog\\foo.lastbuildstate"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
-        "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\foo.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+        "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\foo.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
         PrepareForBuild:
+          "boo.dir\\Debug\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
           援ъ“??異쒕젰???ъ슜?????덉뒿?덈떎. 而댄뙆?쇰윭 吏꾨떒???쒖떇?\xc2\x80 ?ㅻ쪟 怨꾩링 援ъ“瑜?諛섏쁺?⑸땲?? ?먯꽭???댁슜?\xc2\x80 https://aka.ms/cpp/structured-output??李몄“?섏꽭??
           "boo.dir\\Debug\\boo.tlog\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
         InitializeBuildStatus:
           "AlwaysCreate"??媛\xc2\x80) 吏\xc2\x80?뺣릺?덇린 ?뚮Ц??"boo.dir\\Debug\\boo.tlog\\unsuccessfulbuild"??瑜? 留뚮뱾怨??덉뒿?덈떎.
           "boo.dir\\Debug\\boo.tlog\\unsuccessfulbuild"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
         CustomBuild:
-          Building Custom Rule C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt
+          Building Custom Rule C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt
         VcpkgTripletSelection:
-          Using triplet "x64-windows" from "C:\\vcpkg-master\\installed\\x64-windows\\"
-          Using normalized configuration "Debug"
+          Using triplet "x64-windows" from "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\"
+          Using normalized configuration "Release"
         ClCompile:
-          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\CL.exe /c /I"C:\\vcpkg-master\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /Fo"boo.dir\\Debug\\\\" /Fd"boo.dir\\Debug\\vc143.pdb" /external:W1 /TP /errorReport:queue "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\src\\main.cpp"
-          Microsoft (R) C/C++ 理쒖쟻??而댄뙆?쇰윭 踰꾩쟾 19.38.33145(x64)
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.41.34120\\bin\\HostX64\\x64\\CL.exe /c /I"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"boo.dir\\Debug\\\\" /Fd"boo.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TP /errorReport:queue "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\src\\main.cpp"
+          Microsoft (R) C/C++ 理쒖쟻??而댄뙆?쇰윭 踰꾩쟾 19.41.34123(x64)
           Copyright (c) Microsoft Corporation. All rights reserved.
-          cl /c /I"C:\\vcpkg-master\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /Fo"boo.dir\\Debug\\\\" /Fd"boo.dir\\Debug\\vc143.pdb" /external:W1 /TP /errorReport:queue "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\src\\main.cpp"
+          cl /c /I"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"boo.dir\\Debug\\\\" /Fd"boo.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TP /errorReport:queue "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\src\\main.cpp"
           main.cpp
         Link:
-          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\link.exe /OUT:"C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\boo.exe" /NOLOGO /LIBPATH:"C:\\vcpkg-master\\installed\\x64-windows\\debug\\lib" /LIBPATH:"C:\\vcpkg-master\\installed\\x64-windows\\debug\\lib\\manual-link" Debug\\foo.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib "C:\\vcpkg-master\\installed\\x64-windows\\debug\\lib\\*.lib" /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/Debug/boo.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG:incremental /LTCGOUT:"boo.dir\\Debug\\boo.iobj" /TLBID:1 /IMPLIB:"C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/Debug/boo.lib" /MACHINE:X64 boo.dir\\Debug\\main.obj
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.41.34120\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\boo.exe" /NOLOGO /LIBPATH:"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib" /LIBPATH:"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib\\manual-link" Debug\\foo.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib\\*.lib" /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/Debug/boo.pdb" /SUBSYSTEM:CONSOLE /LTCG:incremental /LTCGOUT:"boo.dir\\Debug\\boo.iobj" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/Debug/boo.lib" /MACHINE:X64  /machine:x64 boo.dir\\Debug\\main.obj
           肄붾뱶瑜??앹꽦?섍퀬 ?덉뒿?덈떎.
           Not all modules are compiled with -Gy (function comdat), build without incremental LTCG.
           肄붾뱶瑜??앹꽦?덉뒿?덈떎.
-          boo.vcxproj -> C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\boo.exe
+          boo.vcxproj -> C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\boo.exe
         AppLocalFromInstalled:
-          pwsh.exe -ExecutionPolicy Bypass -noprofile -File "C:\\vcpkg-master\\scripts\\buildsystems\\msbuild\\applocal.ps1" "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\boo.exe" "C:\\vcpkg-master\\installed\\x64-windows\\debug\\bin" "boo.dir\\Debug\\boo.tlog\\boo.write.1u.tlog" "boo.dir\\Debug\\vcpkg.applocal.log"
+          pwsh.exe -ExecutionPolicy Bypass -noprofile -File "C:\\Users\\dk601\\Documents\\vcpkg\\scripts\\buildsystems\\msbuild\\applocal.ps1" "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\boo.exe" "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\bin" "boo.dir\\Debug\\boo.tlog\\boo.write.1u.tlog" "boo.dir\\Debug\\vcpkg.applocal.log"
+          'pwsh.exe'?\xc2\x80(?? ?대? ?먮뒗 ?몃? 紐낅졊, ?ㅽ뻾?????덈뒗 ?꾨줈洹몃옩, ?먮뒗
+          諛곗튂 ?뚯씪???꾨떃?덈떎.
+          "pwsh.exe -ExecutionPolicy Bypass -noprofile -File "C:\\Users\\dk601\\Documents\\vcpkg\\scripts\\buildsystems\\msbuild\\applocal.ps1" "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\boo.exe" "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\bin" "boo.dir\\Debug\\boo.tlog\\boo.write.1u.tlog" "boo.dir\\Debug\\vcpkg.applocal.log"" 紐낅졊??醫낅즺?섏뿀?듬땲??肄붾뱶: 9009).
+          "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -ExecutionPolicy Bypass -noprofile -File "C:\\Users\\dk601\\Documents\\vcpkg\\scripts\\buildsystems\\msbuild\\applocal.ps1" "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\boo.exe" "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\bin" "boo.dir\\Debug\\boo.tlog\\boo.write.1u.tlog" "boo.dir\\Debug\\vcpkg.applocal.log"
         FinalizeBuildStatus:
           "boo.dir\\Debug\\boo.tlog\\unsuccessfulbuild" ?뚯씪????젣?섍퀬 ?덉뒿?덈떎.
           "boo.dir\\Debug\\boo.tlog\\boo.lastbuildstate"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
-        "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\boo.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+        "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\boo.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
         PrepareForBuild:
           "x64\\Debug\\ALL_BUILD\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
           援ъ“??異쒕젰???ъ슜?????덉뒿?덈떎. 而댄뙆?쇰윭 吏꾨떒???쒖떇?\xc2\x80 ?ㅻ쪟 怨꾩링 援ъ“瑜?諛섏쁺?⑸땲?? ?먯꽭???댁슜?\xc2\x80 https://aka.ms/cpp/structured-output??李몄“?섏꽭??
@@ -977,629 +274,139 @@ events:
           "AlwaysCreate"??媛\xc2\x80) 吏\xc2\x80?뺣릺?덇린 ?뚮Ц??"x64\\Debug\\ALL_BUILD\\ALL_BUILD.tlog\\unsuccessfulbuild"??瑜? 留뚮뱾怨??덉뒿?덈떎.
           "x64\\Debug\\ALL_BUILD\\ALL_BUILD.tlog\\unsuccessfulbuild"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
         CustomBuild:
-          Building Custom Rule C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt
+          Building Custom Rule C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt
         FinalizeBuildStatus:
           "x64\\Debug\\ALL_BUILD\\ALL_BUILD.tlog\\unsuccessfulbuild" ?뚯씪????젣?섍퀬 ?덉뒿?덈떎.
           "x64\\Debug\\ALL_BUILD\\ALL_BUILD.tlog\\ALL_BUILD.lastbuildstate"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
-        "C:\\Git\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ALL_BUILD.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+        "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ALL_BUILD.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
         
         鍮뚮뱶?덉뒿?덈떎.
             寃쎄퀬 0媛?
             ?ㅻ쪟 0媛?
         
-        寃쎄낵 ?쒓컙: 00:00:02.63
+        寃쎄낵 ?쒓컙: 00:00:05.16
         
       exitCode: 0
+...
+
+---
+events:
   -
-    kind: "find-v1"
+    kind: "try_compile-v1"
     backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/FindVulkan.cmake:392 (find_path)"
-      - "C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/TestFramework/TestFramework.cmake:2 (find_package)"
-      - "CMakeLists.txt:432 (include)"
-    mode: "path"
-    variable: "Vulkan_INCLUDE_DIR"
-    description: "Path to a file."
-    settings:
-      SearchFramework: "NEVER"
-      SearchAppBundle: "NEVER"
-      CMAKE_FIND_USE_CMAKE_PATH: true
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "vulkan/vulkan.h"
-    candidate_directories:
-      - "/include/"
-      - "C:/Windows/System32/"
-      - "C:/Windows/"
-      - "C:/Windows/System32/wbem/"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
-      - "C:/Windows/System32/OpenSSH/"
-      - "C:/Program Files/dotnet/"
-      - "C:/Program Files/Git/cmd/"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "C:/Program Files/Common Files/Autodesk Shared/"
-      - "C:/Program Files (x86)/Autodesk/Backburner/"
-      - "C:/Program Files/PowerShell/7/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/"
-      - "C:/Users/dk601/.dotnet/tools/"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/"
-      - "C:/Program Files/include/"
-      - "C:/Program Files/"
-      - "C:/Program Files (x86)/include/"
-      - "C:/Program Files (x86)/"
-      - "C:/Program Files/CMake/include/"
-      - "C:/Program Files/CMake/"
-      - "C:/Program Files/JoltPhysics/include/"
-      - "C:/Program Files/JoltPhysics/"
-    searched_directories:
-      - "/include/vulkan/vulkan.h"
-      - "C:/Windows/System32/vulkan/vulkan.h"
-      - "C:/Windows/vulkan/vulkan.h"
-      - "C:/Windows/System32/wbem/vulkan/vulkan.h"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/vulkan/vulkan.h"
-      - "C:/Windows/System32/OpenSSH/vulkan/vulkan.h"
-      - "C:/Program Files/dotnet/vulkan/vulkan.h"
-      - "C:/Program Files/Git/cmd/vulkan/vulkan.h"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/vulkan/vulkan.h"
-      - "C:/Program Files/Common Files/Autodesk Shared/vulkan/vulkan.h"
-      - "C:/Program Files (x86)/Autodesk/Backburner/vulkan/vulkan.h"
-      - "C:/Program Files/PowerShell/7/vulkan/vulkan.h"
-      - "C:/Program Files/CMake/bin/vulkan/vulkan.h"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/vulkan/vulkan.h"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/vulkan/vulkan.h"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/vulkan/vulkan.h"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/vulkan/vulkan.h"
-      - "C:/Users/dk601/.dotnet/tools/vulkan/vulkan.h"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/vulkan/vulkan.h"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/vulkan/vulkan.h"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/vulkan/vulkan.h"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/vulkan/vulkan.h"
-      - "C:/Program Files/include/vulkan/vulkan.h"
-      - "C:/Program Files/vulkan/vulkan.h"
-      - "C:/Program Files (x86)/include/vulkan/vulkan.h"
-      - "C:/Program Files (x86)/vulkan/vulkan.h"
-      - "C:/Program Files/CMake/include/vulkan/vulkan.h"
-      - "C:/Program Files/CMake/vulkan/vulkan.h"
-      - "C:/Program Files/JoltPhysics/include/vulkan/vulkan.h"
-      - "C:/Program Files/JoltPhysics/vulkan/vulkan.h"
-    found: false
-    search_context:
-      ENV{PATH}:
-        - "C:\\WINDOWS\\system32"
-        - "C:\\WINDOWS"
-        - "C:\\WINDOWS\\System32\\Wbem"
-        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
-        - "C:\\WINDOWS\\System32\\OpenSSH\\"
-        - "C:\\Program Files\\dotnet\\"
-        - "C:\\Program Files\\Git\\cmd"
-        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
-        - "C:\\Program Files\\Common Files\\Autodesk Shared\\"
-        - "C:\\Program Files (x86)\\Autodesk\\Backburner\\"
-        - "C:\\Program Files\\PowerShell\\7\\"
-        - "C:\\Program Files\\CMake\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Launcher\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\ProgramData\\dk601\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Roaming\\Programs\\Zero Install"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
-      CMAKE_INSTALL_PREFIX: "C:/Program Files/JoltPhysics"
-      CMAKE_SYSTEM_PREFIX_PATH:
-        - "C:/Program Files"
-        - "C:/Program Files (x86)"
-        - "C:/Program Files/CMake"
-        - "C:/Program Files/JoltPhysics"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/FindVulkan.cmake:399 (find_library)"
-      - "C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/TestFramework/TestFramework.cmake:2 (find_package)"
-      - "CMakeLists.txt:432 (include)"
-    mode: "library"
-    variable: "Vulkan_LIBRARY"
-    description: "Path to a library."
-    settings:
-      SearchFramework: "NEVER"
-      SearchAppBundle: "NEVER"
-      CMAKE_FIND_USE_CMAKE_PATH: true
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "vulkan-1"
-    candidate_directories:
-      - "/lib/"
-      - "/bin/"
-      - "C:/Windows/System32/"
-      - "C:/Windows/"
-      - "C:/Windows/System32/wbem/"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
-      - "C:/Windows/System32/OpenSSH/"
-      - "C:/Program Files/dotnet/"
-      - "C:/Program Files/Git/cmd/"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "C:/Program Files/Common Files/Autodesk Shared/"
-      - "C:/Program Files (x86)/Autodesk/Backburner/"
-      - "C:/Program Files/PowerShell/7/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/"
-      - "C:/Users/dk601/.dotnet/tools/"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/"
-      - "C:/Program Files/lib/"
-      - "C:/Program Files/"
-      - "C:/Program Files (x86)/lib/"
-      - "C:/Program Files (x86)/"
-      - "C:/Program Files/CMake/lib/"
-      - "C:/Program Files/CMake/"
-      - "C:/Program Files/JoltPhysics/lib/"
-      - "C:/Program Files/JoltPhysics/"
-      - "C:/Program Files/JoltPhysics/bin/"
-    searched_directories:
-      - "/lib/"
-      - "/bin/"
-      - "C:/Windows/System32/"
-      - "C:/Windows/"
-      - "C:/Windows/System32/wbem/"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
-      - "C:/Windows/System32/OpenSSH/"
-      - "C:/Program Files/dotnet/"
-      - "C:/Program Files/Git/cmd/"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "C:/Program Files/Common Files/Autodesk Shared/"
-      - "C:/Program Files (x86)/Autodesk/Backburner/"
-      - "C:/Program Files/PowerShell/7/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/"
-      - "C:/Users/dk601/.dotnet/tools/"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/"
-      - "C:/Program Files/lib/"
-      - "C:/Program Files/"
-      - "C:/Program Files (x86)/lib/"
-      - "C:/Program Files (x86)/"
-      - "C:/Program Files/CMake/lib/"
-      - "C:/Program Files/CMake/"
-      - "C:/Program Files/JoltPhysics/lib/"
-      - "C:/Program Files/JoltPhysics/"
-      - "C:/Program Files/JoltPhysics/bin/"
-    found: false
-    search_context:
-      ENV{PATH}:
-        - "C:\\WINDOWS\\system32"
-        - "C:\\WINDOWS"
-        - "C:\\WINDOWS\\System32\\Wbem"
-        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
-        - "C:\\WINDOWS\\System32\\OpenSSH\\"
-        - "C:\\Program Files\\dotnet\\"
-        - "C:\\Program Files\\Git\\cmd"
-        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
-        - "C:\\Program Files\\Common Files\\Autodesk Shared\\"
-        - "C:\\Program Files (x86)\\Autodesk\\Backburner\\"
-        - "C:\\Program Files\\PowerShell\\7\\"
-        - "C:\\Program Files\\CMake\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Launcher\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\ProgramData\\dk601\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Roaming\\Programs\\Zero Install"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
-      CMAKE_INSTALL_PREFIX: "C:/Program Files/JoltPhysics"
-      CMAKE_SYSTEM_PREFIX_PATH:
-        - "C:/Program Files"
-        - "C:/Program Files (x86)"
-        - "C:/Program Files/CMake"
-        - "C:/Program Files/JoltPhysics"
-      CMAKE_SYSTEM_LIBRARY_PATH:
-        - "C:/Program Files/JoltPhysics/bin"
-        - "C:/Program Files/CMake/bin"
-        - "/bin"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/FindVulkan.cmake:407 (find_program)"
-      - "C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/TestFramework/TestFramework.cmake:2 (find_package)"
-      - "CMakeLists.txt:432 (include)"
-    mode: "program"
-    variable: "Vulkan_GLSLC_EXECUTABLE"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "NEVER"
-      SearchAppBundle: "NEVER"
-      CMAKE_FIND_USE_CMAKE_PATH: true
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "glslc"
-    candidate_directories:
-      - "/bin/"
-      - "C:/Windows/System32/"
-      - "C:/Windows/"
-      - "C:/Windows/System32/wbem/"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
-      - "C:/Windows/System32/OpenSSH/"
-      - "C:/Program Files/dotnet/"
-      - "C:/Program Files/Git/cmd/"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "C:/Program Files/Common Files/Autodesk Shared/"
-      - "C:/Program Files (x86)/Autodesk/Backburner/"
-      - "C:/Program Files/PowerShell/7/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/"
-      - "C:/Users/dk601/.dotnet/tools/"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/"
-      - "C:/Program Files/bin/"
-      - "C:/Program Files/sbin/"
-      - "C:/Program Files/"
-      - "C:/Program Files (x86)/bin/"
-      - "C:/Program Files (x86)/sbin/"
-      - "C:/Program Files (x86)/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Program Files/CMake/sbin/"
-      - "C:/Program Files/CMake/"
-      - "C:/Program Files/JoltPhysics/bin/"
-      - "C:/Program Files/JoltPhysics/sbin/"
-      - "C:/Program Files/JoltPhysics/"
-    searched_directories:
-      - "/bin/glslc.com"
-      - "/bin/glslc.exe"
-      - "/bin/glslc"
-      - "C:/Windows/System32/glslc.com"
-      - "C:/Windows/System32/glslc.exe"
-      - "C:/Windows/System32/glslc"
-      - "C:/Windows/glslc.com"
-      - "C:/Windows/glslc.exe"
-      - "C:/Windows/glslc"
-      - "C:/Windows/System32/wbem/glslc.com"
-      - "C:/Windows/System32/wbem/glslc.exe"
-      - "C:/Windows/System32/wbem/glslc"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/glslc.com"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/glslc.exe"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/glslc"
-      - "C:/Windows/System32/OpenSSH/glslc.com"
-      - "C:/Windows/System32/OpenSSH/glslc.exe"
-      - "C:/Windows/System32/OpenSSH/glslc"
-      - "C:/Program Files/dotnet/glslc.com"
-      - "C:/Program Files/dotnet/glslc.exe"
-      - "C:/Program Files/dotnet/glslc"
-      - "C:/Program Files/Git/cmd/glslc.com"
-      - "C:/Program Files/Git/cmd/glslc.exe"
-      - "C:/Program Files/Git/cmd/glslc"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/glslc.com"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/glslc.exe"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/glslc"
-      - "C:/Program Files/Common Files/Autodesk Shared/glslc.com"
-      - "C:/Program Files/Common Files/Autodesk Shared/glslc.exe"
-      - "C:/Program Files/Common Files/Autodesk Shared/glslc"
-      - "C:/Program Files (x86)/Autodesk/Backburner/glslc.com"
-      - "C:/Program Files (x86)/Autodesk/Backburner/glslc.exe"
-      - "C:/Program Files (x86)/Autodesk/Backburner/glslc"
-      - "C:/Program Files/PowerShell/7/glslc.com"
-      - "C:/Program Files/PowerShell/7/glslc.exe"
-      - "C:/Program Files/PowerShell/7/glslc"
-      - "C:/Program Files/CMake/bin/glslc.com"
-      - "C:/Program Files/CMake/bin/glslc.exe"
-      - "C:/Program Files/CMake/bin/glslc"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/glslc.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/glslc.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/glslc"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/glslc.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/glslc.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/glslc"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/glslc.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/glslc.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/glslc"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/glslc.com"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/glslc.exe"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/glslc"
-      - "C:/Users/dk601/.dotnet/tools/glslc.com"
-      - "C:/Users/dk601/.dotnet/tools/glslc.exe"
-      - "C:/Users/dk601/.dotnet/tools/glslc"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/glslc.com"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/glslc.exe"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/glslc"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/glslc.com"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/glslc.exe"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/glslc"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/glslc.com"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/glslc.exe"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/glslc"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/glslc.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/glslc.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/glslc"
-      - "C:/Program Files/bin/glslc.com"
-      - "C:/Program Files/bin/glslc.exe"
-      - "C:/Program Files/bin/glslc"
-      - "C:/Program Files/sbin/glslc.com"
-      - "C:/Program Files/sbin/glslc.exe"
-      - "C:/Program Files/sbin/glslc"
-      - "C:/Program Files/glslc.com"
-      - "C:/Program Files/glslc.exe"
-      - "C:/Program Files/glslc"
-      - "C:/Program Files (x86)/bin/glslc.com"
-      - "C:/Program Files (x86)/bin/glslc.exe"
-      - "C:/Program Files (x86)/bin/glslc"
-      - "C:/Program Files (x86)/sbin/glslc.com"
-      - "C:/Program Files (x86)/sbin/glslc.exe"
-      - "C:/Program Files (x86)/sbin/glslc"
-      - "C:/Program Files (x86)/glslc.com"
-      - "C:/Program Files (x86)/glslc.exe"
-      - "C:/Program Files (x86)/glslc"
-      - "C:/Program Files/CMake/bin/glslc.com"
-      - "C:/Program Files/CMake/bin/glslc.exe"
-      - "C:/Program Files/CMake/bin/glslc"
-      - "C:/Program Files/CMake/sbin/glslc.com"
-      - "C:/Program Files/CMake/sbin/glslc.exe"
-      - "C:/Program Files/CMake/sbin/glslc"
-      - "C:/Program Files/CMake/glslc.com"
-      - "C:/Program Files/CMake/glslc.exe"
-      - "C:/Program Files/CMake/glslc"
-      - "C:/Program Files/JoltPhysics/bin/glslc.com"
-      - "C:/Program Files/JoltPhysics/bin/glslc.exe"
-      - "C:/Program Files/JoltPhysics/bin/glslc"
-      - "C:/Program Files/JoltPhysics/sbin/glslc.com"
-      - "C:/Program Files/JoltPhysics/sbin/glslc.exe"
-      - "C:/Program Files/JoltPhysics/sbin/glslc"
-      - "C:/Program Files/JoltPhysics/glslc.com"
-      - "C:/Program Files/JoltPhysics/glslc.exe"
-      - "C:/Program Files/JoltPhysics/glslc"
-    found: false
-    search_context:
-      ENV{PATH}:
-        - "C:\\WINDOWS\\system32"
-        - "C:\\WINDOWS"
-        - "C:\\WINDOWS\\System32\\Wbem"
-        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
-        - "C:\\WINDOWS\\System32\\OpenSSH\\"
-        - "C:\\Program Files\\dotnet\\"
-        - "C:\\Program Files\\Git\\cmd"
-        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
-        - "C:\\Program Files\\Common Files\\Autodesk Shared\\"
-        - "C:\\Program Files (x86)\\Autodesk\\Backburner\\"
-        - "C:\\Program Files\\PowerShell\\7\\"
-        - "C:\\Program Files\\CMake\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Launcher\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\ProgramData\\dk601\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Roaming\\Programs\\Zero Install"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
-      CMAKE_INSTALL_PREFIX: "C:/Program Files/JoltPhysics"
-      CMAKE_SYSTEM_PREFIX_PATH:
-        - "C:/Program Files"
-        - "C:/Program Files (x86)"
-        - "C:/Program Files/CMake"
-        - "C:/Program Files/JoltPhysics"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "C:/Program Files/CMake/share/cmake-4.2/Modules/FindVulkan.cmake:415 (find_program)"
-      - "C:/Git/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/TestFramework/TestFramework.cmake:2 (find_package)"
-      - "CMakeLists.txt:432 (include)"
-    mode: "program"
-    variable: "Vulkan_GLSLANG_VALIDATOR_EXECUTABLE"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "NEVER"
-      SearchAppBundle: "NEVER"
-      CMAKE_FIND_USE_CMAKE_PATH: true
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "glslangValidator"
-    candidate_directories:
-      - "/bin/"
-      - "C:/Windows/System32/"
-      - "C:/Windows/"
-      - "C:/Windows/System32/wbem/"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
-      - "C:/Windows/System32/OpenSSH/"
-      - "C:/Program Files/dotnet/"
-      - "C:/Program Files/Git/cmd/"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "C:/Program Files/Common Files/Autodesk Shared/"
-      - "C:/Program Files (x86)/Autodesk/Backburner/"
-      - "C:/Program Files/PowerShell/7/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/"
-      - "C:/Users/dk601/.dotnet/tools/"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/"
-      - "C:/Program Files/bin/"
-      - "C:/Program Files/sbin/"
-      - "C:/Program Files/"
-      - "C:/Program Files (x86)/bin/"
-      - "C:/Program Files (x86)/sbin/"
-      - "C:/Program Files (x86)/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Program Files/CMake/sbin/"
-      - "C:/Program Files/CMake/"
-      - "C:/Program Files/JoltPhysics/bin/"
-      - "C:/Program Files/JoltPhysics/sbin/"
-      - "C:/Program Files/JoltPhysics/"
-    searched_directories:
-      - "/bin/glslangValidator.com"
-      - "/bin/glslangValidator.exe"
-      - "/bin/glslangValidator"
-      - "C:/Windows/System32/glslangValidator.com"
-      - "C:/Windows/System32/glslangValidator.exe"
-      - "C:/Windows/System32/glslangValidator"
-      - "C:/Windows/glslangValidator.com"
-      - "C:/Windows/glslangValidator.exe"
-      - "C:/Windows/glslangValidator"
-      - "C:/Windows/System32/wbem/glslangValidator.com"
-      - "C:/Windows/System32/wbem/glslangValidator.exe"
-      - "C:/Windows/System32/wbem/glslangValidator"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/glslangValidator.com"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/glslangValidator.exe"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/glslangValidator"
-      - "C:/Windows/System32/OpenSSH/glslangValidator.com"
-      - "C:/Windows/System32/OpenSSH/glslangValidator.exe"
-      - "C:/Windows/System32/OpenSSH/glslangValidator"
-      - "C:/Program Files/dotnet/glslangValidator.com"
-      - "C:/Program Files/dotnet/glslangValidator.exe"
-      - "C:/Program Files/dotnet/glslangValidator"
-      - "C:/Program Files/Git/cmd/glslangValidator.com"
-      - "C:/Program Files/Git/cmd/glslangValidator.exe"
-      - "C:/Program Files/Git/cmd/glslangValidator"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/glslangValidator.com"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/glslangValidator.exe"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/glslangValidator"
-      - "C:/Program Files/Common Files/Autodesk Shared/glslangValidator.com"
-      - "C:/Program Files/Common Files/Autodesk Shared/glslangValidator.exe"
-      - "C:/Program Files/Common Files/Autodesk Shared/glslangValidator"
-      - "C:/Program Files (x86)/Autodesk/Backburner/glslangValidator.com"
-      - "C:/Program Files (x86)/Autodesk/Backburner/glslangValidator.exe"
-      - "C:/Program Files (x86)/Autodesk/Backburner/glslangValidator"
-      - "C:/Program Files/PowerShell/7/glslangValidator.com"
-      - "C:/Program Files/PowerShell/7/glslangValidator.exe"
-      - "C:/Program Files/PowerShell/7/glslangValidator"
-      - "C:/Program Files/CMake/bin/glslangValidator.com"
-      - "C:/Program Files/CMake/bin/glslangValidator.exe"
-      - "C:/Program Files/CMake/bin/glslangValidator"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/glslangValidator.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/glslangValidator.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/Scripts/glslangValidator"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/glslangValidator.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/glslangValidator.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Python313/glslangValidator"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/glslangValidator.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/glslangValidator.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Python/Launcher/glslangValidator"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/glslangValidator.com"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/glslangValidator.exe"
-      - "C:/Users/dk601/AppData/Local/Microsoft/WindowsApps/glslangValidator"
-      - "C:/Users/dk601/.dotnet/tools/glslangValidator.com"
-      - "C:/Users/dk601/.dotnet/tools/glslangValidator.exe"
-      - "C:/Users/dk601/.dotnet/tools/glslangValidator"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/glslangValidator.com"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/glslangValidator.exe"
-      - "C:/ProgramData/dk601/GitHubDesktop/bin/glslangValidator"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/glslangValidator.com"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/glslangValidator.exe"
-      - "C:/Users/dk601/AppData/Local/GitHubDesktop/bin/glslangValidator"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/glslangValidator.com"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/glslangValidator.exe"
-      - "C:/Users/dk601/AppData/Roaming/Programs/Zero Install/glslangValidator"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/glslangValidator.com"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/glslangValidator.exe"
-      - "C:/Users/dk601/AppData/Local/Programs/Microsoft VS Code/bin/glslangValidator"
-      - "C:/Program Files/bin/glslangValidator.com"
-      - "C:/Program Files/bin/glslangValidator.exe"
-      - "C:/Program Files/bin/glslangValidator"
-      - "C:/Program Files/sbin/glslangValidator.com"
-      - "C:/Program Files/sbin/glslangValidator.exe"
-      - "C:/Program Files/sbin/glslangValidator"
-      - "C:/Program Files/glslangValidator.com"
-      - "C:/Program Files/glslangValidator.exe"
-      - "C:/Program Files/glslangValidator"
-      - "C:/Program Files (x86)/bin/glslangValidator.com"
-      - "C:/Program Files (x86)/bin/glslangValidator.exe"
-      - "C:/Program Files (x86)/bin/glslangValidator"
-      - "C:/Program Files (x86)/sbin/glslangValidator.com"
-      - "C:/Program Files (x86)/sbin/glslangValidator.exe"
-      - "C:/Program Files (x86)/sbin/glslangValidator"
-      - "C:/Program Files (x86)/glslangValidator.com"
-      - "C:/Program Files (x86)/glslangValidator.exe"
-      - "C:/Program Files (x86)/glslangValidator"
-      - "C:/Program Files/CMake/bin/glslangValidator.com"
-      - "C:/Program Files/CMake/bin/glslangValidator.exe"
-      - "C:/Program Files/CMake/bin/glslangValidator"
-      - "C:/Program Files/CMake/sbin/glslangValidator.com"
-      - "C:/Program Files/CMake/sbin/glslangValidator.exe"
-      - "C:/Program Files/CMake/sbin/glslangValidator"
-      - "C:/Program Files/CMake/glslangValidator.com"
-      - "C:/Program Files/CMake/glslangValidator.exe"
-      - "C:/Program Files/CMake/glslangValidator"
-      - "C:/Program Files/JoltPhysics/bin/glslangValidator.com"
-      - "C:/Program Files/JoltPhysics/bin/glslangValidator.exe"
-      - "C:/Program Files/JoltPhysics/bin/glslangValidator"
-      - "C:/Program Files/JoltPhysics/sbin/glslangValidator.com"
-      - "C:/Program Files/JoltPhysics/sbin/glslangValidator.exe"
-      - "C:/Program Files/JoltPhysics/sbin/glslangValidator"
-      - "C:/Program Files/JoltPhysics/glslangValidator.com"
-      - "C:/Program Files/JoltPhysics/glslangValidator.exe"
-      - "C:/Program Files/JoltPhysics/glslangValidator"
-    found: false
-    search_context:
-      ENV{PATH}:
-        - "C:\\WINDOWS\\system32"
-        - "C:\\WINDOWS"
-        - "C:\\WINDOWS\\System32\\Wbem"
-        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
-        - "C:\\WINDOWS\\System32\\OpenSSH\\"
-        - "C:\\Program Files\\dotnet\\"
-        - "C:\\Program Files\\Git\\cmd"
-        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
-        - "C:\\Program Files\\Common Files\\Autodesk Shared\\"
-        - "C:\\Program Files (x86)\\Autodesk\\Backburner\\"
-        - "C:\\Program Files\\PowerShell\\7\\"
-        - "C:\\Program Files\\CMake\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Python313\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Python\\Launcher\\"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\ProgramData\\dk601\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Local\\GitHubDesktop\\bin"
-        - "C:\\Users\\dk601\\AppData\\Roaming\\Programs\\Zero Install"
-        - "C:\\Users\\dk601\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\dk601\\.dotnet\\tools"
-        - "C:\\Users\\dk601\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
-      CMAKE_INSTALL_PREFIX: "C:/Program Files/JoltPhysics"
-      CMAKE_SYSTEM_PREFIX_PATH:
-        - "C:/Program Files"
-        - "C:/Program Files (x86)"
-        - "C:/Program Files/CMake"
-        - "C:/Program Files/JoltPhysics"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.29/Modules/CheckIPOSupported.cmake:138 (try_compile)"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.29/Modules/CheckIPOSupported.cmake:266 (_ipo_run_language_check)"
+      - "CMakeLists.txt:293 (check_ipo_supported)"
+      - "CMakeLists.txt:304 (SET_INTERPROCEDURAL_OPTIMIZATION)"
+    directories:
+      source: "C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src"
+      binary: "C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        msbuild 踰꾩쟾 17.11.9+a69bbaaf5(.NET Framework??
+        鍮뚮뱶 ?쒖옉: 2026-03-20 ?ㅽ썑 8:26:36
+        
+        1 ?몃뱶??"C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ALL_BUILD.vcxproj" ?꾨줈?앺듃(湲곕낯 ?\xc2\x80???낅땲??
+        "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ALL_BUILD.vcxproj"(1) ?꾨줈?앺듃媛\xc2\x80 1 ?몃뱶?먯꽌 "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ZERO_CHECK.vcxproj"(2)??瑜? 鍮뚮뱶?섍퀬 ?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+        PrepareForBuild:
+          "x64\\Debug\\ZERO_CHECK\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
+          援ъ“??異쒕젰???ъ슜?????덉뒿?덈떎. 而댄뙆?쇰윭 吏꾨떒???쒖떇?\xc2\x80 ?ㅻ쪟 怨꾩링 援ъ“瑜?諛섏쁺?⑸땲?? ?먯꽭???댁슜?\xc2\x80 https://aka.ms/cpp/structured-output??李몄“?섏꽭??
+          "x64\\Debug\\ZERO_CHECK\\ZERO_CHECK.tlog\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
+        InitializeBuildStatus:
+          "AlwaysCreate"??媛\xc2\x80) 吏\xc2\x80?뺣릺?덇린 ?뚮Ц??"x64\\Debug\\ZERO_CHECK\\ZERO_CHECK.tlog\\unsuccessfulbuild"??瑜? 留뚮뱾怨??덉뒿?덈떎.
+          "x64\\Debug\\ZERO_CHECK\\ZERO_CHECK.tlog\\unsuccessfulbuild"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
+        CustomBuild:
+          1>Checking Build System
+        FinalizeBuildStatus:
+          "x64\\Debug\\ZERO_CHECK\\ZERO_CHECK.tlog\\unsuccessfulbuild" ?뚯씪????젣?섍퀬 ?덉뒿?덈떎.
+          "x64\\Debug\\ZERO_CHECK\\ZERO_CHECK.tlog\\ZERO_CHECK.lastbuildstate"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
+        "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ZERO_CHECK.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+        "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ALL_BUILD.vcxproj"(1) ?꾨줈?앺듃媛\xc2\x80 1 ?몃뱶?먯꽌 "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\boo.vcxproj"(3)??瑜? 鍮뚮뱶?섍퀬 ?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+        "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\boo.vcxproj"(3) ?꾨줈?앺듃媛\xc2\x80 1 ?몃뱶?먯꽌 "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\foo.vcxproj"(4)??瑜? 鍮뚮뱶?섍퀬 ?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+        PrepareForBuild:
+          "foo.dir\\Debug\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
+          援ъ“??異쒕젰???ъ슜?????덉뒿?덈떎. 而댄뙆?쇰윭 吏꾨떒???쒖떇?\xc2\x80 ?ㅻ쪟 怨꾩링 援ъ“瑜?諛섏쁺?⑸땲?? ?먯꽭???댁슜?\xc2\x80 https://aka.ms/cpp/structured-output??李몄“?섏꽭??
+          "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
+          "foo.dir\\Debug\\foo.tlog\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
+        InitializeBuildStatus:
+          "AlwaysCreate"??媛\xc2\x80) 吏\xc2\x80?뺣릺?덇린 ?뚮Ц??"foo.dir\\Debug\\foo.tlog\\unsuccessfulbuild"??瑜? 留뚮뱾怨??덉뒿?덈떎.
+          "foo.dir\\Debug\\foo.tlog\\unsuccessfulbuild"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
+        CustomBuild:
+          Building Custom Rule C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt
+        VcpkgTripletSelection:
+          Using triplet "x64-windows" from "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\"
+          Using normalized configuration "Release"
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.41.34120\\bin\\HostX64\\x64\\CL.exe /c /I"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"foo.dir\\Debug\\\\" /Fd"C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\foo.pdb" /external:W1 /Gd /TP /errorReport:queue "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\src\\foo.cpp"
+          Microsoft (R) C/C++ 理쒖쟻??而댄뙆?쇰윭 踰꾩쟾 19.41.34123(x64)
+          Copyright (c) Microsoft Corporation. All rights reserved.
+          cl /c /I"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"foo.dir\\Debug\\\\" /Fd"C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\foo.pdb" /external:W1 /Gd /TP /errorReport:queue "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\src\\foo.cpp"
+          foo.cpp
+        Lib:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.41.34120\\bin\\HostX64\\x64\\Lib.exe /OUT:"C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\foo.lib" /LIBPATH:"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib" /LIBPATH:"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib\\manual-link" /NOLOGO /MACHINE:X64 /LTCG  /machine:x64 foo.dir\\Debug\\foo.obj
+          foo.vcxproj -> C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\foo.lib
+        FinalizeBuildStatus:
+          "foo.dir\\Debug\\foo.tlog\\unsuccessfulbuild" ?뚯씪????젣?섍퀬 ?덉뒿?덈떎.
+          "foo.dir\\Debug\\foo.tlog\\foo.lastbuildstate"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
+        "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\foo.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+        PrepareForBuild:
+          "boo.dir\\Debug\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
+          援ъ“??異쒕젰???ъ슜?????덉뒿?덈떎. 而댄뙆?쇰윭 吏꾨떒???쒖떇?\xc2\x80 ?ㅻ쪟 怨꾩링 援ъ“瑜?諛섏쁺?⑸땲?? ?먯꽭???댁슜?\xc2\x80 https://aka.ms/cpp/structured-output??李몄“?섏꽭??
+          "boo.dir\\Debug\\boo.tlog\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
+        InitializeBuildStatus:
+          "AlwaysCreate"??媛\xc2\x80) 吏\xc2\x80?뺣릺?덇린 ?뚮Ц??"boo.dir\\Debug\\boo.tlog\\unsuccessfulbuild"??瑜? 留뚮뱾怨??덉뒿?덈떎.
+          "boo.dir\\Debug\\boo.tlog\\unsuccessfulbuild"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
+        CustomBuild:
+          Building Custom Rule C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt
+        VcpkgTripletSelection:
+          Using triplet "x64-windows" from "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\"
+          Using normalized configuration "Release"
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.41.34120\\bin\\HostX64\\x64\\CL.exe /c /I"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"boo.dir\\Debug\\\\" /Fd"boo.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TP /errorReport:queue "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\src\\main.cpp"
+          Microsoft (R) C/C++ 理쒖쟻??而댄뙆?쇰윭 踰꾩쟾 19.41.34123(x64)
+          Copyright (c) Microsoft Corporation. All rights reserved.
+          cl /c /I"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\include" /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"boo.dir\\Debug\\\\" /Fd"boo.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TP /errorReport:queue "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\src\\main.cpp"
+          main.cpp
+        Link:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.41.34120\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\boo.exe" /NOLOGO /LIBPATH:"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib" /LIBPATH:"C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib\\manual-link" Debug\\foo.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\lib\\*.lib" /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/Debug/boo.pdb" /SUBSYSTEM:CONSOLE /LTCG:incremental /LTCGOUT:"boo.dir\\Debug\\boo.iobj" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/bin/Debug/boo.lib" /MACHINE:X64  /machine:x64 boo.dir\\Debug\\main.obj
+          肄붾뱶瑜??앹꽦?섍퀬 ?덉뒿?덈떎.
+          Not all modules are compiled with -Gy (function comdat), build without incremental LTCG.
+          肄붾뱶瑜??앹꽦?덉뒿?덈떎.
+          boo.vcxproj -> C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\boo.exe
+        AppLocalFromInstalled:
+          pwsh.exe -ExecutionPolicy Bypass -noprofile -File "C:\\Users\\dk601\\Documents\\vcpkg\\scripts\\buildsystems\\msbuild\\applocal.ps1" "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\boo.exe" "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\bin" "boo.dir\\Debug\\boo.tlog\\boo.write.1u.tlog" "boo.dir\\Debug\\vcpkg.applocal.log"
+          'pwsh.exe'?\xc2\x80(?? ?대? ?먮뒗 ?몃? 紐낅졊, ?ㅽ뻾?????덈뒗 ?꾨줈洹몃옩, ?먮뒗
+          諛곗튂 ?뚯씪???꾨떃?덈떎.
+          "pwsh.exe -ExecutionPolicy Bypass -noprofile -File "C:\\Users\\dk601\\Documents\\vcpkg\\scripts\\buildsystems\\msbuild\\applocal.ps1" "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\boo.exe" "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\bin" "boo.dir\\Debug\\boo.tlog\\boo.write.1u.tlog" "boo.dir\\Debug\\vcpkg.applocal.log"" 紐낅졊??醫낅즺?섏뿀?듬땲??肄붾뱶: 9009).
+          "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -ExecutionPolicy Bypass -noprofile -File "C:\\Users\\dk601\\Documents\\vcpkg\\scripts\\buildsystems\\msbuild\\applocal.ps1" "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\Debug\\boo.exe" "C:\\Users\\dk601\\Documents\\vcpkg\\installed\\x64-windows\\bin" "boo.dir\\Debug\\boo.tlog\\boo.write.1u.tlog" "boo.dir\\Debug\\vcpkg.applocal.log"
+        FinalizeBuildStatus:
+          "boo.dir\\Debug\\boo.tlog\\unsuccessfulbuild" ?뚯씪????젣?섍퀬 ?덉뒿?덈떎.
+          "boo.dir\\Debug\\boo.tlog\\boo.lastbuildstate"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
+        "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\boo.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+        PrepareForBuild:
+          "x64\\Debug\\ALL_BUILD\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
+          援ъ“??異쒕젰???ъ슜?????덉뒿?덈떎. 而댄뙆?쇰윭 吏꾨떒???쒖떇?\xc2\x80 ?ㅻ쪟 怨꾩링 援ъ“瑜?諛섏쁺?⑸땲?? ?먯꽭???댁슜?\xc2\x80 https://aka.ms/cpp/structured-output??李몄“?섏꽭??
+          "x64\\Debug\\ALL_BUILD\\ALL_BUILD.tlog\\" ?붾젆?곕━瑜?留뚮뱾怨??덉뒿?덈떎.
+        InitializeBuildStatus:
+          "AlwaysCreate"??媛\xc2\x80) 吏\xc2\x80?뺣릺?덇린 ?뚮Ц??"x64\\Debug\\ALL_BUILD\\ALL_BUILD.tlog\\unsuccessfulbuild"??瑜? 留뚮뱾怨??덉뒿?덈떎.
+          "x64\\Debug\\ALL_BUILD\\ALL_BUILD.tlog\\unsuccessfulbuild"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
+        CustomBuild:
+          Building Custom Rule C:/Users/dk601/Documents/Lies_Of_P/Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/CMakeFiles/_CMakeLTOTest-CXX/src/CMakeLists.txt
+        FinalizeBuildStatus:
+          "x64\\Debug\\ALL_BUILD\\ALL_BUILD.tlog\\unsuccessfulbuild" ?뚯씪????젣?섍퀬 ?덉뒿?덈떎.
+          "x64\\Debug\\ALL_BUILD\\ALL_BUILD.tlog\\ALL_BUILD.lastbuildstate"???곌껐(touching)?섍퀬 ?덉뒿?덈떎.
+        "C:\\Users\\dk601\\Documents\\Lies_Of_P\\Project_P\\Reference\\JoltPhysics-5.5.0\\Build\\VS2022_CL\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\ALL_BUILD.vcxproj" ?꾨줈?앺듃瑜?鍮뚮뱶?덉뒿?덈떎(湲곕낯 ?\xc2\x80??.
+        
+        鍮뚮뱶?덉뒿?덈떎.
+            寃쎄퀬 0媛?
+            ?ㅻ쪟 0媛?
+        
+        寃쎄낵 ?쒓컙: 00:00:04.40
+        
+      exitCode: 0
 ...

@@ -186,18 +186,18 @@ public:
     class CCamera* Get_Camera() const;
     CCamera* Get_Camera(const _int _index) const;
     CCamera* Get_EditorCamera() const;
-    const list <CCamera*>& Get_CameraList();
+    const vector<CCamera*>& Get_CameraList();
     CCamera* Add_Camera(CCamera* _camera);
     void Remove_Camera(CCamera* _camera);
 
-    const list<class CLight*>& Get_LightList();
+    const vector<class CLight*>& Get_LightList();
     CLight* Add_Light(CLight* _light);
     void Remove_Light(CLight* _light);
 
     vector<_matrix>& Get_LightData();
 
     class CCanvas* Get_Canvas(const _int _index) const;
-    const list <CCanvas*>& Get_CanvasList();
+    const vector<CCanvas*>& Get_CanvasList();
     CCanvas* Add_Canvas(CCanvas* _canvas);
     void Remove_Canvas(CCanvas* _canvas);
 
@@ -231,10 +231,10 @@ protected:
     wstring m_strSceneName;
     EnviromentSettings m_sEnviromentSettings;
     class CSkyBox* m_pSkyBox;
-    list <CGameObject*> m_lObjectList;
-    list <CCamera*> m_lCameraList;
-    list <CLight*> m_lLightList;
-    list<CCanvas*> m_lCanvasList;
+    list<CGameObject*> m_lObjectList;
+    vector<CCamera*> m_lCameraList;
+    vector<CLight*> m_lLightList;
+    vector<CCanvas*> m_lCanvasList;
 
     CCamera* m_pEditorCamera;
 

@@ -93,12 +93,29 @@ public:
 	void Add_RenderTarget_UI(class CUI* _ui);
 
 protected:
+	struct RendererBoundsCache
+	{
+		BoundingBox worldAABB = {};
+		_float4x4 worldMatrix = {};
+		CMeshBuffer* meshBuffer = nullptr;
+		_bool valid = false;
+	};
+
+	struct DynamicRendererEntry
+	{
+		CRenderer* renderer;
+		RendererBoundsCache* cache;
+	};
+
+protected:
 	void Bind_ViewMatrix();
 	void Bind_ProjectionMatrix();
 	void Update_WorldFrustum();
 	void Collect_VisibleRenderers();
 	_bool IsRendererVisible(class CRenderer* _renderer) const;
+	_bool IsRendererVisible(class CRenderer* _renderer, RendererBoundsCache& _cache) const;
 	_bool TryBuildRendererWorldAABB(class CRenderer* _renderer, BoundingBox& _outAABB, _bool* _outChanged = nullptr) const;
+	_bool TryBuildRendererWorldAABB(class CRenderer* _renderer, RendererBoundsCache& _cache, BoundingBox& _outAABB, _bool* _outChanged = nullptr) const;
 	void SortTransparentRenderersByCameraDistance(vector<CRenderer*>& _renderers);
 	void BuildStaticOctree();
 	void InsertStaticOctreeEntry(OctreeNode* _node, const OctreeEntry& _entry);
@@ -154,7 +171,7 @@ protected:
 	_float m_fSize;
 
 	vector<CRenderer*> m_vStaticMeshList;
-	vector<CRenderer*> m_vDynamicMeshList;
+	vector<DynamicRendererEntry> m_vDynamicMeshEntries;
 	vector<CRenderer*> m_vVisibleStaticMeshList;
 	vector<CRenderer*> m_vVisibleStaticMeshList_Transparent;
 	vector<CRenderer*> m_vVisibleDynamicMeshList;
@@ -176,14 +193,6 @@ protected:
 		vector<OctreeEntry> entries = {};
 		array<unique_ptr<OctreeNode>, 8> children = {};
 		_int depth = 0;
-	};
-
-	struct RendererBoundsCache
-	{
-		BoundingBox worldAABB = {};
-		_float4x4 worldMatrix = {};
-		CMeshBuffer* meshBuffer = nullptr;
-		_bool valid = false;
 	};
 
 private:

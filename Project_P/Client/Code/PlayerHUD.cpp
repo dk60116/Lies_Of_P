@@ -518,7 +518,7 @@ void CPlayerHUD::Update_DashAttack(const _float _coolRatio, const _bool _ready)
 
 	if (m_sDashAttackFrame.coolDown_Trigger)
 	{
-		m_sDashAttackFrame.blur_Line->GetRectTransform()->Set_WidthHeight(150.f * (m_sDashAttackFrame.coolEndDuration / m_sDashAttackFrame.coolEndDest));
+		m_sDashAttackFrame.blur_Line->GetRectTransform()->Set_WidthHeight(static_cast<_int>(150.f * (m_sDashAttackFrame.coolEndDuration / m_sDashAttackFrame.coolEndDest)));
 
 		m_sDashAttackFrame.coolEndDuration += DELTA_TIME;
 
@@ -538,8 +538,6 @@ void CPlayerHUD::Update_DashAttack(const _float _coolRatio, const _bool _ready)
 			m_sDashAttackFrame.coolDown_Trigger = false;
 		}
 	}
-
-	CDebug::LogError(m_sDashAttackFrame.coolDown_Trigger);
 
 	m_sDashAttackFrame.prevReady = _ready;
 

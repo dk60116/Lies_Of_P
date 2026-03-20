@@ -78,7 +78,67 @@ HRESULT CSkinnedMeshBuffer::Initiailize_Custom(SkinnedBufferInitiaizeInfo _info,
     }
 
     m_vBoneNames = _info.boneNames;
-    m_vBoneOffsetMatrices = _info.boneOffsetMatrices; // 스킨 본 offset
+    m_vBoneOffsetMatrices = _info.boneOffsetMatrices;
+
+    if (m_sInfo.vertexSize == sizeof(VertexSkinnedBuffer) && m_sInfo.vertextCount > 0 && !m_vBoneNames.empty())
+    {
+        const _uint numBones = (_uint)m_vBoneNames.size();
+        vector<_float3> centers(numBones, { 0.f, 0.f, 0.f });
+        vector<_uint> counts(numBones, 0u);
+
+        auto* verts = static_cast<const VertexSkinnedBuffer*>(m_pVertexSysMem);
+
+        for (_uint v = 0; v < m_sInfo.vertextCount; ++v)
+        {
+            const VertexSkinnedBuffer& vtx = verts[v];
+            for (_uint k = 0; k < 4; ++k)
+            {
+                const _uint boneIdx = vtx.boneIndices[k];
+                if (vtx.boneWeights[k] <= 0.f || boneIdx >= numBones)
+                    continue;
+                centers[boneIdx].x += vtx.position.x;
+                centers[boneIdx].y += vtx.position.y;
+                centers[boneIdx].z += vtx.position.z;
+                counts[boneIdx]++;
+            }
+        }
+
+        for (_uint b = 0; b < numBones; ++b)
+        {
+            if (counts[b] > 0)
+            {
+                const _float inv = 1.f / (_float)counts[b];
+                centers[b].x *= inv;
+                centers[b].y *= inv;
+                centers[b].z *= inv;
+            }
+        }
+
+        m_vBoneBoundSpheres.assign(numBones, _float4{ 0.f, 0.f, 0.f, 0.f });
+        for (_uint b = 0; b < numBones; ++b)
+            m_vBoneBoundSpheres[b] = { centers[b].x, centers[b].y, centers[b].z, 0.f };
+
+        for (_uint v = 0; v < m_sInfo.vertextCount; ++v)
+        {
+            const VertexSkinnedBuffer& vtx = verts[v];
+            for (_uint k = 0; k < 4; ++k)
+            {
+                const _uint boneIdx = vtx.boneIndices[k];
+                if (vtx.boneWeights[k] <= 0.f || boneIdx >= numBones)
+                    continue;
+                const _float3& c = centers[boneIdx];
+                const _float dx = vtx.position.x - c.x;
+                const _float dy = vtx.position.y - c.y;
+                const _float dz = vtx.position.z - c.z;
+                const _float distSq = dx * dx + dy * dy + dz * dz;
+                if (distSq > m_vBoneBoundSpheres[boneIdx].w)
+                    m_vBoneBoundSpheres[boneIdx].w = distSq;
+            }
+        }
+
+        for (_uint b = 0; b < numBones; ++b)
+            m_vBoneBoundSpheres[b].w = sqrtf(m_vBoneBoundSpheres[b].w);
+    }
 
     _float4x4 identity;
     XMStoreFloat4x4(&identity, DirectX::XMMatrixIdentity());
@@ -87,17 +147,13 @@ HRESULT CSkinnedMeshBuffer::Initiailize_Custom(SkinnedBufferInitiaizeInfo _info,
     {
         const auto& name = node.name;
 
-        // 이미 존재하면 패스
         if (find(m_vBoneNames.begin(),
             m_vBoneNames.end(),
             name) != m_vBoneNames.end())
             continue;
 
-        // 이름 추가
         m_vBoneNames.push_back(name);
 
-        // 오프셋 행렬:
-        //  - 스킨 가중치 없는 본이므로 단위행렬이면 충분
         m_vBoneOffsetMatrices.push_back(identity);
     }
     return S_OK;
@@ -161,7 +217,6 @@ void CSkinnedMeshBuffer::FillBoneWeights(VertexSkinnedBuffer& _targetBuffer, con
         }
     }
 
-    // 4개 꽉 찼다면 가장 작은 weight을 대체
     _uint minIndex = 0;
     for (int i = 1; i < 4; ++i)
     {
@@ -183,7 +238,6 @@ const _float4x4& CSkinnedMeshBuffer::Get_BoneOffsetMatrix(const _uint _index)
 
 void CSkinnedMeshBuffer::FillBoneWeightsAndIndices(const aiMesh* mesh, vector<VertexSkinnedBuffer>& vertices)
 {
-    // 본 인덱스/가중치 할당
     for (_uint i = 0; i < mesh->mNumBones; ++i)
     {
         const aiBone* bone = mesh->mBones[i];
@@ -209,10 +263,8 @@ void CSkinnedMeshBuffer::FillBoneWeightsAndIndices(const aiMesh* mesh, vector<Ve
         }
     }
 
-    // 각 버텍스의 가중치를 큰 순서로 정렬 + 인덱스 함께 정렬
     for (auto& v : vertices)
     {
-        // 가중치와 인덱스를 쌍으로 모음
         vector<pair<_uint, float>> bonePairs;
         for (int k = 0; k < 4; ++k)
         {
@@ -220,14 +272,12 @@ void CSkinnedMeshBuffer::FillBoneWeightsAndIndices(const aiMesh* mesh, vector<Ve
                 bonePairs.emplace_back(v.boneIndices[k], v.boneWeights[k]);
         }
 
-        // 큰 가중치 순으로 정렬
         sort(bonePairs.begin(), bonePairs.end(),
             [](const pair<_uint, float>& a, const pair<_uint, float>& b)
             {
                 return a.second > b.second;
             });
 
-        // 다시 배열에 복사
         for (_uint k = 0; k < 4; ++k)
         {
             if (k < bonePairs.size())
@@ -242,7 +292,6 @@ void CSkinnedMeshBuffer::FillBoneWeightsAndIndices(const aiMesh* mesh, vector<Ve
             }
         }
 
-        // 정규화
         _float sum = v.boneWeights[0] + v.boneWeights[1] + v.boneWeights[2] + v.boneWeights[3];
         if (sum > 0.0f)
         {

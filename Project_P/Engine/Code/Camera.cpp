@@ -199,7 +199,7 @@ CCamera::CCamera()
 	, m_fFieldOfView(60.f)
 	, m_fSize(5.f)
 	, m_vStaticMeshList({})
-	, m_vDynamicMeshList({})
+	, m_vDynamicMeshEntries({})
 	, m_vVisibleStaticMeshList({})
 	, m_vVisibleDynamicMeshList({})
 	, m_vUIList({})
@@ -428,7 +428,7 @@ void CCamera::Render()
 void CCamera::OnPostRender()
 {
 	m_vStaticMeshList.clear();
-	m_vDynamicMeshList.clear();
+	m_vDynamicMeshEntries.clear();
 	m_vVisibleStaticMeshList.clear();
 	m_vVisibleStaticMeshList_Transparent.clear();
 	m_vVisibleDynamicMeshList.clear();
@@ -601,7 +601,7 @@ void CCamera::Add_RenderTarget_Mesh(CRenderer* _mesh)
 	if (_mesh->Get_GameObject()->IsStatic(CGameObject::STATIC_METHOD::TransformStatic))
 		m_vStaticMeshList.push_back(_mesh);
 	else
-		m_vDynamicMeshList.push_back(_mesh);
+		m_vDynamicMeshEntries.push_back({ _mesh, &m_mRendererBoundsCache[_mesh] });
 }
 
 void CCamera::Add_RenderTarget_UI(CUI* _ui)
@@ -849,7 +849,7 @@ void CCamera::Update_WorldFrustum()
 	m_bUseOrthographicCulling = false;
 }
 
-_bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, BoundingBox& _outAABB, _bool* _outChanged) const
+_bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, RendererBoundsCache& _cache, BoundingBox& _outAABB, _bool* _outChanged) const
 {
 	if (_outChanged)
 		*_outChanged = false;
@@ -877,15 +877,10 @@ _bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, BoundingBox& _out
 	_float4x4 worldMatrix = {};
 	XMStoreFloat4x4(&worldMatrix, _renderer->GetTransform()->Get_WorldMatrix());
 
-	auto cacheIt = m_mRendererBoundsCache.find(_renderer);
-	if (cacheIt != m_mRendererBoundsCache.end())
+	if (_cache.valid && _cache.meshBuffer == meshBuffer && IsSameWorldMatrix(_cache.worldMatrix, worldMatrix))
 	{
-		const RendererBoundsCache& cache = cacheIt->second;
-		if (cache.valid && cache.meshBuffer == meshBuffer && IsSameWorldMatrix(cache.worldMatrix, worldMatrix))
-		{
-			_outAABB = cache.worldAABB;
-			return true;
-		}
+		_outAABB = _cache.worldAABB;
+		return true;
 	}
 
 	const BoundingBox& localBox = meshBuffer->Get_Info().boundingBox;
@@ -909,15 +904,14 @@ _bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, BoundingBox& _out
 
 	BoundingBox::CreateFromPoints(_outAABB, minV, maxV);
 
-	RendererBoundsCache& cache = m_mRendererBoundsCache[_renderer];
-	const _bool changed = !cache.valid
-		|| cache.meshBuffer != meshBuffer
-		|| !AreBoundingBoxesEquivalent(cache.worldAABB, _outAABB);
+	const _bool changed = !_cache.valid
+		|| _cache.meshBuffer != meshBuffer
+		|| !AreBoundingBoxesEquivalent(_cache.worldAABB, _outAABB);
 
-	cache.worldAABB = _outAABB;
-	cache.worldMatrix = worldMatrix;
-	cache.meshBuffer = meshBuffer;
-	cache.valid = true;
+	_cache.worldAABB = _outAABB;
+	_cache.worldMatrix = worldMatrix;
+	_cache.meshBuffer = meshBuffer;
+	_cache.valid = true;
 
 	if (_outChanged)
 		*_outChanged = changed;
@@ -925,10 +919,27 @@ _bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, BoundingBox& _out
 	return true;
 }
 
+_bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, BoundingBox& _outAABB, _bool* _outChanged) const
+{
+	return TryBuildRendererWorldAABB(_renderer, m_mRendererBoundsCache[_renderer], _outAABB, _outChanged);
+}
+
 _bool CCamera::IsRendererVisible(CRenderer* _renderer) const
 {
 	BoundingBox worldAABB = {};
 	if (!TryBuildRendererWorldAABB(_renderer, worldAABB))
+		return false;
+
+	ContainmentType contain = m_bUseOrthographicCulling
+		? m_sWorldOrthoBounds.Contains(worldAABB)
+		: m_sWorldFrustum.Contains(worldAABB);
+	return contain != ContainmentType::DISJOINT;
+}
+
+_bool CCamera::IsRendererVisible(CRenderer* _renderer, RendererBoundsCache& _cache) const
+{
+	BoundingBox worldAABB = {};
+	if (!TryBuildRendererWorldAABB(_renderer, _cache, worldAABB))
 		return false;
 
 	ContainmentType contain = m_bUseOrthographicCulling
@@ -1163,7 +1174,7 @@ void CCamera::Collect_VisibleRenderers()
 	m_vVisibleStaticMeshList_Transparent.clear();
 	m_vVisibleDynamicMeshList.clear();
 	m_vVisibleDynamicMeshList_Transparent.clear();
-	m_vVisibleDynamicMeshList.reserve(m_vDynamicMeshList.size());
+	m_vVisibleDynamicMeshList.reserve(m_vDynamicMeshEntries.size());
 
 	BuildStaticOctree();
 	if (m_pStaticOctreeRoot)
@@ -1188,8 +1199,9 @@ void CCamera::Collect_VisibleRenderers()
 
 	m_vVisibleStaticMeshList.swap(opaqueStatic);
 
-	for (auto* renderer : m_vDynamicMeshList)
+	for (auto& entry : m_vDynamicMeshEntries)
 	{
+		auto* renderer = entry.renderer;
 		if (!renderer || !renderer->Get_GameObject())
 			continue;
 
@@ -1202,7 +1214,7 @@ void CCamera::Collect_VisibleRenderers()
 		if (!renderer->Get_Material())
 			continue;
 
-		if (IsRendererVisible(renderer))
+		if (IsRendererVisible(renderer, *entry.cache))
 		{
 			if (!renderer->Get_Material()->IsTransparnet())
 				m_vVisibleDynamicMeshList.push_back(renderer);
@@ -2298,8 +2310,9 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 		}
 	}
 
-	for (auto* r : m_vDynamicMeshList)
+	for (auto& entry : m_vDynamicMeshEntries)
 	{
+		auto* r = entry.renderer;
 		if (!isRenderableShadowTarget(r))
 			continue;
 		if (!isShadowVisible(r))

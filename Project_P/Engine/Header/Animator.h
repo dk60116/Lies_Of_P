@@ -132,6 +132,10 @@ private:
     vector3 m_vNextRootStartPos;
     _bool m_bHasNextRootStartPos;
 
+    CAnimationClip* m_pBoneToTrackClip;
+    vector<_int> m_vBoneToTrack;
+    vector<CAnimationClip::BoneTransform> m_vSampledBones;
+
 private:
     class CAnimatorController* m_pController;
     CAnimatorControllerInstance m_ControllerInst;

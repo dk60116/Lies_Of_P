@@ -1,6 +1,10 @@
 #include "epch.h"
 #include "Font.h"
 
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
 CFont::CFont()
     : m_pSpriteFont(nullptr)
 {
@@ -22,7 +26,6 @@ HRESULT CFont::Initialize(const wstring& _name, const wstring& _filePath, void* 
         return E_FAIL;
 
     ID3D11Device* device = CGraphicDevice::GetInstance().Get_Device();
-    ID3D11DeviceContext* context = CGraphicDevice::GetInstance().Get_Context();
 
     wstring* path = nullptr;
 
@@ -30,11 +33,39 @@ HRESULT CFont::Initialize(const wstring& _name, const wstring& _filePath, void* 
         path = static_cast<wstring*>(_desc);
 
     if (path)
-        m_pSpriteFont = new SpriteFont(device, (*path).c_str());
+    {
+        fs::path fontPath(*path);
+
+        if (!fontPath.is_absolute())
+        {
+            wchar_t exePath[MAX_PATH] = {};
+            GetModuleFileNameW(nullptr, exePath, MAX_PATH);
+            fontPath = fs::path(exePath).parent_path() / fontPath;
+        }
+
+        error_code ec;
+        const fs::path absoluteFontPath = fs::absolute(fontPath, ec);
+        if (ec || !fs::exists(absoluteFontPath))
+        {
+            CDebug::LogError(L"Initialize Font Failed - missing spritefont: " + fontPath.wstring());
+            return E_FAIL;
+        }
+
+        try
+        {
+            m_pSpriteFont = new SpriteFont(device, absoluteFontPath.c_str());
+        }
+        catch (const std::exception& ex)
+        {
+            CDebug::LogError(L"Initialize Font Failed - SpriteFont exception: " + absoluteFontPath.wstring());
+            CDebug::LogError(CEngineString::StringToWString(ex.what()));
+            return E_FAIL;
+        }
+    }
 
     if (!m_pSpriteFont)
     {
-        CDebug::LogError(L"Initialize Font Failed: " + (*path));
+        CDebug::LogError(L"Initialize Font Failed: " + (path ? *path : wstring(L"<null>")));
         return E_FAIL;
     }
 

@@ -33,6 +33,9 @@ CAnimator::CAnimator()
 	, m_bHasPrevRootMotion(false)
 	, m_vNextRootStartPos(vector3::zero())
 	, m_bHasNextRootStartPos(false)
+	, m_pBoneToTrackClip(nullptr)
+	, m_vBoneToTrack({})
+	, m_vSampledBones({})
 {
 	m_strName = L"Animator";
 	m_iSortIndex = 1;
@@ -323,57 +326,87 @@ void CAnimator::Update()
 		return;
 	}
 
-	unordered_map<wstring, CAnimationClip::BoneTransform> sampled;
-	vector3 rootPos = vector3::zero();
-	if (m_bBlendTreeActive)
-		SampleBlendTreePose(*m_pBlendTree, m_fCurrentTime, sampled, &rootPos);
-	else
-		m_pCrtAnimation->Sample(m_fCurrentTime, sampled);
-
 	const _uint boneCount = m_pSkinnedRenderer->Get_BoneCount();
 	_bool rootMotionApplied = false;
 
-	for (_uint i = 0; i < boneCount; ++i)
+	if (m_bBlendTreeActive)
 	{
-		CTransform* bone = m_pSkinnedRenderer->Get_BoneTransform(i);
+		unordered_map<wstring, CAnimationClip::BoneTransform> sampled;
+		vector3 rootPos = vector3::zero();
+		SampleBlendTreePose(*m_pBlendTree, m_fCurrentTime, sampled, &rootPos);
 
-		if (!bone)
-			continue;
-
-		const wstring& name = m_pSkinnedRenderer->Get_BoneName(i);
-
-		if (m_bApplyRootMotion)
+		for (_uint i = 0; i < boneCount; ++i)
 		{
-			if (IsRootBone(name))
+			CTransform* bone = m_pSkinnedRenderer->Get_BoneTransform(i);
+			if (!bone)
+				continue;
+
+			const wstring& name = m_pSkinnedRenderer->Get_BoneName(i);
+
+			if (m_bApplyRootMotion && IsRootBone(name))
 			{
-				if (m_pRootMotionParent)
+				if (m_pRootMotionParent && !rootMotionApplied)
 				{
-					if (!rootMotionApplied)
-					{
-						if (m_bBlendTreeActive)
-							ApplyRootMotionDelta(rootPos);
-						else
-						{
-							auto rootIt = sampled.find(name);
-							if (rootIt != sampled.end())
-								ApplyRootMotionDelta(rootIt->second.pos);
-						}
-						rootMotionApplied = true;
-					}
+					ApplyRootMotionDelta(rootPos);
+					rootMotionApplied = true;
 				}
 				continue;
 			}
+
+			auto it = sampled.find(name);
+			if (it == sampled.end())
+				continue;
+
+			const auto& bt = it->second;
+			bone->Set_LocalPosition(bt.pos);
+			bone->Set_LocalQuaternion(bt.rot);
+			bone->Set_LocalScale(bt.scale);
+		}
+	}
+	else
+	{
+		// 단일 클립 경로: 인덱스 직접 접근 (wstring 해시 조회 제거)
+		if (m_pBoneToTrackClip != m_pCrtAnimation)
+		{
+			vector<wstring> boneNames;
+			boneNames.reserve(boneCount);
+			for (_uint i = 0; i < boneCount; ++i)
+				boneNames.push_back(m_pSkinnedRenderer->Get_BoneName(i));
+			m_pCrtAnimation->BuildBoneToTrackMap(boneNames, m_vBoneToTrack);
+			m_pBoneToTrackClip = m_pCrtAnimation;
 		}
 
-		auto it = sampled.find(name);
-		
-		if (it == sampled.end())
-			continue;
+		m_pCrtAnimation->SampleIndexed(m_fCurrentTime, m_vBoneToTrack, m_vSampledBones);
 
-		const auto& bt = it->second;
-		bone->Set_LocalPosition(bt.pos);
-		bone->Set_LocalQuaternion(bt.rot);
-		bone->Set_LocalScale(bt.scale);
+		for (_uint i = 0; i < boneCount; ++i)
+		{
+			CTransform* bone = m_pSkinnedRenderer->Get_BoneTransform(i);
+			if (!bone)
+				continue;
+
+			if (m_bApplyRootMotion)
+			{
+				const wstring& name = m_pSkinnedRenderer->Get_BoneName(i);
+				if (IsRootBone(name))
+				{
+					if (m_pRootMotionParent && !rootMotionApplied
+						&& i < (_uint)m_vBoneToTrack.size() && m_vBoneToTrack[i] >= 0)
+					{
+						ApplyRootMotionDelta(m_vSampledBones[i].pos);
+						rootMotionApplied = true;
+					}
+					continue;
+				}
+			}
+
+			if (i >= (_uint)m_vBoneToTrack.size() || m_vBoneToTrack[i] < 0)
+				continue;
+
+			const auto& bt = m_vSampledBones[i];
+			bone->Set_LocalPosition(bt.pos);
+			bone->Set_LocalQuaternion(bt.rot);
+			bone->Set_LocalScale(bt.scale);
+		}
 	}
 }
 

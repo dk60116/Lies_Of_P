@@ -456,12 +456,14 @@ _bool CSkinnedMeshRenderer::UploadBoneMatricesFromCache() const
 	if (cache.skinningPoseVersion != 0ull && cache.uploadedPoseVersion == cache.skinningPoseVersion)
 		return true;
 
+	const _uint uploadCount = m_iCachedBoneCount > 0 ? m_iCachedBoneCount : MAX_BONE;
+
 	D3D11_MAPPED_SUBRESOURCE mappedRes = {};
 	const HRESULT hr = m_pContext->Map(m_pBoneMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedRes);
 	if (FAILED(hr))
 		return false;
 
-	memcpy(mappedRes.pData, m_vCachedBoneMatrices.data(), sizeof(_float4x4) * MAX_BONE);
+	memcpy(mappedRes.pData, m_vCachedBoneMatrices.data(), sizeof(_float4x4) * uploadCount);
 	m_pContext->Unmap(m_pBoneMatrixBuffer, 0);
 	cache.uploadedPoseVersion = cache.skinningPoseVersion;
 	return true;
@@ -483,37 +485,66 @@ _bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3&
 
 	if (!cache.animatedLocalBoundsValid || cache.cachedLocalBoundsPoseVersion != cache.skinningPoseVersion)
 	{
-		auto* vertices = static_cast<const VertexSkinnedBuffer*>(m_pMeshBuffer->m_pVertexSysMem);
 		_vector minV = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 0.f);
 		_vector maxV = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 0.f);
 		_bool hasPoint = false;
 
-		for (_uint v = 0; v < info.vertextCount; ++v)
-		{
-			const VertexSkinnedBuffer& src = vertices[v];
-			const _vector p = XMVectorSet(src.position.x, src.position.y, src.position.z, 1.f);
-			_vector skinned = XMVectorZero();
-			_float totalW = 0.f;
+		const auto& boneSpheres = m_pMeshBuffer->m_vBoneBoundSpheres;
+		const _bool useBoneSpheres = !boneSpheres.empty() && (_uint)boneSpheres.size() == boneCount;
 
-			for (_uint k = 0; k < 4; ++k)
+		if (useBoneSpheres)
+		{
+			for (_uint b = 0; b < boneCount; ++b)
 			{
-				const _uint idx = src.boneIndices[k];
-				const _float w = src.boneWeights[k];
-				if (w <= 0.f || idx >= boneCount)
+				const _float4& sphere = boneSpheres[b];
+				if (sphere.w <= 0.f)
 					continue;
 
-				const _matrix skinMatrix = XMLoadFloat4x4(&m_vCachedSkinMatrices[idx]);
-				skinned = XMVectorAdd(skinned, XMVectorScale(XMVector3Transform(p, skinMatrix), w));
-				totalW += w;
+				const _matrix skinMatrix = XMLoadFloat4x4(&m_vCachedSkinMatrices[b]);
+				const _vector center = XMVector3Transform(XMVectorSet(sphere.x, sphere.y, sphere.z, 1.f), skinMatrix);
+
+				const _float sx = XMVectorGetX(XMVector3Length(skinMatrix.r[0]));
+				const _float sy = XMVectorGetX(XMVector3Length(skinMatrix.r[1]));
+				const _float sz = XMVectorGetX(XMVector3Length(skinMatrix.r[2]));
+				const _float scaledRadius = sphere.w * max(sx, max(sy, sz));
+
+				const _vector rVec = XMVectorReplicate(scaledRadius);
+				minV = XMVectorMin(minV, XMVectorSubtract(center, rVec));
+				maxV = XMVectorMax(maxV, XMVectorAdd(center, rVec));
+				hasPoint = true;
 			}
+		}
+		else
+		{
+			auto* vertices = static_cast<const VertexSkinnedBuffer*>(m_pMeshBuffer->m_pVertexSysMem);
 
-			if (totalW <= 0.f)
-				continue;
+			for (_uint v = 0; v < info.vertextCount; ++v)
+			{
+				const VertexSkinnedBuffer& src = vertices[v];
+				const _vector p = XMVectorSet(src.position.x, src.position.y, src.position.z, 1.f);
+				_vector skinned = XMVectorZero();
+				_float totalW = 0.f;
 
-			skinned = XMVectorScale(skinned, 1.f / totalW);
-			hasPoint = true;
-			minV = XMVectorMin(minV, skinned);
-			maxV = XMVectorMax(maxV, skinned);
+				for (_uint k = 0; k < 4; ++k)
+				{
+					const _uint idx = src.boneIndices[k];
+					const _float w = src.boneWeights[k];
+					if (w <= 0.f || idx >= boneCount)
+						continue;
+
+					const _matrix skinMatrix = XMLoadFloat4x4(&m_vCachedSkinMatrices[idx]);
+					skinned = XMVectorAdd(skinned, XMVectorScale(XMVector3Transform(p, skinMatrix), w));
+					totalW += w;
+				}
+
+				if (totalW <= 0.f)
+					continue;
+
+				skinned = XMVectorScale(skinned, 1.f / totalW);
+				hasPoint = true;
+				minV = XMVectorMin(minV, skinned);
+				maxV = XMVectorMax(maxV, skinned);
+			}
 		}
 
 		if (!hasPoint)

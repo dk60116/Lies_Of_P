@@ -350,7 +350,7 @@ bool CHierachyBox::TryInsertObject(CGameObject* _droppedObject, CTransform* _tar
 		return false;
 
 	auto& objectList = scene->Get_ObjectList();
-	objectList.remove(_droppedObject);
+	objectList.erase(std::remove(objectList.begin(), objectList.end(), _droppedObject), objectList.end());
 
 	if (_beforeObject)
 	{

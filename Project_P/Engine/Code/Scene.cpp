@@ -26,6 +26,7 @@
 #include "RigidBody.h"
 #include "Physics.h"
 #include <filesystem>
+#include <algorithm>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -2825,7 +2826,7 @@ CCamera* CScene::Get_EditorCamera() const
 	return m_pEditorCamera;
 }
 
-const list<class CCamera*>& CScene::Get_CameraList()
+const vector<class CCamera*>& CScene::Get_CameraList()
 {
 	return m_lCameraList;
 }
@@ -2846,10 +2847,10 @@ CCamera* CScene::Add_Camera(CCamera* _camera)
 void CScene::Remove_Camera(CCamera* _camera)
 {
 	if (_camera)
-		m_lCameraList.remove(_camera);
+		m_lCameraList.erase(std::remove(m_lCameraList.begin(), m_lCameraList.end(), _camera), m_lCameraList.end());
 }
 
-const list<CLight*>& CScene::Get_LightList()
+const vector<CLight*>& CScene::Get_LightList()
 {
 	return m_lLightList;
 }
@@ -2867,7 +2868,7 @@ CLight* CScene::Add_Light(CLight* _light)
 void CScene::Remove_Light(CLight* _light)
 {
 	if (_light)
-		m_lLightList.remove(_light);
+		m_lLightList.erase(std::remove(m_lLightList.begin(), m_lLightList.end(), _light), m_lLightList.end());
 }
 
 vector<_matrix>& CScene::Get_LightData()
@@ -2893,7 +2894,7 @@ CCanvas* CScene::Get_Canvas(const _int _index) const
 	return m_lCanvasList.back();
 }
 
-const list<CCanvas*>& CScene::Get_CanvasList()
+const vector<CCanvas*>& CScene::Get_CanvasList()
 {
 	return m_lCanvasList;
 }
@@ -2914,7 +2915,7 @@ void CScene::Remove_Canvas(CCanvas* _canvas)
 	if (!_canvas)
 		return;
 
-	m_lCanvasList.remove(_canvas);
+	m_lCanvasList.erase(std::remove(m_lCanvasList.begin(), m_lCanvasList.end(), _canvas), m_lCanvasList.end());
 	Safe_Release(_canvas);
 }
 

@@ -59,6 +59,10 @@ public:
 
 public:
 	_int Sample(_float _timeSec, unordered_map<wstring, BoneTransform>& _out) const;
+
+	void BuildBoneToTrackMap(const vector<wstring>& boneNames, vector<_int>& outBoneToTrack) const;
+	_int SampleIndexed(_float _timeSec, const vector<_int>& boneToTrack, vector<BoneTransform>& out) const;
+
 	const _bool IsLoop() const;
 	void SetLoop(const _bool _loop);
 	const _float Get_Duration() const;

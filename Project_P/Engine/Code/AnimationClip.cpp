@@ -115,6 +115,76 @@ _int CAnimationClip::Sample(_float _timeSec, unordered_map<wstring, BoneTransfor
 	return frameIndex;
 }
 
+void CAnimationClip::BuildBoneToTrackMap(const vector<wstring>& boneNames, vector<_int>& outBoneToTrack) const
+{
+	outBoneToTrack.assign(boneNames.size(), -1);
+
+	for (_uint b = 0; b < (_uint)boneNames.size(); ++b)
+	{
+		for (_uint t = 0; t < (_uint)m_vBoneAnimation.size(); ++t)
+		{
+			if (m_vBoneAnimation[t].nodeName == boneNames[b])
+			{
+				outBoneToTrack[b] = (_int)t;
+				break;
+			}
+		}
+	}
+}
+
+_int CAnimationClip::SampleIndexed(_float _timeSec, const vector<_int>& boneToTrack, vector<BoneTransform>& out) const
+{
+	_int frameIndex = -1;
+
+	out.assign(boneToTrack.size(), BoneTransform{});
+
+	if (m_vBoneAnimation.empty() || m_fDuration == 0.f)
+		return frameIndex;
+
+	double ticks = _timeSec * m_fTicksPerSecond;
+	double time = ticks;
+	if (m_bLoopTime)
+	{
+		time = fmod(ticks, m_fDuration);
+		if (time < 0.0) time += m_fDuration;
+		if (ticks > 0.0 && fabs(time) <= 1e-8) time = m_fDuration;
+	}
+	else
+	{
+		if (time < 0.0) time = 0.0;
+		if (time > m_fDuration) time = m_fDuration;
+	}
+
+	for (_uint b = 0; b < (_uint)boneToTrack.size(); ++b)
+	{
+		const _int trackIdx = boneToTrack[b];
+		if (trackIdx < 0 || trackIdx >= (_int)m_vBoneAnimation.size())
+			continue;
+
+		const auto& ba = m_vBoneAnimation[trackIdx];
+		const auto& keys = ba.keyframes;
+		if (keys.empty())
+			continue;
+
+		size_t i1 = 0, i2 = 0;
+		while (i2 < keys.size() && time >= keys[i2].timeStamp) { i1 = i2++; }
+		if (i2 >= keys.size()) i2 = i1;
+
+		const _float span = float(keys[i2].timeStamp - keys[i1].timeStamp);
+		const _float t = span > 0.f ? clamp(float((time - keys[i1].timeStamp) / span), 0.f, 1.f) : 0.f;
+
+		BoneTransform& bt = out[b];
+		XMStoreFloat3(&bt.pos, XMVectorLerp(XMLoadFloat3(&keys[i1].position), XMLoadFloat3(&keys[i2].position), t));
+		XMStoreFloat4(&bt.rot, XMQuaternionNormalize(XMQuaternionSlerp(XMLoadFloat4(&keys[i1].rotation), XMLoadFloat4(&keys[i2].rotation), t)));
+		XMStoreFloat3(&bt.scale, XMVectorLerp(XMLoadFloat3(&keys[i1].scaling), XMLoadFloat3(&keys[i2].scaling), t));
+
+		if (frameIndex < 0)
+			frameIndex = static_cast<_int>(i1);
+	}
+
+	return frameIndex;
+}
+
 const _bool CAnimationClip::IsLoop() const
 {
 	return m_bLoopTime;
