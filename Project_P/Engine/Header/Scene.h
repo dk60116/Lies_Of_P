@@ -124,6 +124,7 @@ public:
         _float ambient = 0.2f;
         _float directionalLightShadowDist = 200.f;
         _float shadowBias = 0.f;
+        _float softShadowLightSize = 5.f;
     };
 
 protected:
@@ -139,6 +140,7 @@ public:
     virtual void FixedUpdate();
     virtual void LateUpdateEditor();
     virtual void LateUpdate();
+    virtual void PrepareRender();
     virtual void Render_Editor();
     virtual void Render_Game();
     virtual void SceneRelease();
@@ -182,6 +184,7 @@ public:
     void Set_Ambient(const _float _value);
     void Set_DirectionalLightShadowDist(const _float _value);
     void Set_ShadwoBias(const _float _value);
+    void Set_SoftShadowLightSize(const _float _value);
 
     class CCamera* Get_Camera() const;
     CCamera* Get_Camera(const _int _index) const;
@@ -253,6 +256,7 @@ protected:
     ID3D11BlendState* m_pBlendingState, * m_pNoneBlendingState, * m_pUIBlendingState;
 
     vector<_matrix> m_vLightData;
+    vector<CGameObject*> m_vRenderSnapshot;
 
     _float m_fPssedTime;
 

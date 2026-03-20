@@ -419,6 +419,7 @@ void CTopToolBar::ShowSceneSettingsWindow()
 		_float ambient = setting.ambient;
 		_float shadowDist = setting.directionalLightShadowDist;
 		_float shadowBias = setting.shadowBias;
+		_float softShadowLightSize = setting.softShadowLightSize;
 
 		ImGui::Text("Scene");
 		ImGui::Separator();
@@ -433,6 +434,9 @@ void CTopToolBar::ShowSceneSettingsWindow()
 
 		if (ImGui::DragFloat("Shadow Bias", &shadowBias, 0.0001f, 0.f, 1.f, "%.4f"))
 			currentScene->Set_ShadwoBias(shadowBias);
+
+		if (ImGui::DragFloat("Soft Shadow Light Size", &softShadowLightSize, 0.1f, 0.f, 50.f, "%.1f"))
+			currentScene->Set_SoftShadowLightSize(softShadowLightSize);
 
 		ImGui::Spacing();
 		if (ImGui::Button("Save"))

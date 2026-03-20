@@ -875,7 +875,7 @@ _bool CCamera::TryBuildRendererWorldAABB(CRenderer* _renderer, RendererBoundsCac
 	}
 
 	_float4x4 worldMatrix = {};
-	XMStoreFloat4x4(&worldMatrix, _renderer->GetTransform()->Get_WorldMatrix());
+	XMStoreFloat4x4(&worldMatrix, _renderer->GetTransform()->GetSnapshotWorldMatrix());
 
 	if (_cache.valid && _cache.meshBuffer == meshBuffer && IsSameWorldMatrix(_cache.worldMatrix, worldMatrix))
 	{
@@ -1841,6 +1841,7 @@ void CCamera::RenderLightingCombined(const D3D11_VIEWPORT* vp)
 		const _float shadowSize = (_float)CSceneManager::GetInstance().Get_LightSetting().shadowMapSize;
 		scb.invShadowMapSize = _float2(1.0f / shadowSize, 1.0f / shadowSize);
 		scb.bias = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().shadowBias;
+		scb.lightSize = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().softShadowLightSize;
 	}
 	ctx->UpdateSubresource(m_pShadowCB, 0, nullptr, &scb, 0, 0);
 	ctx->PSSetConstantBuffers(6, 1, &m_pShadowCB);
@@ -2466,6 +2467,7 @@ void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 	scb.invShadowMapSize = _float2(1.0f / shadowSize, 1.0f / shadowSize);
 
 	scb.bias = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().shadowBias;
+	scb.lightSize = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().softShadowLightSize;
 
 	ctx->UpdateSubresource(m_pShadowCB, 0, nullptr, &scb, 0, 0);
 	ctx->PSSetConstantBuffers(6, 1, &m_pShadowCB);

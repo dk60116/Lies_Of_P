@@ -28,6 +28,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <unordered_map>
+#include "JobSystem.h"
 #include <unordered_set>
 
 namespace
@@ -846,6 +847,57 @@ void CScene::LateUpdate()
 	}
 }
 
+void CScene::PrepareRender()
+{
+	for (TRAVERSAL_ITER(m_lObjectList, it))
+	{
+		if ((*it)->IsRecursiveActive())
+			(*it)->GetTransform()->SnapshotWorldMatrix();
+	}
+
+	m_vRenderSnapshot.clear();
+	for (TRAVERSAL_ITER(m_lObjectList, it))
+	{
+		if ((*it)->IsActive())
+			m_vRenderSnapshot.push_back(*it);
+	}
+
+	m_vLightData.clear();
+	const _uint maxLightCount = 63u;
+	vector<_float4x4> lightInfos;
+	lightInfos.reserve(min<_uint>(static_cast<_uint>(m_lLightList.size()), maxLightCount));
+	for (CLight* light : m_lLightList)
+	{
+		if (!light)
+			continue;
+		if (lightInfos.size() >= maxLightCount)
+			break;
+		lightInfos.push_back(light->To_LightInfo());
+	}
+	_float4x4 lightMeta = {};
+	lightMeta._44 = static_cast<_float>(lightInfos.size());
+	m_vLightData.push_back(XMLoadFloat4x4(&lightMeta));
+	for (auto& lightInfo : lightInfos)
+		m_vLightData.push_back(XMLoadFloat4x4(&lightInfo));
+
+	vector<CSkinnedMeshRenderer*> skinnedRenderers;
+	for (CGameObject* obj : m_vRenderSnapshot)
+	{
+		CSkinnedMeshRenderer* smr = obj->GetComponent<CSkinnedMeshRenderer>();
+		if (smr)
+			skinnedRenderers.push_back(smr);
+	}
+
+	for (CSkinnedMeshRenderer* smr : skinnedRenderers)
+		smr->EnsureSkinningCacheEntry();
+
+	CJobSystem& jobSystem = CJobSystem::GetInstance();
+	for (CSkinnedMeshRenderer* smr : skinnedRenderers)
+		jobSystem.Schedule([smr] { smr->ComputeSkinning(); });
+
+	jobSystem.WaitAll();
+}
+
 void CScene::Render_Editor()
 {
 #ifndef _CLIENT_BUILD
@@ -960,37 +1012,13 @@ void CScene::Render_Editor()
 
 void CScene::Render_Game()
 {
-	m_vLightData.clear();
-	const _uint maxLightCount = 63u;
-	vector<_float4x4> lightInfos = {};
-	lightInfos.reserve(min<_uint>(static_cast<_uint>(m_lLightList.size()), maxLightCount));
-
-	for (TRAVERSAL_ITER(m_lLightList, it))
-	{
-		if (!(*it))
-			continue;
-
-		if (lightInfos.size() >= maxLightCount)
-			break;
-
-		lightInfos.push_back((*it)->To_LightInfo());
-	}
-
-	_float4x4 lightMeta = {};
-	lightMeta._44 = static_cast<_float>(lightInfos.size());
-	m_vLightData.push_back(XMLoadFloat4x4(&lightMeta));
-
-	for (auto& lightInfo : lightInfos)
-		m_vLightData.push_back(XMLoadFloat4x4(&lightInfo));
-
 	CGraphicDevice::GetInstance().Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
 	ColorValue initialBackgroundColor = ColorValue::black();
 	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&initialBackgroundColor);
 	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
-	for (TRAVERSAL_ITER(m_lObjectList, it))
-		if ((*it)->IsActive())
-			(*it)->Render();
+	for (CGameObject* obj : m_vRenderSnapshot)
+		obj->Render();
 
 	for (TRAVERSAL_ITER(m_lCameraList, it)) 
 		(*it)->OnPreCull();
@@ -1073,8 +1101,8 @@ void CScene::Render_Game()
 		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
 			(*it)->RenderRTDebugDisplay(false);
 
-	for (TRAVERSAL_ITER(m_lObjectList, it))
-		(*it)->OnPostRender();
+	for (CGameObject* obj : m_vRenderSnapshot)
+		obj->OnPostRender();
 
 	m_pContext->OMSetBlendState(nullptr, uiBlendFactor, 0xFFFFFFFF);
 }
@@ -2795,6 +2823,11 @@ void CScene::Set_ShadwoBias(const _float _value)
 	m_sEnviromentSettings.shadowBias = _value;
 }
 
+void CScene::Set_SoftShadowLightSize(const _float _value)
+{
+	m_sEnviromentSettings.softShadowLightSize = _value;
+}
+
 CCamera* CScene::Get_Camera() const
 {
 	if (m_lCameraList.size() <= 0)
@@ -2962,6 +2995,7 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 	string sceneAmbientLine = "SceneAmbient : " + to_string(m_sEnviromentSettings.ambient);
 	string sceneDirectionalLightShadowDistLine = "SceneDirectionalLightShadowDist : " + to_string(m_sEnviromentSettings.directionalLightShadowDist);
 	string sceneShadowBiasLine = "SceneShadowBias : " + to_string(m_sEnviromentSettings.shadowBias);
+	string sceneSoftShadowLightSizeLine = "SceneSoftShadowLightSize : " + to_string(m_sEnviromentSettings.softShadowLightSize);
 	vector<string> preservedManualLines;
 	unordered_map<wstring, SceneResourceEntry> previousEntries;
 	unordered_set<wstring> previousNonEditorClipPaths;
@@ -2990,7 +3024,7 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 			}
 
 
-			if (key == "SceneSkyBox" || key == "SceneAmbient" || key == "SceneDirectionalLightShadowDist" || key == "SceneShadowBias")
+			if (key == "SceneSkyBox" || key == "SceneAmbient" || key == "SceneDirectionalLightShadowDist" || key == "SceneShadowBias" || key == "SceneSoftShadowLightSize")
 			{
 				continue;
 			}
@@ -3171,6 +3205,7 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 	out << sceneAmbientLine << "\n";
 	out << sceneDirectionalLightShadowDistLine << "\n";
 	out << sceneShadowBiasLine << "\n";
+	out << sceneSoftShadowLightSizeLine << "\n";
 	for (const auto& preservedLine : preservedManualLines)
 		out << preservedLine << "\n";
 	for (const auto& entry : sortedEntries)
@@ -3378,6 +3413,12 @@ HRESULT CScene::PreLoadResources()
 			if (name == "SceneShadowBias")
 			{
 				try { m_sEnviromentSettings.shadowBias = stof(filepath); } catch (...) {}
+				continue;
+			}
+
+			if (name == "SceneSoftShadowLightSize")
+			{
+				try { m_sEnviromentSettings.softShadowLightSize = stof(filepath); } catch (...) {}
 				continue;
 			}
 

@@ -1192,11 +1192,7 @@ HRESULT CResources::ConvertOTFTTFToSpriteFont(const wstring _filePath)
 
 	const vector<uint8_t> pixels = BuildFontTexture(glyphs, textureWidth, textureHeight);
 
-	wchar_t exeDir[MAX_PATH] = {};
-	GetModuleFileNameW(nullptr, exeDir, MAX_PATH);
-	PathRemoveFileSpecW(exeDir);
-
-	const fs::path outputDir = fs::path(exeDir) / L"BinaryAssets" / L"FontData";
+	const fs::path outputDir = fs::path(L"BinaryAssets/FontData");
 	error_code createDirError;
 	fs::create_directories(outputDir, createDirError);
 	if (createDirError)

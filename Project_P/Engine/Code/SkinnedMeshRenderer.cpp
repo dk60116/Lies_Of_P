@@ -297,14 +297,14 @@ uint64_t CSkinnedMeshRenderer::ComputeSkinningPoseHash(_uint _boneCount) const
 
 	_float4x4 meshWorld = {};
 	if (m_pGameObject && m_pGameObject->GetTransform())
-		XMStoreFloat4x4(&meshWorld, m_pGameObject->GetTransform()->Get_WorldMatrix());
+		XMStoreFloat4x4(&meshWorld, m_pGameObject->GetTransform()->GetSnapshotWorldMatrix());
 	hashBytes(&meshWorld, sizeof(meshWorld));
 
 	for (_uint i = 0; i < _boneCount; ++i)
 	{
 		_float4x4 boneWorld = {};
 		if (i < m_vBones.size() && m_vBones[i])
-			XMStoreFloat4x4(&boneWorld, m_vBones[i]->Get_WorldMatrix());
+			XMStoreFloat4x4(&boneWorld, m_vBones[i]->GetSnapshotWorldMatrix());
 		hashBytes(&boneWorld, sizeof(boneWorld));
 	}
 
@@ -415,7 +415,7 @@ _bool CSkinnedMeshRenderer::TryUpdateSkinningCache(_uint* _outBoneCount) const
 	_matrix meshWorldInv = XMMatrixIdentity();
 	if (meshTransform)
 	{
-		meshWorld = meshTransform->Get_WorldMatrix();
+		meshWorld = meshTransform->GetSnapshotWorldMatrix();
 		meshWorldInv = XMMatrixInverse(nullptr, meshWorld);
 	}
 
@@ -427,7 +427,7 @@ _bool CSkinnedMeshRenderer::TryUpdateSkinningCache(_uint* _outBoneCount) const
 		if (m_vBones[i])
 		{
 			const _matrix invBindPose = XMLoadFloat4x4(&m_pMeshBuffer->m_vBoneOffsetMatrices[i]);
-			const _matrix boneWorld = m_vBones[i]->Get_WorldMatrix();
+			const _matrix boneWorld = m_vBones[i]->GetSnapshotWorldMatrix();
 			const _matrix boneMeshLocal = boneWorld * meshWorldInv;
 			skinMatrix = invBindPose * boneMeshLocal;
 		}
@@ -564,7 +564,7 @@ _bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3&
 	}
 
 	CTransform* meshTransform = (m_pGameObject) ? m_pGameObject->GetTransform() : nullptr;
-	const _matrix meshWorld = meshTransform ? meshTransform->Get_WorldMatrix() : XMMatrixIdentity();
+	const _matrix meshWorld = meshTransform ? meshTransform->GetSnapshotWorldMatrix() : XMMatrixIdentity();
 	_float4x4 meshWorldMatrix = {};
 	XMStoreFloat4x4(&meshWorldMatrix, meshWorld);
 
@@ -573,12 +573,14 @@ _bool CSkinnedMeshRenderer::TryGetAnimatedWorldBounds(_float3& _outMin, _float3&
 		|| !cache.meshWorldMatrixValid
 		|| !IsSameFloat4x4(cache.cachedMeshWorldMatrix, meshWorldMatrix))
 	{
-		BuildWorldBoundsFromLocalAABB(
+		BuildWorldBoundsFromLocalAABB
+		(
 			cache.cachedAnimatedLocalBoundsMin,
 			cache.cachedAnimatedLocalBoundsMax,
 			meshWorld,
 			cache.cachedAnimatedWorldBoundsMin,
-			cache.cachedAnimatedWorldBoundsMax);
+			cache.cachedAnimatedWorldBoundsMax
+		);
 		cache.cachedWorldBoundsPoseVersion = cache.skinningPoseVersion;
 		cache.cachedMeshWorldMatrix = meshWorldMatrix;
 		cache.meshWorldMatrixValid = true;
@@ -649,7 +651,7 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 	vector3 cPos = _cam->GetTransform()->Get_Position();
 	const _float3 camPos = cPos.toFloat3();
 
-	const _matrix matWorld = m_pGameObject->GetTransform()->Get_WorldMatrix();
+	const _matrix matWorld = m_pGameObject->GetTransform()->GetSnapshotWorldMatrix();
 	const _matrix matView = _cam->GetViewMatrix();
 	const _matrix matProj = _cam->GetProjectionMatrix();
 
@@ -703,7 +705,7 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 		return;
 	}
 
-	const _matrix matWorld = m_pGameObject->GetTransform()->Get_WorldMatrix();
+	const _matrix matWorld = m_pGameObject->GetTransform()->GetSnapshotWorldMatrix();
 	const _matrix matView = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.view));
 	const _matrix matProj = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.proj));
 
@@ -815,6 +817,16 @@ void CSkinnedMeshRenderer::AddRootBone(CTransform* _tf)
 const _float CSkinnedMeshRenderer::GetScaleFactor() const
 {
 	return m_pMeshBuffer->Get_ScaleFactor();
+}
+
+void CSkinnedMeshRenderer::EnsureSkinningCacheEntry() const
+{
+	GetSkinningRuntimeCache(this);
+}
+
+void CSkinnedMeshRenderer::ComputeSkinning() const
+{
+	TryUpdateSkinningCache(nullptr);
 }
 
 

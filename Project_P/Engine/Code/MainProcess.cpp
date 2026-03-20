@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "MainProcess.h"
+#include "JobSystem.h"
 
 CMainProcess::CMainProcess()
 {
@@ -105,21 +106,25 @@ void CMainProcess::Update_MainApp()
 			scene->LateUpdateEditor();
 		}
 
-		graphicDev.Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
-		scene->Render_Game();
-        graphicDev.Present();
+		CRenderThread::GetInstance().WaitIdle();
+		scene->EndFrame();
 
-        scene->EndFrame();
+		scene->PrepareRender();
+
+		CRenderThread::GetInstance().Submit([scene, &graphicDev]
+		{
+			scene->Render_Game();
+			graphicDev.Present();
+		});
 
 #ifndef _CLIENT_BUILD
-        graphicDev.Set_RenderTarget(CEditor::GetInstance().Get_EditorWindow());
-
-        CEditor::GetInstance().Editor_Update_Begin();
-        CEditor::GetInstance().Editor_Update_During();
-        scene->Render_Editor();
-        CEditor::GetInstance().Editor_Update_End();
-
-        graphicDev.Present();
+		CRenderThread::GetInstance().WaitIdle();
+		graphicDev.Set_RenderTarget(CEditor::GetInstance().Get_EditorWindow());
+		CEditor::GetInstance().Editor_Update_Begin();
+		CEditor::GetInstance().Editor_Update_During();
+		scene->Render_Editor();
+		CEditor::GetInstance().Editor_Update_End();
+		graphicDev.Present();
 #endif
     }
 

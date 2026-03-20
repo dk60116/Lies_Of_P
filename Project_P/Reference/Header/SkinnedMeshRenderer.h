@@ -52,6 +52,8 @@ public:
 
 public:
 	const _float GetScaleFactor() const override;
+	void EnsureSkinningCacheEntry() const;
+	void ComputeSkinning() const;
 
 private:
 	uint64_t ComputeSkinningPoseHash(_uint _boneCount) const;

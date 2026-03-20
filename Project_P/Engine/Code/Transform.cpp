@@ -16,6 +16,7 @@ CTransform::CTransform()
     , m_vMatWorld()
     , m_vMatLocal()
     , m_vMatLocalRotation()
+    , m_vSnapshotWorld()
     , m_vPrevPosition({})
     , m_vPrevEulerAngles({})
     , m_vPrevLoclaPos({})
@@ -365,6 +366,16 @@ const _matrix CTransform::Get_WorldMatrix() const
     _matrix mat = XMLoadFloat4x4(&m_vMatWorld);
 
     return mat;
+}
+
+const _matrix CTransform::GetSnapshotWorldMatrix() const
+{
+    return XMLoadFloat4x4(&m_vSnapshotWorld);
+}
+
+void CTransform::SnapshotWorldMatrix()
+{
+    m_vSnapshotWorld = m_vMatWorld;
 }
 
 const _matrix CTransform::Get_LocalMatrix() const
@@ -824,6 +835,7 @@ void CTransform::Bind_Matrix()
         worldMat = matWorldF;
 
     XMStoreFloat4x4(&m_vMatWorld, worldMat);
+    m_vSnapshotWorld = m_vMatWorld;
 
     m_vWorldPosition = vector3(m_vMatWorld._41, m_vMatWorld._42, m_vMatWorld._43);
 

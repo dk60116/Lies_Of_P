@@ -66,10 +66,7 @@ static _bool DirectoryMatchesQuery(const fs::path& dir, const string& query)
 }
 
 CProjectBox::CProjectBox()
-	: m_strCurrentSelectedFilePath("")
-	, m_strPendingDeletePath("")
-	, m_bRequestDelete(false)
-	, m_bPendingDeleteIsDirectory(false)
+	: m_bRequestDelete(false)
 	, m_createTargetDir("")
 	, m_bRequestCreateAC(false)
 	, m_newACName({})
@@ -131,6 +128,9 @@ void CProjectBox::Render()
         ImGuiWindowFlags_HorizontalScrollbar
 	);
 
+	m_vFlatVisibleFiles = std::move(m_vFlatVisibleFilesBuilding);
+	m_vFlatVisibleFilesBuilding.clear();
+
 	ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.f);
 
     ImGui::Text("Search");
@@ -140,18 +140,20 @@ void CProjectBox::Render()
 
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
         ImGui::IsKeyPressed(ImGuiKey_Delete, false) &&
-        !m_strCurrentSelectedFilePath.empty())
+        !m_vSelectedPaths.empty())
     {
-        error_code deleteTargetEc;
-        if (fs::exists(m_strCurrentSelectedFilePath, deleteTargetEc) && !deleteTargetEc)
+        m_vPendingDeletePaths.clear();
+        for (const string& p : m_vSelectedPaths)
         {
-            m_strPendingDeletePath = m_strCurrentSelectedFilePath;
-            m_bPendingDeleteIsDirectory = fs::is_directory(m_strCurrentSelectedFilePath, deleteTargetEc);
-            m_bRequestDelete = true;
+            error_code ec;
+            if (fs::exists(p, ec) && !ec)
+                m_vPendingDeletePaths.push_back(p);
         }
+        if (!m_vPendingDeletePaths.empty())
+            m_bRequestDelete = true;
         else
         {
-            m_strCurrentSelectedFilePath.clear();
+            m_vSelectedPaths.clear();
             CEditor::GetInstance().Set_SelectedAssetPath(fs::path());
         }
     }
@@ -169,37 +171,44 @@ void CProjectBox::Render()
 
 	if (ImGui::BeginPopupModal("ConfirmDeletePopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
-		ImGui::Text(m_bPendingDeleteIsDirectory
-			? "Are you sure you want to delete this folder and its contents?"
-			: "Are you sure you want to delete this file?");
+		if (m_vPendingDeletePaths.size() == 1)
+		{
+			error_code ec;
+			const bool isDir = fs::is_directory(m_vPendingDeletePaths[0], ec);
+			ImGui::Text(isDir
+				? "Are you sure you want to delete this folder and its contents?"
+				: "Are you sure you want to delete this file?");
+		}
+		else
+		{
+			ImGui::Text("Are you sure you want to delete %d items?", (int)m_vPendingDeletePaths.size());
+		}
 		ImGui::Separator();
 
 		if (ImGui::Button("Yes", ImVec2(120, 0)))
-        {
-            error_code ec;
-            if (m_bPendingDeleteIsDirectory)
-                fs::remove_all(m_strPendingDeletePath, ec);
-            else
-                fs::remove(m_strPendingDeletePath, ec);
+		{
+			for (const string& p : m_vPendingDeletePaths)
+			{
+				error_code ec;
+				if (fs::is_directory(p, ec))
+					fs::remove_all(p, ec);
+				else
+					fs::remove(p, ec);
 
-            const fs::path deletedPath = m_strPendingDeletePath;
-            if (ec)
-                CDebug::LogError(L"Delete failed: " + deletedPath.wstring());
-            else if (m_strCurrentSelectedFilePath == deletedPath)
-            {
-                m_strCurrentSelectedFilePath.clear();
-                CEditor::GetInstance().Set_SelectedAssetPath(fs::path());
-            }
-
-            m_strPendingDeletePath.clear();
-			m_bPendingDeleteIsDirectory = false;
-            ImGui::CloseCurrentPopup();
+				if (ec)
+					CDebug::LogError(L"Delete failed: " + fs::path(p).wstring());
+				else
+					m_vSelectedPaths.erase(p);
+			}
+			m_vPendingDeletePaths.clear();
+			if (m_vSelectedPaths.empty())
+				CEditor::GetInstance().Set_SelectedAssetPath(fs::path());
+			ImGui::CloseCurrentPopup();
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("No", ImVec2(120, 0)))
 		{
-			m_strPendingDeletePath.clear();
-			m_bPendingDeleteIsDirectory = false;
+			m_vPendingDeletePaths.clear();
 			ImGui::CloseCurrentPopup();
 		}
 
@@ -276,8 +285,8 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 		}
 		else if (ImGui::MenuItem("Delete"))
 		{
-			m_strPendingDeletePath = _dirPath.string();
-			m_bPendingDeleteIsDirectory = true;
+			m_vPendingDeletePaths.clear();
+			m_vPendingDeletePaths.push_back(_dirPath.string());
 			m_bRequestDelete = true;
 		}
 
@@ -298,11 +307,48 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                 if (!ContainsCaseInsensitive(filename, query))
                     continue;
                 string buttonId = filename + "##" + entry.path().string();
+                const string pathStr = entry.path().string();
 
-                _bool isSelected = (m_strCurrentSelectedFilePath == entry.path().string());
+                m_vFlatVisibleFilesBuilding.push_back(pathStr);
+
+                _bool isSelected = m_vSelectedPaths.count(pathStr) > 0;
                 if (ImGui::Selectable(buttonId.c_str(), isSelected))
                 {
-                    m_strCurrentSelectedFilePath = entry.path().string();
+                    const bool shiftHeld = ImGui::GetIO().KeyShift;
+                    const bool ctrlHeld = ImGui::GetIO().KeyCtrl;
+
+                    if (shiftHeld && !m_strLastClickedPath.empty())
+                    {
+                        auto itA = std::find(m_vFlatVisibleFiles.begin(), m_vFlatVisibleFiles.end(), m_strLastClickedPath);
+                        auto itB = std::find(m_vFlatVisibleFiles.begin(), m_vFlatVisibleFiles.end(), pathStr);
+                        if (itA != m_vFlatVisibleFiles.end() && itB != m_vFlatVisibleFiles.end())
+                        {
+                            if (itA > itB) std::swap(itA, itB);
+                            m_vSelectedPaths.clear();
+                            for (auto it = itA; it != itB + 1; ++it)
+                                m_vSelectedPaths.insert(*it);
+                        }
+                        else
+                        {
+                            m_vSelectedPaths.clear();
+                            m_vSelectedPaths.insert(pathStr);
+                            m_strLastClickedPath = pathStr;
+                        }
+                    }
+                    else if (ctrlHeld)
+                    {
+                        if (isSelected)
+                            m_vSelectedPaths.erase(pathStr);
+                        else
+                            m_vSelectedPaths.insert(pathStr);
+                        m_strLastClickedPath = pathStr;
+                    }
+                    else
+                    {
+                        m_vSelectedPaths.clear();
+                        m_vSelectedPaths.insert(pathStr);
+                        m_strLastClickedPath = pathStr;
+                    }
                     CEditor::GetInstance().Set_SelectedAssetPath(entry.path());
                 }
 
@@ -323,6 +369,46 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                     const string fileName = splitName[0];
                     const string extension = splitName.size() > 1 ? splitName[1] : "";
 
+                    const bool isMultiContext = m_vSelectedPaths.count(pathStr) > 0 && m_vSelectedPaths.size() > 1;
+
+                    auto GetTargets = [&](auto extPred) -> vector<string>
+                    {
+                        if (!isMultiContext)
+                            return { pathStr };
+                        vector<string> result;
+                        for (const string& p : m_vSelectedPaths)
+                        {
+                            string pExt = ToLowerCopy(fs::path(p).extension().string());
+                            if (!pExt.empty()) pExt = pExt.substr(1);
+                            if (extPred(pExt))
+                                result.push_back(p);
+                        }
+                        return result;
+                    };
+
+                    auto BatchConvert = [](const vector<string>& targets, const string& label, auto convertFn)
+                    {
+                        const int total = (int)targets.size();
+                        if (total > 1)
+                            CDebug::Log("[Batch:" + label + "] Starting " + to_string(total) + " files");
+
+                        int succeeded = 0;
+                        for (int i = 0; i < total; ++i)
+                        {
+                            const string fname = fs::path(targets[i]).filename().string();
+                            if (total > 1)
+                                CDebug::Log("[" + to_string(i + 1) + "/" + to_string(total) + "] " + fname);
+
+                            if (SUCCEEDED(convertFn(targets[i])))
+                                ++succeeded;
+                            else
+                                CDebug::LogError("[" + to_string(i + 1) + "/" + to_string(total) + "] Failed: " + fname);
+                        }
+
+                        if (total > 1)
+                            CDebug::Log("[Batch:" + label + "] Done " + to_string(succeeded) + "/" + to_string(total));
+                    };
+
                     if (ImGui::Selectable("Log info"))
                     {
                         uintmax_t sizeInBytes = fs::file_size(entry.path());
@@ -340,55 +426,99 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                     if (extension == "animatorcontroller")
                     {
                         if (ImGui::Selectable("Open"))
-                        {
                             CEditor::GetInstance().OpenAnimatorController(entry.path());
-                        }
 
                         if (ImGui::Selectable("Build Binary"))
                         {
-                            wstring rel = entry.path().wstring();
-                            rel = CEngineString::Erase(rel, L"../Assets\\");
-                            rel = CEngineString::Replace(rel, L"\\", L"/");
-
-                            CResources::GetInstance().ConvertAnimatorControllerToBinary(rel);
+                            BatchConvert(
+                                GetTargets([](const string& e) { return e == "animatorcontroller"; }),
+                                "Build Binary",
+                                [](const string& t) {
+                                    wstring rel = fs::path(t).wstring();
+                                    rel = CEngineString::Erase(rel, L"../Assets\\");
+                                    rel = CEngineString::Replace(rel, L"\\", L"/");
+                                    return CResources::GetInstance().ConvertAnimatorControllerToBinary(rel);
+                                }
+                            );
                         }
                     }
 
                     if (extension == "fbx")
                     {
-                        wstring rel = entry.path().wstring();
-                        rel = CEngineString::Erase(rel, L"../Assets\\");
-                        rel = CEngineString::Replace(rel, L"\\", L"/");
+                        auto fbxPred = [](const string& e) { return e == "fbx"; };
+
+                        auto fbxConvertRel = [](const string& t) -> wstring {
+                            wstring rel = fs::path(t).wstring();
+                            rel = CEngineString::Erase(rel, L"../Assets\\");
+                            rel = CEngineString::Replace(rel, L"\\", L"/");
+                            return rel;
+                        };
 
                         if (ImGui::Selectable("Create Mesh Data"))
-                            CResources::GetInstance().ConvertFBXToMeshBufferData(rel);
+                        {
+                            BatchConvert(GetTargets(fbxPred), "Mesh Data", [&](const string& t) {
+                                return CResources::GetInstance().ConvertFBXToMeshBufferData(fbxConvertRel(t));
+                            });
+                        }
 
                         if (ImGui::Selectable("Create Skinned Data"))
-                            CResources::GetInstance().ConvertFBXToSkinnedBufferData(rel);
+                        {
+                            BatchConvert(GetTargets(fbxPred), "Skinned Data", [&](const string& t) {
+                                return CResources::GetInstance().ConvertFBXToSkinnedBufferData(fbxConvertRel(t));
+                            });
+                        }
 
                         if (ImGui::Selectable("Create Animation Data"))
-                            CResources::GetInstance().ConvertFBXToAnimationClipData(rel);
+                        {
+                            BatchConvert(GetTargets(fbxPred), "Animation Data", [&](const string& t) {
+                                return CResources::GetInstance().ConvertFBXToAnimationClipData(fbxConvertRel(t));
+                            });
+                        }
                     }
 
                     if (extension == "ttf" || extension == "otf")
                     {
-                        wstring pathW = entry.path().wstring();
                         if (ImGui::Selectable("Create Font Data"))
-                            CResources::GetInstance().ConvertOTFTTFToSpriteFont(pathW);
+                        {
+                            BatchConvert(
+                                GetTargets([](const string& e) { return e == "ttf" || e == "otf"; }),
+                                "Font Data",
+                                [](const string& t) {
+                                    return CResources::GetInstance().ConvertOTFTTFToSpriteFont(fs::path(t).wstring());
+                                }
+                            );
+                        }
                     }
 
                     if (extension == "png" || extension == "jpg" || extension == "jpeg" || extension == "bmp" || extension == "tga" || extension == "tif" || extension == "tiff")
                     {
-                        wstring pathW = entry.path().wstring();
                         if (ImGui::Selectable("Create Texture Data"))
-                            CResources::GetInstance().ConvertImageToDDS(pathW);
+                        {
+                            BatchConvert(
+                                GetTargets([](const string& e) {
+                                    return e == "png" || e == "jpg" || e == "jpeg" || e == "bmp" || e == "tga" || e == "tif" || e == "tiff";
+                                }),
+                                "Texture Data",
+                                [](const string& t) {
+                                    return CResources::GetInstance().ConvertImageToDDS(fs::path(t).wstring());
+                                }
+                            );
+                        }
                     }
 
                     if (ImGui::Selectable("Delete"))
                     {
-                        m_strPendingDeletePath = entry.path().string();
+                        m_vPendingDeletePaths.clear();
+                        if (isMultiContext)
+                        {
+                            for (const string& p : m_vSelectedPaths)
+                                m_vPendingDeletePaths.push_back(p);
+                        }
+                        else
+                        {
+                            m_vPendingDeletePaths.push_back(pathStr);
+                        }
                         m_bRequestDelete = true;
-						m_bPendingDeleteIsDirectory = false;
                     }
 
                     ImGui::EndPopup();
@@ -513,7 +643,9 @@ void CProjectBox::CreateAnimatorControllerFile(const fs::path& dir, const string
     ofs.write(text.data(), (streamsize)text.size());
     ofs.close();
 
-    m_strCurrentSelectedFilePath = outPath.string();
+    m_vSelectedPaths.clear();
+    m_vSelectedPaths.insert(outPath.string());
+    m_strLastClickedPath = outPath.string();
     CEditor::GetInstance().Set_SelectedAssetPath(outPath);
 
     CDebug::Log("Created AnimatorController: " + outPath.string());
@@ -539,7 +671,9 @@ void CProjectBox::CreateFolder(const fs::path& dir, const string& name)
 		return;
 	}
 
-	m_strCurrentSelectedFilePath = outPath.string();
+	m_vSelectedPaths.clear();
+	m_vSelectedPaths.insert(outPath.string());
+	m_strLastClickedPath = outPath.string();
 	CEditor::GetInstance().Set_SelectedAssetPath(outPath);
 
 	CDebug::Log("Created Folder: " + outPath.string());

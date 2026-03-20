@@ -52,6 +52,8 @@ public:
 	const _matrix Get_WorldMatrix() const;
 	const _matrix Get_LocalMatrix() const;
 	const _matrix Get_InverseWorldMatrix() const;
+	const _matrix GetSnapshotWorldMatrix() const;
+	void SnapshotWorldMatrix();
 
 public:
 	template <typename T>
@@ -167,6 +169,7 @@ protected:
 	quaternion m_vQuaternion, m_vWorldQuaternion;
 	quaternion m_vPrevQuaternion, m_vPrevLocalQuat;
 	_float4x4 m_vMatWorld, m_vMatLocal, m_vMatLocalRotation;
+	_float4x4 m_vSnapshotWorld;
 	vector3 m_vPrevPosition, m_vPrevEulerAngles;
 	vector3 m_vPrevLoclaPos, m_vPrevLocalEuler, m_vPrevLocalScale;
 	DIRECTIONS m_sDirections, m_sPrevDirections;

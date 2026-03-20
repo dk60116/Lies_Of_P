@@ -33,6 +33,6 @@ PhysicsLayerCollision28=4294967295
 PhysicsLayerCollision29=4294967295
 PhysicsLayerCollision30=4294967295
 PhysicsLayerCollision31=4294967295
-LightShadowQuality=2
+LightShadowQuality=3
 Tag=PlayerBody
 Tag=MonsterBody

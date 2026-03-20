@@ -20,12 +20,12 @@ cbuffer InvViewProjCB : register(b5)
 cbuffer ShadowCB : register(b6)
 {
     float4x4 gShadowViewProj;
-    float2 gShadowInvMapSize; 
+    float2 gShadowInvMapSize;
     float gShadowBias;
-    float _padShadow0;
+    float gLightSize;
 };
 
-Texture2D<float> gSceneDepth : register(t0); 
+Texture2D<float> gSceneDepth : register(t0);
 Texture2D<float> gShadowDepth : register(t1);
 SamplerState gSampler : register(s0);
 
@@ -51,23 +51,77 @@ VSOut VSMain(VSIn v)
     return o;
 }
 
-float SampleShadowPCF(float2 uv, float receiverDepth)
+static const float2 gPoissonDisk[16] =
+{
+    float2(-0.94201624f, -0.39906216f),
+    float2( 0.94558609f, -0.76890725f),
+    float2(-0.09418410f, -0.92938870f),
+    float2( 0.34495938f,  0.29387760f),
+    float2(-0.91588581f,  0.45771432f),
+    float2(-0.81544232f, -0.87912464f),
+    float2(-0.38277543f,  0.27676845f),
+    float2( 0.97484398f,  0.75648379f),
+    float2( 0.44323325f, -0.97511554f),
+    float2( 0.53742981f, -0.47373420f),
+    float2(-0.26496911f, -0.41893023f),
+    float2( 0.79197514f,  0.19090188f),
+    float2(-0.24188840f,  0.99706507f),
+    float2(-0.81409955f,  0.91437590f),
+    float2( 0.19984126f,  0.78641367f),
+    float2( 0.14383161f, -0.14100790f)
+};
+
+float FindBlockerDistance(float2 uv, float receiverDepth, float searchWidth)
+{
+    float blockerSum = 0.0f;
+    int numBlockers = 0;
+
+    [unroll]
+    for (int i = 0; i < 16; ++i)
+    {
+        float2 offset = gPoissonDisk[i] * searchWidth;
+        float sd = gShadowDepth.SampleLevel(gSampler, uv + offset, 0);
+        if (sd + gShadowBias < receiverDepth)
+        {
+            blockerSum += sd;
+            ++numBlockers;
+        }
+    }
+
+    if (numBlockers == 0)
+        return -1.0f;
+
+    return blockerSum / (float)numBlockers;
+}
+
+float PCF_Filter(float2 uv, float receiverDepth, float filterRadius)
 {
     float sum = 0.0f;
 
     [unroll]
-    for (int y = -1; y <= 1; ++y)
+    for (int i = 0; i < 16; ++i)
     {
-        [unroll]
-        for (int x = -1; x <= 1; ++x)
-        {
-            float2 duv = float2(x, y) * gShadowInvMapSize;
-            float sd = gShadowDepth.SampleLevel(gSampler, uv + duv, 0);
-
-            sum += (sd + gShadowBias < receiverDepth) ? 0.0f : 1.0f;
-        }
+        float2 offset = gPoissonDisk[i] * filterRadius;
+        float sd = gShadowDepth.SampleLevel(gSampler, uv + offset, 0);
+        sum += (sd + gShadowBias < receiverDepth) ? 0.0f : 1.0f;
     }
-    return sum / 9.0f;
+
+    return sum / 16.0f;
+}
+
+float PCSS(float2 uv, float receiverDepth)
+{
+    float searchWidth = gLightSize * gShadowInvMapSize.x;
+    float avgBlockerDepth = FindBlockerDistance(uv, receiverDepth, searchWidth);
+
+    if (avgBlockerDepth < 0.0f)
+        return 1.0f;
+
+    float penumbraRatio = (receiverDepth - avgBlockerDepth) / avgBlockerDepth;
+    float filterRadius = penumbraRatio * gLightSize * gShadowInvMapSize.x;
+    filterRadius = clamp(filterRadius, gShadowInvMapSize.x, gShadowInvMapSize.x * 64.0f);
+
+    return PCF_Filter(uv, receiverDepth, filterRadius);
 }
 
 float4 PSMain(VSOut i) : SV_Target
@@ -76,12 +130,7 @@ float4 PSMain(VSOut i) : SV_Target
     uv.y = 1.0f - uv.y;
 
     float sceneDepth = gSceneDepth.SampleLevel(gSampler, uv, 0);
-    
-    //float d = gShadowDepth.SampleLevel(gSampler, uv, 0);
 
-    //float v = saturate((1.0f - d));
-    //return float4(v, v, v, 1);
-    
     if (sceneDepth >= 0.999999f)
         return float4(1, 1, 1, 1);
 
@@ -102,6 +151,6 @@ float4 PSMain(VSOut i) : SV_Target
     if (uvL.x < 0 || uvL.x > 1 || uvL.y < 0 || uvL.y > 1 || depthL < 0 || depthL > 1)
         return float4(1, 1, 1, 1);
 
-    float lit = SampleShadowPCF(uvL, depthL);
+    float lit = PCSS(uvL, depthL);
     return float4(lit, lit, lit, 1.0f);
 }

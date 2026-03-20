@@ -108,7 +108,7 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 
 	vector3 cPos = _cam->GetTransform()->Get_Position();
 	_float3 camPos = cPos.toFloat3();
-	_matrix matWorld = GetTransform()->Get_WorldMatrix();
+	_matrix matWorld = GetTransform()->GetSnapshotWorldMatrix();
 	_matrix matView = _cam->GetViewMatrix();
 	_matrix matProj = _cam->GetProjectionMatrix();
 
@@ -146,7 +146,7 @@ void CMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const CLight:
 		return;
 
 	// World
-	_matrix matWorld = GetTransform()->Get_WorldMatrix();
+	_matrix matWorld = GetTransform()->GetSnapshotWorldMatrix();
 
 	// Light View/Proj (shadow matrices)
 	_matrix matView = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(&_shadowMatrix.view));

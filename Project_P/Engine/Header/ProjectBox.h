@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EditorBox.h"
+#include <unordered_set>
 
 NS_BEGIN(Engine)
 
@@ -31,10 +32,13 @@ private:
 	string MakeAnimatorControllerTemplateText(const string& controllerName);
 
 private:
-	fs::path m_strCurrentSelectedFilePath;
-	fs::path m_strPendingDeletePath;
+	unordered_set<string> m_vSelectedPaths;
+	string m_strLastClickedPath;
+	vector<string> m_vPendingDeletePaths;
 	_bool m_bRequestDelete;
-	_bool m_bPendingDeleteIsDirectory;
+
+	vector<string> m_vFlatVisibleFiles;
+	vector<string> m_vFlatVisibleFilesBuilding;
 
 	fs::path m_createTargetDir;
 	_bool m_bRequestCreateAC;
