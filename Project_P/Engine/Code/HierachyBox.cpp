@@ -125,6 +125,9 @@ void CHierachyBox::Render()
 	const CEditor::EDITORWINOPTION& editorOption = editor.Get_Options();
 	CScene* currentScene = CSceneManager::GetInstance().Get_CrtScene();
 
+	m_vFlatVisible = std::move(m_vFlatVisibleBuilding);
+	m_vFlatVisibleBuilding.clear();
+
 	_float width = static_cast<_float>(editorOption.hierachyWidth);
 
 	ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -151,6 +154,38 @@ void CHierachyBox::Render()
 
 	ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 6.f);
 
+	if (m_bRequestDelete && !m_pendingDeleteObjects.empty())
+	{
+		ImGui::OpenPopup("DeleteMultipleObjects");
+		m_bRequestDelete = false;
+	}
+
+	if (ImGui::BeginPopupModal("DeleteMultipleObjects", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text("Delete %d object(s)?", (int)m_pendingDeleteObjects.size());
+		ImGui::Separator();
+		if (ImGui::Button("Delete", ImVec2(100, 0)))
+		{
+			for (CGameObject* obj : m_pendingDeleteObjects)
+			{
+				if (editor.Get_SelectedGameObject() == obj)
+					editor.Set_SelectedGameObject(nullptr);
+				m_selectedObjects.erase(obj);
+				obj->Destroy();
+			}
+			m_pendingDeleteObjects.clear();
+			editor.Set_MultiSelectedObjects({});
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(100, 0)))
+		{
+			m_pendingDeleteObjects.clear();
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+
 	if (currentScene)
 	{
 		ImGui::InputTextWithHint("##HierarchySearch", "Search...", m_searchBuffer.data(), m_searchBuffer.size());
@@ -164,6 +199,15 @@ void CHierachyBox::Render()
 			m_lastSelectedGameObject = selectedObject;
 			m_scrollToSelected = selectedObject != nullptr;
 			m_openToSelected = editor.Consume_OpenSelectedInHierarchyRequest();
+		}
+
+		if (ImGui::IsKeyPressed(ImGuiKey_Delete, false) && ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
+		{
+			if (!m_selectedObjects.empty())
+			{
+				m_pendingDeleteObjects.assign(m_selectedObjects.begin(), m_selectedObjects.end());
+				m_bRequestDelete = true;
+			}
 		}
 
 		if (ImGui::BeginChild("HierarchyScrollRegion", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar))
@@ -210,7 +254,12 @@ void CHierachyBox::Render()
 			}
 
 			if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGui::GetDragDropPayload())
+			{
 				editor.Set_SelectedGameObject(nullptr);
+				m_selectedObjects.clear();
+				m_lastClickedObject = nullptr;
+				editor.Set_MultiSelectedObjects({});
+			}
 
 			if (ImGui::BeginPopupContextItem("HierarchyBlankContextMenu"))
 			{
@@ -373,13 +422,15 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filte
 
 	CEditor& editor = CEditor::GetInstance();
 	const _bool filterActive = !_filterLower.empty();
-	CGameObject* selectedObject = editor.Get_SelectedGameObject();
+	CGameObject* primarySelected = editor.Get_SelectedGameObject();
 
 	string name = CEngineString::WStringToString(_obj->Get_ObjectName());
 	const _bool matchesFilter = ObjectMatchesFilter(_obj, _filterLower);
 
 	if (filterActive && !matchesFilter)
 		return;
+
+	m_vFlatVisibleBuilding.push_back(_obj);
 
 	_bool hasChildren = !_obj->GetTransform()->Get_ChldList().empty();
 
@@ -388,10 +439,10 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filte
 	if (filterActive && hasChildren)
 		ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
-	if (m_openToSelected && !filterActive && selectedObject && (selectedObject == _obj || IsAncestorOfSelected(_obj, selectedObject)))
+	if (m_openToSelected && !filterActive && primarySelected && (primarySelected == _obj || IsAncestorOfSelected(_obj, primarySelected)))
 		ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
-	if (_obj == editor.Get_SelectedGameObject())
+	if (m_selectedObjects.count(_obj) > 0)
 		flags |= ImGuiTreeNodeFlags_Selected;
 
 	if (!hasChildren)
@@ -400,7 +451,43 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filte
 	_bool nodeOpen = ImGui::TreeNodeEx((name + "##" + to_string(reinterpret_cast<size_t>(_obj))).c_str(), flags);
 
 	if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-		editor.Set_SelectedGameObject(_obj);
+	{
+		const bool ctrlHeld  = ImGui::GetIO().KeyCtrl;
+		const bool shiftHeld = ImGui::GetIO().KeyShift;
+
+		if (shiftHeld && m_lastClickedObject)
+		{
+			auto itA = find(m_vFlatVisible.begin(), m_vFlatVisible.end(), m_lastClickedObject);
+			auto itB = find(m_vFlatVisible.begin(), m_vFlatVisible.end(), _obj);
+			if (itA != m_vFlatVisible.end() && itB != m_vFlatVisible.end())
+			{
+				if (itA > itB)
+					swap(itA, itB);
+				if (!ctrlHeld)
+					m_selectedObjects.clear();
+				for (auto it = itA; it <= itB; ++it)
+					m_selectedObjects.insert(*it);
+			}
+		}
+		else if (ctrlHeld)
+		{
+			if (m_selectedObjects.count(_obj) > 0)
+				m_selectedObjects.erase(_obj);
+			else
+				m_selectedObjects.insert(_obj);
+			m_lastClickedObject = _obj;
+		}
+		else
+		{
+			m_selectedObjects.clear();
+			m_selectedObjects.insert(_obj);
+			m_lastClickedObject = _obj;
+		}
+
+		CGameObject* primary = m_selectedObjects.empty() ? nullptr : _obj;
+		editor.Set_SelectedGameObject(primary);
+		editor.Set_MultiSelectedObjects(vector<CGameObject*>(m_selectedObjects.begin(), m_selectedObjects.end()));
+	}
 
 	if (ImGui::BeginDragDropSource())
 	{
@@ -441,21 +528,32 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filte
 			}
 		}
 
-		if (ImGui::MenuItem("Delete"))
-		{
-			if (editor.Get_SelectedGameObject() == _obj)
-				editor.Set_SelectedGameObject(nullptr);
+		const bool isMultiContext = m_selectedObjects.count(_obj) > 0 && m_selectedObjects.size() > 1;
+		const string deleteLabel = isMultiContext
+			? ("Delete " + to_string(m_selectedObjects.size()) + " Objects")
+			: "Delete";
 
-			_obj->Destroy();
+		if (ImGui::MenuItem(deleteLabel.c_str()))
+		{
+			if (isMultiContext)
+			{
+				m_pendingDeleteObjects.assign(m_selectedObjects.begin(), m_selectedObjects.end());
+				m_bRequestDelete = true;
+			}
+			else
+			{
+				if (editor.Get_SelectedGameObject() == _obj)
+					editor.Set_SelectedGameObject(nullptr);
+				m_selectedObjects.erase(_obj);
+				_obj->Destroy();
+			}
 			ImGui::EndPopup();
-			if (_obj == selectedObject)
-				m_scrollToSelected = false;
 			return;
 		}
 		ImGui::EndPopup();
 	}
 
-	if (_obj == selectedObject && m_scrollToSelected)
+	if (_obj == primarySelected && m_scrollToSelected)
 	{
 		ImGui::SetScrollHereY(0.35f);
 		m_scrollToSelected = false;
@@ -482,6 +580,3 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filte
 		ImGui::TreePop();
 	}
 }
-
-
-

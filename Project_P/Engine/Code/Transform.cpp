@@ -97,18 +97,15 @@ void CTransform::LateUpdate()
 
 void CTransform::Render_Gizmo()
 {
-    if (CEditor::GetInstance().Get_SelectedGameObject() != m_pGameObject)
+    CEditor& editor = CEditor::GetInstance();
+
+    if (editor.Get_SelectedGameObject() != m_pGameObject)
         return;
 
     CCamera* editorCam = CSceneManager::GetInstance().Get_CrtScene()->Get_EditorCamera();
 
     _matrix viewMatrix = editorCam->GetViewMatrix();
     _matrix projMatrix = editorCam->GetProjectionMatrix();
-
-    _matrix worldMatrix = XMLoadFloat4x4(&m_vMatWorld);
-
-    _float world[16];
-    memcpy(world, &worldMatrix, sizeof(float) * 16);
 
     _float view[16];
     memcpy(view, &viewMatrix, sizeof(float) * 16);
@@ -125,13 +122,7 @@ void CTransform::Render_Gizmo()
 
     if (vp)
     {
-        ImGuizmo::SetRect
-        (
-            vp->TopLeftX,
-            vp->TopLeftY,
-            vp->Width,
-            vp->Height
-        );
+        ImGuizmo::SetRect(vp->TopLeftX, vp->TopLeftY, vp->Width, vp->Height);
     }
     else
     {
@@ -141,9 +132,7 @@ void CTransform::Render_Gizmo()
 
     static ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;
 
-    CEditor& editor = CEditor::GetInstance();
     CEditor::TransformControleTool mode = editor.Get_ControleTool();
-
     if (mode == CEditor::TransformControleTool::MOVE)
         currentGizmoOperation = ImGuizmo::TRANSLATE;
     if (mode == CEditor::TransformControleTool::ROTATE)
@@ -154,18 +143,83 @@ void CTransform::Render_Gizmo()
     const _bool lockStaticGizmo = CSceneManager::GetInstance().IsPlaying() && m_pGameObject->IsStatic(CGameObject::STATIC_METHOD::TransformStatic);
     ImGuizmo::Enable(!lockStaticGizmo);
 
-    _bool manipulated = ImGuizmo::Manipulate
-    (
-        view,
-        projection,
-        currentGizmoOperation,
-        ImGuizmo::LOCAL,
-        world
-    );
+    const vector<CGameObject*>& multiSelected = editor.Get_MultiSelectedObjects();
+    const bool isMultiSelect = multiSelected.size() > 1;
+
+    _float world[16];
+
+    _matrix gizmoPrev;
+
+    if (isMultiSelect)
+    {
+        _float3 avgPos = { 0.f, 0.f, 0.f };
+        for (CGameObject* obj : multiSelected)
+        {
+            if (!obj || !obj->GetTransform()) continue;
+            const _float4x4& wm = obj->GetTransform()->m_vMatWorld;
+            avgPos.x += wm._41;
+            avgPos.y += wm._42;
+            avgPos.z += wm._43;
+        }
+        float count = (float)multiSelected.size();
+        avgPos.x /= count;
+        avgPos.y /= count;
+        avgPos.z /= count;
+
+        gizmoPrev = XMMatrixTranslation(avgPos.x, avgPos.y, avgPos.z);
+        memcpy(world, &gizmoPrev, sizeof(float) * 16);
+    }
+    else
+    {
+        gizmoPrev = XMLoadFloat4x4(&m_vMatWorld);
+        memcpy(world, &gizmoPrev, sizeof(float) * 16);
+    }
+
+    ImGuizmo::MODE gizmoMode = isMultiSelect ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
+
+    _bool manipulated = ImGuizmo::Manipulate(view, projection, currentGizmoOperation, gizmoMode, world);
 
     ImGuizmo::Enable(true);
 
-    if (manipulated)
+    if (!manipulated)
+        return;
+
+    if (isMultiSelect)
+    {
+        _matrix gizmoNext = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(world));
+        _matrix delta = XMMatrixMultiply(XMMatrixInverse(nullptr, gizmoPrev), gizmoNext);
+
+        for (CGameObject* obj : multiSelected)
+        {
+            if (!obj) continue;
+            CTransform* tr = obj->GetTransform();
+            if (!tr) continue;
+
+            _matrix objWorld = XMLoadFloat4x4(&tr->m_vMatWorld);
+            _matrix newObjWorld = XMMatrixMultiply(objWorld, delta);
+
+            if (CTransform* parent = tr->Get_Parent())
+            {
+                _matrix parentInv = XMMatrixInverse(nullptr, XMLoadFloat4x4(&parent->m_vMatWorld));
+                _matrix localMatrix = XMMatrixMultiply(newObjWorld, parentInv);
+
+                _vector S, R, T;
+                XMMatrixDecompose(&S, &R, &T, localMatrix);
+                XMStoreFloat3(reinterpret_cast<_float3*>(&tr->m_vScale), S);
+                XMStoreFloat4(reinterpret_cast<_float4*>(&tr->m_vQuaternion), R);
+                XMStoreFloat3(reinterpret_cast<_float3*>(&tr->m_vPosition), T);
+            }
+            else
+            {
+                _vector S, R, T;
+                XMMatrixDecompose(&S, &R, &T, newObjWorld);
+                XMStoreFloat3(reinterpret_cast<_float3*>(&tr->m_vScale), S);
+                XMStoreFloat4(reinterpret_cast<_float4*>(&tr->m_vQuaternion), R);
+                XMStoreFloat3(reinterpret_cast<_float3*>(&tr->m_vPosition), T);
+            }
+        }
+    }
+    else
     {
         _matrix newWorldMatrix = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(world));
 

@@ -4,6 +4,8 @@
 
 #include <array>
 #include <string>
+#include <unordered_set>
+#include <vector>
 
 NS_BEGIN(Engine)
 
@@ -34,6 +36,13 @@ private:
 	CGameObject* m_lastSelectedGameObject = nullptr;
 	bool m_scrollToSelected = false;
 	bool m_openToSelected = false;
+
+	std::unordered_set<CGameObject*> m_selectedObjects;
+	CGameObject* m_lastClickedObject = nullptr;
+	std::vector<CGameObject*> m_vFlatVisible;
+	std::vector<CGameObject*> m_vFlatVisibleBuilding;
+	std::vector<CGameObject*> m_pendingDeleteObjects;
+	bool m_bRequestDelete = false;
 };
 
 NS_END

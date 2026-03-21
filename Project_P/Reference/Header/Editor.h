@@ -50,6 +50,10 @@ public:
 	CGameObject* Get_SelectedGameObject() const;
 	_bool Consume_OpenSelectedInHierarchyRequest();
 
+	void Set_MultiSelectedObjects(const vector<CGameObject*>& _objects);
+	const vector<CGameObject*>& Get_MultiSelectedObjects() const;
+	_bool IsSelected(class CGameObject* _obj) const;
+
 public:
 	void OpenAsset(const fs::path& path);
 	void OpenAnimatorController(const fs::path& path);
@@ -110,6 +114,7 @@ private:
 	CGameObject* m_pSelectedGameObject;
 	CGameObject* m_pMoveTargetGameObject;
 	_bool m_bOpenSelectedInHierarchyRequested;
+	vector<CGameObject*> m_multiSelectedObjects;
 	_bool m_bShowColliderGizmo;
 	_bool m_bShowMeshColliderGizmo;
 	_bool m_bShowNavigationMesh;

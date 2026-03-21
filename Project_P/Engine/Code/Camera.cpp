@@ -1513,7 +1513,7 @@ void CCamera::RenderRTDebugDisplay(const _bool _renderingEditorPass)
 		if (_renderingEditorPass)
 			return;
 
-		if (CEditor::GetInstance().Get_SelectedGameObject() != m_pGameObject)
+		if (!CEditor::GetInstance().IsSelected(m_pGameObject))
 			return;
 	}
 

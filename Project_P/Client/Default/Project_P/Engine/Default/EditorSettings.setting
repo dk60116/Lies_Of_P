@@ -1,0 +1,4 @@
+ShowCollider=0
+ShowMeshCollider=1
+ShowNavigationMesh=1
+ShowGameStatus=0

@@ -118,7 +118,7 @@ void CSphereCollider::Render_Gizmo()
 {
 #ifndef _CLIENT_BUILD
     CEditor& editor = CEditor::GetInstance();
-    if (!editor.IsColliderGizmoVisible() && editor.Get_SelectedGameObject() != m_pGameObject)
+    if (!editor.IsColliderGizmoVisible() && !editor.IsSelected(m_pGameObject))
         return;
 
     if (!m_pLineMesh || !m_pLineMaterial)

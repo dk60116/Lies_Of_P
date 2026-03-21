@@ -333,7 +333,7 @@ void CNaviMeshAgent::Update()
 void CNaviMeshAgent::Render_Gizmo()
 {
 #ifndef _CLIENT_BUILD
-	if (CEditor::GetInstance().Get_SelectedGameObject() != m_pGameObject)
+	if (!CEditor::GetInstance().IsSelected(m_pGameObject))
 		return;
 
 	if (!m_pLineMesh || !m_pLineMaterial)

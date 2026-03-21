@@ -465,6 +465,25 @@ void CEditor::Set_SelectedGameObject(CGameObject* _target, _bool _openHierarchy)
 		m_bOpenSelectedInHierarchyRequested = true;
 }
 
+void CEditor::Set_MultiSelectedObjects(const vector<CGameObject*>& _objects)
+{
+	m_multiSelectedObjects = _objects;
+}
+
+const vector<CGameObject*>& CEditor::Get_MultiSelectedObjects() const
+{
+	return m_multiSelectedObjects;
+}
+
+_bool CEditor::IsSelected(CGameObject* _obj) const
+{
+	if (_obj == m_pSelectedGameObject)
+		return true;
+	for (CGameObject* obj : m_multiSelectedObjects)
+		if (obj == _obj) return true;
+	return false;
+}
+
 _bool CEditor::Consume_OpenSelectedInHierarchyRequest()
 {
 	const _bool requested = m_bOpenSelectedInHierarchyRequested;

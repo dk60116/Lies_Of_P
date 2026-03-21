@@ -1,5 +1,6 @@
 #pragma once
 
+#include "epch.h"
 #include "Component.h"
 
 class CPlayerHUD final : public CComponent

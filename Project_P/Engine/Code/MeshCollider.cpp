@@ -260,7 +260,7 @@ void CMeshCollider::Render_Gizmo()
     if (!editor.IsMeshColliderGizmoVisible())
         return;
 
-    if (!editor.IsColliderGizmoVisible() && editor.Get_SelectedGameObject() != m_pGameObject)
+    if (!editor.IsColliderGizmoVisible() && !editor.IsSelected(m_pGameObject))
         return;
 
     if (!m_bShowGizmo)
