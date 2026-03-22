@@ -1,0 +1,8 @@
+# Binary asset files - prevent CRLF corruption
+*.skinneddata binary
+*.animdata    binary
+*.meshdata    binary
+*.scenedata   binary
+*.navdata     binary
+*.acdata      binary
+*.spritefont  binary
