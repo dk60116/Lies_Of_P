@@ -1,0 +1,638 @@
+#include "epch.h"
+#include "TopToolBar.h"
+#include "ProjectBox.h"
+#include "HierachyBox.h"
+#include "InspectorBox.h"
+#include "AnimatorControllerEditorBox.h"
+#include "Physics.h"
+
+namespace
+{
+	static fs::path ResolveEditorSettingsPath(const _bool forSave)
+	{
+		const fs::path candidates[] =
+		{
+			"../Engine/Default/EditorSettings.setting",
+			"Engine/Default/EditorSettings.setting",
+			"../Project_P/Engine/Default/EditorSettings.setting",
+			"Project_P/Engine/Default/EditorSettings.setting"
+		};
+
+		for (const fs::path& path : candidates)
+		{
+			if (fs::exists(path))
+				return path;
+		}
+
+		if (forSave)
+			return candidates[3];
+
+		return candidates[0];
+	}
+}
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+CEditor::CEditor()
+	: m_hEditorWindow(nullptr)
+	, m_mBoxList({})
+	, m_sOptions({})
+	, m_eControleTool(TransformControleTool::MOVE)
+	, m_pSelectedGameObject(nullptr)
+	, m_pMoveTargetGameObject(nullptr)
+	, m_bOpenSelectedInHierarchyRequested(false)
+	, m_bShowColliderGizmo(true)
+	, m_bShowMeshColliderGizmo(true)
+	, m_bShowNavigationMesh(true)
+	, m_bShowGameStatusWindow(false)
+	, m_vCameraPos({})
+	, m_vCameraQuat({})
+	, m_bDoubleClicked(false)
+	, m_bIsMovingCamera(false)
+	, m_vCameraMoveStartPos({})
+	, m_vCameraMoveTargetPos({})
+	, m_fCameraMoveDuration(0.3f)
+	, m_fCameraMoveProgress(0.f)
+	, m_hEditorWindowIcon_Default(nullptr)
+	, m_hEditorWindoIcon_Small(nullptr)
+	, m_pAnimatorControllerBox(nullptr)
+{
+}
+
+CEditor::~CEditor()
+{
+	Release();
+}
+
+CEditor& CEditor::GetInstance()
+{
+	static CEditor inst;
+	return inst;
+}
+
+HRESULT CEditor::Initialize()
+{
+#ifdef _CLIENT_BUILD
+	return S_OK;
+#endif
+
+	ImGuiContext* newCtx = ImGui::CreateContext();
+	ImGui::SetCurrentContext(newCtx);
+
+	m_hEditorWindow = CreateEditorWindow();
+
+	ImGui_ImplWin32_Init(m_hEditorWindow);
+	ImGui_ImplDX11_Init(CGraphicDevice::GetInstance().Get_Device(), CGraphicDevice::GetInstance().Get_Context());
+
+	ImGuiIO& io = ImGui::GetIO();
+	io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\malgun.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesKorean());
+
+
+	LoadViewSettings();
+
+	CTopToolBar* toolbar = CTopToolBar::Create();
+	if (toolbar)
+	{
+		m_mBoxList.emplace(L"TopTool", toolbar);
+		toolbar->AddRef();
+	}
+
+	CProjectBox* projectBox = CProjectBox::Create();
+	if (projectBox)
+	{
+		m_mBoxList.emplace(L"Project", projectBox);
+		projectBox->AddRef();
+	}
+
+	CHierachyBox* hierachyBox = CHierachyBox::Create();
+	if (hierachyBox)
+	{
+		m_mBoxList.emplace(L"Hierachy", hierachyBox);
+		hierachyBox->AddRef();
+	}
+
+	CInspectorBox* inspectorBox = CInspectorBox::Create();
+	if (inspectorBox)
+	{
+		m_mBoxList.emplace(L"Inspector", inspectorBox);
+		inspectorBox->AddRef();
+	}
+
+	return S_OK;
+}
+
+void CEditor::Release()
+{
+#ifdef _CLIENT_BUILD
+	return;
+#endif
+
+	ImGui_ImplWin32_Shutdown();
+	ImGui_ImplDX11_Shutdown();
+	ImGui::DestroyContext();
+
+	for (TRAVERSAL_ITER(m_mBoxList, it))
+		Safe_Release((*it).second);
+
+	m_mBoxList.clear();
+}
+
+HWND CEditor::Get_EditorWindow()
+{
+	return m_hEditorWindow;
+}
+
+void CEditor::Editor_Update_Begin()
+{
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	for (TRAVERSAL_ITER(m_mBoxList, it))
+		(*it).second->Render();
+}
+
+void CEditor::Editor_Update_During()
+{
+	ChangeControleTool();
+
+	if (m_bIsMovingCamera)
+	{
+		const _float dt = CTime::GetInstance().Get_DeltaTime();
+		m_fCameraMoveProgress += dt / m_fCameraMoveDuration;
+
+		if (m_fCameraMoveProgress >= 1.f)
+		{
+			m_fCameraMoveProgress = 1.f;
+			m_bIsMovingCamera = false;
+		}
+
+		_float t = m_fCameraMoveProgress;
+		t = t * t * (3.f - 2.f * t);
+
+		vector3 interpPos = vector3::Lerp(m_vCameraMoveStartPos, m_vCameraMoveTargetPos, t);
+
+		CTransform* camTransform = CSceneManager::GetInstance().Get_EditorCamera()->GetTransform();
+		camTransform->Set_Position(interpPos);
+	}
+}
+
+void CEditor::Editor_Update_End()
+{
+	ImGui::Render();
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+}
+
+HWND CEditor::CreateEditorWindow()
+{
+	WNDCLASS wc = {};
+	wc.lpfnWndProc = EditorWndProc;
+	wc.hInstance = CDisplay::GetInstance().Get_HInstance();
+	wc.lpszClassName = L"Editor";
+
+	RegisterClass(&wc);
+
+	RECT rc = { 0, 0, static_cast<LONG>(m_sOptions.windowWidth), static_cast<LONG>(m_sOptions.windowHeight) };
+	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
+
+	m_hEditorWindowIcon_Default = (HICON)LoadImageW
+	(
+		NULL,
+		L"../EngineResources/Icon/Engine_Icon.ico",
+		IMAGE_ICON,
+		32, 32,
+		LR_LOADFROMFILE | LR_DEFAULTSIZE
+	);
+
+	m_hEditorWindoIcon_Small = (HICON)LoadImageW
+	(
+		NULL,
+		L"../EngineResources/Icon/Engine_Icon.ico",
+		IMAGE_ICON,
+		16, 16,
+		LR_LOADFROMFILE
+	);
+
+	HWND hwnd = CreateWindowEx
+	(
+		0,
+		wc.lpszClassName,
+		L"Editor",
+		WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, CW_USEDEFAULT,
+		rc.right - rc.left, rc.bottom - rc.top,
+		nullptr,
+		nullptr,
+		CDisplay::GetInstance().Get_HInstance(),
+		nullptr
+	);
+
+	SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)m_hEditorWindoIcon_Small);
+
+	ShowWindow(hwnd, SW_SHOW);
+	UpdateWindow(hwnd);
+
+	return hwnd;
+}
+
+LRESULT CEditor::EditorWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))
+		return true;
+
+	switch (msg)
+	{
+	case WM_MOUSEWHEEL:
+	{
+#ifndef _DEBUG
+#else
+		short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+		_float normalized = static_cast<float>(delta) / WHEEL_DELTA;
+
+		CInput::GetInstance().Get_WheelAxisRaw() += normalized;
+#endif
+	}
+	return 0;
+	}
+
+	return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+void CEditor::ChangeControleTool()
+{
+	if (!CInput::GetInstance().GetMouseButton_Editor(1))
+	{
+		if (CInput::GetInstance().GetKeyDown_Editor(Q))
+			Change_ControleTool(TransformControleTool::VIEW);
+		if (CInput::GetInstance().GetKeyDown_Editor(W))
+			Change_ControleTool(TransformControleTool::MOVE);
+		if (CInput::GetInstance().GetKeyDown_Editor(E))
+			Change_ControleTool(TransformControleTool::ROTATE);
+		if (CInput::GetInstance().GetKeyDown_Editor(R))
+			Change_ControleTool(TransformControleTool::SCALE);
+		if (CInput::GetInstance().GetKeyDown_Editor(T))
+			Change_ControleTool(TransformControleTool::RECT);
+		if (CInput::GetInstance().GetKeyDown_Editor(Y))
+			Change_ControleTool(TransformControleTool::TRANSFORM);
+	}
+}
+
+void CEditor::LoadViewSettings()
+{
+	const fs::path settingsPath = ResolveEditorSettingsPath(false);
+	ifstream inFile(settingsPath);
+	if (!inFile.is_open())
+		return;
+
+	string line;
+	while (getline(inFile, line))
+	{
+		line = CEngineString::Trim(line);
+		if (line.empty())
+			continue;
+
+		size_t delim = line.find('=');
+		if (delim == string::npos)
+			continue;
+
+		const string key = CEngineString::Trim(line.substr(0, delim));
+		const string value = CEngineString::Trim(line.substr(delim + 1));
+		if (key.empty() || value.empty())
+			continue;
+
+		auto parseBool = [](const string& text, _bool& outValue) -> _bool
+		{
+			string lower = CEditor::ToLowerCopy(text);
+			if (lower == "1" || lower == "true")
+			{
+				outValue = true;
+				return true;
+			}
+			if (lower == "0" || lower == "false")
+			{
+				outValue = false;
+				return true;
+			}
+			return false;
+		};
+
+		if (key == "ShowCollider")
+		{
+			parseBool(value, m_bShowColliderGizmo);
+			continue;
+		}
+
+		if (key == "ShowMeshCollider")
+		{
+			parseBool(value, m_bShowMeshColliderGizmo);
+			continue;
+		}
+
+		if (key == "ShowNavigationMesh")
+		{
+			parseBool(value, m_bShowNavigationMesh);
+			continue;
+		}
+
+		if (key == "ShowGameStatus")
+			parseBool(value, m_bShowGameStatusWindow);
+	}
+}
+
+void CEditor::SaveViewSettings() const
+{
+	const fs::path settingsPath = ResolveEditorSettingsPath(true);
+	fs::create_directories(settingsPath.parent_path());
+	ofstream outFile(settingsPath, ios::trunc);
+	if (!outFile.is_open())
+		return;
+
+	outFile << "ShowCollider=" << (m_bShowColliderGizmo ? 1 : 0) << "\n";
+	outFile << "ShowMeshCollider=" << (m_bShowMeshColliderGizmo ? 1 : 0) << "\n";
+	outFile << "ShowNavigationMesh=" << (m_bShowNavigationMesh ? 1 : 0) << "\n";
+	outFile << "ShowGameStatus=" << (m_bShowGameStatusWindow ? 1 : 0) << "\n";
+}
+
+CEditor::EDITORWINOPTION CEditor::Get_Options() const
+{
+	return m_sOptions;
+}
+
+const _bool CEditor::IsColliderGizmoVisible() const
+{
+	return m_bShowColliderGizmo;
+}
+
+void CEditor::SetColliderGizmoVisible(const _bool visible)
+{
+	if (m_bShowColliderGizmo == visible)
+		return;
+
+	m_bShowColliderGizmo = visible;
+	SaveViewSettings();
+}
+
+const _bool CEditor::IsMeshColliderGizmoVisible() const
+{
+	return m_bShowMeshColliderGizmo;
+}
+
+void CEditor::SetMeshColliderGizmoVisible(const _bool visible)
+{
+	if (m_bShowMeshColliderGizmo == visible)
+		return;
+
+	m_bShowMeshColliderGizmo = visible;
+	SaveViewSettings();
+}
+
+const _bool CEditor::IsNavigationMeshVisible() const
+{
+	return m_bShowNavigationMesh;
+}
+
+void CEditor::SetNavigationMeshVisible(const _bool visible)
+{
+	if (m_bShowNavigationMesh == visible)
+		return;
+
+	m_bShowNavigationMesh = visible;
+	SaveViewSettings();
+}
+
+const _bool CEditor::IsGameStatusWindowVisible() const
+{
+	return m_bShowGameStatusWindow;
+}
+
+void CEditor::SetGameStatusWindowVisible(const _bool visible)
+{
+	if (m_bShowGameStatusWindow == visible)
+		return;
+
+	m_bShowGameStatusWindow = visible;
+	SaveViewSettings();
+}
+
+const vector2Int CEditor::Get_WindowResolution() const
+{
+	return vector2Int(m_sOptions.windowWidth, m_sOptions.windowHeight);
+}
+
+const vector2Int CEditor::Get_ScreenResolution() const
+{
+	_int width = _int(m_sOptions.windowWidth - (m_sOptions.projectWidth + m_sOptions.hierachyWidth + m_sOptions.inspectorWidth));
+	_int height = _int(m_sOptions.windowHeight - (m_sOptions.topBarHeight));
+
+	return vector2Int(width, height);
+}
+
+const CEditor::TransformControleTool CEditor::Get_ControleTool() const
+{
+	return m_eControleTool;
+}
+
+void CEditor::Change_ControleTool(const TransformControleTool _tool)
+{
+	m_eControleTool = _tool;
+}
+
+const vector3 CEditor::Get_EditorCamPositon() const
+{
+	return m_vCameraPos;
+}
+
+const quaternion CEditor::Get_EditorCamQuaternion() const
+{
+	return m_vCameraQuat;
+}
+
+void CEditor::Set_EditorCamTransform(CTransform* _transform)
+{
+	m_vCameraPos = _transform->Get_Position();
+	m_vCameraQuat = _transform->Get_Quaternion();
+}
+
+void CEditor::Set_SelectedGameObject(CGameObject* _target, _bool _openHierarchy)
+{
+	if (_target == m_pSelectedGameObject)
+		return;
+
+	m_pSelectedGameObject = _target;
+	m_selectedAssetPath.clear();
+
+	if (_openHierarchy && m_pSelectedGameObject)
+		m_bOpenSelectedInHierarchyRequested = true;
+}
+
+void CEditor::Set_MultiSelectedObjects(const vector<CGameObject*>& _objects)
+{
+	m_multiSelectedObjects = _objects;
+}
+
+const vector<CGameObject*>& CEditor::Get_MultiSelectedObjects() const
+{
+	return m_multiSelectedObjects;
+}
+
+_bool CEditor::IsSelected(CGameObject* _obj) const
+{
+	if (_obj == m_pSelectedGameObject)
+		return true;
+	for (CGameObject* obj : m_multiSelectedObjects)
+		if (obj == _obj) return true;
+	return false;
+}
+
+_bool CEditor::Consume_OpenSelectedInHierarchyRequest()
+{
+	const _bool requested = m_bOpenSelectedInHierarchyRequested;
+	m_bOpenSelectedInHierarchyRequested = false;
+	return requested;
+}
+
+void CEditor::Set_SelectedAssetPath(const fs::path& path)
+{
+	m_selectedAssetPath = path;
+	m_pSelectedGameObject = nullptr;
+}
+
+void CEditor::MoveTo_SelectedGameObject(CGameObject* _target)
+{
+	if (!_target)
+	{
+		m_pMoveTargetGameObject = nullptr;
+		return;
+	}
+
+	if (_target == m_pMoveTargetGameObject)
+		m_bDoubleClicked = !m_bDoubleClicked;
+	else
+		m_bDoubleClicked = false;
+
+	_float distance = m_bDoubleClicked ? 6.f : 3.f;
+
+	m_pMoveTargetGameObject = _target;
+
+	_float3 targetPos = _target->GetTransform()->Get_Position();
+	CTransform& ect = *CSceneManager::GetInstance().Get_EditorCamera()->GetTransform();
+
+	m_vCameraMoveStartPos = ect.Get_Position();
+	m_vCameraMoveTargetPos = targetPos + ect.Get_Directions().forward * -distance;
+
+	m_fCameraMoveProgress = 0.f;
+	m_bIsMovingCamera = true;
+}
+
+CGameObject* CEditor::Get_SelectedGameObject() const
+{
+	return m_pSelectedGameObject;
+}
+
+void CEditor::OpenAsset(const fs::path& path)
+{
+	std::error_code ec;
+	if (path.empty())
+		return;
+
+	if (!fs::exists(path, ec) || ec)
+	{
+		CDebug::LogError(L"OpenAsset failed - not exists: " + path.wstring());
+		return;
+	}
+
+	if (fs::is_directory(path, ec) && !ec)
+	{
+		OpenAssetExternal(path);
+		return;
+	}
+
+	string ext = path.extension().string();
+	ext = ToLowerCopy(ext);
+
+	if (ext == ".animatorcontroller")
+	{
+		OpenAnimatorController(path);
+		return;
+	}
+
+	OpenAssetExternal(path);
+}
+
+const _bool CEditor::IsAnimatorControllerEditorFocused() const
+{
+	for (const auto& [key, boxBase] : m_mBoxList)
+	{
+		auto* box = dynamic_cast<CAnimatorControllerEditorBox*>(boxBase);
+		if (box && box->IsShortcutFocused())
+			return true;
+	}
+
+	return false;
+}
+
+void CEditor::OpenAnimatorController(const fs::path& path)
+{
+#ifdef _CLIENT_BUILD
+	return;
+#endif
+
+	error_code ec;
+	if (!fs::exists(path, ec) || ec)
+	{
+		CDebug::LogError(L"OpenAnimatorController failed - file not exists: " + path.wstring());
+		return;
+	}
+
+	const wstring key = L"S_AnimatorController:" + path.wstring();
+
+	CAnimatorControllerEditorBox* box = nullptr;
+
+	auto it = m_mBoxList.find(key);
+	if (it != m_mBoxList.end())
+	{
+		box = dynamic_cast<CAnimatorControllerEditorBox*>(it->second);
+		if (!box)
+		{
+			CDebug::LogError(L"OpenAnimatorController failed - box type mismatch: " + key);
+			return;
+		}
+
+		box->Open(path);
+		return;
+	}
+
+	box = CAnimatorControllerEditorBox::Create();
+	if (!box)
+	{
+		CDebug::LogError(L"OpenAnimatorController failed - Create() returned nullptr");
+		return;
+	}
+
+	m_mBoxList.emplace(key, box);
+	box->AddRef();
+
+	box->Open(path);
+}
+
+void CEditor::OpenAssetExternal(const fs::path& path)
+{
+#ifdef _WIN32
+	HINSTANCE r = ShellExecuteW(
+		nullptr,
+		L"open",
+		path.wstring().c_str(),
+		nullptr,
+		nullptr,
+		SW_SHOWNORMAL
+	);
+
+	if ((INT_PTR)r <= 32)
+	{
+		CDebug::LogError(L"OpenAssetExternal failed: " + path.wstring());
+	}
+#else
+	CDebug::LogError(L"OpenAssetExternal is not implemented on this platform.");
+#endif
+}
+

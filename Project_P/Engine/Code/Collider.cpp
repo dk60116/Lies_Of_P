@@ -1,0 +1,361 @@
+#include "epch.h"
+#include "Collider.h"
+#include "GameObject.h"
+#include "RigidBody.h"
+#include "Physics.h"
+
+using namespace JPH;
+
+namespace
+{
+	constexpr uint64 g_iColliderUserDataFlag = 1ull;
+
+	inline uint64 EncodeColliderUserData(CCollider* _collider)
+	{
+		return static_cast<uint64>(reinterpret_cast<uintptr_t>(_collider)) | g_iColliderUserDataFlag;
+	}
+
+
+	inline void DecomposeWorldMatrix(const _matrix& _matrix, Vec3& _outPos, Quat& _outRot)
+	{
+		XMVECTOR s, r, t;
+		XMMatrixDecompose(&s, &r, &t, _matrix);
+
+		XMFLOAT3 p;
+		XMStoreFloat3(&p, t);
+		_outPos = Vec3(p.x, p.y, p.z);
+
+		XMFLOAT4 q;
+		XMStoreFloat4(&q, r);
+		_outRot = Quat(q.x, q.y, q.z, q.w);
+	}
+}
+
+CCollider::CCollider()
+	: m_pRigidBody(nullptr)
+	, m_bIsTrigger(false)
+	, m_vCachedShapeWorldScale(vector3::one())
+	, m_bShapeDirty(true)
+	, m_pShape(nullptr)
+	, m_iContactCount(0)
+	, m_iStandaloneBodyID(BodyID())
+	, m_bHasStandaloneBody(false)
+	, m_bStandaloneBodyDirty(true)
+	, m_vCachedWorldPosition(vector3::zero())
+	, m_vCachedWorldRotation(quaternion::identity())
+	, m_bDestroying(false)
+{
+	m_strName = L"Collider";
+}
+
+CCollider::~CCollider()
+{
+}
+
+HRESULT CCollider::Initialize()
+{
+	CRigidBody* rig = m_pGameObject->GetComponent<CRigidBody>();
+	if (rig)
+		rig->AddCollider(this);
+
+	return S_OK;
+}
+
+void CCollider::Awake()
+{
+	m_vCachedShapeWorldScale = GetWorldScale();
+	m_vCachedWorldPosition = m_pGameObject->GetTransform()->Get_Position();
+	m_vCachedWorldRotation = m_pGameObject->GetTransform()->Get_Quaternion();
+	RefreshStandaloneBody();
+}
+
+void CCollider::OnEnable()
+{
+	m_bStandaloneBodyDirty = true;
+	if (m_pRigidBody)
+		m_pRigidBody->MarkBodyDirty();
+	RefreshStandaloneBody();
+}
+
+void CCollider::OnDisable()
+{
+	if (m_pRigidBody)
+		m_pRigidBody->MarkBodyDirty();
+	DestroyStandaloneBody();
+}
+
+void CCollider::Update()
+{
+	const vector3 worldScale = GetWorldScale();
+	const _float dx = fabsf(worldScale.x - m_vCachedShapeWorldScale.x);
+	const _float dy = fabsf(worldScale.y - m_vCachedShapeWorldScale.y);
+	const _float dz = fabsf(worldScale.z - m_vCachedShapeWorldScale.z);
+
+	if (dx > 0.0001f || dy > 0.0001f || dz > 0.0001f)
+	{
+		m_vCachedShapeWorldScale = worldScale;
+		m_bShapeDirty = true;
+		m_bStandaloneBodyDirty = true;
+
+		if (m_pRigidBody)
+			m_pRigidBody->MarkBodyDirty();
+	}
+
+	const vector3 pos = m_pGameObject->GetTransform()->Get_Position();
+	const quaternion rot = m_pGameObject->GetTransform()->Get_Quaternion();
+
+	const _float dpx = fabsf(pos.x - m_vCachedWorldPosition.x);
+	const _float dpy = fabsf(pos.y - m_vCachedWorldPosition.y);
+	const _float dpz = fabsf(pos.z - m_vCachedWorldPosition.z);
+	const _float dot = fabsf(rot.x * m_vCachedWorldRotation.x + rot.y * m_vCachedWorldRotation.y + rot.z * m_vCachedWorldRotation.z + rot.w * m_vCachedWorldRotation.w);
+	const _bool moved = dpx > 0.0001f || dpy > 0.0001f || dpz > 0.0001f || dot < 0.9999f;
+
+	if (moved)
+	{
+		m_vCachedWorldPosition = pos;
+		m_vCachedWorldRotation = rot;
+		m_bStandaloneBodyDirty = true;
+	}
+
+	if (!m_pRigidBody)
+		RefreshStandaloneBody();
+}
+
+void CCollider::ReleaseShape()
+{
+	if (m_pShape)
+	{
+		m_pShape->Release();
+		m_pShape = nullptr;
+	}
+}
+
+void CCollider::SetRigidBody(CRigidBody* rigidBody)
+{
+	m_pRigidBody = rigidBody;
+
+	if (m_pRigidBody)
+	{
+		DestroyStandaloneBody();
+		return;
+	}
+
+	if (m_bDestroying)
+		return;
+
+	m_bStandaloneBodyDirty = true;
+	RefreshStandaloneBody();
+}
+
+void CCollider::OnDestroy()
+{
+	m_bDestroying = true;
+
+	if (m_pRigidBody)
+		m_pRigidBody->RemvoeCollier(this);
+
+	DestroyStandaloneBody();
+	ReleaseShape();
+}
+
+const _bool CCollider::IsTrigger() const
+{
+	return m_bIsTrigger;
+}
+
+const vector3& CCollider::GetCenter() const
+{
+	return m_vCenter;
+}
+
+void CCollider::NotifyShapeChanged()
+{
+	m_bShapeDirty = true;
+	m_bStandaloneBodyDirty = true;
+
+	if (m_pRigidBody)
+		m_pRigidBody->MarkBodyDirty();
+	else
+		RefreshStandaloneBody();
+}
+
+void CCollider::SetTrigger(const _bool isTrigger)
+{
+	m_bIsTrigger = isTrigger;
+	NotifyShapeChanged();
+}
+
+void CCollider::SetCenter(const vector3& center)
+{
+	m_vCenter = center;
+	NotifyShapeChanged();
+}
+
+_float4 CCollider::GetGizmoColor() const
+{
+	_float4 color = IsContacting() ? _float4(1.f, 0.f, 0.f, 1.f) : _float4(0.f, 1.f, 0.f, 1.f);
+
+	if (!Get_Enable())
+	{
+		constexpr _float disabledBrightness = 0.45f;
+		color.x *= disabledBrightness;
+		color.y *= disabledBrightness;
+		color.z *= disabledBrightness;
+	}
+
+	return color;
+}
+
+vector3 CCollider::GetWorldScale()
+{
+	CTransform* transform = GetTransform();
+	if (!transform)
+		return vector3::one();
+
+	XMVECTOR scaleVec;
+	XMVECTOR rotationVec;
+	XMVECTOR translationVec;
+	XMMatrixDecompose(&scaleVec, &rotationVec, &translationVec, transform->Get_WorldMatrix());
+
+	_float3 scale = {};
+	XMStoreFloat3(&scale, scaleVec);
+	return vector3(scale.x, scale.y, scale.z);
+}
+
+const Shape* CCollider::GetShape()
+{
+	BuildShapeIfNeeded();
+	return m_pShape;
+}
+
+const _bool CCollider::IsContacting() const
+{
+	return m_iContactCount > 0;
+}
+
+void CCollider::BeginContact()
+{
+	++m_iContactCount;
+}
+
+void CCollider::EndContact()
+{
+	if (m_iContactCount > 0)
+		--m_iContactCount;
+}
+
+void CCollider::RefreshStandaloneBody()
+{
+	if (m_pRigidBody)
+		return;
+
+	if (!m_pGameObject || !m_pGameObject->IsRecursiveActive() || !Get_Enable())
+	{
+		DestroyStandaloneBody();
+		return;
+	}
+
+	if (m_bStandaloneBodyDirty)
+	{
+		DestroyStandaloneBody();
+		CreateStandaloneBody();
+		m_bStandaloneBodyDirty = !m_bHasStandaloneBody;
+		return;
+	}
+
+	if (!m_bHasStandaloneBody)
+		CreateStandaloneBody();
+
+	SyncStandaloneBodyTransform();
+}
+
+void CCollider::MarkPhysicsLayerDirty()
+{
+	m_bStandaloneBodyDirty = true;
+
+	if (m_pRigidBody)
+	{
+		m_pRigidBody->MarkBodyDirty();
+		return;
+	}
+
+	RefreshStandaloneBody();
+}
+
+void CCollider::CreateStandaloneBody()
+{
+	if (!CPhysics::GetInstance().IsInitialized())
+		return;
+
+	if (m_pRigidBody || m_bHasStandaloneBody)
+		return;
+
+	const Shape* shape = GetShape();
+
+	if (!shape)
+		return;
+
+	Vec3 pos;
+	Quat rot;
+	DecomposeWorldMatrix(GetTransform()->Get_WorldMatrix(), pos, rot);
+
+	const CPhysics::CollisionObjectType layerType = m_bIsTrigger
+		? CPhysics::CollisionObjectType::Sensor
+		: CPhysics::CollisionObjectType::NonMoving;
+	const ObjectLayer layer = CPhysics::MakeObjectLayer(m_pGameObject ? m_pGameObject->GetLayer() : 0u, layerType);
+	BodyCreationSettings settings(shape, pos, rot, EMotionType::Static, layer);
+	settings.mIsSensor = m_bIsTrigger;
+
+	BodyInterface& bodyInterface = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
+	Body* body = bodyInterface.CreateBody(settings);
+	if (!body)
+		return;
+
+	m_iStandaloneBodyID = body->GetID();
+	m_bHasStandaloneBody = true;
+
+	bodyInterface.SetUserData(m_iStandaloneBodyID, EncodeColliderUserData(this));
+	bodyInterface.AddBody(m_iStandaloneBodyID, EActivation::DontActivate);
+}
+
+void CCollider::DestroyStandaloneBody()
+{
+	if (!m_bHasStandaloneBody || m_pRigidBody)
+		return;
+
+	if (!CPhysics::GetInstance().IsInitialized())
+	{
+		m_iStandaloneBodyID = BodyID();
+		m_bHasStandaloneBody = false;
+		m_iContactCount = 0;
+		return;
+	}
+
+	BodyInterface& bodyInterface = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
+	CPhysics::GetInstance().RemoveContactPairs(m_iStandaloneBodyID);
+	bodyInterface.RemoveBody(m_iStandaloneBodyID);
+	bodyInterface.DestroyBody(m_iStandaloneBodyID);
+
+	m_iStandaloneBodyID = BodyID();
+	m_bHasStandaloneBody = false;
+	m_iContactCount = 0;
+}
+
+void CCollider::SyncStandaloneBodyTransform()
+{
+	if (!m_bHasStandaloneBody || m_pRigidBody)
+		return;
+
+	if (!CPhysics::GetInstance().IsInitialized())
+		return;
+
+	Vec3 pos;
+	Quat rot;
+	DecomposeWorldMatrix(GetTransform()->Get_WorldMatrix(), pos, rot);
+
+	BodyInterface& bodyInterface = CPhysics::GetInstance().GetPhysicsSystem().GetBodyInterface();
+	bodyInterface.SetPositionAndRotation(m_iStandaloneBodyID, RVec3(pos), rot, EActivation::Activate);
+}
+
+
+

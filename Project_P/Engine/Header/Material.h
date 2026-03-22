@@ -1,0 +1,130 @@
+#pragma once
+
+#include "EngineResource.h"
+
+NS_BEGIN(Engine)
+
+class ENGINE_DLL CMaterial final : public CEngineResource
+{
+	friend class CResources;
+
+public:
+	typedef struct MaterialDescription
+	{
+		class CShader* shaderPointer;
+		_bool transparent = false;
+		_bool usingLight = true;
+		_bool usingNormalMap = false;
+		_bool usingORMMap = false;
+		_bool usingAlphaMap = false;
+		vector<pair<wstring, _float>> customFloatValues = {};
+		vector<pair<wstring, _int>> customIntValues = {};
+		vector<pair<wstring, _float2>> customVector2Values = {};
+		vector<pair<wstring, _float3>> customVector3Values = {};
+		vector<pair<wstring, _float4>> customVector4Values = {};
+		vector<pair<wstring, _float4x4>> customMatrixValues = {};
+	} MATERIALDESC;
+
+private:
+	explicit CMaterial();
+	CMaterial(const CMaterial& _other);
+	virtual ~CMaterial();
+
+private:
+	static CMaterial* Create(const wstring _path = L"");
+	static CMaterial* Clone(const CMaterial& _other);
+
+private:
+	HRESULT Initialize(const wstring& _name, wstring _filePath, void* _desc);
+	void OnDestroy() override;
+
+public:
+	void Bind_Matrix(const _fmatrix _world);
+	void Bind_Camera(const _float3 _camPos, const _fmatrix _view, const _cmatrix _projection, const _uint _boneCount = 0);
+	void Bind_Light(_matrix* _lights, const _uint _count);
+	void Bind_CustomValues();
+
+public:
+	const _bool IsTransparnet() const;
+	const _bool IsUseLight() const;
+	class CShader* Get_Shader() const;
+	const _uint Get_TextureCount() const;
+	class CTexture* Get_Texture(_int _index) const;
+
+public:
+	const _bool Get_FloatValue(const wstring& _key, _float& _out);
+	const _bool Get_IntValue(const wstring& _key, _int& _out);
+	const _bool Get_Vector2Value(const wstring& _key, _float2& _out);
+	const _bool Get_Vector3Value(const wstring& _key, _float3& _out);
+	const _bool Get_Vector4Value(const wstring& _key, _float4& _out);
+	const _bool Get_MatrixValue(const wstring& _key, _float4x4 _out);
+	const unordered_map<wstring, _float>& Get_FloatValues() const;
+	const unordered_map<wstring, _int>& Get_IntValues() const;
+	const unordered_map<wstring, _float2>& Get_Vector2Values() const;
+	const unordered_map<wstring, _float3>& Get_Vector3Values() const;
+	const unordered_map<wstring, _float4>& Get_Vector4Values() const;
+	const unordered_map<wstring, _float4x4>& Get_MatrixValues() const;
+
+	void Set_Shader(CShader* _shader);
+	void Set_Texture(CTexture* _texture, _int _index = 0);
+	void Remove_Texture(_int _index);
+	void Set_BaseColor(const _float4& _color);
+
+	void Set_FloatValue(const wstring& _key, const _float _value);
+	void Set_IntValue(const wstring& _key, const _int _value);
+	void Set_Vector2Value(const wstring& _key, const _float2 _value);
+	void Set_Vector3Value(const wstring& _key, const _float3& _value);
+	void Set_Vector4Value(const wstring& _key, const _float4& _value);
+	void Set_MatrixValue(const wstring& _key, const _float4x4& _value);
+
+private:
+	HRESULT Create_ConstantBuffer();
+	void Rebuild_CustomBufferByteList();
+	void Bind_Texture() const;
+
+private:
+	CShader* m_pShader;
+
+	ID3D11Buffer* m_pMatrixBuffer;
+	ID3D11Buffer* m_pCameraBuffer;
+	ID3D11Buffer* m_pMaterialBuffer;
+	ID3D11Buffer* m_pLightBuffer;
+	ID3D11Buffer* m_pCustomBuffer;
+	vector<BYTE> m_vCustomBufferByteList;
+	struct CachedCameraCB
+	{
+		_float3 camPos = {};
+		_float padding = 0.f;
+		_float4x4 view = {};
+		_float4x4 proj = {};
+	};
+	struct CachedMaterialCB
+	{
+		_float4 baseColor = {};
+		_uint useTexture = 0;
+		_uint useNormalMap = 0;
+		_uint useORMMap = 0;
+		_uint boneCount = 0;
+		_uint useAlphaMap = 0;
+		_uint materialPadding0 = 0;
+		_uint materialPadding1 = 0;
+		_uint materialPadding2 = 0;
+	};
+	CachedCameraCB m_sLastCameraCB;
+	CachedMaterialCB m_sLastMaterialCB;
+	_bool m_bCameraBufferDirty;
+	_bool m_bMaterialBufferDirty;
+	_bool m_bCustomBufferDirty;
+
+	_bool m_bTransparent, m_bUseLight, m_bUseNormalMap, m_bUseORMMap, m_bUseAlphaMap;
+	_float4 m_vBaseColor;
+	vector<class CTexture*> m_vTextureList;
+	unordered_map<wstring, _float> m_mFloatValues;
+	unordered_map<wstring, _int> m_mIntValues;
+	unordered_map<wstring, _float2> m_mVector2Values;
+	unordered_map<wstring, _float3> m_mVector3Values;
+	unordered_map<wstring, _float4> m_mVector4Values;
+	unordered_map<wstring, _float4x4> m_mMatrixValues;
+};
+
+NS_END
