@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\JoltViewer.dir\cmake_pch.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\JoltViewer\JoltViewer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\JoltViewer\JoltViewer.h" />
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\JoltViewer.dir\Debug\cmake_pch.hxx">
+      <Filter>Precompile Header File</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\JoltViewer.dir\Release\cmake_pch.hxx">
+      <Filter>Precompile Header File</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\VS2022_CL\CMakeFiles\JoltViewer.dir\Distribution\cmake_pch.hxx">
+      <Filter>Precompile Header File</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\Build\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Git\Lies_Of_P\Project_P\Reference\JoltPhysics-5.5.0\JoltViewer\JoltViewer.cmake" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Precompile Header File">
+      <UniqueIdentifier>{2C33E5EA-5B70-3015-8DCB-272FB8B769C9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{0502A27F-835B-3BA2-B4EE-6615DA2C44BB}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
