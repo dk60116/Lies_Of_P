@@ -30,8 +30,6 @@ x86/
 *.pch
 *.gch
 
-Project_P/Engine/JoltEngine/
-
 # CMake generated build directories (contain hardcoded absolute paths)
 Project_P/Reference/JoltPhysics-5.5.0/Build/VS2022_CL/
 
