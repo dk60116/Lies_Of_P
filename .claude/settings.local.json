@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"/c/Git/Lies_Of_P\" log --oneline -- \"Project_P/Client/Bin/BinaryAssets/SkinnedMeshData/Weapon_Eve_Sword.skinneddata\")"
+    ]
+  }
+}
