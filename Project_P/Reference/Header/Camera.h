@@ -92,6 +92,9 @@ public:
 	void Add_RenderTarget_Mesh(class CRenderer* _mesh);
 	void Add_RenderTarget_UI(class CUI* _ui);
 
+public:
+	const vector2 WorldToScreenPoint(const vector3& _world) const ;
+
 protected:
 	struct RendererBoundsCache
 	{

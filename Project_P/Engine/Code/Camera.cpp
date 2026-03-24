@@ -615,6 +615,32 @@ void CCamera::Add_RenderTarget_UI(CUI* _ui)
 	m_vUIList.push_back(_ui);
 }
 
+const vector2 CCamera::WorldToScreenPoint(const vector3& _world) const
+{
+	const D3D11_VIEWPORT* vp = ResolveViewport();
+	const _float W = vp ? vp->Width  : (_float)(m_bIsEditor ? CEditor::GetInstance().Get_ScreenResolution().x : CDisplay::GetInstance().Get_ScreenResolution().x);
+	const _float H = vp ? vp->Height : (_float)(m_bIsEditor ? CEditor::GetInstance().Get_ScreenResolution().y : CDisplay::GetInstance().Get_ScreenResolution().y);
+
+	_matrix view = XMLoadFloat4x4(&m_vViewMatrix);
+	_matrix proj = XMLoadFloat4x4(&m_vProjMatrix);
+
+	_vector worldPos = XMVectorSet(_world.x, _world.y, _world.z, 1.f);
+	_vector clipPos  = XMVector4Transform(worldPos, XMMatrixMultiply(view, proj));
+
+	const _float w = XMVectorGetW(clipPos);
+	if (fabsf(w) < 1e-6f)
+		return vector2(0.f, 0.f);
+
+	const _float xNDC = XMVectorGetX(clipPos) / w;
+	const _float yNDC = XMVectorGetY(clipPos) / w;
+
+	return vector2
+	(
+		(xNDC + 1.f) * 0.5f * W,
+		(1.f - yNDC) * 0.5f * H
+	);
+}
+
 void CCamera::Bind_ViewMatrix()
 {
 	_matrix inverseWorldMatrix = GetTransform()->Get_InverseWorldMatrix();

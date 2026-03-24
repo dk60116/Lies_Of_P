@@ -34,6 +34,22 @@ int hitDir=0
 bool isEvade=false
 trigger dashAttack
 
+[state Attack_Light_04]
+motion=Eve_Attack_Light_04
+speedMul=1.000000
+pos=-888,978
+
+[state Run_Forward_Start]
+blendTree=2d
+paramX=isBattle
+paramY=speed
+child=Eve_SprintForward_Start,0.000000,2.000000
+child=Eve_BattleRun_Start,1.000000,1.000000
+child=Eve_Run_Forward_Start,0.000000,1.000000
+child=Eve_BattleSprint_Start,1.000000,2.000000
+speedMul=1.000000
+pos=578,145
+
 [state Eve_Attack_LLS23]
 motion=Eve_Attack_LLS23
 speedMul=1.000000
@@ -57,32 +73,7 @@ directBlend=0.500000
 child=Eve_Idle,0.000000
 child=Eve_BattleIdle,1.000000
 speedMul=1.000000
-pos=116,236
-
-[state Attack_Light_04]
-motion=Eve_Attack_Light_04
-speedMul=1.000000
-pos=-888,978
-
-[state Run_Forward_Start]
-blendTree=2d
-paramX=isBattle
-paramY=speed
-child=Eve_SprintForward_Start,0.000000,2.000000
-child=Eve_BattleRun_Start,1.000000,1.000000
-child=Eve_Run_Forward_Start,0.000000,1.000000
-child=Eve_BattleSprint_Start,1.000000,2.000000
-speedMul=1.000000
-pos=578,145
-
-[state Run_End]
-blendTree=2d
-paramX=isBattle
-paramY=speed
-child=Eve_Run_Forward_End,0.000000,1.000000
-child=Eve_BattleRun_End,1.000000,1.000000
-speedMul=1.000000
-pos=407,373
+pos=0,200
 
 [state Attack_Light_01]
 motion=Eve_Attack_Light_01
@@ -93,6 +84,15 @@ pos=-885,534
 motion=Eve_Guard_Hit_Back
 speedMul=1.000000
 pos=-455,-510
+
+[state Run_End]
+blendTree=2d
+paramX=isBattle
+paramY=speed
+child=Eve_Run_Forward_End,0.000000,1.000000
+child=Eve_BattleRun_End,1.000000,1.000000
+speedMul=1.000000
+pos=407,373
 
 [state Run_Forward]
 blendTree=2d
@@ -116,14 +116,6 @@ child=Eve_BattleSprintTurn_L,1.000000,2.000000
 speedMul=1.000000
 pos=305,-292
 
-[state SprintEnd]
-blendTree=direct
-param=isBattle
-child=Eve_Sprint_End,0.000000
-child=Eve_BattleSprint_End,1.000000
-speedMul=1.000000
-pos=870,359
-
 [state Run_TurnR]
 blendTree=2d
 paramX=isBattle
@@ -135,20 +127,33 @@ child=Eve_BattleSprintTurn_R,1.000000,2.000000
 speedMul=1.000000
 pos=655,-169
 
+[state SprintEnd]
+blendTree=direct
+param=isBattle
+child=Eve_Sprint_End,0.000000
+child=Eve_BattleSprint_End,1.000000
+speedMul=1.000000
+pos=870,359
+
+[state DashAttack]
+motion=Eve_Attack_Thrust
+speedMul=1.000000
+pos=-1250,369
+
 [state Attack_Light_02]
 motion=Eve_Attack_Light_02
 speedMul=1.000000
 pos=-841,706
 
-[state DashAttack]
-motion=Eve_Attack_Thrust
-speedMul=1.000000
-pos=-1250,377
-
 [state Attack_Light_03]
 motion=Eve_Attack_Light_03
 speedMul=1.000000
 pos=-873,829
+
+[state Guard_Start]
+motion=Eve_Guard_Start
+speedMul=1.000000
+pos=-142,-273
 
 [state SprintToRun]
 blendTree=direct
@@ -157,11 +162,6 @@ child=Eve_SprintToRun,0.000000
 child=Eve_BattleSprintToRun,1.000000
 speedMul=1.000000
 pos=873,494
-
-[state Guard_Start]
-motion=Eve_Guard_Start
-speedMul=1.000000
-pos=-142,-273
 
 [state Guard_Idle]
 motion=Eve_Guard_Idle
@@ -173,15 +173,15 @@ motion=Eve_Guard_End
 speedMul=1.000000
 pos=-275,-41
 
-[state Guard_Walk_Start]
-motion=Eve_Guard_Walk_Forward_Start
-speedMul=1.000000
-pos=-725,-251
-
 [state Eve_Attack_LS45]
 motion=Eve_Attack_LS45
 speedMul=1.000000
 pos=825,708
+
+[state Guard_Walk_Start]
+motion=Eve_Guard_Walk_Forward_Start
+speedMul=1.000000
+pos=-725,-251
 
 [state Guard_Walk_During]
 motion=Eve_Guard_Walk_Forward_During
@@ -193,6 +193,11 @@ motion=Eve_Guard_Walk_Forward_End
 speedMul=1.000000
 pos=-722,77
 
+[state Attack_ST34]
+motion=Eve_Attack_Strong_02
+speedMul=1.000000
+pos=-1359,866
+
 [state Evade]
 blendTree=direct
 param=isInputDir
@@ -201,11 +206,6 @@ child=Eve_Evade_Backward,0.000000
 speedMul=1.000000
 pos=-767,269
 
-[state Attack_ST34]
-motion=Eve_Attack_Strong_02
-speedMul=1.000000
-pos=-1359,866
-
 [state IdleToBattle_End]
 blendTree=direct
 param=speed
@@ -213,17 +213,6 @@ directBlend=0.150000
 child=Eve_BattleEnd,0.000000
 speedMul=1.000000
 pos=196,511
-
-[state Hit_Stand_Light]
-blendTree=direct
-param=HitDirection
-directBlend=0.150000
-child=Eve_Hit_Stand_Light_Fw,0.000000
-child=Eve_Hit_Stand_Light_Bw,1.000000
-child=Eve_Hit_Stand_Light_Lw,2.000000
-child=Eve_Hit_Stand_Light_Rw,3.000000
-speedMul=1.000000
-pos=807,-595
 
 [state Jump_Start]
 blendTree=2d
@@ -235,6 +224,17 @@ child=Eve_Battle_Jump_Start,1.000000,0.000000
 child=Eve_Battle_JumpForward_Start,1.000000,1.000000
 speedMul=1.000000
 pos=-39,-597
+
+[state Hit_Stand_Light]
+blendTree=direct
+param=HitDirection
+directBlend=0.150000
+child=Eve_Hit_Stand_Light_Fw,0.000000
+child=Eve_Hit_Stand_Light_Bw,1.000000
+child=Eve_Hit_Stand_Light_Lw,2.000000
+child=Eve_Hit_Stand_Light_Rw,3.000000
+speedMul=1.000000
+pos=807,-595
 
 [state Attack_Strong_01]
 motion=Eve_Attack_Strong_01
@@ -286,15 +286,15 @@ motion=Eve_Attack_SL34
 speedMul=1.000000
 pos=611,707
 
-[state Eve_Attack_ST34]
-motion=Eve_Attack_LLSS34
-speedMul=1.000000
-pos=-1259,578
-
 [state Eve_Attack_LSLS_34]
 motion=Eve_Attack_Strong_02
 speedMul=1.000000
 pos=-98,1002
+
+[state Eve_Attack_ST34]
+motion=Eve_Attack_LLSS34
+speedMul=1.000000
+pos=-1259,578
 
 [state Attack_LLLS34]
 motion=Eve_Attack_LLLS34
@@ -1261,7 +1261,28 @@ transitionOffset=0.000000
 
 [transition DashAttack->Idle]
 blend=0.150000
-exitTime=0.400000
+cond=isStrongAttack==false
+exitTime=0.800000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Evade->DashAttack]
+blend=0.150000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition DashAttack->Run_End]
+blend=0.150000
+cond=isStrongAttack==false && speed>0.100000
+fixedDuration=false
+transitionDuration=0.150000
+transitionOffset=0.000000
+
+[transition Guard_Idle->Idle]
+blend=0.150000
+cond=isGuard==false
 fixedDuration=false
 transitionDuration=0.150000
 transitionOffset=0.000000

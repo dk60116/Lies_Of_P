@@ -404,14 +404,24 @@ void CPlayerHUD::CreateSkillFrame()
 		imgBlur_Circle->GetRectTransform()->SetParent(imgFrame->GetTransform());
 		imgBlur_Circle->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
 		imgBlur_Circle->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SkillBlur_Circle (Texture)"));
+		imgBlur_Circle->SetColor(ColorValue(29, 101, 255));
 
 		CGameObject* blur_LineObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Blur_Line");
 		CImage* imgBlur_Line = blur_LineObj->AddComponent<CImage>();
 		imgBlur_Line->GetRectTransform()->SetParent(imgFrame->GetTransform());
 		imgBlur_Line->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
 		imgBlur_Line->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SkillBlur_Line (Texture)"));
+		imgBlur_Line->SetColor(ColorValue(29, 101, 255));
+		imgBlur_Line->SetAlpha(0.5f);
+
+
+		CGameObject* blur_IocnObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Blur_Icon");
+		CImage* imgBlur_Icon = blur_IocnObj->AddComponent<CImage>();
+		imgBlur_Icon->GetRectTransform()->SetParent(imgFrame->GetTransform());
+		imgBlur_Icon->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
+		imgBlur_Icon->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"DashAttack_Glow (Texture)"));
 		
-		m_sDashAttackFrame = { imgFrame, imgGlow, imgCool, imgIcon, imgBlur_Circle, imgBlur_Line };
+		m_sDashAttackFrame = { imgFrame, imgGlow, imgCool, imgIcon, imgBlur_Circle, imgBlur_Line, imgBlur_Icon };
 	}
 
 	{
@@ -514,28 +524,36 @@ void CPlayerHUD::Update_DashAttack(const _float _coolRatio, const _bool _ready)
 		m_sDashAttackFrame.blur_Circle->Get_GameObject()->SetActive(true);
 		m_sDashAttackFrame.blur_Circle->SetAlpha(1.f);
 		m_sDashAttackFrame.coolDown_Trigger = true;
+		m_sDashAttackFrame.blur_Icon->Get_GameObject()->SetActive(true);
+		m_sDashAttackFrame.blur_Icon->SetAlpha(1.f);
 	}
 
 	if (m_sDashAttackFrame.coolDown_Trigger)
 	{
-		m_sDashAttackFrame.blur_Line->GetRectTransform()->Set_WidthHeight(static_cast<_int>(150.f * (m_sDashAttackFrame.coolEndDuration / m_sDashAttackFrame.coolEndDest)));
+		if (m_sDashAttackFrame.coolEndDuration <= m_sDashAttackFrame.coolEndDest * 0.5f)
+			m_sDashAttackFrame.blur_Line->GetRectTransform()->Set_WidthHeight(static_cast<_int>(300.f * (m_sDashAttackFrame.coolEndDuration / m_sDashAttackFrame.coolEndDest)));
 
 		m_sDashAttackFrame.coolEndDuration += DELTA_TIME;
 
-		if (m_sDashAttackFrame.coolEndDuration >= m_sDashAttackFrame.coolEndDest)
+		if (m_sDashAttackFrame.coolEndDuration <= m_sDashAttackFrame.coolEndDest)
 		{
-			m_sDashAttackFrame.blur_Circle->SetAlpha(1.f - (m_sDashAttackFrame.coolEndDuration * m_sDashAttackFrame.coolEndDest));
+			const _float fade = 1.f - (m_sDashAttackFrame.coolEndDuration / m_sDashAttackFrame.coolEndDest);
+
+			m_sDashAttackFrame.blur_Circle->SetAlpha(fade);
+			m_sDashAttackFrame.blur_Circle->GetRectTransform()->Set_WidthHeight(static_cast<_int>(150.f * (1.f - (m_sDashAttackFrame.coolEndDuration / m_sDashAttackFrame.coolEndDest))));
+			m_sDashAttackFrame.blur_Icon->SetAlpha(fade);
 		}
 
-		if (m_sDashAttackFrame.coolEndDuration >= m_sDashAttackFrame.coolEndDest)
+		if (m_sDashAttackFrame.coolEndDuration > m_sDashAttackFrame.coolEndDest * 0.5f)
 		{
 			m_sDashAttackFrame.blur_Line->Get_GameObject()->SetActive(false);
 		}
 
-		if (m_sDashAttackFrame.coolEndDuration >= m_sDashAttackFrame.coolEndDest * 2.f)
+		if (m_sDashAttackFrame.coolEndDuration >= m_sDashAttackFrame.coolEndDest)
 		{
 			m_sDashAttackFrame.blur_Circle->Get_GameObject()->SetActive(false);
 			m_sDashAttackFrame.coolDown_Trigger = false;
+			m_sDashAttackFrame.blur_Icon->Get_GameObject()->SetActive(false);
 		}
 	}
 

@@ -313,6 +313,9 @@ BTState CBT_Monster::RunChase(AIContext& _ctx)
 	navAgent->SetStoppingDistance(animStopDistance);
 	navAgent->SetDestination(targetTransform->Get_Position());
 
+	if (status.attackSpeed > 0.f)
+		m_fAttackCooldown = max(0.f, m_fAttackCooldown - DELTA_TIME);
+
 	return BTState::Success;
 }
 
@@ -369,7 +372,25 @@ BTState CBT_Monster::RunAttack(AIContext& _ctx)
 		const _bool shouldPlayRun = !isAttackPlaying && (shouldMoveToTarget || shouldPlayRunTurn || didMoveThisFrame);
 		animator->SetFloat(L"speed", shouldPlayRun ? 1.f : 0.f);
 
-		if (status.attackSpeed > 0.f && m_fAttackCooldown <= 0.f)
+		const _bool isFacingTarget = [&]() -> _bool
+		{
+			CTransform* monsterTransform = monster->GetTransform();
+			if (!monsterTransform)
+				return true;
+
+			vector3 flatForward = monsterTransform->Get_Directions().forward;
+			flatForward.y = 0.f;
+			vector3 toTarget = targetTransform->Get_Position() - monsterTransform->Get_Position();
+			toTarget.y = 0.f;
+
+			if (toTarget.lengthSq() < FLT_EPSILON)
+				return true;
+
+			constexpr _float facingThreshold = 0.866f;
+			return flatForward.normalized().dot(toTarget.normalized()) >= facingThreshold;
+		}();
+
+		if (status.attackSpeed > 0.f && m_fAttackCooldown <= 0.f && isFacingTarget)
 		{
 			animator->SetTrigger(L"attack");
 			m_fAttackCooldown = 1.f / status.attackSpeed;

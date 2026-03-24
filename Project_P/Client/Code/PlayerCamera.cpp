@@ -64,7 +64,8 @@ namespace
 }
 
 CPlayerCamera::CPlayerCamera()
-    : m_sOptions({})
+    : m_pCamera(nullptr)
+    , m_sOptions({})
     , m_fBackOffset(6.f)
     , m_fZoomSensor(0.f)
     , m_bMouseLocked(true)
@@ -95,7 +96,7 @@ HRESULT CPlayerCamera::Initialize()
     if (FAILED(__super::Initialize()))
         return E_FAIL;
 
-    m_pGameObject->AddComponent<CCamera>();
+    m_pCamera = m_pGameObject->AddComponent<CCamera>();
 
     m_fZoomSensor = m_sOptions.firstZoomSensor;
 
@@ -239,6 +240,11 @@ _float CPlayerCamera::LerpAngle(_float current, _float target, _float t)
         diff += 360.f;
 
     return current + diff * t;
+}
+
+CCamera* CPlayerCamera::GetCamera()
+{
+    return m_pCamera;
 }
 
 const vector3 CPlayerCamera::Get_ForwardVector()

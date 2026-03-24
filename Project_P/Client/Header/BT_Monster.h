@@ -5,6 +5,17 @@
 class CMonster;
 class CMonsterController;
 
+struct AttackPattern
+{
+	wstring triggerName = L"attack";
+	_float minRange = 0.f;
+	_float maxRange = 5.f;
+	_float cooldown = 1.f;
+	_float weight = 1.f;
+	_int phase = -1;
+	_float currentCooldown = 0.f;
+};
+
 class CBT_Monster abstract : public CBehaviourTree
 {
 protected:

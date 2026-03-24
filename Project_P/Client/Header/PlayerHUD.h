@@ -41,10 +41,11 @@ public:
 		CImage* icon;
 		CImage* blur_Circle;
 		CImage* blur_Line;
+		CImage* blur_Icon;
 
 		_bool coolDown_Trigger = false;
 		_float coolEndDuration = 0.f;
-		_float coolEndDest = 0.3f;
+		_float coolEndDest = 0.5f;
 
 		_bool prevReady = false;
 		_bool glowAlbe = false;
@@ -68,7 +69,6 @@ public:
 
 public:
 	HRESULT Initialize() override;
-
 	void Awake() override;
 	void Start() override;
 	void Update() override;

@@ -55,6 +55,12 @@
     <Filter Include="Scripts\Object\Character\Collider">
       <UniqueIdentifier>{b6ebf21b-b967-44e5-882c-ff3f20a10fad}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Scripts\Object\UI\Player">
+      <UniqueIdentifier>{c80925bb-368f-4170-b7bc-9f0f90504996}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts\Object\UI\Monster">
+      <UniqueIdentifier>{41cff06a-8c07-47a4-86b8-f21b0d474877}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Header\MainScene.h">
@@ -92,9 +98,6 @@
     </ClInclude>
     <ClInclude Include="..\Header\Player.h">
       <Filter>Scripts\Object\Character\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Header\PlayerHUD.h">
-      <Filter>Scripts\Object\UI</Filter>
     </ClInclude>
     <ClInclude Include="..\Header\PlayerCamera.h">
       <Filter>Scripts\Object\Character\Player</Filter>
@@ -168,6 +171,12 @@
     <ClInclude Include="..\Header\PlayerState_DashAttack.h">
       <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\PlayerHUD.h">
+      <Filter>Scripts\Object\UI\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Header\MonsterHUD.h">
+      <Filter>Scripts\Object\UI\Monster</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Code\MainScene.cpp">
@@ -202,9 +211,6 @@
     </ClCompile>
     <ClCompile Include="..\Code\Player.cpp">
       <Filter>Scripts\Object\Character\Player</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Code\PlayerHUD.cpp">
-      <Filter>Scripts\Object\UI</Filter>
     </ClCompile>
     <ClCompile Include="..\Code\PlayerController.cpp">
       <Filter>Scripts\Object\Character\Player</Filter>
@@ -274,6 +280,12 @@
     </ClCompile>
     <ClCompile Include="..\Code\PlayerState_DashAttack.cpp">
       <Filter>Scripts\Object\Character\Player\FSM\PlayerState</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\PlayerHUD.cpp">
+      <Filter>Scripts\Object\UI\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\MonsterHUD.cpp">
+      <Filter>Scripts\Object\UI\Monster</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

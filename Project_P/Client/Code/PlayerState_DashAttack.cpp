@@ -48,6 +48,12 @@ void CPlayerState_DashAttack::Initialize(CPlayerControllerContext* _ctx, const C
 			m_pCtx->Get_Player()->DisableSwordCollider();
 		});
 
+	registerActionTrigger(18, L"DashAttack_StartRun", [this]()
+		{
+			if (m_pCtx->IsKeyPressed_Hold(PlayerState::Move))
+				Exit();
+		});
+
 	registerActionTrigger(endFrame, L"DashAttack_End", [this]()
 		{
 			Exit();
@@ -63,6 +69,7 @@ void CPlayerState_DashAttack::Enter()
 	m_pCtx->SetBattle(true);
 	m_pCtx->StopMoveImmediate();
 	m_pCtx->Animator()->SetTrigger(L"dashAttack");
+	m_pCtx->Animator()->SetBool(L"isStrongAttack", true);
 
 	m_pCtx->SetCanDashAttack(false);
 	m_pCtx->SetCanMove(false);
@@ -109,4 +116,6 @@ void CPlayerState_DashAttack::Exit()
 	m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionY(false);
 	m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionZ(false);
 	m_pCtx->Get_Player()->SetAbleNavAgent(false);
+
+	m_pCtx->Animator()->SetBool(L"isStrongAttack", false);
 }

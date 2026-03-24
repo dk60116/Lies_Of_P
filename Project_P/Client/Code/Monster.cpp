@@ -14,6 +14,7 @@ CMonster::CMonster()
 	, m_vActiveHitKnockback(vector3::zero())
 	, m_qHitReactionRotation(quaternion::identity())
 	, m_fHitKnockbackRemain(0.f)
+	, m_pHUD(nullptr)
 {
 	m_strName = L"Monster";
 }
@@ -39,6 +40,10 @@ HRESULT CMonster::Initialize()
 void CMonster::Awake()
 {
 	__super::Awake();
+
+	CGameObject* hudObj = m_pGameObject->Get_Scene()->Add_GameObject(L"HUD - " + m_strCharacterName);
+	m_pHUD = hudObj->AddComponent<CMonsterHUD>();
+	m_pHUD->BIndMonster(this);
 }
 
 void CMonster::Start()

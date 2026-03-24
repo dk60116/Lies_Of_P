@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Character.h"
+#include "MonsterHUD.h"
 
 class CMonster abstract : public CCharacter
 {
@@ -9,8 +10,12 @@ class CMonster abstract : public CCharacter
 public:
 	struct MonsterStatus
 	{
-		_int maxHp = 3;
+		_int maxHp = 1000;
 		_int crtHp = 0;
+		_int maxShield = 500;
+		_int crtShield = 0;
+		_int maxBalance = 3;
+		_int crtBalance = 0;
 		_float moveSpeed = 5.f;
 		_float detectionRange = 30.f;
 		_float turnSpeed = 180.f;
@@ -71,5 +76,7 @@ protected:
 	vector3 m_vActiveHitKnockback;
 	quaternion m_qHitReactionRotation;
 	_float m_fHitKnockbackRemain;
+
+	CMonsterHUD* m_pHUD;
 };
 

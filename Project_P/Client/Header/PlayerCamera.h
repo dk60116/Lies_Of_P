@@ -38,6 +38,7 @@ public:
     void OnDestroy() override;
 
 public:
+    CCamera* GetCamera();
     const vector3 Get_ForwardVector();
     const _float Get_ForwardAngle();
 
@@ -45,6 +46,7 @@ private:
     _float LerpAngle(_float current, _float target, _float t);
 
 private:
+    CCamera* m_pCamera;
     PlayerCameraOptions m_sOptions;
 
     _float m_fBackOffset;

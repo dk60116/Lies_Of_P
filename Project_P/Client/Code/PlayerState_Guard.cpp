@@ -49,11 +49,19 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 		CAnimationClip* idleClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_Idle (Animation Clip)");
 
 		{
-			CAnimationClip::ActionTrigger at = { 5, L"Guard_CanMoveTime" };
-			idleClip->Add_ActionTrigger(at);
+			CAnimationClip::ActionTrigger atMove = { 5, L"Guard_CanMoveTime" };
+			idleClip->Add_ActionTrigger(atMove);
 			m_pCtx->Animator()->RegisterActionHandler(L"Guard_CanMoveTime", [this]()
 				{
 					m_pCtx->SetCanMove(true);
+				});
+
+			CAnimationClip::ActionTrigger atExit = { 2, L"Guard_Idle_ExitAbleTime" };
+			idleClip->Add_ActionTrigger(atExit);
+			m_pCtx->Animator()->RegisterActionHandler(L"Guard_Idle_ExitAbleTime", [this]()
+				{
+					m_bExitableTime = true;
+					m_pCtx->SetCanTurn(false);
 				});
 		}
 	}

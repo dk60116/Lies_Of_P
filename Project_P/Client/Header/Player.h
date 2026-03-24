@@ -27,7 +27,7 @@ public:
 		_int shAttack = 0;
 		_float criticalChance = 0.f;
 		_float criticalDamage = 0.f;
-		_float runSpeed = 3.f;
+		_float runSpeed = 3.5f;
 		_float sprintSpeed = 4.2f;
 		_float backWalkRatio = 0.7f;
 		_float moveAccelRate = 4.f;
