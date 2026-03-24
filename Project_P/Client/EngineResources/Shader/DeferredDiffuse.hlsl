@@ -237,12 +237,12 @@ float4 PSMain(VSOut i) : SV_Target
 
         float3 diffuse = kD * (albedo);
 
-        Lo += (diffuse + spec) * radiance * NdotL;
+        Lo += (diffuse * occulusion + spec) * radiance * NdotL;
     }
     
     float ambient = dirLightCount ? 0.5f : 0.2f;
     
-    float3 ambientV = ambient * albedo * (1.0f - (metallic * 0.7f));
+    float3 ambientV = ambient * albedo * (1.0f - (metallic * 0.7f)) * occulusion;
 
     float3 color = ambientV + Lo;
     color = saturate(color);

@@ -41,6 +41,9 @@ public:
 public:
 	void SetAbleNavAgent(const _bool _value);
 
+public:
+	const _float GetHeight() const;
+
 protected:
 	virtual void SetAnimationAction() PURE;
 	void CreateHurtBox();

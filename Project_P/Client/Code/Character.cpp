@@ -91,6 +91,11 @@ void CCharacter::SetAbleNavAgent(const _bool _value)
 	m_pNavAgent->SetEnable(_value);
 }
 
+const _float CCharacter::GetHeight() const
+{
+	return m_pBodyCollider->GetHeight();
+}
+
 void CCharacter::CreateHurtBox()
 {
 	for (size_t i = 0; i < m_vHurtBoxInfoList.size(); ++i)

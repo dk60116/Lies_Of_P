@@ -78,7 +78,7 @@ void CHorizontalLayoutGroup::ApplyLayout(const LayoutContext& context)
 	for (const _float width : widths)
 		rowWidth += width;
 
-	const _float remainingWidth = max(0.f, context.innerWidth - rowWidth);
+	const _float remainingWidth = context.innerWidth - rowWidth;
 	const _float startX = m_tPadding.left + remainingWidth * GetHorizontalAlignmentFactor();
 
 	_float cursorX = startX;
@@ -94,7 +94,7 @@ void CHorizontalLayoutGroup::ApplyLayout(const LayoutContext& context)
 		if (m_bControlChildSizeHeight || m_bForceExpandHeight)
 			childHeight = context.innerHeight;
 
-		const _float remainingHeight = max(0.f, context.innerHeight - childHeight);
+		const _float remainingHeight = context.innerHeight - childHeight;
 		const _float y = m_tPadding.bottom + remainingHeight * GetVerticalAlignmentFactor();
 
 		SetChildLayout

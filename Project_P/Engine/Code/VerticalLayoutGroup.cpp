@@ -78,7 +78,7 @@ void CVerticalLayoutGroup::ApplyLayout(const LayoutContext& context)
 	for (const _float height : heights)
 		columnHeight += height;
 
-	const _float remainingHeight = max(0.f, context.innerHeight - columnHeight);
+	const _float remainingHeight = context.innerHeight - columnHeight;
 	const _float baseY = m_tPadding.bottom + remainingHeight * GetVerticalAlignmentFactor();
 	_float cursorTop = baseY + columnHeight;
 
@@ -94,7 +94,7 @@ void CVerticalLayoutGroup::ApplyLayout(const LayoutContext& context)
 		if (m_bControlChildSizeWidth || m_bForceExpandWidth)
 			childWidth = context.innerWidth;
 
-		const _float remainingWidth = max(0.f, context.innerWidth - childWidth);
+		const _float remainingWidth = context.innerWidth - childWidth;
 		const _float x = m_tPadding.left + remainingWidth * GetHorizontalAlignmentFactor();
 
 		cursorTop -= childHeight;

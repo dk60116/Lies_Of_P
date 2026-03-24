@@ -33,6 +33,7 @@ cbuffer PerCustomValue : register(b5)
 
 Texture2D gNormal : register(t0);
 Texture2D<float> gDepth : register(t1);
+Texture2D gMaterial : register(t2);
 SamplerState gSampler : register(s0);
 
 struct VSIn
@@ -159,9 +160,11 @@ float4 PSMain(VSOut i) : SV_Target
         diffuseSum += lightCol * (NdotL * intensity * att);
     }
 
-    float3 globalAmbient = 0.2f;
+    float4 mat = gMaterial.Sample(gSampler, uvTex);
+    float occulusion = saturate(mat.r);
 
-    // "�˺����� ���� ���ϸ�" �̹Ƿ� ���� ����� ���
+    float3 globalAmbient = 0.2f * occulusion;
+
     float3 lit = saturate(globalAmbient + ambientSum + diffuseSum + specularSum);
     return float4(lit, 1);
 }
