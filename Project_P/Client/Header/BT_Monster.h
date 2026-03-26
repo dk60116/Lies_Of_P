@@ -35,6 +35,7 @@ protected:
 	CMonsterController* Get_Controller();
 	CMonster* Get_Monster();
 
+	BTState RunDead(AIContext& _ctx);
 	BTState RunHide(AIContext& _ctx);
 	BTState RunChase(AIContext& _ctx);
 	BTState RunAttack(AIContext& _ctx);

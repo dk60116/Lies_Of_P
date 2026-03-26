@@ -53,6 +53,9 @@ void CMonsterController::Start()
 
 void CMonsterController::Update()
 {
+	if (m_eState == MonsterState::Dead)
+		return;
+
 	Refresh_Target();
 	Set_State(Resolve_State());
 }
@@ -177,6 +180,9 @@ CMonsterController::MonsterState CMonsterController::Resolve_State() const
 {
 	if (!m_pMonster)
 		return m_eDefaultState;
+
+	if (m_pMonster->IsDead())
+		return MonsterState::Dead;
 
 	if (m_pMonster->HasPendingHitReaction() || m_pMonster->IsHitReacting())
 		return MonsterState::Hit;

@@ -196,6 +196,10 @@ void CPlayer::Awake()
 void CPlayer::Start()
 {
 	__super::Start();
+
+	if (m_pEquipWeapon)
+		m_pEquipWeapon->SetDamage(m_sPlayerStatus.attackPower + m_sEquipStatus.attack);
+
 	SyncHUDStatus();
 }
 
@@ -267,9 +271,15 @@ void CPlayer::RecoverHp(const _uint _value)
 
 void CPlayer::GetDamage(const _uint _damage)
 {
+	if (m_bIsDead)
+		return;
+
 	m_sPlayerStatus.crtHp -= _damage;
 	m_sPlayerStatus.crtHp = max(m_sPlayerStatus.crtHp, 0);
 	SyncHUDStatus();
+
+	if (m_sPlayerStatus.crtHp <= 0)
+		Die();
 }
 
 void CPlayer::TickDashAttackCooldown()
@@ -321,6 +331,12 @@ void CPlayer::OnSwordAttackHandler()
 void CPlayer::DisableSwordCollider()
 {
 	m_pEquipWeapon->DisableHurtBox();
+}
+
+void CPlayer::SetWeaponKnockback(const _bool _knockback)
+{
+	if (m_pEquipWeapon)
+		m_pEquipWeapon->SetKnockback(_knockback);
 }
 
 void CPlayer::GetHitHandler(const HurtDescription& _hurtDesc)

@@ -16,7 +16,8 @@ public:
 		Detect,
 		Hit,
 		Chase,
-		Battle
+		Battle,
+		Dead
 	};
 
 protected:

@@ -77,6 +77,11 @@ const _int CHurtBox::GetDamage() const
     return m_sHurtDesc.damage;
 }
 
+void CHurtBox::SetKnockback(const _bool _knockback)
+{
+    m_sHurtDesc.knockback = _knockback;
+}
+
 void CHurtBox::OnHitEvent(CCharacter* _target)
 {
     if (!_target)

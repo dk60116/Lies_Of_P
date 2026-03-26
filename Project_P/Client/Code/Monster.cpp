@@ -32,9 +32,6 @@ HRESULT CMonster::Initialize()
 	PaintTexture();
 	CreateAnimator();
 	CreateAI();
-	m_sStatus.crtHp = m_sStatus.maxHp;
-	m_sStatus.crtShield = m_sStatus.maxShield;
-	m_sStatus.crtBalance = m_sStatus.maxBalance;
 
 	return S_OK;
 }
@@ -42,6 +39,10 @@ HRESULT CMonster::Initialize()
 void CMonster::Awake()
 {
 	__super::Awake();
+
+	m_sStatus.crtHp = m_sStatus.maxHp;
+	m_sStatus.crtShield = m_sStatus.maxShield;
+	m_sStatus.crtBalance = m_sStatus.maxBalance;
 
 	CGameObject* hudObj = m_pGameObject->Get_Scene()->Add_GameObject(L"HUD - " + m_strCharacterName);
 	m_pHUD = hudObj->AddComponent<CMonsterHUD>();
@@ -73,6 +74,37 @@ void CMonster::OnDestroy()
 	m_qHitReactionRotation = quaternion::identity();
 	m_fHitKnockbackRemain = 0.f;
 	__super::OnDestroy();
+}
+
+void CMonster::Die()
+{
+	if (m_bIsDead)
+		return;
+
+	__super::Die();
+
+	for (const auto& hurtBoxPair : m_mHurtBoxList)
+	{
+		if (hurtBoxPair.second)
+			hurtBoxPair.second->DisableBox();
+	}
+
+	if (m_pNavAgent)
+	{
+		m_pNavAgent->ResetPath();
+		m_pNavAgent->SetEnable(false);
+	}
+
+	if (m_pBodyCollider)
+		m_pBodyCollider->SetEnable(false);
+
+	if (m_pHUD)
+		m_pHUD->SetHUDVisible(false);
+
+	EndHitReaction();
+
+	if (m_pController)
+		m_pController->Set_State(CMonsterController::MonsterState::Dead);
 }
 
 void CMonster::Change_State(const _uint _state)
@@ -227,28 +259,40 @@ void CMonster::TickHitReactionKnockback()
 
 void CMonster::GetHitHandler(const HurtDescription& _hurtDesc)
 {
+	if (m_bIsDead)
+		return;
+
 	if (_hurtDesc.damage > 0)
 	{
 		m_sStatus.crtHp -= _hurtDesc.damage;
 		m_sStatus.crtHp = max(m_sStatus.crtHp, 0);
 	}
 
-	if (CTransform* transform = GetTransform())
+	if (m_sStatus.crtHp <= 0)
 	{
-		vector3 knockbackDir = _hurtDesc.forward;
-		knockbackDir.y = 0.f;
+		Die();
+		return;
+	}
 
-		if (knockbackDir.lengthSq() <= 0.0001f)
-			knockbackDir = transform->Get_Position() - _hurtDesc.position;
+	if (_hurtDesc.knockback)
+	{
+		if (CTransform* transform = GetTransform())
+		{
+			vector3 knockbackDir = _hurtDesc.forward;
+			knockbackDir.y = 0.f;
 
-		knockbackDir.y = 0.f;
+			if (knockbackDir.lengthSq() <= 0.0001f)
+				knockbackDir = transform->Get_Position() - _hurtDesc.position;
 
-		if (knockbackDir.lengthSq() <= 0.0001f)
-			knockbackDir = transform->Get_Directions().forward;
+			knockbackDir.y = 0.f;
 
-		knockbackDir.y = 0.f;
-		if (knockbackDir.lengthSq() > 0.0001f)
-			m_vPendingHitKnockback = knockbackDir.normalized();
+			if (knockbackDir.lengthSq() <= 0.0001f)
+				knockbackDir = transform->Get_Directions().forward;
+
+			knockbackDir.y = 0.f;
+			if (knockbackDir.lengthSq() > 0.0001f)
+				m_vPendingHitKnockback = knockbackDir.normalized();
+		}
 	}
 
 	m_bHitRequested = true;

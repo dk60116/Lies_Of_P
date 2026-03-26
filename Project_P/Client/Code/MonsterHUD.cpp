@@ -80,6 +80,12 @@ void CMonsterHUD::Update()
 	if (!m_pMonster || !m_pRect)
 		return;
 
+	if (m_pMonster->IsDead())
+	{
+		SetHUDVisible(false);
+		return;
+	}
+
 	CPlayerCamera* playerCamera = CGameManager::GetInstance().Get_PlayerCamera();
 	CCamera* camera = playerCamera ? playerCamera->GetCamera() : nullptr;
 	if (!camera)
@@ -328,17 +334,19 @@ void CMonsterHUD::UpdateRectWidthFromMaxHP()
 	if (!m_pRect || !m_pMonster)
 		return;
 
-	const _float hpRectCapacity = 100.f;
+	const _int maxCubeCount = 30;
 	const _float hpRectWidth = m_sOption.rectSize;
 	const _float maxHp = static_cast<_float>(max(0, m_pMonster->GetStatus().maxHp));
-	const _float activeRectCount = ceilf(maxHp / hpRectCapacity);
+	const _float hpRectCapacity = max(100.f, ceilf(maxHp / static_cast<_float>(maxCubeCount)));
+	const _float activeRectCount = min(static_cast<_float>(maxCubeCount), ceilf(maxHp / hpRectCapacity));
 
 	m_pRect->Set_Width(max(hpRectWidth, activeRectCount * hpRectWidth));
 }
 
 void CMonsterHUD::Update_HP(const _int _maxValue, const _int _current)
 {
-	const _float rectCapacity = 100.f;
+	const _int maxCubeCount = 30;
+	const _float rectCapacity = max(100.f, ceilf(static_cast<_float>(_maxValue) / static_cast<_float>(maxCubeCount)));
 
 	for (size_t i = 0; i < m_vHPBox.size(); ++i)
 	{

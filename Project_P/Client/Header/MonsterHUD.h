@@ -42,12 +42,12 @@ public:
 
 public:
 	void BIndMonster(class CMonster* _monster);
+	void SetHUDVisible(const _bool _visible);
 
 private:
 	void CreateHPBar();
 	void CreateSHBar();
 	void CreateBABar();
-	void SetHUDVisible(const _bool _visible);
 	void UpdateRectWidthFromMaxHP();
 	void Update_HP(const _int _maxValue, const _int _current);
 	void Update_SH(const _int _maxValue, const _int _current);

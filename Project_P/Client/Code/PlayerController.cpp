@@ -102,6 +102,9 @@ void CPlayerController::Update()
             return;
     }
 
+	if (m_pPlayer && m_pPlayer->GetTransform())
+		m_vPreAnimPos = m_pPlayer->GetTransform()->Get_Position();
+
 	m_pCtx->SetSprint(m_mKeyHold[Evade]);
 
 	HandleStrongAttackInput();
@@ -176,6 +179,93 @@ void CPlayerController::Update()
 
 void CPlayerController::LateUpdate()
 {
+	if (!m_pCtx || !m_pPlayer)
+		return;
+
+	if (!m_pCtx->IsActionActive(PlayerState::Attack) &&
+		!m_pCtx->IsActionActive(PlayerState::Attack_S) &&
+		!m_pCtx->IsActionActive(PlayerState::DashAttack))
+		return;
+
+	CTransform* tr = m_pPlayer->GetTransform();
+	if (!tr)
+		return;
+
+	vector3 pos = tr->Get_Position();
+	vector3 fwd = tr->Get_Directions().forward;
+	fwd.y = 0.f;
+	if (fwd.lengthSq() < 0.0001f)
+		return;
+	fwd = fwd.normalized();
+
+	const _float playerRadius = m_pPlayer->GetRadius();
+
+	/* ── 1. 루트모션 슬라이딩 방지 ──
+	   NavAgent::Update()의 SnapToNavigation이 navmesh 경계에서
+	   가장 가까운 점으로 보정하면서 벽을 따라 슬라이딩 시킴.
+	   Set_Position으로 XZ를 강제 설정하여 이를 무효화. */
+	vector3 frameDelta = pos - m_vPreAnimPos;
+	frameDelta.y = 0.f;
+
+	if (frameDelta.lengthSq() > 0.0001f)
+	{
+		const _float forwardAmount = frameDelta.dot(fwd);
+
+		// 전방 성분만 허용, 측면 성분(슬라이딩) 완전 제거
+		vector3 correctedPos;
+		if (forwardAmount > 0.f)
+		{
+			correctedPos.x = m_vPreAnimPos.x + fwd.x * forwardAmount;
+			correctedPos.y = pos.y;
+			correctedPos.z = m_vPreAnimPos.z + fwd.z * forwardAmount;
+		}
+		else
+		{
+			// 후방 또는 이동 없음 — 원래 위치 유지
+			correctedPos = vector3(m_vPreAnimPos.x, pos.y, m_vPreAnimPos.z);
+		}
+
+		tr->Set_Position(correctedPos);
+	}
+
+	/* ── 2. 적 충돌 체크 ── */
+	pos = tr->Get_Position();
+
+	const _float checkDistance = playerRadius + 0.5f;
+
+	CPhysics::SphereRay ray = {};
+	ray.center = pos + vector3::up() * 1.f;
+	ray.radius = playerRadius * 0.5f;
+	ray.dir = fwd;
+	ray.maxDist = checkDistance;
+
+	vector<_uint> layers = { CSceneManager::GetInstance().NameToLayer(L"HitBox_Enemy") };
+	auto mask = CSceneManager::GetInstance().MakeLayerMask(false, layers);
+
+	auto hits = CPhysics::GetInstance().SphereRaycast(ray, mask);
+
+	for (const auto& hit : hits)
+	{
+		if (!hit.isHit)
+			continue;
+
+		const _float safeDistance = playerRadius + 0.3f;
+		if (hit.distance < safeDistance)
+		{
+			vector3 enemyFrameDelta = pos - m_vPreAnimPos;
+			enemyFrameDelta.y = 0.f;
+			const _float forwardMove = enemyFrameDelta.dot(fwd);
+
+			if (forwardMove > 0.f)
+				tr->Translate(-fwd * forwardMove);
+
+			const _float remaining = safeDistance - hit.distance + forwardMove;
+			if (remaining > 0.f)
+				tr->Translate(-fwd * remaining);
+
+			break;
+		}
+	}
 }
 
 void CPlayerController::OnDestroy()

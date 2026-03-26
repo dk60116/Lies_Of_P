@@ -178,6 +178,11 @@ CBTNode* CBT_Monster::CreateHideChaseRoot()
 {
 	CBTSelector* root = new CBTSelector();
 
+	CBTAction* deadAction = new CBTAction([this](AIContext& _ctx)
+		{
+			return RunDead(_ctx);
+		});
+
 	CBTAction* hitAction = new CBTAction([this](AIContext& _ctx)
 		{
 			return RunHit(_ctx);
@@ -198,6 +203,7 @@ CBTNode* CBT_Monster::CreateHideChaseRoot()
 			return RunHide(_ctx);
 		});
 
+	root->AddChild(deadAction);
 	root->AddChild(hitAction);
 	root->AddChild(attackAction);
 	root->AddChild(chaseAction);
@@ -219,6 +225,34 @@ CMonster* CBT_Monster::Get_Monster()
 		return nullptr;
 
 	return controller->Get_Monster();
+}
+
+BTState CBT_Monster::RunDead(AIContext& _ctx)
+{
+	UNREFERENCED_PARAMETER(_ctx);
+
+	CMonsterController* controller = Get_Controller();
+	CMonster* monster = Get_Monster();
+	if (!controller || !monster)
+		return BTState::Failure;
+
+	if (controller->Get_State() != CMonsterController::MonsterState::Dead)
+		return BTState::Failure;
+
+	m_bChaseMoveActive = false;
+	m_fAttackCooldown = 0.f;
+
+	CNaviMeshAgent* navAgent = monster->GetNaviAgent();
+	if (navAgent)
+	{
+		navAgent->SetAlwaysLookAt(false);
+		navAgent->ResetPath();
+	}
+
+	if (CAnimator* animator = monster->GetAnimator())
+		animator->SetFloat(L"speed", 0.f);
+
+	return BTState::Success;
 }
 
 BTState CBT_Monster::RunHide(AIContext& _ctx)

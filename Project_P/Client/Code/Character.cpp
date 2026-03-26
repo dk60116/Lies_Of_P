@@ -5,6 +5,7 @@
 
 CCharacter::CCharacter()
 	: m_strCharacterName(L"")
+	, m_bIsDead(false)
 	, m_pSkinnedMeshRenderer()
 	, m_pBodyCollider(nullptr)
 	, m_pRigidBody(nullptr)
@@ -61,6 +62,22 @@ void CCharacter::OnDestroy()
 	m_vHitBoxInfoList.clear();
 }
 
+void CCharacter::Die()
+{
+	if (m_bIsDead)
+		return;
+
+	m_bIsDead = true;
+
+	if (m_pAnimator)
+		m_pAnimator->SetBool(L"isDead", true);
+}
+
+const _bool CCharacter::IsDead() const
+{
+	return m_bIsDead;
+}
+
 CAnimator* CCharacter::GetAnimator()
 {
 	return m_pAnimator;
@@ -89,6 +106,8 @@ const wstring& CCharacter::GetCharacterName() const
 void CCharacter::SetAbleNavAgent(const _bool _value)
 {
 	m_pNavAgent->SetEnable(_value);
+	m_pRigidBody->SetUseGravity(!_value);
+	m_pRigidBody->ResetVelocity();
 }
 
 const _float CCharacter::GetHeight() const

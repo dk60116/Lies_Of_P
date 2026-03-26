@@ -23,7 +23,7 @@ public:
 		_int crtHp = 0;
 		_int maxShield;
 		_int crtShield = 0;
-		_int attackPower = 0;
+		_int attackPower = 250;
 		_int shAttack = 0;
 		_float criticalChance = 0.f;
 		_float criticalDamage = 0.f;
@@ -49,7 +49,7 @@ public:
 		_int be = 1000;
 		_int hp = 2000;
 		_int sh = 500;
-		_int attack = 450;
+		_int attack = 0;
 		_int shAttack = 100;
 		_float criticalChance = 5.f;
 		_float criticalDamageRate = 150.f;
@@ -93,6 +93,7 @@ public:
 public:
 	void OnSwordAttackHandler();
 	void DisableSwordCollider();
+	void SetWeaponKnockback(const _bool _knockback);
 	void GetHitHandler(const HurtDescription& _hurtDesc) override;
 
 protected:

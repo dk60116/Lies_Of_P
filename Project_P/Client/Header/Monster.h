@@ -40,6 +40,7 @@ public:
 	void OnDestroy() override;
 
 public:
+	void Die() override;
 	void Change_State(const _uint _state);
 	const MonsterStatus& GetStatus();
 

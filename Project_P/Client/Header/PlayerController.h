@@ -73,6 +73,7 @@ private:
 
 private:
     _float m_fPrevSpeed;
+    vector3 m_vPreAnimPos = vector3::zero();
     _float m_fStrongAttackHoldTime = 0.f;
     _bool m_bPendingStrongAttackRelease = false;
     _bool m_bDashAttackQueuedFromHold = false;

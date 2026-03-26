@@ -6,6 +6,7 @@ struct HurtDescription
 	vector3 position = vector3::zero();
 	vector3 forward = vector3::zero();
 	_int damage = 0;
+	_bool knockback = true;
 };
 
 class CColliderBox abstract : public CComponent

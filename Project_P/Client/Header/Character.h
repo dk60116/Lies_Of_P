@@ -27,6 +27,10 @@ public:
 	void OnDestroy() override;
 
 public:
+	virtual void Die();
+	const _bool IsDead() const;
+
+public:
 	CAnimator* GetAnimator();
 	CRigidBody* GetRigidBody();
 
@@ -54,6 +58,7 @@ private:
 
 protected:
 	wstring m_strCharacterName;
+	_bool m_bIsDead;
 
 	CSkinnedMeshRenderer* m_pSkinnedMeshRenderer;
 

@@ -67,6 +67,8 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
         if (onStart)
             onStart();
 
+        m_pCtx->Get_Player()->SetWeaponKnockback(m_iCrtCombo <= 1);
+
         m_pCtx->Animator()->SetInt(L"attackCombo", m_iCrtCombo);
         m_pCtx->Animator()->SetBool(L"comboContinue", false);
         m_bCanContinue = true;
@@ -268,6 +270,7 @@ void CPlayerState_Attack::Enter()
     m_bThrust = false;
 
     m_pCtx->Get_Player()->OnSwordAttackHandler();
+    m_pCtx->Get_Player()->SetWeaponKnockback(true);
 
     m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionX(true);
     m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionY(true);

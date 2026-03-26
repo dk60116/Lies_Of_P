@@ -22,6 +22,7 @@ public:
 public:
 	void SetDamage(const _int damage);
 	const _int GetDamage() const;
+	void SetKnockback(const _bool _knockback);
 
 private:
 	void OnHitEvent(CCharacter* _target);

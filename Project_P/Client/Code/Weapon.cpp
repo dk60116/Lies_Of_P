@@ -56,3 +56,15 @@ void CWeapon::DisableHurtBox()
 {
 	m_pHurtBox->DisableBox();
 }
+
+void CWeapon::SetDamage(const _int _damage)
+{
+	if (m_pHurtBox)
+		m_pHurtBox->SetDamage(_damage);
+}
+
+void CWeapon::SetKnockback(const _bool _knockback)
+{
+	if (m_pHurtBox)
+		m_pHurtBox->SetKnockback(_knockback);
+}

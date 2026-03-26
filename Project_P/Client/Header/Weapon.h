@@ -22,6 +22,8 @@ protected:
 public:
 	void EnableHurtBox();
 	void DisableHurtBox();
+	void SetDamage(const _int _damage);
+	void SetKnockback(const _bool _knockback);
 
 protected:
 	wstring m_strWeaponName;
