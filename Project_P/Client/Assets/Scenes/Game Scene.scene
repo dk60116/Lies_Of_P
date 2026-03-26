@@ -150,6 +150,8 @@ HUD_SkillFrame : UI/HUDUI/HUD_skill_hud_frame.png : [Texture]
 HUD_SkillGlow : UI/HUDUI/HUD_cicle_glow.png : [Texture]
 HUD_SkillBlur_Circle : UI/HUDUI/HUD_blur_circle.png : [Texture]
 HUD_SkillBlur_Line : UI/HUDUI/HUD_blur_circle_line.png : [Texture]
+HUD_BA_Cube_Empty : UI/HUDUI/HUD_Balancd_Dot_Empty.png : [Texture]
+HUD_BA_Cube_Full : UI/HUDUI/HUD_Balancd_Dot_Full.png : [Texture]
 //
 Building_0_Stage01_Building_00_Auto_1770865212651 : Map/Map01/Building_0/Stage01_Building_00.fbx : [Mesh]
 Building_1_Stage01_Building_01_Auto_1770868093590 : Map/Map01/Building_1/Stage01_Building_01.fbx : [Mesh]

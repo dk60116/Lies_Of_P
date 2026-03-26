@@ -214,8 +214,17 @@ void CLayoutGroup::SetChildLayout(CRectTransform* child, const _float x, const _
 	if (!child)
 		return;
 
-	child->Set_AnchorsMin(0.f, 0.f);
-	child->Set_AnchorsMax(0.f, 0.f);
+	const _float anchorX = GetHorizontalAlignmentFactor();
+	const _float anchorY = GetVerticalAlignmentFactor();
+	const _float parentWidth = (m_pGameObject && m_pGameObject->GetComponent<CRectTransform>())
+		? max(0.f, m_pGameObject->GetComponent<CRectTransform>()->Get_Width())
+		: 0.f;
+	const _float parentHeight = (m_pGameObject && m_pGameObject->GetComponent<CRectTransform>())
+		? max(0.f, m_pGameObject->GetComponent<CRectTransform>()->Get_Height())
+		: 0.f;
+
+	child->Set_AnchorsMin(anchorX, anchorY);
+	child->Set_AnchorsMax(anchorX, anchorY);
 
 	if (setWidth && setHeight)
 		child->Set_WidthHeight(width, height);
@@ -230,8 +239,8 @@ void CLayoutGroup::SetChildLayout(CRectTransform* child, const _float x, const _
 
 	child->Set_AnchoredPosition
 	(
-		x + finalWidth * pivot.x,
-		y + finalHeight * pivot.y
+		x + finalWidth * pivot.x - parentWidth * anchorX,
+		y + finalHeight * pivot.y - parentHeight * anchorY
 	);
 }
 

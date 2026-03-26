@@ -14,7 +14,7 @@ CComponent::CComponent()
 
 CComponent::~CComponent()
 {
-	Release();
+	ComponentRelease();
 }
 
 HRESULT CComponent::Initialize()

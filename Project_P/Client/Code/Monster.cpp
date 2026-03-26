@@ -33,6 +33,8 @@ HRESULT CMonster::Initialize()
 	CreateAnimator();
 	CreateAI();
 	m_sStatus.crtHp = m_sStatus.maxHp;
+	m_sStatus.crtShield = m_sStatus.maxShield;
+	m_sStatus.crtBalance = m_sStatus.maxBalance;
 
 	return S_OK;
 }

@@ -134,6 +134,16 @@ void CMainProcess::Update_MainApp()
 
 void CMainProcess::Release_MainApp()
 {
+    CRenderThread::GetInstance().WaitIdle();
+
+    // Tear scenes down while dependent runtime systems are still alive.
+    CSceneManager::GetInstance().Release();
+    CJobSystem::GetInstance().Shutdown();
+    CRenderThread::GetInstance().Shutdown();
+    CUIManager::GetInstance().Release();
     CPhysics::GetInstance().Release();
+    CInput::GetInstance().Release();
+    CRenderTargetManager::GetInstance().Release();
     CDebug::GetInstance().Release();
+    CTime::GetInstance().Release();
 }

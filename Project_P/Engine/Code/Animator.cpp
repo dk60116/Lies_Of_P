@@ -411,6 +411,8 @@ void CAnimator::Update()
 
 void CAnimator::OnDestroy()
 {
+	m_mActionHandlers.clear();
+
 	for (TRAVERSAL_ITER(m_mAnimationList, it))
 		Safe_Release((*it).second);
 	m_mAnimationList.clear();

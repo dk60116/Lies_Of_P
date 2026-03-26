@@ -21,8 +21,14 @@ public:
 
 	void Schedule(std::function<void()> _job)
 	{
+		if (!_job)
+			return;
+
 		{
 			std::unique_lock<std::mutex> lock(m_mutex);
+			if (m_shutdown)
+				return;
+
 			++m_pendingCount;
 			m_queue.push(std::move(_job));
 		}
@@ -33,6 +39,35 @@ public:
 	{
 		std::unique_lock<std::mutex> lock(m_mutex);
 		m_cvDone.wait(lock, [this] { return m_pendingCount.load() == 0; });
+	}
+
+	void Shutdown()
+	{
+		{
+			std::unique_lock<std::mutex> lock(m_mutex);
+			if (m_shutdown && m_workers.empty())
+				return;
+
+			m_shutdown = true;
+		}
+
+		m_cvWork.notify_all();
+
+		for (auto& t : m_workers)
+		{
+			if (t.joinable())
+				t.join();
+		}
+
+		std::vector<std::thread>().swap(m_workers);
+
+		{
+			std::unique_lock<std::mutex> lock(m_mutex);
+			std::queue<std::function<void()>>().swap(m_queue);
+			m_pendingCount = 0;
+		}
+
+		m_cvDone.notify_all();
 	}
 
 private:
@@ -48,13 +83,7 @@ private:
 
 	~CJobSystem()
 	{
-		{
-			std::unique_lock<std::mutex> lock(m_mutex);
-			m_shutdown = true;
-		}
-		m_cvWork.notify_all();
-		for (auto& t : m_workers)
-			t.join();
+		Shutdown();
 	}
 
 	void WorkerLoop()
@@ -101,8 +130,14 @@ public:
 
 	void Submit(std::function<void()> _renderFn)
 	{
+		if (!_renderFn)
+			return;
+
 		{
 			std::unique_lock<std::mutex> lock(m_mutex);
+			if (m_shutdown)
+				return;
+
 			m_job = std::move(_renderFn);
 			m_hasJob = true;
 		}
@@ -113,6 +148,31 @@ public:
 	{
 		std::unique_lock<std::mutex> lock(m_mutex);
 		m_cv.wait(lock, [this] { return !m_hasJob && !m_running; });
+	}
+
+	void Shutdown()
+	{
+		WaitIdle();
+
+		{
+			std::unique_lock<std::mutex> lock(m_mutex);
+			if (m_shutdown && !m_thread.joinable())
+				return;
+
+			m_shutdown = true;
+		}
+
+		m_cv.notify_all();
+
+		if (m_thread.joinable())
+			m_thread.join();
+
+		{
+			std::unique_lock<std::mutex> lock(m_mutex);
+			m_job = {};
+			m_hasJob = false;
+			m_running = false;
+		}
 	}
 
 private:
@@ -126,13 +186,7 @@ private:
 
 	~CRenderThread()
 	{
-		WaitIdle();
-		{
-			std::unique_lock<std::mutex> lock(m_mutex);
-			m_shutdown = true;
-		}
-		m_cv.notify_all();
-		m_thread.join();
+		Shutdown();
 	}
 
 	void ThreadLoop()

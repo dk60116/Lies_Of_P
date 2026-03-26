@@ -625,14 +625,25 @@ const vector2 CCamera::WorldToScreenPoint(const vector3& _world) const
 	_matrix proj = XMLoadFloat4x4(&m_vProjMatrix);
 
 	_vector worldPos = XMVectorSet(_world.x, _world.y, _world.z, 1.f);
-	_vector clipPos  = XMVector4Transform(worldPos, XMMatrixMultiply(view, proj));
+	_vector viewPos = XMVector4Transform(worldPos, view);
+	const _float viewZ = XMVectorGetZ(viewPos);
+
+	if (!std::isfinite(viewZ) || viewZ <= 0.f)
+		return vector2(-FLT_MAX, -FLT_MAX);
+
+	_vector clipPos = XMVector4Transform(viewPos, proj);
 
 	const _float w = XMVectorGetW(clipPos);
-	if (fabsf(w) < 1e-6f)
-		return vector2(0.f, 0.f);
+	const _float safeW = (fabsf(w) <= 1e-6f) ? (w < 0.f ? -1e-6f : 1e-6f) : w;
 
-	const _float xNDC = XMVectorGetX(clipPos) / w;
-	const _float yNDC = XMVectorGetY(clipPos) / w;
+	_float xNDC = XMVectorGetX(clipPos) / safeW;
+	_float yNDC = XMVectorGetY(clipPos) / safeW;
+
+	if (!std::isfinite(xNDC))
+		xNDC = xNDC < 0.f ? -FLT_MAX : FLT_MAX;
+
+	if (!std::isfinite(yNDC))
+		yNDC = yNDC < 0.f ? -FLT_MAX : FLT_MAX;
 
 	return vector2
 	(

@@ -6,6 +6,11 @@ class CMonsterHUD final : public CComponent
 	friend class CGameObject;
 
 public:
+	struct MonsterHUDOPtions
+	{
+		_float rectSize = 4.f;
+	};
+
 	struct HPGaugeSet
 	{
 		CRectTransform* rect;
@@ -42,8 +47,11 @@ private:
 	void CreateHPBar();
 	void CreateSHBar();
 	void CreateBABar();
+	void SetHUDVisible(const _bool _visible);
+	void UpdateRectWidthFromMaxHP();
 	void Update_HP(const _int _maxValue, const _int _current);
 	void Update_SH(const _int _maxValue, const _int _current);
+	void Update_BA(const _int _maxValue, const _int _current);
 
 public:
 	CRectTransform* m_pRect;
@@ -51,7 +59,13 @@ public:
 	CCanvas* m_pCanvas;
 
 private:
+	MonsterHUDOPtions m_sOption;
+
+	CRectTransform* m_pHPBarRect;
+	CRectTransform* m_pSHBarRect;
+	CRectTransform* m_pBABarRect;
 	vector<HPGaugeSet> m_vHPBox;
 	vector<SEGaugeSet> m_vSHBox;
+	vector<SEGaugeSet> m_vBABox;
 };
 
