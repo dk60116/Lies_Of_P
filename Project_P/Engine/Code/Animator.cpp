@@ -2,6 +2,7 @@
 #include "Animator.h"
 #include "SkinnedMeshRenderer.h"
 #include "Resources.h"
+#include "RigidBody.h"
 
 CAnimator::CAnimator()
 	: m_pSkinnedRenderer(nullptr)
@@ -440,7 +441,16 @@ void CAnimator::ApplyRootMotionDelta(const vector3& rootPos)
 	vector3 mapped = vector3(delta.z, delta.y, -delta.x);
 	const auto& directions = m_pRootMotionParent->Get_Directions();
 	vector3 worldDelta = (directions.right * mapped.x + directions.up * mapped.y + directions.forward * mapped.z) * m_pSkinnedRenderer->Get_SkinnedMeshBuffer()->Get_ScaleFactor();
-	m_pRootMotionParent->Translate(-worldDelta);
+
+	CRigidBody* rigidBody = nullptr;
+	if (CGameObject* go = m_pRootMotionParent->Get_GameObject())
+		rigidBody = go->GetComponent<CRigidBody>();
+
+	if (rigidBody && (rigidBody->IsConstPositionX() || rigidBody->IsConstPositionY() || rigidBody->IsConstPositionZ()))
+		rigidBody->Translate(-worldDelta);
+	else
+		m_pRootMotionParent->Translate(-worldDelta);
+
 	m_vPrevRootMotionPos = rootPos;
 }
 

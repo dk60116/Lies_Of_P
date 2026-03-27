@@ -42,7 +42,10 @@ void CColliderBox::LateUpdate()
 		return;
 
 	m_bPendingDisable = false;
+	const _bool wasEnabled = m_pCollider->Get_Enable();
 	m_pCollider->SetEnable(false);
+	if (wasEnabled)
+		OnBoxDisabled();
 	RefreshColliderPhysics(m_pGameObject);
 }
 
@@ -170,8 +173,11 @@ void CColliderBox::EnableBox()
 	if (!m_pCollider)
 		return;
 
+	const _bool wasEnabled = m_pCollider->Get_Enable();
 	m_bPendingDisable = false;
 	m_pCollider->SetEnable(true);
+	if (!wasEnabled)
+		OnBoxEnabled();
 	RefreshColliderPhysics(m_pGameObject);
 }
 
@@ -180,8 +186,11 @@ void CColliderBox::DisableBox()
 	if (!m_pCollider)
 		return;
 
+	const _bool wasEnabled = m_pCollider->Get_Enable();
 	m_bPendingDisable = false;
 	m_pCollider->SetEnable(false);
+	if (wasEnabled)
+		OnBoxDisabled();
 	RefreshColliderPhysics(m_pGameObject);
 }
 
@@ -191,4 +200,12 @@ void CColliderBox::RequestDisableBox()
 		return;
 
 	m_bPendingDisable = true;
+}
+
+void CColliderBox::OnBoxEnabled()
+{
+}
+
+void CColliderBox::OnBoxDisabled()
+{
 }

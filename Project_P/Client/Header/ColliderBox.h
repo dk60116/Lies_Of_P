@@ -44,5 +44,9 @@ protected:
 	_bool m_bPendingDisable;
 	_bool m_bColliderBootstrapped;
 	wstring m_strCBName;
+
+protected:
+	virtual void OnBoxEnabled();
+	virtual void OnBoxDisabled();
 };
 

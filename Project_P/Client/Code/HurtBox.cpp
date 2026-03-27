@@ -2,9 +2,24 @@
 #include "HurtBox.h"
 #include "HitBox.h"
 
+namespace
+{
+    size_t GetHitTargetKey(CCharacter* _target)
+    {
+        if (!_target)
+            return 0;
+
+        if (CGameObject* targetObject = _target->Get_GameObject())
+            return static_cast<size_t>(targetObject->Get_UniqueID());
+
+        return reinterpret_cast<size_t>(_target);
+    }
+}
+
 CHurtBox::CHurtBox()
     :m_sHurtDesc({})
     , m_pRigid(nullptr)
+    , m_setHitTargets({})
 {
 }
 
@@ -45,26 +60,12 @@ void CHurtBox::Awake()
 
 void CHurtBox::OnTriggerEnter(CCollider* _other)
 {
-    if (m_eOwner == ColliderOwner::Player)
-    {
-        if (_other->Get_GameObject()->CompareTag(L"MonsterBody"))
-        {
-            CCharacter* ch = _other->Get_GameObject()->GetComponent<CHitBox>()->GetCharacter();
-            OnHitEvent(ch);
-        }
-    }
-    else if (m_eOwner == ColliderOwner::Enemy)
-    {
-        if (_other->Get_GameObject()->CompareTag(L"PlayerBody"))
-        {
-            OnHitEvent(_other->Get_GameObject()->GetComponent<CPlayer>());
-            RequestDisableBox();
-        }
-    }
+    HandleHitOverlap(_other);
 }
 
 void CHurtBox::OnTriggerStay(CCollider* _other)
 {
+    HandleHitOverlap(_other);
 }
 
 void CHurtBox::SetDamage(const _int damage)
@@ -92,6 +93,55 @@ void CHurtBox::SetKnockbackAmount(const _float _knockbackAmount)
     m_sHurtDesc.knockback = m_sHurtDesc.knockbackAmount > 0.f;
 }
 
+void CHurtBox::HandleHitOverlap(CCollider* _other)
+{
+    if (!_other || !_other->Get_GameObject())
+        return;
+
+    CCharacter* target = nullptr;
+
+    if (m_eOwner == ColliderOwner::Player)
+    {
+        if (!_other->Get_GameObject()->CompareTag(L"MonsterBody"))
+            return;
+
+        if (CHitBox* hitBox = _other->Get_GameObject()->GetComponent<CHitBox>())
+            target = hitBox->GetCharacter();
+    }
+    else if (m_eOwner == ColliderOwner::Enemy)
+    {
+        if (!_other->Get_GameObject()->CompareTag(L"PlayerBody"))
+            return;
+
+        target = _other->Get_GameObject()->GetComponent<CPlayer>();
+    }
+    else
+    {
+        return;
+    }
+
+    if (!TryRegisterHitTarget(target))
+        return;
+
+    OnHitEvent(target);
+
+    if (m_eOwner == ColliderOwner::Enemy)
+        RequestDisableBox();
+}
+
+_bool CHurtBox::TryRegisterHitTarget(CCharacter* _target)
+{
+    if (!_target)
+        return false;
+
+    const size_t targetKey = GetHitTargetKey(_target);
+    if (targetKey == 0)
+        return true;
+
+    const auto [it, inserted] = m_setHitTargets.insert(targetKey);
+    return inserted;
+}
+
 void CHurtBox::OnHitEvent(CCharacter* _target)
 {
     if (!_target)
@@ -103,5 +153,14 @@ void CHurtBox::OnHitEvent(CCharacter* _target)
     _target->GetHitHandler(m_sHurtDesc);
 }
 
+void CHurtBox::OnBoxEnabled()
+{
+    m_setHitTargets.clear();
+}
+
+void CHurtBox::OnBoxDisabled()
+{
+    m_setHitTargets.clear();
+}
 
 
