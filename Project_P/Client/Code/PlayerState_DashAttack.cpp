@@ -82,7 +82,7 @@ void CPlayerState_DashAttack::Enter()
 	m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionX(true);
 	m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionY(true);
 	m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionZ(true);
-	m_pCtx->Get_Player()->SetAbleNavAgent(true);
+	m_pCtx->Get_Player()->GetRigidBody()->ResetVelocity();
 
 	m_bDash = false;
 	m_bAttackBuffer = false;

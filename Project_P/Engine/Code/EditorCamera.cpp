@@ -65,7 +65,7 @@ void CEditorCamera::Update_Editor()
 
 		_vector moveFrom = m_v3MoveFrom.toXMVector();
 		_vector moveTo = m_v3MoveTo.toXMVector();
-		float smoothT = t * t * (3.f - 2.f * t);
+		_float smoothT = t * t * (3.f - 2.f * t);
 
 		_vector newPos = XMVectorLerp(moveFrom, moveTo, smoothT);
 		GetTransform()->Add_Position(vector3(newPos));

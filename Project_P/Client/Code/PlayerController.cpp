@@ -102,8 +102,15 @@ void CPlayerController::Update()
             return;
     }
 
-	if (m_pPlayer && m_pPlayer->GetTransform())
+	/* 공격 중에는 LateUpdate 끝에서 보정된 위치를 사용.
+	   Update에서 저장하면 물리 pushout(벽 겹침 해소)이 포함됨. */
+	if (m_pPlayer && m_pPlayer->GetTransform() &&
+		!m_pCtx->IsActionActive(PlayerState::Attack) &&
+		!m_pCtx->IsActionActive(PlayerState::Attack_S) &&
+		!m_pCtx->IsActionActive(PlayerState::DashAttack))
+	{
 		m_vPreAnimPos = m_pPlayer->GetTransform()->Get_Position();
+	}
 
 	m_pCtx->SetSprint(m_mKeyHold[Evade]);
 
@@ -200,10 +207,17 @@ void CPlayerController::LateUpdate()
 
 	const _float playerRadius = m_pPlayer->GetRadius();
 
-	/* ── 1. 루트모션 슬라이딩 방지 ──
-	   NavAgent::Update()의 SnapToNavigation이 navmesh 경계에서
-	   가장 가까운 점으로 보정하면서 벽을 따라 슬라이딩 시킴.
-	   Set_Position으로 XZ를 강제 설정하여 이를 무효화. */
+	vector<_uint> ignoreLayers = {
+		CSceneManager::GetInstance().NameToLayer(L"Player"),
+		CSceneManager::GetInstance().NameToLayer(L"HitBox_Player"),
+		CSceneManager::GetInstance().NameToLayer(L"HitBox_Enemy"),
+		CSceneManager::GetInstance().NameToLayer(L"HitBox_NPC"),
+		CSceneManager::GetInstance().NameToLayer(L"HurtBox_Player"),
+		CSceneManager::GetInstance().NameToLayer(L"HurtBox_Ememy"),
+		CSceneManager::GetInstance().NameToLayer(L"HurtBox_NPC")
+	};
+	auto envMask = CSceneManager::GetInstance().MakeLayerMask(true, ignoreLayers);
+
 	vector3 frameDelta = pos - m_vPreAnimPos;
 	frameDelta.y = 0.f;
 
@@ -211,38 +225,71 @@ void CPlayerController::LateUpdate()
 	{
 		const _float forwardAmount = frameDelta.dot(fwd);
 
-		// 전방 성분만 허용, 측면 성분(슬라이딩) 완전 제거
-		vector3 correctedPos;
-		if (forwardAmount > 0.f)
+		const vector3 lateral = frameDelta - fwd * forwardAmount;
+		if (lateral.lengthSq() > 0.0001f)
 		{
-			correctedPos.x = m_vPreAnimPos.x + fwd.x * forwardAmount;
-			correctedPos.y = pos.y;
-			correctedPos.z = m_vPreAnimPos.z + fwd.z * forwardAmount;
-		}
-		else
-		{
-			// 후방 또는 이동 없음 — 원래 위치 유지
-			correctedPos = vector3(m_vPreAnimPos.x, pos.y, m_vPreAnimPos.z);
+			pos = vector3(pos.x - lateral.x, pos.y, pos.z - lateral.z);
+			tr->Set_Position(pos);
 		}
 
-		tr->Set_Position(correctedPos);
+		if (forwardAmount > 0.001f)
+		{
+			CPhysics::SphereRay wallRay = {};
+			wallRay.center  = m_vPreAnimPos + vector3::up() * 0.5f;
+			wallRay.radius  = playerRadius * 0.5f;
+			wallRay.dir     = fwd;
+			wallRay.maxDist = forwardAmount + playerRadius;
+
+			auto wallHits = CPhysics::GetInstance().SphereRaycast(wallRay, envMask);
+
+			for (const auto& hit : wallHits)
+			{
+				if (hit.isHit)
+				{
+					pos = vector3(m_vPreAnimPos.x, pos.y, m_vPreAnimPos.z);
+					tr->Set_Position(pos);
+					break;
+				}
+			}
+		}
 	}
 
-	/* ── 2. 적 충돌 체크 ── */
+	pos = tr->Get_Position();
+
+	CPhysics::Ray groundRay = {};
+	groundRay.origin  = vector3(pos.x, pos.y + 1.f, pos.z);
+	groundRay.dir     = vector3(0.f, -1.f, 0.f);
+	groundRay.maxDist = 2.f;
+
+	auto groundHits = CPhysics::GetInstance().Raycast(groundRay, envMask);
+
+	_float closestGroundDist = 999.f;
+	_float groundY = pos.y;
+	for (const auto& hit : groundHits)
+	{
+		if (hit.isHit && hit.distance < closestGroundDist)
+		{
+			closestGroundDist = hit.distance;
+			groundY = hit.hitPos.y;
+		}
+	}
+	if (closestGroundDist < 999.f)
+		tr->Set_Position(vector3(pos.x, groundY, pos.z));
+
 	pos = tr->Get_Position();
 
 	const _float checkDistance = playerRadius + 0.5f;
 
 	CPhysics::SphereRay ray = {};
-	ray.center = pos + vector3::up() * 1.f;
-	ray.radius = playerRadius * 0.5f;
-	ray.dir = fwd;
+	ray.center  = pos + vector3::up() * 1.f;
+	ray.radius  = playerRadius * 0.5f;
+	ray.dir     = fwd;
 	ray.maxDist = checkDistance;
 
-	vector<_uint> layers = { CSceneManager::GetInstance().NameToLayer(L"HitBox_Enemy") };
-	auto mask = CSceneManager::GetInstance().MakeLayerMask(false, layers);
+	vector<_uint> enemyLayers = { CSceneManager::GetInstance().NameToLayer(L"HitBox_Enemy") };
+	auto enemyMask = CSceneManager::GetInstance().MakeLayerMask(false, enemyLayers);
 
-	auto hits = CPhysics::GetInstance().SphereRaycast(ray, mask);
+	auto hits = CPhysics::GetInstance().SphereRaycast(ray, enemyMask);
 
 	for (const auto& hit : hits)
 	{
@@ -252,9 +299,9 @@ void CPlayerController::LateUpdate()
 		const _float safeDistance = playerRadius + 0.3f;
 		if (hit.distance < safeDistance)
 		{
-			vector3 enemyFrameDelta = pos - m_vPreAnimPos;
-			enemyFrameDelta.y = 0.f;
-			const _float forwardMove = enemyFrameDelta.dot(fwd);
+			vector3 enemyDelta = pos - m_vPreAnimPos;
+			enemyDelta.y = 0.f;
+			const _float forwardMove = enemyDelta.dot(fwd);
 
 			if (forwardMove > 0.f)
 				tr->Translate(-fwd * forwardMove);
@@ -266,6 +313,8 @@ void CPlayerController::LateUpdate()
 			break;
 		}
 	}
+
+	m_vPreAnimPos = tr->Get_Position();
 }
 
 void CPlayerController::OnDestroy()

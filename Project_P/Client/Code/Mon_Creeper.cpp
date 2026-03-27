@@ -42,7 +42,7 @@ HRESULT CMon_Creeper::Initialize()
 
 	m_pBodyCollider->SetCenter(vector3(0.f, 2.f, 0.f));
 	m_pBodyCollider->SetHeight(2.f);
-	m_pBodyCollider->SetRadius(1.7f);
+	m_pBodyCollider->SetRadius(1.f);
 
 	m_sStatus.maxHp = 40000;
 	m_sStatus.moveSpeed = 6.f;

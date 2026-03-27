@@ -64,6 +64,11 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
     {
         ++m_iCrtCombo;
 
+        // 콤보 순환 시 리셋 (라이트 4콤보, 스트롱 3콤보)
+        const _int maxCombo = m_bStrong ? 3 : 4;
+        if (m_iCrtCombo > maxCombo)
+            m_iCrtCombo = 1;
+
         if (onStart)
             onStart();
 
@@ -276,7 +281,7 @@ void CPlayerState_Attack::Enter()
     m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionY(true);
     m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionZ(true);
 
-    m_pCtx->Get_Player()->SetAbleNavAgent(true);
+    m_pCtx->Get_Player()->GetRigidBody()->ResetVelocity();
 }
 
 void CPlayerState_Attack::Update()
