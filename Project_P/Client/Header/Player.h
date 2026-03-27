@@ -92,8 +92,8 @@ public:
 
 public:
 	void OnSwordAttackHandler();
-	void DisableSwordCollider();
-	void SetWeaponKnockback(const _bool _knockback);
+	void OffSwordAttackHandler();
+	void SetWeaponKnockbackAmount(const _float _knockbackAmount);
 	void GetHitHandler(const HurtDescription& _hurtDesc) override;
 
 protected:

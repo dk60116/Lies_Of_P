@@ -13,7 +13,7 @@ CMonster::CMonster()
 	, m_vPendingHitKnockback(vector3::zero())
 	, m_vActiveHitKnockback(vector3::zero())
 	, m_qHitReactionRotation(quaternion::identity())
-	, m_fHitKnockbackRemain(0.f)
+	, m_fHitKnockbackRemainDistance(0.f)
 	, m_pHUD(nullptr)
 {
 	m_strName = L"Monster";
@@ -72,7 +72,7 @@ void CMonster::OnDestroy()
 	m_vPendingHitKnockback = vector3::zero();
 	m_vActiveHitKnockback = vector3::zero();
 	m_qHitReactionRotation = quaternion::identity();
-	m_fHitKnockbackRemain = 0.f;
+	m_fHitKnockbackRemainDistance = 0.f;
 	__super::OnDestroy();
 }
 
@@ -198,21 +198,10 @@ void CMonster::BeginHitReaction()
 	m_vActiveHitKnockback = m_vPendingHitKnockback;
 	m_vActiveHitKnockback.y = 0.f;
 	m_vPendingHitKnockback = vector3::zero();
-	m_fHitKnockbackRemain = m_vActiveHitKnockback.lengthSq() > 0.0001f ? m_sStatus.hitKnockbackDuration : 0.f;
+	m_fHitKnockbackRemainDistance = m_vActiveHitKnockback.lengthSq() > 0.0001f ? m_vActiveHitKnockback.length() : 0.f;
 
 	if (CTransform* transform = GetTransform())
 		m_qHitReactionRotation = transform->Get_LocalQuaternion();
-
-	if (m_fHitKnockbackRemain > 0.f)
-	{
-		const vector3 immediateDelta = m_vActiveHitKnockback.normalized() * max(0.15f, m_sStatus.hitKnockbackSpeed * 0.04f);
-		if (CTransform* transform = GetTransform())
-		{
-			transform->Set_LocalQuaternion(m_qHitReactionRotation);
-			transform->Translate(immediateDelta);
-			transform->Set_LocalQuaternion(m_qHitReactionRotation);
-		}
-	}
 }
 
 void CMonster::EndHitReaction()
@@ -221,7 +210,7 @@ void CMonster::EndHitReaction()
 	m_vPendingHitKnockback = vector3::zero();
 	m_vActiveHitKnockback = vector3::zero();
 	m_qHitReactionRotation = quaternion::identity();
-	m_fHitKnockbackRemain = 0.f;
+	m_fHitKnockbackRemainDistance = 0.f;
 }
 
 void CMonster::TickHitReactionKnockback()
@@ -229,9 +218,9 @@ void CMonster::TickHitReactionKnockback()
 	if (!m_bHitReacting)
 		return;
 
-	if (m_fHitKnockbackRemain <= 0.f || m_vActiveHitKnockback.lengthSq() <= 0.0001f)
+	if (m_fHitKnockbackRemainDistance <= 0.f || m_vActiveHitKnockback.lengthSq() <= 0.0001f)
 	{
-		m_fHitKnockbackRemain = 0.f;
+		m_fHitKnockbackRemainDistance = 0.f;
 		m_vActiveHitKnockback = vector3::zero();
 		return;
 	}
@@ -239,12 +228,14 @@ void CMonster::TickHitReactionKnockback()
 	const _float knockbackSpeed = max(0.f, m_sStatus.hitKnockbackSpeed);
 	if (knockbackSpeed <= 0.f)
 	{
-		m_fHitKnockbackRemain = 0.f;
+		m_fHitKnockbackRemainDistance = 0.f;
 		m_vActiveHitKnockback = vector3::zero();
 		return;
 	}
 
-	const vector3 delta = m_vActiveHitKnockback.normalized() * knockbackSpeed * DELTA_TIME;
+	const vector3 knockbackDir = m_vActiveHitKnockback.normalized();
+	const _float moveDistance = min(m_fHitKnockbackRemainDistance, knockbackSpeed * DELTA_TIME);
+	const vector3 delta = knockbackDir * moveDistance;
 	if (CTransform* transform = GetTransform())
 	{
 		transform->Set_LocalQuaternion(m_qHitReactionRotation);
@@ -252,9 +243,15 @@ void CMonster::TickHitReactionKnockback()
 		transform->Set_LocalQuaternion(m_qHitReactionRotation);
 	}
 
-	m_fHitKnockbackRemain = max(0.f, m_fHitKnockbackRemain - DELTA_TIME);
-	if (m_fHitKnockbackRemain <= 0.f)
+	m_fHitKnockbackRemainDistance = max(0.f, m_fHitKnockbackRemainDistance - moveDistance);
+	if (m_fHitKnockbackRemainDistance <= 0.f)
+	{
 		m_vActiveHitKnockback = vector3::zero();
+	}
+	else
+	{
+		m_vActiveHitKnockback = knockbackDir * m_fHitKnockbackRemainDistance;
+	}
 }
 
 void CMonster::GetHitHandler(const HurtDescription& _hurtDesc)
@@ -274,7 +271,7 @@ void CMonster::GetHitHandler(const HurtDescription& _hurtDesc)
 		return;
 	}
 
-	if (_hurtDesc.knockback)
+	if (_hurtDesc.knockback && _hurtDesc.knockbackAmount > 0.f)
 	{
 		if (CTransform* transform = GetTransform())
 		{
@@ -291,7 +288,7 @@ void CMonster::GetHitHandler(const HurtDescription& _hurtDesc)
 
 			knockbackDir.y = 0.f;
 			if (knockbackDir.lengthSq() > 0.0001f)
-				m_vPendingHitKnockback = knockbackDir.normalized();
+				m_vPendingHitKnockback = knockbackDir.normalized() * _hurtDesc.knockbackAmount;
 		}
 	}
 

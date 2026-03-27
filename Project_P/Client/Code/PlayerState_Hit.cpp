@@ -93,7 +93,13 @@ void PlayerState_Hit::Update()
 	__super::Update();
 
 	if (!m_bCanMove && m_vKnockbackDir.lengthSq() > 0.0001f)
-		m_pCtx->AddPosition(m_vKnockbackDir * m_pCtx->PlayerStatus().hitKnockbackSpeed * DELTA_TIME);
+	{
+		const vector3 knockbackDir = m_vKnockbackDir.normalized();
+		const _float remainDistance = m_vKnockbackDir.length();
+		const _float moveDistance = min(remainDistance, m_pCtx->PlayerStatus().hitKnockbackSpeed * DELTA_TIME);
+		m_pCtx->AddPosition(knockbackDir * moveDistance);
+		m_vKnockbackDir = knockbackDir * max(0.f, remainDistance - moveDistance);
+	}
 
 	if (m_bCanMove)
 	{

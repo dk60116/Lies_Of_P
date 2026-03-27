@@ -194,11 +194,18 @@ void CHierachyBox::Render()
 		const string filterText = TrimCopy(m_searchBuffer.data());
 		const string filterLower = ToLowerCopy(filterText);
 		CGameObject* selectedObject = editor.Get_SelectedGameObject();
+		const bool openSelectedRequested = editor.Consume_OpenSelectedInHierarchyRequest();
 		if (selectedObject != m_lastSelectedGameObject)
 		{
 			m_lastSelectedGameObject = selectedObject;
 			m_scrollToSelected = selectedObject != nullptr;
-			m_openToSelected = editor.Consume_OpenSelectedInHierarchyRequest();
+			m_openToSelected = false;
+		}
+
+		if (openSelectedRequested && selectedObject)
+		{
+			m_scrollToSelected = true;
+			m_openToSelected = true;
 		}
 
 		if (ImGui::IsKeyPressed(ImGuiKey_Delete, false) && ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))

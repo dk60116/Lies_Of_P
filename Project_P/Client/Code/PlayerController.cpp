@@ -11,6 +11,8 @@
 #include "PlayerState_Evade.h"
 #include "PlayerState_Jump.h"
 #include "PlayerState_Hit.h"
+#include "HitBox.h"
+#include "Monster.h"
 
 CPlayerController::CPlayerController()
 	: m_pCtx(nullptr)
@@ -290,28 +292,44 @@ void CPlayerController::LateUpdate()
 	auto enemyMask = CSceneManager::GetInstance().MakeLayerMask(false, enemyLayers);
 
 	auto hits = CPhysics::GetInstance().SphereRaycast(ray, enemyMask);
+	vector3 intrusionDelta = tr->Get_Position() - m_vPreAnimPos;
+	intrusionDelta.y = 0.f;
+	const _float forwardIntrusion = max(0.f, intrusionDelta.dot(fwd));
+	constexpr _float kEnemyContactPadding = 0.05f;
 
 	for (const auto& hit : hits)
 	{
-		if (!hit.isHit)
+		if (!hit.isHit || !hit.object || forwardIntrusion <= 0.f)
 			continue;
 
-		const _float safeDistance = playerRadius + 0.3f;
-		if (hit.distance < safeDistance)
-		{
-			vector3 enemyDelta = pos - m_vPreAnimPos;
-			enemyDelta.y = 0.f;
-			const _float forwardMove = enemyDelta.dot(fwd);
+		CHitBox* enemyHitBox = hit.object->GetComponent<CHitBox>();
+		CMonster* monster = enemyHitBox ? dynamic_cast<CMonster*>(enemyHitBox->GetCharacter()) : nullptr;
+		if (!monster)
+			continue;
 
-			if (forwardMove > 0.f)
-				tr->Translate(-fwd * forwardMove);
+		CTransform* monsterTransform = monster->GetTransform();
+		if (!monsterTransform)
+			continue;
 
-			const _float remaining = safeDistance - hit.distance + forwardMove;
-			if (remaining > 0.f)
-				tr->Translate(-fwd * remaining);
+		vector3 toPlayer = tr->Get_Position() - monsterTransform->Get_Position();
+		toPlayer.y = 0.f;
 
-			break;
-		}
+		if (toPlayer.lengthSq() <= 0.0001f)
+			toPlayer = fwd;
+
+		const _float distance = toPlayer.length();
+		const _float safeDistance = playerRadius + monster->GetRadius() + kEnemyContactPadding;
+		const _float overlap = safeDistance - distance;
+		if (overlap <= 0.f)
+			continue;
+
+		vector3 separationDir = toPlayer.lengthSq() > 0.0001f ? toPlayer.normalized() : fwd;
+		const _float correction = min(overlap, forwardIntrusion);
+		if (correction <= 0.f)
+			continue;
+
+		tr->Translate(separationDir * correction);
+		break;
 	}
 
 	m_vPreAnimPos = tr->Get_Position();

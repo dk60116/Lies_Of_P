@@ -68,3 +68,9 @@ void CWeapon::SetKnockback(const _bool _knockback)
 	if (m_pHurtBox)
 		m_pHurtBox->SetKnockback(_knockback);
 }
+
+void CWeapon::SetKnockbackAmount(const _float _knockbackAmount)
+{
+	if (m_pHurtBox)
+		m_pHurtBox->SetKnockbackAmount(_knockbackAmount);
+}

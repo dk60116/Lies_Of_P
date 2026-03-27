@@ -947,19 +947,20 @@ void CAnimator::ProcessActionTriggers(CAnimationClip* clip, _float prevTime, _fl
 	};
 
 	const _bool looped = clip->IsLoop();
-	_uint currentFrame = calcFrame(currentTime, looped);
-	_uint prevFrame = m_iPrevTriggerFrame;
+	_int currentFrame = calcFrame(currentTime, looped);
+	_int prevFrame = m_iPrevTriggerFrame;
 	if (prevFrame < 0)
 		prevFrame = currentFrame - 1;
 
 	if (looped && currentFrame < prevFrame)
 	{
-		const _uint lastFrame = static_cast<_int>(floor(totalTicks));
+		const _int lastFrame = static_cast<_int>(floor(totalTicks));
 		for (const auto& trigger : triggers)
 		{
 			if (trigger.actionName.empty())
 				continue;
-			if ((trigger.frame > prevFrame && trigger.frame <= lastFrame) || (trigger.frame >= 0 && trigger.frame <= currentFrame))
+			const _int triggerFrame = static_cast<_int>(trigger.frame);
+			if ((triggerFrame > prevFrame && triggerFrame <= lastFrame) || (triggerFrame >= 0 && triggerFrame <= currentFrame))
 			{
 				const auto handlerIt = m_mActionHandlers.find(trigger.actionName);
 				if (handlerIt != m_mActionHandlers.end() && handlerIt->second)
@@ -974,7 +975,8 @@ void CAnimator::ProcessActionTriggers(CAnimationClip* clip, _float prevTime, _fl
 		{
 			if (trigger.actionName.empty())
 				continue;
-			if (trigger.frame > prevFrame && trigger.frame <= currentFrame)
+			const _int triggerFrame = static_cast<_int>(trigger.frame);
+			if (triggerFrame > prevFrame && triggerFrame <= currentFrame)
 			{
 				const auto handlerIt = m_mActionHandlers.find(trigger.actionName);
 				if (handlerIt != m_mActionHandlers.end() && handlerIt->second)

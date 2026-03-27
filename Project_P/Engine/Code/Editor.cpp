@@ -456,7 +456,11 @@ void CEditor::Set_EditorCamTransform(CTransform* _transform)
 void CEditor::Set_SelectedGameObject(CGameObject* _target, _bool _openHierarchy)
 {
 	if (_target == m_pSelectedGameObject)
+	{
+		if (_openHierarchy && m_pSelectedGameObject)
+			m_bOpenSelectedInHierarchyRequested = true;
 		return;
+	}
 
 	m_pSelectedGameObject = _target;
 	m_selectedAssetPath.clear();

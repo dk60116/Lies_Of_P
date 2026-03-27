@@ -328,15 +328,15 @@ void CPlayer::OnSwordAttackHandler()
 	m_pEquipWeapon->EnableHurtBox();
 }
 
-void CPlayer::DisableSwordCollider()
+void CPlayer::OffSwordAttackHandler()
 {
 	m_pEquipWeapon->DisableHurtBox();
 }
 
-void CPlayer::SetWeaponKnockback(const _bool _knockback)
+void CPlayer::SetWeaponKnockbackAmount(const _float _knockbackAmount)
 {
 	if (m_pEquipWeapon)
-		m_pEquipWeapon->SetKnockback(_knockback);
+		m_pEquipWeapon->SetKnockbackAmount(_knockbackAmount);
 }
 
 void CPlayer::GetHitHandler(const HurtDescription& _hurtDesc)
@@ -349,16 +349,19 @@ void CPlayer::GetHitHandler(const HurtDescription& _hurtDesc)
 
 	if (m_pController)
 	{
-		vector3 knockbackDir = GetTransform()->Get_Position() - _hurtDesc.position;
-		knockbackDir.y = 0.f;
+		if (_hurtDesc.knockback && _hurtDesc.knockbackAmount > 0.f)
+		{
+			vector3 knockbackDir = GetTransform()->Get_Position() - _hurtDesc.position;
+			knockbackDir.y = 0.f;
 
-		if (knockbackDir.lengthSq() <= 0.0001f)
-			knockbackDir = GetTransform()->Get_Directions().forward;
+			if (knockbackDir.lengthSq() <= 0.0001f)
+				knockbackDir = GetTransform()->Get_Directions().forward;
 
-		knockbackDir.y = 0.f;
+			knockbackDir.y = 0.f;
 
-		if (knockbackDir.lengthSq() > 0.0001f)
-			m_pController->QueueHitKnockback(knockbackDir.normalized());
+			if (knockbackDir.lengthSq() > 0.0001f)
+				m_pController->QueueHitKnockback(knockbackDir.normalized() * _hurtDesc.knockbackAmount);
+		}
 
 		m_pController->RequestAction(CPlayerController::PlayerState::Hit);
 	}

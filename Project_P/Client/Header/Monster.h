@@ -76,7 +76,7 @@ protected:
 	vector3 m_vPendingHitKnockback;
 	vector3 m_vActiveHitKnockback;
 	quaternion m_qHitReactionRotation;
-	_float m_fHitKnockbackRemain;
+	_float m_fHitKnockbackRemainDistance;
 
 	CMonsterHUD* m_pHUD;
 };

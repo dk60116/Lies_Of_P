@@ -3,9 +3,74 @@
 #include "PlayerController.h"
 #include "Player.h"
 
+namespace
+{
+    struct AttackClipDesc
+    {
+        const wchar_t* clipName;
+        const wchar_t* triggerPrefix;
+        _uint enableBoxFrame;
+        _uint termFrame;
+        _uint limitFrame;
+        _bool canTurnOnStart;
+        _float knockbackAmount;
+    };
+
+    constexpr AttackClipDesc kLightAttackDescs[] =
+    {
+        { L"Eve_Attack_Light_01 (Animation Clip)", L"LightAttack_01", 4, 6, 12, true, 0.f },
+        { L"Eve_Attack_Light_02 (Animation Clip)", L"LightAttack_02", 4, 10, 15, true, 0.f },
+        { L"Eve_Attack_Light_03 (Animation Clip)", L"LightAttack_03", 4, 12, 15, true, 0.f },
+        { L"Eve_Attack_Light_04 (Animation Clip)", L"LightAttack_04", 6, 18, 23, true, 55.f }
+    };
+
+    constexpr AttackClipDesc kStrongAttackDescs[] =
+    {
+        { L"Eve_Attack_Strong_01 (Animation Clip)", L"StrongAttack_01", 4, 9, 16, true, 1.f },
+        { L"Eve_Attack_Strong_02 (Animation Clip)", L"StrongAttack_02", 4, 22, 25, true, 0.f },
+        { L"Eve_Attack_Strong_03 (Animation Clip)", L"StrongAttack_03", 4, 55, 62, true, 1.f }
+    };
+
+    struct AttackSequenceDesc
+    {
+        const wchar_t* clipName;
+        const wchar_t* triggerPrefix;
+        _uint enableBoxFrame;
+        _uint termFrame;
+        _uint limitFrame;
+        _bool canTurnOnStart;
+        _float knockbackAmount;
+    };
+
+    constexpr AttackSequenceDesc kAttackSequenceDescs[] =
+    {
+        { L"Eve_Attack_LS12 (Animation Clip)", L"Eve_Attack_LS12", 4, 20, 24, true, 0.f },
+        { L"Eve_Attack_SS23 (Animation Clip)", L"Eve_Attack_SS23", 4, 27, 32, false, 0.f },
+        { L"Eve_Attack_SS34 (Animation Clip)", L"Eve_Attack_SS34", 4, 16, 20, false, 0.f },
+        { L"Eve_Attack_SL23 (Animation Clip)", L"Eve_Attack_SL23", 4, 18, 24, false, 0.f },
+        { L"Eve_Attack_SL12 (Animation Clip)", L"Eve_Attack_SL12", 4, 15, 18, false, 0.f },
+        { L"Eve_Attack_LS23 (Animation Clip)", L"Eve_Attack_LS23", 4, 18, 21, false, 0.f },
+        { L"Eve_Attack_SL34 (Animation Clip)", L"Eve_Attack_SL34", 4, 20, 23, false, 0.f },
+        { L"Eve_Attack_LS45 (Animation Clip)", L"Eve_Attack_LS45", 4, 32, 35, false, 0.f },
+        { L"Eve_Attack_LLS23 (Animation Clip)", L"Eve_Attack_LLS23", 4, 21, 24, false, 0.f },
+        { L"Eve_Attack_LLLS34 (Animation Clip)", L"Eve_Attack_LLLS34", 4, 21, 24, false, 0.f }
+    };
+
+    constexpr _uint kThrustEnableBoxFrame = 11;
+    constexpr _float kThrustKnockbackAmount = 0.f;
+    constexpr _float kComboInputBufferLife = 0.25f;
+
+    _float GetAttackEnterKnockbackAmount(const _bool isStrong)
+    {
+        return isStrong ? kStrongAttackDescs[0].knockbackAmount : kLightAttackDescs[0].knockbackAmount;
+    }
+}
+
 CPlayerState_Attack::CPlayerState_Attack()
     : m_bCanContinue(false)
     , m_bPressedContinue(false)
+    , m_bComboTransitionQueued(false)
+    , m_bBufferedComboInput(false)
     , m_iCrtCombo(0)
     , m_bUnderTerm(false)
     , m_bUnderLimit(false)
@@ -13,6 +78,7 @@ CPlayerState_Attack::CPlayerState_Attack()
     , m_iComboLimit()
     , m_iComboTerm_S()
     , m_iComboLimit_S()
+    , m_fBufferedComboInputTime(0.f)
     , m_bStrong(false)
     , m_bThrust(false)
 {
@@ -26,26 +92,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
 {
     __super::Initialize(_ctx, _type);
 
-    m_iComboTerm[0] = 6;
-    m_iComboTerm[1] = 10;
-    m_iComboTerm[2] = 12;
-    m_iComboTerm[3] = 18;
-
-    m_iComboLimit[0] = 12;
-    m_iComboLimit[1] = 15;
-    m_iComboLimit[2] = 15;
-    m_iComboLimit[3] = 23;
-
-    m_iComboTerm_S[0] = 9;
-    m_iComboTerm_S[1] = 22;
-    m_iComboTerm_S[2] = 55;
-
-    m_iComboLimit_S[0] = 16;
-    m_iComboLimit_S[1] = 25;
-    m_iComboLimit_S[2] = 62;
-
     const _float endRate = 0.78f;
-    const _uint thrustEnableBoxFrame = 11;
 
     const auto registerActionTrigger = [this](CAnimationClip* clip, const _uint frame, const wstring& triggerName, const function<void()>& handler)
     {
@@ -60,19 +107,20 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
             });
     };
 
-    const auto beginCombo = [this](const _bool canTurnOnStart, const function<void()>& onStart)
+    const auto beginCombo = [this](const _bool canTurnOnStart, const _float knockbackAmount, const function<void()>& onStart)
     {
+        m_pCtx->Get_Player()->OffSwordAttackHandler();
+
         ++m_iCrtCombo;
 
-        // 콤보 순환 시 리셋 (라이트 4콤보, 스트롱 3콤보)
-        const _int maxCombo = m_bStrong ? 3 : 4;
+        const _uint maxCombo = m_bStrong ? 3u : 4u;
         if (m_iCrtCombo > maxCombo)
             m_iCrtCombo = 1;
 
         if (onStart)
             onStart();
 
-        m_pCtx->Get_Player()->SetWeaponKnockback(m_iCrtCombo <= 1);
+        m_pCtx->Get_Player()->SetWeaponKnockbackAmount(knockbackAmount);
 
         m_pCtx->Animator()->SetInt(L"attackCombo", m_iCrtCombo);
         m_pCtx->Animator()->SetBool(L"comboContinue", false);
@@ -80,6 +128,14 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
         m_bPressedContinue = false;
         m_bUnderTerm = true;
         m_bUnderLimit = true;
+        m_bComboTransitionQueued = false;
+
+        if (m_bBufferedComboInput)
+        {
+            m_bPressedContinue = true;
+            m_bBufferedComboInput = false;
+            m_fBufferedComboInputTime = 0.f;
+        }
 
         if (canTurnOnStart)
             m_pCtx->SetCanTurn(true);
@@ -103,7 +159,7 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
 
         registerActionTrigger(clip, limitFrame, limitTrigger, [this]()
             {
-                m_pCtx->Get_Player()->DisableSwordCollider();
+                m_pCtx->Get_Player()->OffSwordAttackHandler();
                 m_bCanContinue = false;
                 m_bUnderLimit = false;
             });
@@ -112,20 +168,27 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
     const auto registerComboClip = [this, endRate, &registerActionTrigger, &beginCombo, &registerComboWindow](
         const wstring& clipName,
         const wstring& startTrigger,
+        const wstring& enableBoxTrigger,
+        const _uint enableBoxFrame,
         const wstring& termTrigger,
         const wstring& limitTrigger,
         const wstring& endTrigger,
         const _uint termFrame,
         const _uint limitFrame,
         const _bool canTurnOnStart,
+        const _float knockbackAmount,
         const function<void()>& onStart) -> CAnimationClip*
     {
         CAnimationClip* clip = CResources::GetInstance().LoadOnScene<CAnimationClip>(clipName);
         const _uint endFrame = clip->Get_NormalizedFrameIndex(endRate);
 
-        registerActionTrigger(clip, 1, startTrigger, [beginCombo, canTurnOnStart, onStart]()
+        registerActionTrigger(clip, 1, startTrigger, [beginCombo, canTurnOnStart, knockbackAmount, onStart]()
             {
-                beginCombo(canTurnOnStart, onStart);
+                beginCombo(canTurnOnStart, knockbackAmount, onStart);
+            });
+        registerActionTrigger(clip, enableBoxFrame, enableBoxTrigger, [this]()
+            {
+                m_pCtx->Get_Player()->OnSwordAttackHandler();
             });
         registerComboWindow(clip, termFrame, termTrigger, limitFrame, limitTrigger);
         registerActionTrigger(clip, endFrame, endTrigger, [this]()
@@ -136,80 +199,65 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
         return clip;
     };
 
-    for (_int i = 1; i <= 4; ++i)
-    {
-        const wstring attackIndex = to_wstring(i);
-
-        CAnimationClip* clip = registerComboClip
-        (
-            L"Eve_Attack_Light_0" + attackIndex + L" (Animation Clip)",
-            L"LightAttack0" + attackIndex + L"_Enter",
-            L"LightAttack0" + attackIndex + L"_Term",
-            L"LightAttack0" + attackIndex + L"_Limit",
-            L"LightAttack0" + attackIndex + L"_Exit",
-            m_iComboTerm[i - 1],
-            m_iComboLimit[i - 1],
-            true,
-            nullptr
-        );
-    }
-
-    for (_int i = 1; i <= 3; ++i)
-    {
-        const wstring attackIndex = to_wstring(i);
-
-        CAnimationClip* clip = registerComboClip
-        (
-            L"Eve_Attack_Strong_0" + attackIndex + L" (Animation Clip)",
-            L"StrongAttack_0" + attackIndex + L"_Enter",
-            L"StrongAttack_0" + attackIndex + L"_Term",
-            L"StrongAttack_0" + attackIndex + L"_Limit",
-            L"StrongAttack_0" + attackIndex + L"_Exit",
-            m_iComboTerm_S[i - 1],
-            m_iComboLimit_S[i - 1],
-            true,
-            nullptr
-        );
-    }
-
-    struct AttackSequenceDesc
-    {
-        const wchar_t* clipName;
-        const wchar_t* triggerPrefix;
-        _uint enableBoxFrame;
-        _uint termFrame;
-        _uint limitFrame;
-        _bool canTurnOnStart;
-    };
-
-    const AttackSequenceDesc attackSequenceDescs[] =
-    {
-        { L"Eve_Attack_LS12 (Animation Clip)", L"Eve_Attack_LS12", 4, 20, 24, true },
-        { L"Eve_Attack_SS23 (Animation Clip)", L"Eve_Attack_SS23", 4, 27, 32, false },
-        { L"Eve_Attack_SS34 (Animation Clip)", L"Eve_Attack_SS34", 4, 16, 20, false },
-        { L"Eve_Attack_SL23 (Animation Clip)", L"Eve_Attack_SL23", 4, 18, 24, false },
-        { L"Eve_Attack_SL12 (Animation Clip)", L"Eve_Attack_SL12", 4, 15, 18, false },
-        { L"Eve_Attack_LS23 (Animation Clip)", L"Eve_Attack_LS23", 4, 18, 21, false },
-        { L"Eve_Attack_SL34 (Animation Clip)", L"Eve_Attack_SL34", 4, 20, 23, false },
-        { L"Eve_Attack_LS45 (Animation Clip)", L"Eve_Attack_LS45", 4, 32, 35, false },
-        { L"Eve_Attack_LLS23 (Animation Clip)", L"Eve_Attack_LLS23", 4, 21, 24, false },
-        { L"Eve_Attack_LLLS34 (Animation Clip)", L"Eve_Attack_LLLS34", 4, 21, 24, false }
-    };
-
-    for (const AttackSequenceDesc& desc : attackSequenceDescs)
+    for (const AttackClipDesc& desc : kLightAttackDescs)
     {
         const wstring prefix = desc.triggerPrefix;
 
-        CAnimationClip* clip = registerComboClip
+        registerComboClip
+        (
+            desc.clipName,
+            prefix + L"_Enter",
+            prefix + L"_EnableBox",
+            desc.enableBoxFrame,
+            prefix + L"_Term",
+            prefix + L"_Limit",
+            prefix + L"_Exit",
+            desc.termFrame,
+            desc.limitFrame,
+            desc.canTurnOnStart,
+            desc.knockbackAmount,
+            nullptr
+        );
+    }
+
+    for (const AttackClipDesc& desc : kStrongAttackDescs)
+    {
+        const wstring prefix = desc.triggerPrefix;
+
+        registerComboClip
+        (
+            desc.clipName,
+            prefix + L"_Enter",
+            prefix + L"_EnableBox",
+            desc.enableBoxFrame,
+            prefix + L"_Term",
+            prefix + L"_Limit",
+            prefix + L"_Exit",
+            desc.termFrame,
+            desc.limitFrame,
+            desc.canTurnOnStart,
+            desc.knockbackAmount,
+            nullptr
+        );
+    }
+
+    for (const AttackSequenceDesc& desc : kAttackSequenceDescs)
+    {
+        const wstring prefix = desc.triggerPrefix;
+
+        registerComboClip
         (
             desc.clipName,
             prefix + L"_Start",
+            prefix + L"_EnableBox",
+            desc.enableBoxFrame,
             prefix + L"_Term",
             prefix + L"_Limit",
             prefix + L"_End",
             desc.termFrame,
             desc.limitFrame,
             desc.canTurnOnStart,
+            desc.knockbackAmount,
             nullptr
         );
     }
@@ -218,12 +266,15 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
     (
         L"Eve_Attack_LLSS34 (Animation Clip)",
         L"Eve_Attack_Thrust_Start",
+        L"Eve_Attack_Thrust_EnableBox",
+        kThrustEnableBoxFrame,
         L"Eve_Attack_Thrust_Term",
         L"Eve_Attack_Thrust_Limit",
         L"Eve_Attack_Thrust_End",
         21,
         24,
         false,
+        kThrustKnockbackAmount,
         [this]()
         {
             m_bThrust = true;
@@ -272,10 +323,13 @@ void CPlayerState_Attack::Enter()
     m_bPressedContinue = false;
     m_bUnderTerm = true;
     m_bUnderLimit = true;
+    m_bComboTransitionQueued = false;
+    m_bBufferedComboInput = false;
+    m_fBufferedComboInputTime = 0.f;
     m_bThrust = false;
 
-    m_pCtx->Get_Player()->OnSwordAttackHandler();
-    m_pCtx->Get_Player()->SetWeaponKnockback(true);
+    m_pCtx->Get_Player()->OffSwordAttackHandler();
+    m_pCtx->Get_Player()->SetWeaponKnockbackAmount(GetAttackEnterKnockbackAmount(m_bStrong));
 
     m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionX(true);
     m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionY(true);
@@ -288,20 +342,31 @@ void CPlayerState_Attack::Update()
 {
     __super::Update();
 
-    if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack))
+    if (m_bBufferedComboInput)
+    {
+        m_fBufferedComboInputTime += DELTA_TIME;
+
+        if (m_fBufferedComboInputTime >= kComboInputBufferLife)
+        {
+            m_bBufferedComboInput = false;
+            m_fBufferedComboInputTime = 0.f;
+        }
+    }
+
+    const _bool isLightAttackDown = m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack);
+    const _bool isStrongAttackDown = m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack_S);
+
+    if (isLightAttackDown)
         m_bStrong = false;
-    if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack_S))
+    if (isStrongAttackDown)
         m_bStrong = true;
 
     m_pCtx->Animator()->SetBool(L"isAttack", !m_bStrong);
     m_pCtx->Animator()->SetBool(L"isStrongAttack", m_bStrong);
 
-    if (m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack) || m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack_S))
+    if (isLightAttackDown || isStrongAttackDown)
     {
-        if (m_bCanContinue && m_bUnderTerm)
-            m_bPressedContinue = true;
-        else
-            ContinueCombo();
+        HandleComboInput(isStrongAttackDown);
 
         if (!m_bUnderLimit)
         {
@@ -335,7 +400,10 @@ void CPlayerState_Attack::Exit()
     m_pCtx->SetCanDashAttack(true);
     m_pCtx->SetCanJump(true);
 
-    m_pCtx->Get_Player()->DisableSwordCollider();
+    m_pCtx->Get_Player()->OffSwordAttackHandler();
+    m_bComboTransitionQueued = false;
+    m_bBufferedComboInput = false;
+    m_fBufferedComboInputTime = 0.f;
 
     m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionX(false);
     m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionY(false);
@@ -344,11 +412,33 @@ void CPlayerState_Attack::Exit()
     m_pCtx->Get_Player()->SetAbleNavAgent(false);
 }
 
+void CPlayerState_Attack::HandleComboInput(const _bool strongInput)
+{
+    m_bStrong = strongInput;
+
+    if (m_bComboTransitionQueued)
+    {
+        m_bBufferedComboInput = true;
+        m_fBufferedComboInputTime = 0.f;
+        return;
+    }
+
+    if (m_bCanContinue && m_bUnderTerm)
+    {
+        m_bPressedContinue = true;
+        return;
+    }
+
+    ContinueCombo();
+}
+
 void CPlayerState_Attack::ContinueCombo()
 {
     if (m_bCanContinue)
     {
         m_pCtx->Animator()->SetBool(L"comboContinue", true);
+        m_bComboTransitionQueued = true;
+        m_bPressedContinue = false;
     }
 }
 

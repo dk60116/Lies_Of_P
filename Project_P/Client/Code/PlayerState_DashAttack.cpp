@@ -45,7 +45,7 @@ void CPlayerState_DashAttack::Initialize(CPlayerControllerContext* _ctx, const C
 		{
 			m_bDash = false;
 			m_pCtx->StopMoveImmediate();
-			m_pCtx->Get_Player()->DisableSwordCollider();
+			m_pCtx->Get_Player()->OffSwordAttackHandler();
 		});
 
 	registerActionTrigger(18, L"DashAttack_StartRun", [this]()
@@ -65,6 +65,8 @@ void CPlayerState_DashAttack::Enter()
 	__super::Enter();
 
 	m_pCtx->Get_Player()->StartDashAttackCooldown();
+	m_pCtx->Get_Player()->SetWeaponKnockbackAmount(1.f);
+	m_pCtx->Get_Player()->OffSwordAttackHandler();
 
 	m_pCtx->SetBattle(true);
 	m_pCtx->StopMoveImmediate();
@@ -103,7 +105,7 @@ void CPlayerState_DashAttack::Exit()
 
 	m_bDash = false;
 
-	m_pCtx->Get_Player()->DisableSwordCollider();
+	m_pCtx->Get_Player()->OffSwordAttackHandler();
 	m_pCtx->SetCanDashAttack(true);
 	m_pCtx->SetCanMove(true);
 	m_pCtx->SetCanTurn(true);

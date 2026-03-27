@@ -80,6 +80,16 @@ const _int CHurtBox::GetDamage() const
 void CHurtBox::SetKnockback(const _bool _knockback)
 {
     m_sHurtDesc.knockback = _knockback;
+    if (!_knockback)
+        m_sHurtDesc.knockbackAmount = 0.f;
+    else if (m_sHurtDesc.knockbackAmount <= 0.f)
+        m_sHurtDesc.knockbackAmount = 1.f;
+}
+
+void CHurtBox::SetKnockbackAmount(const _float _knockbackAmount)
+{
+    m_sHurtDesc.knockbackAmount = max(0.f, _knockbackAmount);
+    m_sHurtDesc.knockback = m_sHurtDesc.knockbackAmount > 0.f;
 }
 
 void CHurtBox::OnHitEvent(CCharacter* _target)
