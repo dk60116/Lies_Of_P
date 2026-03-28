@@ -36,6 +36,7 @@ HRESULT CSkinnedMeshBuffer::Initiailize_Custom(SkinnedBufferInitiaizeInfo _info,
 
     m_sInfo = _info.desc;
     m_strResourceName = _info.meshName;
+    m_strFilePath = _info.sourceAssetPath;
 
     const size_t vtxBytes = _info.desc.vertexSize * _info.desc.vertextCount;
 

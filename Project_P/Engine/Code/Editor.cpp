@@ -457,6 +457,17 @@ void CEditor::Set_SelectedGameObject(CGameObject* _target, _bool _openHierarchy)
 {
 	if (_target == m_pSelectedGameObject)
 	{
+		const bool needsSelectionSync =
+			(_target == nullptr && !m_multiSelectedObjects.empty()) ||
+			(_target != nullptr && (m_multiSelectedObjects.size() != 1 || m_multiSelectedObjects.front() != _target));
+
+		if (needsSelectionSync)
+		{
+			m_multiSelectedObjects.clear();
+			if (_target)
+				m_multiSelectedObjects.push_back(_target);
+		}
+
 		if (_openHierarchy && m_pSelectedGameObject)
 			m_bOpenSelectedInHierarchyRequested = true;
 		return;
@@ -464,6 +475,10 @@ void CEditor::Set_SelectedGameObject(CGameObject* _target, _bool _openHierarchy)
 
 	m_pSelectedGameObject = _target;
 	m_selectedAssetPath.clear();
+	m_multiSelectedObjects.clear();
+
+	if (m_pSelectedGameObject)
+		m_multiSelectedObjects.push_back(m_pSelectedGameObject);
 
 	if (_openHierarchy && m_pSelectedGameObject)
 		m_bOpenSelectedInHierarchyRequested = true;

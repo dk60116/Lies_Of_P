@@ -40,8 +40,8 @@ HRESULT CMon_Creeper::Initialize()
 	m_pController->Bind(this, bt);
 	m_pController->Set_DefaultState(CMonsterController::MonsterState::Hide);
 
-	m_pBodyCollider->SetCenter(vector3(0.f, 2.f, 0.f));
-	m_pBodyCollider->SetHeight(2.f);
+	m_pBodyCollider->SetCenter(vector3(0.f, 2.5f, 0.f));
+	m_pBodyCollider->SetHeight(2.5f);
 	m_pBodyCollider->SetRadius(1.f);
 
 	m_sStatus.maxHp = 10000;

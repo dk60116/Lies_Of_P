@@ -632,6 +632,7 @@ HRESULT CResources::ConvertFBXToMeshBufferData(const wstring _filePath)
 
 		CMeshBuffer::MeshBufferInitiaizeInfo info{};
 		info.meshName = CMeshBuffer::FindMeshName(aiScene, i);
+		info.sourceAssetPath = CEngineString::Replace(_filePath, L"\\", L"/");
 
 		vector<VTX>   vertices;
 		vector<_uint> indices;
@@ -849,6 +850,7 @@ HRESULT CResources::ConvertFBXToSkinnedBufferData(const wstring _filePath)
 
 		CSkinnedMeshBuffer::SkinnedBufferInitiaizeInfo info{};
 		info.meshName = CMeshBuffer::FindMeshName(aiScene, i);
+		info.sourceAssetPath = CEngineString::Replace(_filePath, L"\\", L"/");
 
 		vector<VTX>   vertices;
 		vector<_uint> indices;
@@ -1803,6 +1805,12 @@ HRESULT CResources::SaveMeshBufferInfos(const wstring _filePath, vector<CMeshBuf
 			out.write(reinterpret_cast<const char*>(info.diffuseMapPath.data()), sizeof(wchar_t) * diffuseTexPathSize);
 	}
 
+	const wstring sourceAssetPath = _infoList.empty() ? L"" : _infoList.front().sourceAssetPath;
+	_uint sourceAssetPathSize = static_cast<_uint>(sourceAssetPath.size());
+	out.write(reinterpret_cast<const char*>(&sourceAssetPathSize), sizeof(_uint));
+	if (sourceAssetPathSize > 0)
+		out.write(reinterpret_cast<const char*>(sourceAssetPath.data()), sizeof(wchar_t) * sourceAssetPathSize);
+
 	out.close();
 
 	CDebug::Log(L"Save complete meshdata: " + _filePath);
@@ -1866,6 +1874,20 @@ vector<CMeshBuffer::MeshBufferInitiaizeInfo> CResources::ReadMeshBufferInfos(con
 		}
 
 		infoList.push_back(info);
+	}
+
+	_uint sourceAssetPathCount = 0;
+	if (in.read(reinterpret_cast<char*>(&sourceAssetPathCount), sizeof(_uint)))
+	{
+		wstring sourceAssetPath = L"";
+		if (sourceAssetPathCount > 0)
+		{
+			sourceAssetPath.resize(sourceAssetPathCount);
+			in.read(reinterpret_cast<char*>(sourceAssetPath.data()), sizeof(wchar_t) * sourceAssetPathCount);
+		}
+
+		for (auto& info : infoList)
+			info.sourceAssetPath = sourceAssetPath;
 	}
 
 	in.close();
@@ -1954,6 +1976,12 @@ HRESULT CResources::SaveSkinnedBufferInfos(const wstring _filePath, vector<CSkin
 		if (meshLen > 0)
 			out.write(reinterpret_cast<const char*>(bone.meshsId.data()), sizeof(_int) * meshLen);
 	}
+
+	const wstring sourceAssetPath = _infoList.empty() ? L"" : _infoList.front().sourceAssetPath;
+	_uint sourceAssetPathSize = static_cast<_uint>(sourceAssetPath.size());
+	out.write(reinterpret_cast<const char*>(&sourceAssetPathSize), sizeof(_uint));
+	if (sourceAssetPathSize > 0)
+		out.write(reinterpret_cast<const char*>(sourceAssetPath.data()), sizeof(wchar_t) * sourceAssetPathSize);
 
 	out.close();
 
@@ -2095,6 +2123,20 @@ CSkinnedMeshBuffer::SkinnedBuffer CResources::ReadSkinnedBufferInfos(const wstri
 			skeletal.meshsId.resize(meshCount);
 			in.read(reinterpret_cast<char*>(skeletal.meshsId.data()), sizeof(_int) * meshCount);
 		}
+	}
+
+	_uint sourceAssetPathCount = 0;
+	if (in.read(reinterpret_cast<char*>(&sourceAssetPathCount), sizeof(_uint)))
+	{
+		wstring sourceAssetPath = L"";
+		if (sourceAssetPathCount > 0)
+		{
+			sourceAssetPath.resize(sourceAssetPathCount);
+			in.read(reinterpret_cast<char*>(sourceAssetPath.data()), sizeof(wchar_t) * sourceAssetPathCount);
+		}
+
+		for (auto& info : infoList)
+			info.sourceAssetPath = sourceAssetPath;
 	}
 
 	resultBuffer.initList = infoList;

@@ -119,6 +119,41 @@ CHierachyBox* CHierachyBox::Create()
 	return newBox;
 }
 
+void CHierachyBox::SyncSelectionFromEditor(const CEditor& editor)
+{
+	std::unordered_set<CGameObject*> syncedSelection;
+	for (CGameObject* obj : editor.Get_MultiSelectedObjects())
+	{
+		if (obj)
+			syncedSelection.insert(obj);
+	}
+
+	if (syncedSelection.empty())
+	{
+		if (CGameObject* selected = editor.Get_SelectedGameObject())
+			syncedSelection.insert(selected);
+	}
+
+	bool selectionChanged = syncedSelection.size() != m_selectedObjects.size();
+	if (!selectionChanged)
+	{
+		for (CGameObject* obj : syncedSelection)
+		{
+			if (m_selectedObjects.count(obj) == 0)
+			{
+				selectionChanged = true;
+				break;
+			}
+		}
+	}
+
+	if (!selectionChanged)
+		return;
+
+	m_selectedObjects = std::move(syncedSelection);
+	m_lastClickedObject = editor.Get_SelectedGameObject();
+}
+
 void CHierachyBox::Render()
 {
 	CEditor& editor = CEditor::GetInstance();
@@ -193,6 +228,7 @@ void CHierachyBox::Render()
 
 		const string filterText = TrimCopy(m_searchBuffer.data());
 		const string filterLower = ToLowerCopy(filterText);
+		SyncSelectionFromEditor(editor);
 		CGameObject* selectedObject = editor.Get_SelectedGameObject();
 		const bool openSelectedRequested = editor.Consume_OpenSelectedInHierarchyRequest();
 		if (selectedObject != m_lastSelectedGameObject)
@@ -491,7 +527,17 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filte
 			m_lastClickedObject = _obj;
 		}
 
-		CGameObject* primary = m_selectedObjects.empty() ? nullptr : _obj;
+		CGameObject* primary = nullptr;
+		if (!m_selectedObjects.empty())
+		{
+			if (m_selectedObjects.count(_obj) > 0)
+				primary = _obj;
+			else if (primarySelected && m_selectedObjects.count(primarySelected) > 0)
+				primary = primarySelected;
+			else
+				primary = *m_selectedObjects.begin();
+		}
+
 		editor.Set_SelectedGameObject(primary);
 		editor.Set_MultiSelectedObjects(vector<CGameObject*>(m_selectedObjects.begin(), m_selectedObjects.end()));
 	}

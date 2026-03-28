@@ -24,6 +24,10 @@ public:
 public:
 	CMeshBuffer* Get_MeshBuffer() const;
 	void Set_MeshBuffer(CMeshBuffer* _buffer);
+	const _float GetScaleFactor() const;
+	void SetScaleFactor(const _float _value);
+	vector3 GetRotationFactor() const;
+	void SetRotationFactor(const vector3& _value);
 
 private:
 	CMeshBuffer* m_pMeshBuffer;

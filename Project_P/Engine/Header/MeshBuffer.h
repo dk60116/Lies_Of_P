@@ -29,6 +29,7 @@ public:
 		vector<_uint> indices = {};
 		MESHBUFFERDESC desc = {};
 		wstring diffuseMapPath = L"";
+		wstring sourceAssetPath = L"";
 	};
 
 	typedef struct TerrainMeshBufferDesctiption

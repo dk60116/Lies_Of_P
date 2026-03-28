@@ -30,6 +30,7 @@ private:
 	bool TryInsertObject(CGameObject* _droppedObject, CTransform* _targetParent, CGameObject* _beforeObject);
 	bool ObjectMatchesFilter(CGameObject* _obj, const string& _filterLower) const;
 	bool IsAncestorOfSelected(CGameObject* _obj, CGameObject* _selected) const;
+	void SyncSelectionFromEditor(const class CEditor& _editor);
 
 private:
 	std::array<char, 128> m_searchBuffer{};

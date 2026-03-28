@@ -1,8 +1,10 @@
 #include "epch.h"
 #include "RigidBody.h"
+#include "CapsuleCollider.h"
 #include "Collider.h"
 #include "GameObject.h"
 #include "Physics.h"
+#include "SceneManager.h"
 #ifndef _CLIENT_BUILD
 #include "Editor.h"
 #include "ImGuizmo.h"
@@ -36,6 +38,42 @@ namespace
     inline BodyInterface& GetBI()
     {
         return GetPS().GetBodyInterface();
+    }
+
+    inline _bool IsPlayerAttackLockedMovement(const CGameObject* _gameObject, const _bool _bypassPositionConstraints)
+    {
+        if (!_bypassPositionConstraints || !_gameObject)
+            return false;
+
+        return _gameObject->GetLayer() == CSceneManager::GetInstance().NameToLayer(L"Player") ||
+            _gameObject->CompareTag(L"PlayerBody");
+    }
+
+    inline _float GetPrimaryCapsuleRadius(const list<CCollider*>& _colliders)
+    {
+        for (CCollider* collider : _colliders)
+        {
+            if (CCapsuleCollider* capsule = dynamic_cast<CCapsuleCollider*>(collider))
+                return max(capsule->GetRadius(), 0.05f);
+        }
+
+        return 0.5f;
+    }
+
+    inline CSceneManager::LayerMask BuildPlayerAttackObstacleMask()
+    {
+        vector<_uint> ignoreLayers =
+        {
+            CSceneManager::GetInstance().NameToLayer(L"Player"),
+            CSceneManager::GetInstance().NameToLayer(L"HitBox_Player"),
+            CSceneManager::GetInstance().NameToLayer(L"HitBox_Enemy"),
+            CSceneManager::GetInstance().NameToLayer(L"HitBox_NPC"),
+            CSceneManager::GetInstance().NameToLayer(L"HurtBox_Player"),
+            CSceneManager::GetInstance().NameToLayer(L"HurtBox_Ememy"),
+            CSceneManager::GetInstance().NameToLayer(L"HurtBox_NPC")
+        };
+
+        return CSceneManager::GetInstance().MakeLayerMask(true, ignoreLayers);
     }
 }
 
@@ -505,6 +543,28 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
     vector3 targetPos = currentPos + _deltaWorld;
     quaternion targetRot = currentRot;
     const _bool bypassPositionConstraints = !m_bKinematic && m_bConstPositionX && m_bConstPositionY && m_bConstPositionZ;
+
+    if (IsPlayerAttackLockedMovement(m_pGameObject, bypassPositionConstraints))
+    {
+        vector3 horizontalDelta(_deltaWorld.x, 0.f, _deltaWorld.z);
+        const _float horizontalDistanceSq = horizontalDelta.lengthSq();
+
+        if (horizontalDistanceSq > 1e-6f)
+        {
+            CPhysics::SphereRay wallRay = {};
+            wallRay.center = currentPos + vector3::up() * 0.5f;
+            wallRay.radius = GetPrimaryCapsuleRadius(m_lColliderList) * 0.5f;
+            wallRay.dir = horizontalDelta.normalized();
+            wallRay.maxDist = sqrtf(horizontalDistanceSq) + wallRay.radius;
+
+            const auto wallHits = CPhysics::GetInstance().SphereRaycast(wallRay, BuildPlayerAttackObstacleMask());
+            if (!wallHits.empty())
+            {
+                ResetVelocity();
+                return;
+            }
+        }
+    }
 
     if (!bypassPositionConstraints)
         ApplyPositionConstraints(targetPos);

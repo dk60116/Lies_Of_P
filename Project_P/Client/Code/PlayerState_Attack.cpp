@@ -18,10 +18,10 @@ namespace
 
     constexpr AttackClipDesc kLightAttackDescs[] =
     {
-        { L"Eve_Attack_Light_01 (Animation Clip)", L"LightAttack_01", 4, 8, 12, true, 1.f },
-        { L"Eve_Attack_Light_02 (Animation Clip)", L"LightAttack_02", 4, 10, 15, true, 1.f },
-        { L"Eve_Attack_Light_03 (Animation Clip)", L"LightAttack_03", 4, 12, 15, true, 1.f },
-        { L"Eve_Attack_Light_04 (Animation Clip)", L"LightAttack_04", 6, 18, 23, true, 2.5f }
+        { L"Eve_Attack_Light_01 (Animation Clip)", L"LightAttack_01", 4, 8, 12, true, 2.f },
+        { L"Eve_Attack_Light_02 (Animation Clip)", L"LightAttack_02", 4, 10, 15, true, 1.5f },
+        { L"Eve_Attack_Light_03 (Animation Clip)", L"LightAttack_03", 4, 12, 15, true, 1.5f },
+        { L"Eve_Attack_Light_04 (Animation Clip)", L"LightAttack_04", 6, 18, 23, true, 4.f }
     };
 
     constexpr AttackClipDesc kStrongAttackDescs[] =

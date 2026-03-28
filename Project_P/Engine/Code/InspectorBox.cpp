@@ -535,6 +535,37 @@ static string NormalizeSlashPath(const string& path)
     return result;
 }
 
+static string GetOriginalFbxDisplayPath(const CMeshBuffer* meshBuffer)
+{
+    if (!meshBuffer)
+        return "";
+
+    string sourcePath = NormalizeSlashPath(CEngineString::WStringToString(meshBuffer->Get_FilePath()));
+    if (sourcePath.empty())
+        return "";
+
+    if (CEditor::ToLowerCopy(fs::path(sourcePath).extension().string()) != ".fbx")
+        return "";
+
+    if (sourcePath.rfind("../Assets/", 0) != 0 && sourcePath.rfind("Assets/", 0) != 0)
+        sourcePath = "../Assets/" + sourcePath;
+
+    return sourcePath;
+}
+
+static void RenderOriginalFbxPath(const CMeshBuffer* meshBuffer)
+{
+    const string sourcePath = GetOriginalFbxDisplayPath(meshBuffer);
+    if (sourcePath.empty())
+    {
+        ImGui::TextUnformatted("Original FBX: None");
+        return;
+    }
+
+    ImGui::TextUnformatted("Original FBX:");
+    ImGui::TextWrapped("%s", sourcePath.c_str());
+}
+
 static string BuildMeshDataBaseName(const string& assetRelPath)
 {
     const string normalized = NormalizeSlashPath(assetRelPath);
@@ -700,6 +731,9 @@ static void ApplyMeshSelectionToObject(CGameObject* obj, CMeshFilter* meshFilter
     const fs::path expectedMeshDataPath = fs::path("BinaryAssets/MeshData") / expectedMeshDataFile;
     const _bool meshDataExistsInitially = fs::exists(expectedMeshDataPath);
     const wstring sceneMeshResourceName = CEngineString::StringToWString(sceneEntryName + " (MeshBuffer)");
+    // MeshFilter scale/rotation factors live on the selected mesh object's local transform.
+    // Rebuilding the mesh hierarchy under this object should therefore use identity child scale.
+    constexpr _float kReloadHierarchyScaleFactor = 1.f;
 
     if (meshDataExistsInitially)
     {
@@ -710,7 +744,7 @@ static void ApplyMeshSelectionToObject(CGameObject* obj, CMeshFilter* meshFilter
         meshFilter->Set_MeshBuffer(nullptr);
         RemoveFirstMeshRendererComponent(obj);
         RemoveSpecificMeshFilterComponent(obj, meshFilter);
-        obj->CreateMeshHierachy(bundles, 0.01f);
+        obj->CreateMeshHierachy(bundles, kReloadHierarchyScaleFactor);
         return;
     }
 
@@ -739,7 +773,7 @@ static void ApplyMeshSelectionToObject(CGameObject* obj, CMeshFilter* meshFilter
     meshFilter->Set_MeshBuffer(nullptr);
     RemoveFirstMeshRendererComponent(obj);
     RemoveSpecificMeshFilterComponent(obj, meshFilter);
-    obj->CreateMeshHierachy(bundles, 0.01f);
+    obj->CreateMeshHierachy(bundles, kReloadHierarchyScaleFactor);
 }
 
 static void QueueMeshSelectionRequest(CGameObject* obj, CMeshFilter* meshFilter, const string& relPath, const _bool selectedMeshData)
@@ -2715,6 +2749,7 @@ void CInspectorBox::RenderMeshRendererComponent(CMeshRenderer* _meshRenderer)
 
     string meshName = CEngineString::WStringToString(meshBuffer->Get_ResourceName());
     ImGui::Text("MeshBuffer: %s", meshName.c_str());
+    RenderOriginalFbxPath(meshBuffer);
 }
 
 void CInspectorBox::RenderSkinnedMeshRendererComponent(CGameObject* _obj, CSkinnedMeshRenderer* _skinnedMeshRenderer)
@@ -2931,6 +2966,8 @@ void CInspectorBox::RenderSkinnedMeshRendererComponent(CGameObject* _obj, CSkinn
         ImGui::EndCombo();
     }
 
+    RenderOriginalFbxPath(currentMeshBuffer);
+
     if (ImGui::TreeNode("Assets .fbx (Skinned)"))
     {
         if (ImGui::BeginChild("##skinned_fbx_tree_box", ImVec2(0.f, 180.f), true))
@@ -3006,6 +3043,15 @@ void CInspectorBox::RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _m
 
         ImGui::EndCombo();
     }
+
+    _float scaleFactor = _meshFilter->GetScaleFactor();
+    if (ImGui::InputFloat(("ScaleFactor##" + comboLabel).c_str(), &scaleFactor, 0.f, 0.f))
+        _meshFilter->SetScaleFactor(scaleFactor);
+
+    vector3 rotationFactor = _meshFilter->GetRotationFactor();
+    _float rotationFactorValues[3] = { rotationFactor.x, rotationFactor.y, rotationFactor.z };
+    if (ImGui::InputFloat3(("RotationFactor##" + comboLabel).c_str(), rotationFactorValues))
+        _meshFilter->SetRotationFactor(vector3(rotationFactorValues[0], rotationFactorValues[1], rotationFactorValues[2]));
 
     if (ImGui::TreeNode("Assets .fbx"))
     {

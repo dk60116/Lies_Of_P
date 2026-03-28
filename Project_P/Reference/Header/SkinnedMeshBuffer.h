@@ -17,6 +17,7 @@ public:
 		vector<_uint> indices = {};
 		MESHBUFFERDESC desc = {};
 		wstring diffuseMapPath = L"";
+		wstring sourceAssetPath = L"";
 		vector<wstring> boneNames;
 		vector<_float4x4> boneOffsetMatrices;
 	};

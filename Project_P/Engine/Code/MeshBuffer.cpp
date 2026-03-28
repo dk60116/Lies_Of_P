@@ -136,6 +136,7 @@ HRESULT CMeshBuffer::Initialize_Custom(MeshBufferInitiaizeInfo _info, void* _des
     m_sInfo = _info.desc;
 
     m_strResourceName = _info.meshName;
+    m_strFilePath = _info.sourceAssetPath;
 
     size_t size = _info.desc.vertexSize * _info.desc.vertextCount;
 

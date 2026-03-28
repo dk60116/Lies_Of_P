@@ -3,6 +3,7 @@ SceneSkyBox : DefaultSky (SkyBox)
 SceneAmbient : 0.200000
 SceneDirectionalLightShadowDist : 200.000000
 SceneShadowBias : 0.000000
+SceneSoftShadowLightSize : 5.000000
 // Eve Model
 EveBody_Model : Player/Eve/EveBody.fbx :  [Skinned Mesh] [Root : Root]
 EveHead_Model : Player/Eve/EveHead.fbx :  [Skinned Mesh]
@@ -191,6 +192,8 @@ Statue_0_Stage01_Statue_00_Auto_1771997710327 : Map/Map01/Statue_0/Stage01_Statu
 Floor_6_Stage01_Floor_06_Auto_1772008548395 : Map/Map01/Floor_6/Stage01_Floor_06.fbx : [Mesh]
 Building_10_Stage01_Building_10_00_Auto_1772079737743 : Map/Map01/Building_10/Stage01_Building_10_00.fbx : [Mesh]
 Building_10_Stage01_Building_10_01_Auto_1772081057602 : Map/Map01/Building_10/Stage01_Building_10_01.fbx : [Mesh]
+Building_6_Stage01_Building_06_02_Auto_1774702069061 : Map/Map01/Building_6/Stage01_Building_06_02.fbx : [Mesh]
+004_Aa_SM_LOD0 : Map/Map01/Building_6/Stage01_Building_06_02.fbx : [Mesh] [Editor]
 SceneTexture/Building_0_Stage01_Building_00_TD_0.dds_18281719154232444330 : BinaryAssets/TextureData/Building_0_Stage01_Building_00_TD_0.dds : [Texture] [Editor]
 SceneTexture/Building_0_Stage01_Building_00_TD_1.dds_892922895400749697 : BinaryAssets/TextureData/Building_0_Stage01_Building_00_TD_1.dds : [Texture] [Editor]
 SceneTexture/Building_0_Stage01_Building_00_TD_2.dds_10217609621784755652 : BinaryAssets/TextureData/Building_0_Stage01_Building_00_TD_2.dds : [Texture] [Editor]

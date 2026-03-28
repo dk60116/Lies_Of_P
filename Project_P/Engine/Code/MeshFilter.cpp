@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "MeshFilter.h"
+#include "Transform.h"
 
 CMeshFilter::CMeshFilter()
 	: m_pMeshBuffer(nullptr)
@@ -55,4 +56,37 @@ void CMeshFilter::Set_MeshBuffer(CMeshBuffer* _buffer)
 CMeshBuffer* CMeshFilter::Get_MeshBuffer() const
 {
 	return m_pMeshBuffer;
+}
+
+const _float CMeshFilter::GetScaleFactor() const
+{
+	if (!m_pGameObject || !m_pGameObject->GetTransform())
+		return 1.f;
+
+	return m_pGameObject->GetTransform()->Get_LocalScale().x;
+}
+
+void CMeshFilter::SetScaleFactor(const _float _value)
+{
+	if (!m_pGameObject || !m_pGameObject->GetTransform())
+		return;
+
+	const _float clampedValue = max(_value, 0.0001f);
+	m_pGameObject->GetTransform()->Set_LocalScale(vector3::one() * clampedValue);
+}
+
+vector3 CMeshFilter::GetRotationFactor() const
+{
+	if (!m_pGameObject || !m_pGameObject->GetTransform())
+		return vector3::zero();
+
+	return m_pGameObject->GetTransform()->Get_LocalEulerAngles();
+}
+
+void CMeshFilter::SetRotationFactor(const vector3& _value)
+{
+	if (!m_pGameObject || !m_pGameObject->GetTransform())
+		return;
+
+	m_pGameObject->GetTransform()->Set_LocalEulerAngles(_value);
 }

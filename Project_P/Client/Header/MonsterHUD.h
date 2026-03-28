@@ -8,7 +8,7 @@ class CMonsterHUD final : public CComponent
 public:
 	struct MonsterHUDOPtions
 	{
-		_float rectSize = 4.f;
+		_float rectSize = 5.f;
 	};
 
 	struct HPGaugeSet
