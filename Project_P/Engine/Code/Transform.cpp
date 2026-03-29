@@ -2,6 +2,11 @@
 #include "Transform.h"
 #include "RigidBody.h"
 
+namespace
+{
+	thread_local _uint g_iThreadSnapshotSlot = 0u;
+}
+
 CTransform::CTransform()
     : m_bIsRootParent(true)
     , m_pParent(nullptr)
@@ -16,7 +21,6 @@ CTransform::CTransform()
     , m_vMatWorld()
     , m_vMatLocal()
     , m_vMatLocalRotation()
-    , m_vSnapshotWorld()
     , m_vPrevPosition({})
     , m_vPrevEulerAngles({})
     , m_vPrevLoclaPos({})
@@ -61,6 +65,8 @@ HRESULT CTransform::Initialize()
 
     Bind_Matrix();
     Bind_Direction();
+    for (_uint i = 0u; i < kSnapshotBufferCount; ++i)
+        m_vSnapshotWorld[i] = m_vMatWorld;
 
     return S_OK;
 }
@@ -424,12 +430,22 @@ const _matrix CTransform::Get_WorldMatrix() const
 
 const _matrix CTransform::GetSnapshotWorldMatrix() const
 {
-    return XMLoadFloat4x4(&m_vSnapshotWorld);
+    return XMLoadFloat4x4(&m_vSnapshotWorld[g_iThreadSnapshotSlot % kSnapshotBufferCount]);
 }
 
 void CTransform::SnapshotWorldMatrix()
 {
-    m_vSnapshotWorld = m_vMatWorld;
+    m_vSnapshotWorld[g_iThreadSnapshotSlot % kSnapshotBufferCount] = m_vMatWorld;
+}
+
+void CTransform::SetThreadSnapshotSlot(const _uint _slot)
+{
+    g_iThreadSnapshotSlot = _slot % kSnapshotBufferCount;
+}
+
+void CTransform::ClearThreadSnapshotSlot()
+{
+    g_iThreadSnapshotSlot = 0u;
 }
 
 const _matrix CTransform::Get_LocalMatrix() const
@@ -889,7 +905,6 @@ void CTransform::Bind_Matrix()
         worldMat = matWorldF;
 
     XMStoreFloat4x4(&m_vMatWorld, worldMat);
-    m_vSnapshotWorld = m_vMatWorld;
 
     m_vWorldPosition = vector3(m_vMatWorld._41, m_vMatWorld._42, m_vMatWorld._43);
 

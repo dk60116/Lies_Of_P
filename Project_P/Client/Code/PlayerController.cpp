@@ -104,8 +104,6 @@ void CPlayerController::Update()
             return;
     }
 
-	/* 공격 중에는 LateUpdate 끝에서 보정된 위치를 사용.
-	   Update에서 저장하면 물리 pushout(벽 겹침 해소)이 포함됨. */
 	if (m_pPlayer && m_pPlayer->GetTransform() &&
 		!m_pCtx->IsActionActive(PlayerState::Attack) &&
 		!m_pCtx->IsActionActive(PlayerState::Attack_S) &&

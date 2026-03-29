@@ -138,8 +138,7 @@ public:
 			if (m_shutdown)
 				return;
 
-			m_job = std::move(_renderFn);
-			m_hasJob = true;
+			m_jobs.push(std::move(_renderFn));
 		}
 		m_cv.notify_all();
 	}
@@ -147,7 +146,7 @@ public:
 	void WaitIdle()
 	{
 		std::unique_lock<std::mutex> lock(m_mutex);
-		m_cv.wait(lock, [this] { return !m_hasJob && !m_running; });
+		m_cv.wait(lock, [this] { return m_jobs.empty() && !m_running; });
 	}
 
 	void Shutdown()
@@ -169,16 +168,14 @@ public:
 
 		{
 			std::unique_lock<std::mutex> lock(m_mutex);
-			m_job = {};
-			m_hasJob = false;
+			m_jobs = {};
 			m_running = false;
 		}
 	}
 
 private:
 	CRenderThread()
-		: m_hasJob(false)
-		, m_running(false)
+		: m_running(false)
 		, m_shutdown(false)
 	{
 		m_thread = std::thread([this] { ThreadLoop(); });
@@ -196,11 +193,11 @@ private:
 			std::function<void()> job;
 			{
 				std::unique_lock<std::mutex> lock(m_mutex);
-				m_cv.wait(lock, [this] { return m_hasJob || m_shutdown; });
-				if (m_shutdown && !m_hasJob)
+				m_cv.wait(lock, [this] { return !m_jobs.empty() || m_shutdown; });
+				if (m_shutdown && m_jobs.empty())
 					return;
-				job = std::move(m_job);
-				m_hasJob = false;
+				job = std::move(m_jobs.front());
+				m_jobs.pop();
 				m_running = true;
 			}
 
@@ -215,10 +212,9 @@ private:
 	}
 
 	std::thread m_thread;
-	std::function<void()> m_job;
+	std::queue<std::function<void()>> m_jobs;
 	std::mutex m_mutex;
 	std::condition_variable m_cv;
-	bool m_hasJob;
 	bool m_running;
 	bool m_shutdown;
 };

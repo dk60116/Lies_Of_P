@@ -33,6 +33,9 @@
 
 namespace
 {
+	thread_local CCamera* g_pThreadRenderCameraOverride = nullptr;
+	thread_local vector<_matrix>* g_pThreadRenderLightDataOverride = nullptr;
+
 	_bool BuildLineWorldMatrix(const _vector& a, const _vector& b, _matrix& outWorld)
 	{
 		_vector delta = b - a;
@@ -502,6 +505,7 @@ CScene::CScene()
 	, m_lLightList({})
 	, m_lCanvasList({})
 	, m_vLightData({})
+	, m_aRenderFrames()
 	, m_pSkyBox(nullptr)
 	, m_pEditorCamera(nullptr)
 	, m_iUniqueObjectCount(0)
@@ -847,22 +851,86 @@ void CScene::LateUpdate()
 	}
 }
 
-void CScene::PrepareRender()
+void CScene::ResetRenderFrame(RenderFrameData& _frame)
 {
+	_frame.renderSnapshot.clear();
+	_frame.cameras.clear();
+	_frame.lightData.clear();
+	_frame.primaryCamera = nullptr;
+	_frame.completed.store(false);
+}
+
+void CScene::ReleaseRenderFrame(RenderFrameData& _frame)
+{
+	for (CGameObject* obj : _frame.renderSnapshot)
+		Safe_Release(obj);
+
+	ResetRenderFrame(_frame);
+	_frame.inUse = false;
+}
+
+void CScene::CollectCompletedRenderFrames()
+{
+	for (RenderFrameData& frame : m_aRenderFrames)
+	{
+		if (!frame.inUse || !frame.completed.load())
+			continue;
+
+		ReleaseRenderFrame(frame);
+	}
+}
+
+void CScene::CompleteRenderFrame(const _uint _frameIndex)
+{
+	if (_frameIndex >= kRenderFrameBufferCount)
+		return;
+
+	m_aRenderFrames[_frameIndex].completed.store(true);
+}
+
+_uint CScene::AcquireRenderFrame()
+{
+	CollectCompletedRenderFrames();
+
+	while (true)
+	{
+		for (_uint i = 0u; i < kRenderFrameBufferCount; ++i)
+		{
+			RenderFrameData& frame = m_aRenderFrames[i];
+			if (frame.inUse)
+				continue;
+
+			ResetRenderFrame(frame);
+			frame.inUse = true;
+			return i;
+		}
+
+		CRenderThread::GetInstance().WaitIdle();
+		CollectCompletedRenderFrames();
+	}
+}
+
+_uint CScene::PrepareRender()
+{
+	const _uint frameIndex = AcquireRenderFrame();
+	RenderFrameData& frame = m_aRenderFrames[frameIndex];
+	CTransform::SetThreadSnapshotSlot(frameIndex);
+
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
 		if ((*it)->IsRecursiveActive())
 			(*it)->GetTransform()->SnapshotWorldMatrix();
 	}
 
-	m_vRenderSnapshot.clear();
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
 		if ((*it)->IsActive())
-			m_vRenderSnapshot.push_back(*it);
+		{
+			(*it)->AddRef();
+			frame.renderSnapshot.push_back(*it);
+		}
 	}
 
-	m_vLightData.clear();
 	const _uint maxLightCount = 63u;
 	vector<_float4x4> lightInfos;
 	lightInfos.reserve(min<_uint>(static_cast<_uint>(m_lLightList.size()), maxLightCount));
@@ -876,12 +944,25 @@ void CScene::PrepareRender()
 	}
 	_float4x4 lightMeta = {};
 	lightMeta._44 = static_cast<_float>(lightInfos.size());
-	m_vLightData.push_back(XMLoadFloat4x4(&lightMeta));
+	frame.lightData.push_back(XMLoadFloat4x4(&lightMeta));
 	for (auto& lightInfo : lightInfos)
-		m_vLightData.push_back(XMLoadFloat4x4(&lightInfo));
+		frame.lightData.push_back(XMLoadFloat4x4(&lightInfo));
+
+	for (CCamera* camera : m_lCameraList)
+	{
+		if (!camera || !camera->Get_GameObject())
+			continue;
+		if (!camera->Get_GameObject()->IsRecursiveActive() || !camera->Get_Enable())
+			continue;
+
+		frame.cameras.push_back(camera);
+	}
+
+	if (!frame.cameras.empty())
+		frame.primaryCamera = frame.cameras.back();
 
 	vector<CSkinnedMeshRenderer*> skinnedRenderers;
-	for (CGameObject* obj : m_vRenderSnapshot)
+	for (CGameObject* obj : frame.renderSnapshot)
 	{
 		CSkinnedMeshRenderer* smr = obj->GetComponent<CSkinnedMeshRenderer>();
 		if (smr)
@@ -893,9 +974,17 @@ void CScene::PrepareRender()
 
 	CJobSystem& jobSystem = CJobSystem::GetInstance();
 	for (CSkinnedMeshRenderer* smr : skinnedRenderers)
-		jobSystem.Schedule([smr] { smr->ComputeSkinning(); });
+		jobSystem.Schedule([smr, frameIndex]
+		{
+			CTransform::SetThreadSnapshotSlot(frameIndex);
+			smr->ComputeSkinning();
+			CTransform::ClearThreadSnapshotSlot();
+		});
 
 	jobSystem.WaitAll();
+	CTransform::ClearThreadSnapshotSlot();
+
+	return frameIndex;
 }
 
 void CScene::Render_Editor()
@@ -1010,20 +1099,31 @@ void CScene::Render_Editor()
 #endif
 }
 
-void CScene::Render_Game()
+void CScene::Render_Game(const _uint _frameIndex)
 {
+	if (_frameIndex >= kRenderFrameBufferCount)
+		return;
+
+	RenderFrameData& frame = m_aRenderFrames[_frameIndex];
+	CTransform::SetThreadSnapshotSlot(_frameIndex);
+	g_pThreadRenderCameraOverride = frame.primaryCamera;
+	g_pThreadRenderLightDataOverride = &frame.lightData;
+
 	CGraphicDevice::GetInstance().Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
 	ColorValue initialBackgroundColor = ColorValue::black();
 	CGraphicDevice::GetInstance().Clear_BackBuffer_View(&initialBackgroundColor);
 	CGraphicDevice::GetInstance().Clear_DepthStencil_View();
 
-	for (CGameObject* obj : m_vRenderSnapshot)
-		obj->Render();
+	if (frame.primaryCamera)
+	{
+		for (CGameObject* obj : frame.renderSnapshot)
+			obj->Render();
+	}
 
-	for (TRAVERSAL_ITER(m_lCameraList, it)) 
-		(*it)->OnPreCull();
-	for (TRAVERSAL_ITER(m_lCameraList, it)) 
-		(*it)->OnPreRender();
+	for (CCamera* camera : frame.cameras)
+		camera->OnPreCull();
+	for (CCamera* camera : frame.cameras)
+		camera->OnPreRender();
 
 	ID3D11DeviceContext* ctx = m_pContext;
 	const D3D11_VIEWPORT* vp = CGraphicDevice::GetInstance().Get_GameViewport();
@@ -1032,12 +1132,8 @@ void CScene::Render_Game()
 
 	auto& trm = CRenderTargetManager::GetInstance();
 
-	for (TRAVERSAL_ITER(m_lCameraList, it))
+	for (CCamera* camera : frame.cameras)
 	{
-		CCamera* camera = *it;
-		if (!camera || !camera->Get_GameObject() || !camera->Get_GameObject()->IsRecursiveActive() || !camera->Get_Enable())
-			continue;
-
 		trm.Bind_GBuffer(ctx, vp);
 
 		switch (camera->GetClearFlags())
@@ -1093,22 +1189,30 @@ void CScene::Render_Game()
 	const _float uiBlendFactor[4] = { 0.f, 0.f, 0.f, 0.f };
 	m_pContext->OMSetBlendState(m_pUIBlendingState, uiBlendFactor, 0xFFFFFFFF);
 
-	for (TRAVERSAL_ITER(m_lCameraList, it))
-		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
-			(*it)->RenderUI();
+	for (CCamera* camera : frame.cameras)
+		camera->RenderUI();
 
-	for (TRAVERSAL_ITER(m_lCameraList, it))
-		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
-			(*it)->RenderRTDebugDisplay(false);
+	for (CCamera* camera : frame.cameras)
+		camera->RenderRTDebugDisplay(false);
 
-	for (CGameObject* obj : m_vRenderSnapshot)
+	for (CGameObject* obj : frame.renderSnapshot)
 		obj->OnPostRender();
 
 	m_pContext->OMSetBlendState(nullptr, uiBlendFactor, 0xFFFFFFFF);
+	g_pThreadRenderLightDataOverride = nullptr;
+	g_pThreadRenderCameraOverride = nullptr;
+	CTransform::ClearThreadSnapshotSlot();
 }
 
 void CScene::SceneRelease()
 {
+	CollectCompletedRenderFrames();
+	for (RenderFrameData& frame : m_aRenderFrames)
+	{
+		if (frame.inUse)
+			ReleaseRenderFrame(frame);
+	}
+
 	Safe_Release(m_pSkyBox);
 	m_pSkyBox = nullptr;
 
@@ -2830,6 +2934,9 @@ void CScene::Set_SoftShadowLightSize(const _float _value)
 
 CCamera* CScene::Get_Camera() const
 {
+	if (g_pThreadRenderCameraOverride)
+		return g_pThreadRenderCameraOverride;
+
 	if (m_lCameraList.size() <= 0)
 		return nullptr;
 
@@ -2906,6 +3013,9 @@ void CScene::Remove_Light(CLight* _light)
 
 vector<_matrix>& CScene::Get_LightData()
 {
+	if (g_pThreadRenderLightDataOverride)
+		return *g_pThreadRenderLightDataOverride;
+
 	return m_vLightData;
 }
 

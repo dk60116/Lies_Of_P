@@ -2,6 +2,7 @@
 #include "SceneManager.h"
 #include "RenderTargetManager.h"
 #include "Physics.h"
+#include "JobSystem.h"
 
 namespace
 {
@@ -231,6 +232,10 @@ void CSceneManager::LoadScene(CScene* _scene)
 
 void CSceneManager::LoadComplete()
 {
+	CRenderThread::GetInstance().WaitIdle();
+	if (m_pCrtScene)
+		m_pCrtScene->CollectCompletedRenderFrames();
+
 	CPhysics::GetInstance().ClearRaycastDebugDisplay();
 
 	const PlayState prevPlayState = m_ePlayState;
@@ -789,4 +794,3 @@ const _bool CSceneManager::ContainLayerMask(const _uint _layer, const LayerMask 
 
 	return (_layer & _mask) != 0u;
 }
-

@@ -4,6 +4,8 @@
 #include "Renderer.h"
 #include "SkinnedMeshBuffer.h"
 #include "NaviMesh.h"
+#include <array>
+#include <atomic>
 
 NS_BEGIN(Engine)
 
@@ -13,6 +15,8 @@ class ENGINE_DLL CScene abstract : public UObject
     friend class CSceneLoader;
 
 public:
+    static constexpr _uint kRenderFrameBufferCount = 3u;
+
     typedef struct ObjectsRectTransfomInfo
     {
         _float2 anchoredPos = {};
@@ -21,6 +25,16 @@ public:
         _float2 anchorMin = {};
         _float2 anchorMax = {};
     }SCENERECTINFO;
+
+    struct RenderFrameData
+    {
+        vector<CGameObject*> renderSnapshot = {};
+        vector<class CCamera*> cameras = {};
+        vector<_matrix> lightData = {};
+        class CCamera* primaryCamera = nullptr;
+        _bool inUse = false;
+        atomic_bool completed{ false };
+    };
 
     typedef struct ObjectsTransformInfo
     {
@@ -140,14 +154,19 @@ public:
     virtual void FixedUpdate();
     virtual void LateUpdateEditor();
     virtual void LateUpdate();
-    virtual void PrepareRender();
+    virtual _uint PrepareRender();
     virtual void Render_Editor();
-    virtual void Render_Game();
+    virtual void Render_Game(const _uint _frameIndex);
     virtual void SceneRelease();
     virtual void EndFrame();
+    void CollectCompletedRenderFrames();
+    void CompleteRenderFrame(const _uint _frameIndex);
 
 protected:
     void RenderSkyBox(class CCamera* _camera);
+    _uint AcquireRenderFrame();
+    void ResetRenderFrame(RenderFrameData& _frame);
+    void ReleaseRenderFrame(RenderFrameData& _frame);
 
 public:
     void Set_SceneName(const wstring _name);
@@ -256,7 +275,7 @@ protected:
     ID3D11BlendState* m_pBlendingState, * m_pNoneBlendingState, * m_pUIBlendingState;
 
     vector<_matrix> m_vLightData;
-    vector<CGameObject*> m_vRenderSnapshot;
+    array<RenderFrameData, kRenderFrameBufferCount> m_aRenderFrames;
 
     _float m_fPssedTime;
 

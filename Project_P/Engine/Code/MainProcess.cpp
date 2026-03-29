@@ -91,6 +91,7 @@ void CMainProcess::Update_MainApp()
 
 	if (scene)
 	{
+		scene->CollectCompletedRenderFrames();
 		scene->Update_Editor();
 
 		const _bool runSimulationFrame = CSceneManager::GetInstance().IsPlaying() || CSceneManager::GetInstance().ConsumeStepFrameRequest();
@@ -106,19 +107,20 @@ void CMainProcess::Update_MainApp()
 			scene->LateUpdateEditor();
 		}
 
-		CRenderThread::GetInstance().WaitIdle();
 		scene->EndFrame();
 
-		scene->PrepareRender();
+		const _uint renderFrameIndex = scene->PrepareRender();
 
-		CRenderThread::GetInstance().Submit([scene, &graphicDev]
+		CRenderThread::GetInstance().Submit([scene, &graphicDev, renderFrameIndex]
 		{
-			scene->Render_Game();
+			scene->Render_Game(renderFrameIndex);
 			graphicDev.Present();
+			scene->CompleteRenderFrame(renderFrameIndex);
 		});
 
 #ifndef _CLIENT_BUILD
 		CRenderThread::GetInstance().WaitIdle();
+		scene->CollectCompletedRenderFrames();
 		graphicDev.Set_RenderTarget(CEditor::GetInstance().Get_EditorWindow());
 		CEditor::GetInstance().Editor_Update_Begin();
 		CEditor::GetInstance().Editor_Update_During();
@@ -135,6 +137,8 @@ void CMainProcess::Update_MainApp()
 void CMainProcess::Release_MainApp()
 {
     CRenderThread::GetInstance().WaitIdle();
+	if (CScene* scene = CSceneManager::GetInstance().Get_CrtScene())
+		scene->CollectCompletedRenderFrames();
 
     // Tear scenes down while dependent runtime systems are still alive.
     CSceneManager::GetInstance().Release();

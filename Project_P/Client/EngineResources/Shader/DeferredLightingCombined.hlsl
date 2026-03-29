@@ -254,18 +254,19 @@ float4 PSMain(VSOut i) : SV_Target
         float G = GeometrySmith(NdotV, NdotL, roughnessSpecular);
         float3 F = FresnelSchlick(VdotH, F0);
 
+        float metallicSpecBoost = lerp(1.0f, 1.25f, metallic);
         float3 spec = (D * G * F) / max(4.0f * NdotV * NdotL, 1e-6f);
         float3 kS = F;
         float3 kD = (1.0f - kS) * (1.0f - metallic);
         float3 diffuse = kD * albedo;
 
-        Lo += (diffuse + spec) * radiance * NdotL;
+        Lo += (diffuse + spec * metallicSpecBoost) * radiance * NdotL;
     }
 
     float ambient = dirLightCount > 0 ? 0.5f : 0.2f;
     float3 ambientDiffuse = ambient * albedo * (1.0f - metallic * 0.7f) * occulusion;
     float3 ambientF = FresnelSchlickRoughness(NdotV, F0, roughnessSpecular);
-    float specAmbientStrength = lerp(0.02f, 0.25f, metallic) * lerp(1.0f, 0.6f, roughnessSpecular);
+    float specAmbientStrength = lerp(0.02f, 0.35f, metallic) * lerp(1.0f, 0.75f, roughnessSpecular);
     float3 ambientSpec = ambient * ambientF * specAmbientStrength * occulusion;
     float3 color = ambientDiffuse + ambientSpec + Lo;
 

@@ -10,6 +10,8 @@ class ENGINE_DLL CTransform : public CComponent
 	friend class CGameObject;
 
 public:
+	static constexpr _uint kSnapshotBufferCount = 3u;
+
 	typedef struct TransformDirections
 	{
 		vector3 forward = vector3::zero();
@@ -54,6 +56,8 @@ public:
 	const _matrix Get_InverseWorldMatrix() const;
 	const _matrix GetSnapshotWorldMatrix() const;
 	void SnapshotWorldMatrix();
+	static void SetThreadSnapshotSlot(const _uint _slot);
+	static void ClearThreadSnapshotSlot();
 
 public:
 	template <typename T>
@@ -169,7 +173,7 @@ protected:
 	quaternion m_vQuaternion, m_vWorldQuaternion;
 	quaternion m_vPrevQuaternion, m_vPrevLocalQuat;
 	_float4x4 m_vMatWorld, m_vMatLocal, m_vMatLocalRotation;
-	_float4x4 m_vSnapshotWorld;
+	_float4x4 m_vSnapshotWorld[kSnapshotBufferCount];
 	vector3 m_vPrevPosition, m_vPrevEulerAngles;
 	vector3 m_vPrevLoclaPos, m_vPrevLocalEuler, m_vPrevLocalScale;
 	DIRECTIONS m_sDirections, m_sPrevDirections;
