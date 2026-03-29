@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "Texture.h"
+#include "Resources.h"
 #include "DDSTextureLoader.h"
 
 CTexture::CTexture()
@@ -44,7 +45,20 @@ HRESULT CTexture::Initialize(const wstring& _name, const wstring& _filePath, voi
 
 	HRESULT hr = E_FAIL;
 	if (extension == L".dds")
+	{
 		hr = DirectX::CreateDDSTextureFromFile(device, m_strFilePath.c_str(), nullptr, &m_pSRV);
+		if (FAILED(hr))
+		{
+			const HRESULT rebuildResult = CResources::GetInstance().RebuildDDSFromBinaryPath(m_strFilePath);
+			if (SUCCEEDED(rebuildResult))
+			{
+				Safe_Release(m_pSRV);
+				hr = DirectX::CreateDDSTextureFromFile(device, m_strFilePath.c_str(), nullptr, &m_pSRV);
+				if (SUCCEEDED(hr))
+					CDebug::LogWarnning(L"Texture load recovered by rebuilding DDS: " + m_strFilePath);
+			}
+		}
+	}
 	else
 		hr = CreateWICTextureFromFile(device, m_strFilePath.c_str(), nullptr, &m_pSRV);
 

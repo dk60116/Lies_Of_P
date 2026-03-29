@@ -11,10 +11,126 @@
 
 namespace
 {
+	constexpr UINT kDDSMaxTextureSize = 4096;
+	constexpr UINT kDDSMinMipDimension = 64;
+	constexpr const wchar_t* kSupportedTextureSourceExtensions[] =
+	{
+		L".png", L".jpg", L".jpeg", L".bmp", L".tga", L".tif", L".tiff", L".gif"
+	};
+
 	constexpr int kSpriteFontFirstChar = 32;
 	constexpr int kSpriteFontLastChar = 126;
 	constexpr int kSpriteFontPadding = 2;
 	constexpr float kSpriteFontPointSize = 32.f;
+
+	wstring ToLowerCopy(wstring value);
+
+	UINT CalculateDDSMipLevels(UINT width, UINT height)
+	{
+		UINT mipLevels = 1;
+		while (width > kDDSMinMipDimension && height > kDDSMinMipDimension)
+		{
+			width = std::max<UINT>(1, width / 2);
+			height = std::max<UINT>(1, height / 2);
+
+			if (width < kDDSMinMipDimension || height < kDDSMinMipDimension)
+				break;
+
+			++mipLevels;
+		}
+
+		return mipLevels;
+	}
+
+	bool IsSupportedTextureSourceExtension(const fs::path& path)
+	{
+		const wstring extension = ToLowerCopy(path.extension().wstring());
+		for (const wchar_t* supported : kSupportedTextureSourceExtensions)
+		{
+			if (extension == supported)
+				return true;
+		}
+
+		return false;
+	}
+
+	wstring JoinTokens(const vector<wstring>& tokens, size_t beginIndex, size_t endIndex)
+	{
+		wstring joined;
+		for (size_t i = beginIndex; i < endIndex; ++i)
+		{
+			if (!joined.empty())
+				joined += L"_";
+
+			joined += tokens[i];
+		}
+
+		return joined;
+	}
+
+	vector<fs::path> GetAssetSearchRoots(const wstring& defaultAssetPath)
+	{
+		vector<fs::path> roots;
+
+		auto pushUnique = [&roots](const fs::path& candidate)
+			{
+				const wstring normalized = ToLowerCopy(candidate.generic_wstring());
+				for (const fs::path& existing : roots)
+				{
+					if (ToLowerCopy(existing.generic_wstring()) == normalized)
+						return;
+				}
+
+				roots.push_back(candidate);
+			};
+
+		pushUnique(fs::path(defaultAssetPath));
+		pushUnique(fs::path(L"Assets"));
+		pushUnique(fs::path(L"../Assets"));
+		pushUnique(fs::path(L"Client/Assets"));
+		pushUnique(fs::path(L"../Client/Assets"));
+
+		return roots;
+	}
+
+	fs::path FindSourceTexturePathForDDS(const vector<fs::path>& assetRoots, const wstring& ddsStem)
+	{
+		const vector<wstring> tokens = CEngineString::Split(ddsStem, L"_");
+		if (tokens.size() < 2)
+			return {};
+
+		for (size_t splitIndex = tokens.size() - 1; splitIndex > 0; --splitIndex)
+		{
+			const wstring folderName = ToLowerCopy(JoinTokens(tokens, 0, splitIndex));
+			const wstring fileName = ToLowerCopy(JoinTokens(tokens, splitIndex, tokens.size()));
+			if (folderName.empty() || fileName.empty())
+				continue;
+
+			for (const fs::path& assetRoot : assetRoots)
+			{
+				if (!fs::exists(assetRoot))
+					continue;
+
+				for (const auto& entry : fs::recursive_directory_iterator(assetRoot, fs::directory_options::skip_permission_denied))
+				{
+					if (!entry.is_regular_file())
+						continue;
+
+					const fs::path sourcePath = entry.path();
+					if (!IsSupportedTextureSourceExtension(sourcePath))
+						continue;
+					if (ToLowerCopy(sourcePath.parent_path().filename().wstring()) != folderName)
+						continue;
+					if (ToLowerCopy(sourcePath.stem().wstring()) != fileName)
+						continue;
+
+					return sourcePath;
+				}
+			}
+		}
+
+		return {};
+	}
 
 	struct PrivateFontRegistration
 	{
@@ -757,7 +873,7 @@ HRESULT CResources::ConvertImageToDDS(const wstring _filePath)
 	}
 
 	ComPtr<ID3D11Resource> sourceResource;
-	if (FAILED(CreateWICTextureFromFile(device, _filePath.c_str(), sourceResource.GetAddressOf(), nullptr)))
+	if (FAILED(CreateWICTextureFromFile(device, _filePath.c_str(), sourceResource.GetAddressOf(), nullptr, kDDSMaxTextureSize)))
 	{
 		CDebug::LogError(L"Failed create texture Data - Can not load image: " + _filePath);
 		return E_FAIL;
@@ -767,6 +883,60 @@ HRESULT CResources::ConvertImageToDDS(const wstring _filePath)
 	{
 		CDebug::LogError(L"Failed create texture Data - Invalid source resource: " + _filePath);
 		return E_FAIL;
+	}
+
+	ComPtr<ID3D11Texture2D> sourceTexture;
+	if (FAILED(sourceResource.As(&sourceTexture)) || !sourceTexture)
+	{
+		CDebug::LogError(L"Failed create texture Data - Invalid source texture: " + _filePath);
+		return E_FAIL;
+	}
+
+	D3D11_TEXTURE2D_DESC sourceDesc{};
+	sourceTexture->GetDesc(&sourceDesc);
+
+	ID3D11Resource* saveResource = sourceResource.Get();
+	ComPtr<ID3D11Texture2D> mipTexture;
+	ComPtr<ID3D11ShaderResourceView> mipSRV;
+
+	const UINT mipLevels = CalculateDDSMipLevels(sourceDesc.Width, sourceDesc.Height);
+	if (mipLevels > 1)
+	{
+		UINT formatSupport = 0;
+		if (FAILED(device->CheckFormatSupport(sourceDesc.Format, &formatSupport)) ||
+			(formatSupport & D3D11_FORMAT_SUPPORT_MIP_AUTOGEN) == 0)
+		{
+			CDebug::LogWarnning(L"Texture Data - Mip autogen unsupported, saving single mip: " + _filePath);
+		}
+		else
+		{
+			D3D11_TEXTURE2D_DESC mipDesc = sourceDesc;
+			mipDesc.MipLevels = mipLevels;
+			mipDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+			mipDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+
+			if (FAILED(device->CreateTexture2D(&mipDesc, nullptr, mipTexture.GetAddressOf())))
+			{
+				CDebug::LogError(L"Failed create texture Data - Can not create mip texture: " + _filePath);
+				return E_FAIL;
+			}
+
+			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+			srvDesc.Format = mipDesc.Format;
+			srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+			srvDesc.Texture2D.MostDetailedMip = 0;
+			srvDesc.Texture2D.MipLevels = mipLevels;
+
+			if (FAILED(device->CreateShaderResourceView(mipTexture.Get(), &srvDesc, mipSRV.GetAddressOf())))
+			{
+				CDebug::LogError(L"Failed create texture Data - Can not create mip SRV: " + _filePath);
+				return E_FAIL;
+			}
+
+			context->CopySubresourceRegion(mipTexture.Get(), 0, 0, 0, 0, sourceTexture.Get(), 0, nullptr);
+			context->GenerateMips(mipSRV.Get());
+			saveResource = mipTexture.Get();
+		}
 	}
 
 	auto pathSplit = CEngineString::Split(CEngineString::Replace(_filePath, L"\\", L"/"), L"/");
@@ -783,13 +953,38 @@ HRESULT CResources::ConvertImageToDDS(const wstring _filePath)
 	if (!fs::exists("BinaryAssets/TextureData"))
 		fs::create_directories("BinaryAssets/TextureData");
 
-	if (FAILED(DirectX::SaveDDSTextureToFile(context, sourceResource.Get(), savePath.c_str())))
+	if (FAILED(DirectX::SaveDDSTextureToFile(context, saveResource, savePath.c_str())))
 	{
 		CDebug::LogError(L"Failed create texture Data - Can not save DDS: " + _filePath);
 		return E_FAIL;
 	}
 
 	CDebug::Log(L"Complete create texture Data: " + _filePath);
+	return S_OK;
+}
+
+HRESULT CResources::RebuildDDSFromBinaryPath(const wstring _ddsPath)
+{
+	const fs::path ddsPath = fs::path(CEngineString::Replace(_ddsPath, L"\\", L"/"));
+	if (ToLowerCopy(ddsPath.extension().wstring()) != L".dds")
+		return E_INVALIDARG;
+
+	const vector<fs::path> assetRoots = GetAssetSearchRoots(m_strDefaultAssetPath);
+	const fs::path sourcePath = FindSourceTexturePathForDDS(assetRoots, ddsPath.stem().wstring());
+	if (sourcePath.empty())
+	{
+		CDebug::LogWarnning(L"Texture load recovery failed - source image not found: " + _ddsPath);
+		return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	}
+
+	const HRESULT result = ConvertImageToDDS(sourcePath.generic_wstring());
+	if (FAILED(result))
+	{
+		CDebug::LogWarnning(L"Texture load recovery failed - DDS rebuild failed: " + _ddsPath);
+		return result;
+	}
+
+	CDebug::LogWarnning(L"Texture load recovery rebuilt DDS: " + _ddsPath);
 	return S_OK;
 }
 

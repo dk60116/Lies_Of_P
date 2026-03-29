@@ -34,6 +34,7 @@ public:
 public:
     HRESULT ConvertFBXToMeshBufferData(const wstring _filePath);
     HRESULT ConvertImageToDDS(const wstring _filePath);
+    HRESULT RebuildDDSFromBinaryPath(const wstring _ddsPath);
     HRESULT ConvertFBXToSkinnedBufferData(const wstring _filePath);
     HRESULT ConvertFBXToAnimationClipData(const wstring _filePath);
     HRESULT ConvertAnimatorControllerToBinary(const wstring _filePath);
