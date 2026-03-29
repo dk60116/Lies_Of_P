@@ -202,7 +202,7 @@ Building_6_Stage01_Building_06_03_Auto_1774795222388 : Map/Map01/Building_6/Stag
 Building_8_Stage01_Building_08_06_Auto_1774800072304 : Map/Map01/Building_8/Stage01_Building_08_06.fbx : [Mesh]
 Building_9_Stage01_Building_09_07_Auto_1774802919779 : Map/Map01/Building_9/Stage01_Building_09_07.fbx : [Mesh]
 003_B_SM_LOD0 : Map/Map01/Building_8/Stage01_Building_09_04.fbx : [Mesh] [Editor]
-004_Aa_SM_LOD0 : Map/Map01/Building_9/Stage01_Building_09_07.fbx : [Mesh] [Editor]
+004_Aa_SM_LOD0 : Map/Map01/Building_6/Stage01_Building_06_02.fbx : [Mesh] [Editor]
 004_B_SM_LOD0 : Map/Map01/Building_9/Stage01_Building_09_06.fbx : [Mesh] [Editor]
 004_E_SM_LOD0 : Map/Map01/Building_6/Stage01_Building_06_03.fbx : [Mesh] [Editor]
 SceneTexture/Building_0_Stage01_Building_00_TD_0.dds_18281719154232444330 : BinaryAssets/TextureData/Building_0_Stage01_Building_00_TD_0.dds : [Texture] [Editor]

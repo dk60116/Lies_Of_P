@@ -2049,6 +2049,7 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 	ID3D11ShaderResourceView* srvNormal = rtm.GetSRV(CRenderTarget::RTType::Normal, m_bIsEditor);
 	ID3D11ShaderResourceView* srvDepth = rtm.GetSRV(CRenderTarget::RTType::Depth, m_bIsEditor);
 	ID3D11ShaderResourceView* srvMaterial = rtm.GetSRV(CRenderTarget::RTType::Material, m_bIsEditor);
+	ID3D11ShaderResourceView* srvEnv = CSceneManager::GetInstance().Get_CrtScene()->GetSkyBoxEnvironmentSRV();
 
 	ID3D11RenderTargetView* rtvSpecular = rtm.GetRTV(CRenderTarget::RTType::Specular, m_bIsEditor);
 
@@ -2126,8 +2127,8 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 	vector<_matrix>& lights = CSceneManager::GetInstance().Get_CrtScene()->Get_LightData();
 	specularMat->Bind_Light(lights.empty() ? nullptr : lights.data(), (_uint)lights.size());
 
-	ID3D11ShaderResourceView* srvs[4] = { srvAlbedo, srvNormal, srvDepth, srvMaterial };
-	ctx->PSSetShaderResources(0, 4, srvs);
+	ID3D11ShaderResourceView* srvs[5] = { srvAlbedo, srvNormal, srvDepth, srvMaterial, srvEnv };
+	ctx->PSSetShaderResources(0, 5, srvs);
 
 	m_pRectBuffer->Render();
 

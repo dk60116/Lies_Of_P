@@ -30,6 +30,8 @@ private:
 
 public:
 	void RenderSky(CCamera* _camera);
+	class CTexture* Get_Texture() const;
+	ID3D11ShaderResourceView* Get_TextureSRV() const;
 
 	SKYBOXBUFFERDESC m_sSaveDesc;
 	CMaterial* m_pMaterial;

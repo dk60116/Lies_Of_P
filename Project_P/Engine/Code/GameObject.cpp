@@ -1,7 +1,13 @@
 #include "epch.h"
 #include "GameObject.h"
+#include "Camera.h"
+#include "Canvas.h"
 #include "Collider.h"
+#include "Light.h"
+#include "MeshFilter.h"
+#include "MeshRenderer.h"
 #include "RectTransform.h"
+#include "SkinnedMeshRenderer.h"
 #include "UI.h"
 #include <objbase.h>
 
@@ -19,6 +25,30 @@ namespace
 
 		return wstring(buffer);
 	}
+
+	CMeshFilter* FindPreferredMeshFilter(CGameObject* _object)
+	{
+		if (!_object)
+			return nullptr;
+
+		CMeshFilter* fallback = nullptr;
+
+		for (TRAVERSAL_ITER(_object->Get_ComponentList(), it))
+		{
+			CMeshFilter* meshFilter = dynamic_cast<CMeshFilter*>(*it);
+			if (!meshFilter)
+				continue;
+
+			if (!fallback)
+				fallback = meshFilter;
+
+			if (meshFilter->Get_MeshBuffer())
+				return meshFilter;
+		}
+
+		return fallback;
+	}
+
 }
 
 
@@ -705,22 +735,168 @@ const _bool CGameObject::IsBoneTransform() const
 
 CGameObject* CGameObject::Instantiate(const CGameObject* _rhs)
 {
+	if (!_rhs)
+		return nullptr;
+
 	CGameObject* newGameObj = CSceneManager::GetInstance().Get_CrtScene()->Add_GameObject(_rhs->Get_ObjectName() + L" (Clone)");
+	if (!newGameObj)
+		return nullptr;
 
 	for (TRAVERSAL_ITER(_rhs->m_lComponentList, it))
 	{
-		if (*it && !dynamic_cast<CTransform*>(*it))
-		{
-			newGameObj->m_lComponentList.push_back((*it)->Clone());
-			newGameObj->m_lComponentList.back()->Set_Object(newGameObj);
-			newGameObj->m_lComponentList.back()->AddRef();
+		CComponent* sourceComponent = *it;
+		if (!sourceComponent)
+			continue;
 
-			newGameObj->m_lComponentList.back()->Initialize();
+		if (dynamic_cast<CTransform*>(sourceComponent))
+			continue;
+
+		CComponent* clonedComponent = sourceComponent->Clone();
+		if (!clonedComponent)
+			continue;
+
+		clonedComponent->Set_Object(newGameObj);
+		clonedComponent->m_bEnable = sourceComponent->m_bEnable;
+		clonedComponent->m_bSaveTarget = sourceComponent->m_bSaveTarget;
+		clonedComponent->AddRef();
+		newGameObj->m_lComponentList.push_back(clonedComponent);
+
+		if (FAILED(clonedComponent->Initialize()))
+		{
+			newGameObj->m_lComponentList.remove(clonedComponent);
+			Safe_Release(clonedComponent);
+			continue;
 		}
+
+		if (CCamera* cam = dynamic_cast<CCamera*>(clonedComponent))
+			newGameObj->m_pScene->Add_Camera(cam);
+
+		if (CLight* light = dynamic_cast<CLight*>(clonedComponent))
+			newGameObj->m_pScene->Add_Light(light);
+
+		if (CCanvas* canvas = dynamic_cast<CCanvas*>(clonedComponent))
+			newGameObj->m_pScene->Add_Canvas(canvas);
+
+		newGameObj->m_lComponentList.sort([](const CComponent* a, const CComponent* b)
+			{
+				return a->GetSortIndex() < b->GetSortIndex();
+			});
+
+		newGameObj->FinalizeAddedComponent(clonedComponent);
+	}
+
+	CTransform* sourceTransform = _rhs->GetTransform();
+	CRectTransform* sourceRectTransform = dynamic_cast<CRectTransform*>(sourceTransform);
+	if (sourceRectTransform)
+	{
+		CRectTransform* clonedRectTransform = newGameObj->GetComponent<CRectTransform>();
+		if (!clonedRectTransform)
+			clonedRectTransform = newGameObj->AddComponent<CRectTransform>();
+
+		if (clonedRectTransform)
+		{
+			clonedRectTransform->m_bEnable = sourceRectTransform->m_bEnable;
+			clonedRectTransform->m_bSaveTarget = sourceRectTransform->m_bSaveTarget;
+
+			if (CUI* clonedUI = newGameObj->GetComponent<CUI>())
+				clonedRectTransform->Set_UI(clonedUI);
+
+			if (CTransform* parent = sourceRectTransform->Get_Parent())
+				clonedRectTransform->SetParent(parent);
+
+			clonedRectTransform->m_vPosition = sourceRectTransform->m_vPosition;
+			clonedRectTransform->m_vEulerAngles = sourceRectTransform->m_vEulerAngles;
+			clonedRectTransform->m_vScale = sourceRectTransform->m_vScale;
+			clonedRectTransform->m_vQuaternion = sourceRectTransform->m_vQuaternion;
+			clonedRectTransform->m_vPrevPosition = sourceRectTransform->m_vPrevPosition;
+			clonedRectTransform->m_vPrevEulerAngles = sourceRectTransform->m_vPrevEulerAngles;
+			clonedRectTransform->m_vPrevLoclaPos = sourceRectTransform->m_vPrevLoclaPos;
+			clonedRectTransform->m_vPrevLocalEuler = sourceRectTransform->m_vPrevLocalEuler;
+			clonedRectTransform->m_vPrevLocalScale = sourceRectTransform->m_vPrevLocalScale;
+			clonedRectTransform->m_vPrevQuaternion = sourceRectTransform->m_vPrevQuaternion;
+			clonedRectTransform->m_vPrevLocalQuat = sourceRectTransform->m_vPrevLocalQuat;
+			clonedRectTransform->m_vAnchoredPosition = sourceRectTransform->m_vAnchoredPosition;
+			clonedRectTransform->m_vAnchoredScale = sourceRectTransform->m_vAnchoredScale;
+			clonedRectTransform->m_vStaticWH = sourceRectTransform->m_vStaticWH;
+			clonedRectTransform->m_vSizeScale = sourceRectTransform->m_vSizeScale;
+			clonedRectTransform->m_fWidth = sourceRectTransform->m_fWidth;
+			clonedRectTransform->m_fHeight = sourceRectTransform->m_fHeight;
+			clonedRectTransform->m_sAnchors = sourceRectTransform->m_sAnchors;
+			clonedRectTransform->m_vPivot = sourceRectTransform->m_vPivot;
+			clonedRectTransform->Update();
+		}
+	}
+	else if (sourceTransform && newGameObj->GetTransform())
+	{
+		CTransform* clonedTransform = newGameObj->GetTransform();
+		clonedTransform->m_bEnable = sourceTransform->m_bEnable;
+		clonedTransform->m_bSaveTarget = sourceTransform->m_bSaveTarget;
+
+		if (CTransform* parent = sourceTransform->Get_Parent())
+			clonedTransform->SetParent(parent);
+
+		clonedTransform->m_vPosition = sourceTransform->m_vPosition;
+		clonedTransform->m_vEulerAngles = sourceTransform->m_vEulerAngles;
+		clonedTransform->m_vScale = sourceTransform->m_vScale;
+		clonedTransform->m_vQuaternion = sourceTransform->m_vQuaternion;
+		clonedTransform->m_vPrevPosition = sourceTransform->m_vPrevPosition;
+		clonedTransform->m_vPrevEulerAngles = sourceTransform->m_vPrevEulerAngles;
+		clonedTransform->m_vPrevLoclaPos = sourceTransform->m_vPrevLoclaPos;
+		clonedTransform->m_vPrevLocalEuler = sourceTransform->m_vPrevLocalEuler;
+		clonedTransform->m_vPrevLocalScale = sourceTransform->m_vPrevLocalScale;
+		clonedTransform->m_vPrevQuaternion = sourceTransform->m_vPrevQuaternion;
+		clonedTransform->m_vPrevLocalQuat = sourceTransform->m_vPrevLocalQuat;
+		clonedTransform->Update();
 	}
 
 	newGameObj->SetTag(_rhs->GetTag());
-	newGameObj->GetTransform()->SetTransformForMatrix(_rhs->GetTransform()->Get_WorldMatrix());
+	newGameObj->m_bActive = _rhs->m_bActive;
+	newGameObj->m_bActive_Origin = _rhs->m_bActive_Origin;
+	newGameObj->m_bPrevActive = _rhs->m_bPrevActive;
+	newGameObj->m_bRecursiveActive = _rhs->m_bRecursiveActive;
+	newGameObj->m_bIsBoneTransform = _rhs->m_bIsBoneTransform;
+	newGameObj->m_bSaveTarget = _rhs->m_bSaveTarget;
+	newGameObj->m_bTransformStatic = _rhs->m_bTransformStatic;
+	newGameObj->m_bNavigationStatic = _rhs->m_bNavigationStatic;
+	newGameObj->m_iLayer = _rhs->m_iLayer;
+
+	CGameObject* sourceObject = const_cast<CGameObject*>(_rhs);
+	if (CMeshRenderer* sourceMeshRenderer = sourceObject->GetComponent<CMeshRenderer>())
+	{
+		if (CMeshRenderer* cloneMeshRenderer = newGameObj->GetComponent<CMeshRenderer>())
+		{
+			CMeshFilter* preferredMeshFilter = FindPreferredMeshFilter(newGameObj);
+			if (preferredMeshFilter && cloneMeshRenderer->m_pMeshFilter != preferredMeshFilter)
+			{
+				Safe_Release(cloneMeshRenderer->m_pMeshFilter);
+				cloneMeshRenderer->m_pMeshFilter = preferredMeshFilter;
+				preferredMeshFilter->AddRef();
+			}
+
+			vector<CComponent*> redundantMeshFilters = {};
+			for (TRAVERSAL_ITER(newGameObj->Get_ComponentList(), it))
+			{
+				CMeshFilter* meshFilter = dynamic_cast<CMeshFilter*>(*it);
+				if (meshFilter && meshFilter != preferredMeshFilter)
+					redundantMeshFilters.push_back(meshFilter);
+			}
+
+			for (CComponent* redundantFilter : redundantMeshFilters)
+				newGameObj->RemoveComponent(redundantFilter);
+
+			if (CMaterial* sourceMaterial = sourceMeshRenderer->Get_Material())
+				cloneMeshRenderer->Set_Material(sourceMaterial);
+		}
+	}
+
+	if (CSkinnedMeshRenderer* sourceSkinnedRenderer = sourceObject->GetComponent<CSkinnedMeshRenderer>())
+	{
+		if (CSkinnedMeshRenderer* cloneSkinnedRenderer = newGameObj->GetComponent<CSkinnedMeshRenderer>())
+		{
+			if (CMaterial* sourceMaterial = sourceSkinnedRenderer->Get_Material())
+				cloneSkinnedRenderer->Set_Material(sourceMaterial);
+		}
+	}
 
 	return newGameObj;
 }

@@ -199,6 +199,7 @@ public:
     vector<CRenderer*> Get_MeshObjects();
 
     const EnviromentSettings& Get_EnviromentSetting();
+    ID3D11ShaderResourceView* GetSkyBoxEnvironmentSRV() const;
 
     void Set_Ambient(const _float _value);
     void Set_DirectionalLightShadowDist(const _float _value);

@@ -34,6 +34,7 @@ Texture2D gAlbedo : register(t0);
 Texture2D gNormal : register(t1);
 Texture2D<float> gDepth : register(t2);
 Texture2D gMaterial : register(t3);
+Texture2D gEnvAtlas : register(t4);
 SamplerState gSampler : register(s0);
 
 struct VSIn
@@ -105,6 +106,99 @@ float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
     float3 fresnelMax = max(oneMinusRoughness, F0);
     float f = pow(saturate(1.0f - cosTheta), 5.0f);
     return F0 + (fresnelMax - F0) * f;
+}
+
+float2 DirectionToCrossUV(float3 dir, float2 faceTexelPad)
+{
+    dir = normalize(dir);
+
+    float3 a = abs(dir);
+    float2 uv = 0.0f;
+    float2 cell = 0.0f;
+
+    if (a.x >= a.y && a.x >= a.z)
+    {
+        float invMajor = rcp(max(a.x, 1e-6f));
+        if (dir.x > 0.0f)
+        {
+            uv = float2(-dir.z, -dir.y) * invMajor;
+            cell = float2(2.0f, 1.0f);
+        }
+        else
+        {
+            uv = float2(dir.z, -dir.y) * invMajor;
+            cell = float2(0.0f, 1.0f);
+        }
+    }
+    else if (a.y >= a.x && a.y >= a.z)
+    {
+        float invMajor = rcp(max(a.y, 1e-6f));
+        if (dir.y > 0.0f)
+        {
+            uv = float2(dir.x, dir.z) * invMajor;
+            cell = float2(1.0f, 0.0f);
+        }
+        else
+        {
+            uv = float2(dir.x, -dir.z) * invMajor;
+            cell = float2(1.0f, 2.0f);
+        }
+    }
+    else
+    {
+        float invMajor = rcp(max(a.z, 1e-6f));
+        if (dir.z > 0.0f)
+        {
+            uv = float2(dir.x, -dir.y) * invMajor;
+            cell = float2(1.0f, 1.0f);
+        }
+        else
+        {
+            uv = float2(-dir.x, -dir.y) * invMajor;
+            cell = float2(3.0f, 1.0f);
+        }
+    }
+
+    uv = uv * 0.5f + 0.5f;
+    uv = saturate(uv) * (1.0f - 2.0f * faceTexelPad) + faceTexelPad;
+
+    return (cell + uv) / float2(4.0f, 3.0f);
+}
+
+float3 SampleEnvAtlas(float3 dir)
+{
+    uint atlasWidth = 0;
+    uint atlasHeight = 0;
+    uint mipCount = 0;
+    gEnvAtlas.GetDimensions(0, atlasWidth, atlasHeight, mipCount);
+
+    if (atlasWidth == 0 || atlasHeight == 0)
+        return 0.0f;
+
+    float2 faceSize = float2(max((float)atlasWidth / 4.0f, 1.0f), max((float)atlasHeight / 3.0f, 1.0f));
+    float2 faceTexelPad = 1.0f / faceSize;
+    float2 uv = DirectionToCrossUV(dir, faceTexelPad);
+
+    return gEnvAtlas.SampleLevel(gSampler, uv, 0).rgb;
+}
+
+float3 SampleEnvAtlasFiltered(float3 dir, float roughness)
+{
+    float3 sampleDir = normalize(dir);
+    float blurRoughness = saturate(roughness * 0.85f + 0.15f);
+    float spread = lerp(0.02f, 0.28f, blurRoughness * blurRoughness);
+
+    float3 up = (abs(sampleDir.y) < 0.999f) ? float3(0.0f, 1.0f, 0.0f) : float3(1.0f, 0.0f, 0.0f);
+    float3 tangent = normalize(cross(up, sampleDir));
+    float3 bitangent = normalize(cross(sampleDir, tangent));
+
+    float3 filtered = SampleEnvAtlas(sampleDir) * 0.40f;
+    filtered += SampleEnvAtlas(normalize(sampleDir + tangent * spread)) * 0.15f;
+    filtered += SampleEnvAtlas(normalize(sampleDir - tangent * spread)) * 0.15f;
+    filtered += SampleEnvAtlas(normalize(sampleDir + bitangent * spread)) * 0.15f;
+    filtered += SampleEnvAtlas(normalize(sampleDir - bitangent * spread)) * 0.15f;
+
+    return filtered;
 }
 
 float4 PSMain(VSOut i) : SV_Target
@@ -217,6 +311,17 @@ float4 PSMain(VSOut i) : SV_Target
     float3 ambientF = FresnelSchlickRoughness(NdotV, F0, roughness);
     float specAmbientStrength = lerp(0.02f, 0.35f, metallic) * lerp(1.0f, 0.75f, roughness);
     specSum += ambient * ambientF * specAmbientStrength * occulusion;
+
+    float3 R = reflect(-V, N);
+    float roughnessSq = roughness * roughness;
+    float envRoughness = saturate(roughness * 0.8f + 0.18f);
+    float3 envDir = normalize(lerp(R, N, envRoughness * envRoughness));
+    float3 envColor = SampleEnvAtlasFiltered(envDir, envRoughness);
+    float envLuma = dot(envColor, float3(0.299f, 0.587f, 0.114f));
+    float envTint = lerp(0.25f, 0.45f, 1.0f - roughnessSq);
+    envColor = lerp(envLuma.xxx, envColor, envTint);
+    float envStrength = lerp(0.01f, 0.22f, metallic) * lerp(0.9f, 0.7f, roughness);
+    specSum += envColor * ambientF * envStrength * occulusion;
 
     return float4(specSum, 1);
 }

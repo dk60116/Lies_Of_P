@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "SkyBox.h"
+#include "Texture.h"
 
 CSkyBox::CSkyBox()
 	: m_pMaterial(nullptr)
@@ -90,4 +91,18 @@ void CSkyBox::RenderSky(CCamera* _camera)
 	);
 
 	__super::Render(); 
+}
+
+CTexture* CSkyBox::Get_Texture() const
+{
+	if (!m_pMaterial)
+		return nullptr;
+
+	return m_pMaterial->Get_Texture(0);
+}
+
+ID3D11ShaderResourceView* CSkyBox::Get_TextureSRV() const
+{
+	CTexture* texture = Get_Texture();
+	return texture ? texture->Get_SRV() : nullptr;
 }

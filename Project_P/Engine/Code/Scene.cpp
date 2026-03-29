@@ -87,6 +87,88 @@ namespace
 		return nullptr;
 	}
 
+	CGameObject* DuplicateGameObjectHierarchy(
+		const CGameObject* source,
+		CTransform* parentOverride = nullptr,
+		unordered_map<const CTransform*, CTransform*>* duplicatedTransformMap = nullptr,
+		const _bool keepCloneSuffix = true)
+	{
+		if (!source || !source->GetTransform())
+			return nullptr;
+
+		CGameObject* clone = CGameObject::Instantiate(source);
+		if (!clone || !clone->GetTransform())
+			return clone;
+
+		if (!keepCloneSuffix)
+		{
+			wstring originalName = source->Get_ObjectName();
+			clone->Set_ObjectName(originalName);
+		}
+
+		CTransform* desiredParent = parentOverride ? parentOverride : source->GetTransform()->Get_Parent();
+		if (clone->GetTransform()->Get_Parent() != desiredParent)
+			clone->GetTransform()->SetParent(desiredParent);
+
+		if (duplicatedTransformMap)
+			(*duplicatedTransformMap)[source->GetTransform()] = clone->GetTransform();
+
+		for (CTransform* childTransform : source->GetTransform()->Get_ChldList())
+		{
+			if (!childTransform || !childTransform->Get_GameObject())
+				continue;
+
+			DuplicateGameObjectHierarchy(childTransform->Get_GameObject(), clone->GetTransform(), duplicatedTransformMap, false);
+		}
+
+		if (duplicatedTransformMap)
+		{
+			CGameObject* mutableSource = const_cast<CGameObject*>(source);
+			if (CSkinnedMeshRenderer* sourceSkinnedRenderer = mutableSource->GetComponent<CSkinnedMeshRenderer>())
+			{
+				if (CSkinnedMeshRenderer* cloneSkinnedRenderer = clone->GetComponent<CSkinnedMeshRenderer>())
+				{
+					vector<CTransform*> duplicatedBones = {};
+					duplicatedBones.reserve(sourceSkinnedRenderer->Get_BoneCount());
+
+					for (_uint i = 0; i < sourceSkinnedRenderer->Get_BoneCount(); ++i)
+					{
+						CTransform* sourceBone = sourceSkinnedRenderer->Get_BoneTransform(i);
+						CTransform* duplicatedBone = sourceBone;
+
+						if (sourceBone)
+						{
+							auto found = duplicatedTransformMap->find(sourceBone);
+							if (found != duplicatedTransformMap->end())
+								duplicatedBone = found->second;
+						}
+
+						duplicatedBones.push_back(duplicatedBone);
+					}
+
+					vector<CTransform*> duplicatedRootBones = {};
+					for (CTransform* sourceRootBone : sourceSkinnedRenderer->GetRootBons())
+					{
+						if (!sourceRootBone)
+							continue;
+
+						CTransform* duplicatedRootBone = sourceRootBone;
+						auto found = duplicatedTransformMap->find(sourceRootBone);
+						if (found != duplicatedTransformMap->end() && found->second)
+							duplicatedRootBone = found->second;
+
+						if (duplicatedRootBone)
+							duplicatedRootBones.push_back(duplicatedRootBone);
+					}
+
+					cloneSkinnedRenderer->Set_Bones(duplicatedBones, duplicatedRootBones);
+				}
+			}
+		}
+
+		return clone;
+	}
+
 	vector<EngineAI::CNaviMesh::MeshSource> GatherNavigationStaticMeshSources(CScene* scene)
 	{
 		vector<EngineAI::CNaviMesh::MeshSource> sources = {};
@@ -797,6 +879,15 @@ void CScene::Update_Editor()
 		{
 			wstring scenePath = L"../Assets/Scenes/" + m_strSceneName + L".scene";
 			SaveScene(scenePath);
+		}
+		else if (CInput::GetInstance().GetKeyDown_Editor(D))
+		{
+			if (CGameObject* selected = CEditor::GetInstance().Get_SelectedGameObject())
+			{
+				unordered_map<const CTransform*, CTransform*> duplicatedTransformMap = {};
+				if (CGameObject* duplicated = DuplicateGameObjectHierarchy(selected, nullptr, &duplicatedTransformMap))
+					CEditor::GetInstance().Set_SelectedGameObject(duplicated, true);
+			}
 		}
 	}
 }
@@ -2910,6 +3001,25 @@ vector<CRenderer*> CScene::Get_MeshObjects()
 const CScene::EnviromentSettings& CScene::Get_EnviromentSetting()
 {
 	return m_sEnviromentSettings;
+}
+
+ID3D11ShaderResourceView* CScene::GetSkyBoxEnvironmentSRV() const
+{
+	if (!m_pSkyBox)
+		return nullptr;
+
+	CTexture* texture = m_pSkyBox->Get_Texture();
+	if (!texture)
+		return nullptr;
+
+	const D3D11_TEXTURE2D_DESC& desc = texture->Get_TextureDesc();
+	if (desc.Width == 0 || desc.Height == 0)
+		return nullptr;
+
+	if (desc.Width * 3 != desc.Height * 4)
+		return nullptr;
+
+	return texture->Get_SRV();
 }
 
 void CScene::Set_Ambient(const _float _value)

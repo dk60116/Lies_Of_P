@@ -67,7 +67,10 @@ HRESULT CMeshRenderer::Initialize()
 
 	if (!m_pMeshFilter)
 	{
-		m_pMeshFilter = m_pGameObject->AddComponent<CMeshFilter>();
+		m_pMeshFilter = m_pGameObject->GetComponent<CMeshFilter>();
+
+		if (!m_pMeshFilter)
+			m_pMeshFilter = m_pGameObject->AddComponent<CMeshFilter>();
 
 		if (m_pMeshFilter)
 			m_pMeshFilter->AddRef();

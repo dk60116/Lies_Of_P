@@ -95,9 +95,6 @@ void CMonster::Die()
 		m_pNavAgent->SetEnable(false);
 	}
 
-	if (m_pBodyCollider)
-		m_pBodyCollider->SetEnable(false);
-
 	if (m_pHUD)
 		m_pHUD->SetHUDVisible(false);
 
