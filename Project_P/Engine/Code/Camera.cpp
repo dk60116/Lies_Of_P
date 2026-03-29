@@ -30,10 +30,13 @@ namespace
 	{
 		CMeshBuffer* meshBuffer = nullptr;
 		CMaterial* material = nullptr;
+		_bool isMirrored = false;
 
 		bool operator==(const RendererBatchKey& rhs) const
 		{
-			return meshBuffer == rhs.meshBuffer && material == rhs.material;
+			return meshBuffer == rhs.meshBuffer
+				&& material == rhs.material
+				&& isMirrored == rhs.isMirrored;
 		}
 	};
 
@@ -43,7 +46,8 @@ namespace
 		{
 			const size_t h1 = hash<void*>()(static_cast<void*>(key.meshBuffer));
 			const size_t h2 = hash<void*>()(static_cast<void*>(key.material));
-			return h1 ^ (h2 << 1);
+			const size_t h3 = hash<int>()(static_cast<int>(key.isMirrored));
+			return h1 ^ (h2 << 1) ^ (h3 << 2);
 		}
 	};
 
@@ -728,7 +732,7 @@ void CCamera::RenderMesh()
 				continue;
 			}
 
-			RendererBatchKey key = { meshBuffer, material };
+			RendererBatchKey key = { meshBuffer, material, renderer->IsMirroredTransform() };
 			staticBatches[key].push_back(renderer);
 		}
 
@@ -2265,10 +2269,14 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 		CMeshBuffer* meshBuffer;
 		CMaterial* material;
 		_bool castShadow;
+		_bool isMirrored;
 
 		_bool operator==(const ShadowBatchKey& rhs) const
 		{
-			return meshBuffer == rhs.meshBuffer && material == rhs.material && castShadow == rhs.castShadow;
+			return meshBuffer == rhs.meshBuffer
+				&& material == rhs.material
+				&& castShadow == rhs.castShadow
+				&& isMirrored == rhs.isMirrored;
 		}
 	};
 
@@ -2279,7 +2287,8 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 			size_t h1 = hash<void*>()(static_cast<void*>(key.meshBuffer));
 			size_t h2 = hash<void*>()(static_cast<void*>(key.material));
 			size_t h3 = hash<int>()(static_cast<int>(key.castShadow));
-			return h1 ^ (h2 << 1) ^ (h3 << 2);
+			size_t h4 = hash<int>()(static_cast<int>(key.isMirrored));
+			return h1 ^ (h2 << 1) ^ (h3 << 2) ^ (h4 << 3);
 		}
 	};
 
@@ -2293,7 +2302,7 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 		if (!isShadowVisible(r))
 			continue;
 
-		ShadowBatchKey key = { r->Get_MeshBuffer(), r->Get_Material(), r->IsCastShadow() };
+		ShadowBatchKey key = { r->Get_MeshBuffer(), r->Get_Material(), r->IsCastShadow(), r->IsMirroredTransform() };
 		staticBatches[key].push_back(r);
 	}
 

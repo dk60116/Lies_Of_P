@@ -30,6 +30,8 @@ public:
 
 public:
 	const _bool IsCastShadow() const;
+	const _bool IsMirroredTransform() const;
+	static const _bool IsMirroredWorldMatrix(const _matrix& _world);
 	virtual const _float GetScaleFactor() const PURE;
 	void SetCastShadow(const _bool _on);
 

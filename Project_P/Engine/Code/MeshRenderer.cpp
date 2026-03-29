@@ -1,6 +1,40 @@
 #include "epch.h"
 #include "MeshRenderer.h"
 
+namespace
+{
+	class ScopedRasterizerOverride
+	{
+	public:
+		ScopedRasterizerOverride(ID3D11DeviceContext* _context, ID3D11RasterizerState* _replacement)
+			: m_pContext(_context)
+			, m_pPrevious(nullptr)
+			, m_bApplied(false)
+		{
+			if (!m_pContext || !_replacement)
+				return;
+
+			m_pContext->RSGetState(&m_pPrevious);
+			m_pContext->RSSetState(_replacement);
+			m_bApplied = true;
+		}
+
+		~ScopedRasterizerOverride()
+		{
+			if (!m_pContext || !m_bApplied)
+				return;
+
+			m_pContext->RSSetState(m_pPrevious);
+			Safe_Release(m_pPrevious);
+		}
+
+	private:
+		ID3D11DeviceContext* m_pContext;
+		ID3D11RasterizerState* m_pPrevious;
+		_bool m_bApplied;
+	};
+}
+
 CMeshRenderer::CMeshRenderer()
 	: CRenderer{}
 	, m_pMeshFilter(nullptr)
@@ -111,6 +145,12 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 	_matrix matWorld = GetTransform()->GetSnapshotWorldMatrix();
 	_matrix matView = _cam->GetViewMatrix();
 	_matrix matProj = _cam->GetProjectionMatrix();
+	const _bool isMirrored = CRenderer::IsMirroredWorldMatrix(matWorld);
+	ScopedRasterizerOverride mirroredRasterizer
+	(
+		m_pContext,
+		isMirrored ? CGraphicDevice::GetInstance().Get_Rasterizer_CullBackMirrored() : nullptr
+	);
 
 	// ̴ + ؽó +   ε
 	m_pMaterial->Bind_Matrix(matWorld);
@@ -147,6 +187,12 @@ void CMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const CLight:
 
 	// World
 	_matrix matWorld = GetTransform()->GetSnapshotWorldMatrix();
+	const _bool isMirrored = CRenderer::IsMirroredWorldMatrix(matWorld);
+	ScopedRasterizerOverride mirroredRasterizer
+	(
+		m_pContext,
+		isMirrored ? CGraphicDevice::GetInstance().Get_Rasterizer_CullFrontMirrored() : nullptr
+	);
 
 	// Light View/Proj (shadow matrices)
 	_matrix matView = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(&_shadowMatrix.view));

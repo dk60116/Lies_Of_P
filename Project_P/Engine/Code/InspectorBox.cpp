@@ -921,6 +921,17 @@ static void RenderSkinnedPathTreeRecursive(const PathTreeNode& node, const strin
     }
 }
 
+static _float CalculatePathTreeContentWidth(const vector<string>& files, const string& emptyText)
+{
+    _float maxWidth = ImGui::CalcTextSize(emptyText.c_str()).x;
+
+    for (const string& relPath : files)
+        maxWidth = max(maxWidth, ImGui::CalcTextSize(relPath.c_str()).x);
+
+    const ImGuiStyle& style = ImGui::GetStyle();
+    return maxWidth + style.FramePadding.x * 4.f + style.ScrollbarSize;
+}
+
 static void RenderSkinnedPathTreeList(const vector<string>& files, const string& idPrefix, CGameObject* obj, CSkinnedMeshRenderer* skinnedMeshRenderer, const _bool selectedSkinnedData, const string& emptyText)
 {
     if (files.empty())
@@ -2970,7 +2981,8 @@ void CInspectorBox::RenderSkinnedMeshRendererComponent(CGameObject* _obj, CSkinn
 
     if (ImGui::TreeNode("Assets .fbx (Skinned)"))
     {
-        if (ImGui::BeginChild("##skinned_fbx_tree_box", ImVec2(0.f, 180.f), true))
+        ImGui::SetNextWindowContentSize(ImVec2(CalculatePathTreeContentWidth(fbxFiles, "(No .fbx files)"), 0.f));
+        if (ImGui::BeginChild("##skinned_fbx_tree_box", ImVec2(0.f, 180.f), true, ImGuiWindowFlags_HorizontalScrollbar))
             RenderSkinnedPathTreeList(fbxFiles, "skinned_fbx_tree_", _obj, _skinnedMeshRenderer, false, "(No .fbx files)");
         ImGui::EndChild();
         ImGui::TreePop();
@@ -2978,7 +2990,8 @@ void CInspectorBox::RenderSkinnedMeshRendererComponent(CGameObject* _obj, CSkinn
 
     if (ImGui::TreeNode("BinaryAssets .skinneddata"))
     {
-        if (ImGui::BeginChild("##skinneddata_tree_box", ImVec2(0.f, 180.f), true))
+        ImGui::SetNextWindowContentSize(ImVec2(CalculatePathTreeContentWidth(skinnedDataFiles, "(No .skinneddata files)"), 0.f));
+        if (ImGui::BeginChild("##skinneddata_tree_box", ImVec2(0.f, 180.f), true, ImGuiWindowFlags_HorizontalScrollbar))
             RenderSkinnedPathTreeList(skinnedDataFiles, "skinneddata_tree_", _obj, _skinnedMeshRenderer, true, "(No .skinneddata files)");
         ImGui::EndChild();
         ImGui::TreePop();
@@ -3055,7 +3068,8 @@ void CInspectorBox::RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _m
 
     if (ImGui::TreeNode("Assets .fbx"))
     {
-        if (ImGui::BeginChild("##fbx_tree_box", ImVec2(0.f, 180.f), true))
+        ImGui::SetNextWindowContentSize(ImVec2(CalculatePathTreeContentWidth(fbxFiles, "(No .fbx files)"), 0.f));
+        if (ImGui::BeginChild("##fbx_tree_box", ImVec2(0.f, 180.f), true, ImGuiWindowFlags_HorizontalScrollbar))
             RenderPathTreeList(fbxFiles, "fbx_tree_", _obj, _meshFilter, false, "(No .fbx files)");
         ImGui::EndChild();
         ImGui::TreePop();
@@ -3063,7 +3077,8 @@ void CInspectorBox::RenderMeshFilterComponent(CGameObject* _obj, CMeshFilter* _m
 
     if (ImGui::TreeNode("BinaryAssets .meshdata"))
     {
-        if (ImGui::BeginChild("##meshdata_tree_box", ImVec2(0.f, 180.f), true))
+        ImGui::SetNextWindowContentSize(ImVec2(CalculatePathTreeContentWidth(meshDataFiles, "(No .meshdata files)"), 0.f));
+        if (ImGui::BeginChild("##meshdata_tree_box", ImVec2(0.f, 180.f), true, ImGuiWindowFlags_HorizontalScrollbar))
             RenderPathTreeList(meshDataFiles, "meshdata_tree_", _obj, _meshFilter, true, "(No .meshdata files)");
         ImGui::EndChild();
         ImGui::TreePop();

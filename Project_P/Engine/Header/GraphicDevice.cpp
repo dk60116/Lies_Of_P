@@ -11,6 +11,8 @@ CGraphicDevice::CGraphicDevice()
 	, m_hCrtWndow(nullptr)
 	, m_pDepthStencilNoWrite(nullptr)
 	, m_pRasterizerCullFront(nullptr)
+	, m_pRasterizerCullFrontMirrored(nullptr)
+	, m_pRasterizerCullBackMirrored(nullptr)
 	, m_pRasterizerWireframe(nullptr)
 {
 }
@@ -73,9 +75,34 @@ HRESULT CGraphicDevice::Initialize()
 		D3D11_RASTERIZER_DESC rsDesc = {};
 		rsDesc.FillMode = D3D11_FILL_SOLID;
 		rsDesc.CullMode = D3D11_CULL_FRONT;
+		rsDesc.FrontCounterClockwise = FALSE;
 		rsDesc.DepthClipEnable = TRUE;
 
 		HRESULT hr = m_pDevice->CreateRasterizerState(&rsDesc, &m_pRasterizerCullFront);
+		if (FAILED(hr))
+			return E_FAIL;
+	}
+
+	{
+		D3D11_RASTERIZER_DESC rsDesc = {};
+		rsDesc.FillMode = D3D11_FILL_SOLID;
+		rsDesc.CullMode = D3D11_CULL_FRONT;
+		rsDesc.FrontCounterClockwise = TRUE;
+		rsDesc.DepthClipEnable = TRUE;
+
+		HRESULT hr = m_pDevice->CreateRasterizerState(&rsDesc, &m_pRasterizerCullFrontMirrored);
+		if (FAILED(hr))
+			return E_FAIL;
+	}
+
+	{
+		D3D11_RASTERIZER_DESC rsDesc = {};
+		rsDesc.FillMode = D3D11_FILL_SOLID;
+		rsDesc.CullMode = D3D11_CULL_BACK;
+		rsDesc.FrontCounterClockwise = TRUE;
+		rsDesc.DepthClipEnable = TRUE;
+
+		HRESULT hr = m_pDevice->CreateRasterizerState(&rsDesc, &m_pRasterizerCullBackMirrored);
 		if (FAILED(hr))
 			return E_FAIL;
 	}
@@ -106,6 +133,8 @@ void CGraphicDevice::Destroy()
 	Safe_Release(m_pDevice);
 	Safe_Release(m_pDepthStencilNoWrite);
 	Safe_Release(m_pRasterizerCullFront);
+	Safe_Release(m_pRasterizerCullFrontMirrored);
+	Safe_Release(m_pRasterizerCullBackMirrored);
 	Safe_Release(m_pRasterizerWireframe);
 
 	if (m_pSpriteBatch)
@@ -314,6 +343,16 @@ ID3D11DepthStencilState* CGraphicDevice::Get_DepthStencil_NoWrite() const
 ID3D11RasterizerState* CGraphicDevice::Get_Rasterizer_CullFront() const
 {
 	return m_pRasterizerCullFront;
+}
+
+ID3D11RasterizerState* CGraphicDevice::Get_Rasterizer_CullFrontMirrored() const
+{
+	return m_pRasterizerCullFrontMirrored;
+}
+
+ID3D11RasterizerState* CGraphicDevice::Get_Rasterizer_CullBackMirrored() const
+{
+	return m_pRasterizerCullBackMirrored;
 }
 
 ID3D11RasterizerState* CGraphicDevice::Get_Rasterizer_Wireframe() const

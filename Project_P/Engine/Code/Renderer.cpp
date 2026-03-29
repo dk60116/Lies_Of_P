@@ -95,6 +95,19 @@ const _bool CRenderer::IsCastShadow() const
 	return m_bCastShadow;
 }
 
+const _bool CRenderer::IsMirroredTransform() const
+{
+	if (!m_pGameObject || !m_pGameObject->GetTransform())
+		return false;
+
+	return IsMirroredWorldMatrix(m_pGameObject->GetTransform()->GetSnapshotWorldMatrix());
+}
+
+const _bool CRenderer::IsMirroredWorldMatrix(const _matrix& _world)
+{
+	return XMVectorGetX(XMMatrixDeterminant(_world)) < 0.f;
+}
+
 void CRenderer::SetCastShadow(const _bool _on)
 {
 	m_bCastShadow = _on;
