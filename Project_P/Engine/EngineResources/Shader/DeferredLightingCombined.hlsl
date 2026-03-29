@@ -105,6 +105,14 @@ float3 FresnelSchlick(float cosTheta, float3 F0)
     return F0 + (1.0f - F0) * f;
 }
 
+float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
+{
+    float3 oneMinusRoughness = float3(1.0f - roughness, 1.0f - roughness, 1.0f - roughness);
+    float3 fresnelMax = max(oneMinusRoughness, F0);
+    float f = pow(saturate(1.0f - cosTheta), 5.0f);
+    return F0 + (fresnelMax - F0) * f;
+}
+
 float SampleShadowPCF(float2 uv, float receiverDepth)
 {
     if (gShadowInvMapSize.x <= 0.0f || gShadowInvMapSize.y <= 0.0f)
@@ -159,9 +167,10 @@ float4 PSMain(VSOut i) : SV_Target
     float3 N = DecodeNormal(gNormal.Sample(gSampler, uvTex).xyz);
 
     float4 mat = gMaterial.Sample(gSampler, uvTex);
+    float occulusion = saturate(mat.r);
     float roughness = saturate(mat.g);
     float metallic = saturate(mat.b);
-    float roughnessSpecular = saturate(roughness * (1.0f + metallic * 0.5f));
+    float roughnessSpecular = max(roughness, 0.04f);
 
     float3 posW = ReconstructWorldPos(uvScreen, depth01);
     float3 V = normalize(camPos - posW);
@@ -247,14 +256,18 @@ float4 PSMain(VSOut i) : SV_Target
 
         float3 spec = (D * G * F) / max(4.0f * NdotV * NdotL, 1e-6f);
         float3 kS = F;
-        float3 kD = (1.0f - kS) * (1.0f - metallic * PI);
+        float3 kD = (1.0f - kS) * (1.0f - metallic);
         float3 diffuse = kD * albedo;
 
         Lo += (diffuse + spec) * radiance * NdotL;
     }
 
     float ambient = dirLightCount > 0 ? 0.5f : 0.2f;
-    float3 color = ambient * albedo * (1.0f - metallic * 0.7f) + Lo;
+    float3 ambientDiffuse = ambient * albedo * (1.0f - metallic * 0.7f) * occulusion;
+    float3 ambientF = FresnelSchlickRoughness(NdotV, F0, roughnessSpecular);
+    float specAmbientStrength = lerp(0.02f, 0.25f, metallic) * lerp(1.0f, 0.6f, roughnessSpecular);
+    float3 ambientSpec = ambient * ambientF * specAmbientStrength * occulusion;
+    float3 color = ambientDiffuse + ambientSpec + Lo;
 
     float shadowF = ComputeShadow(posW);
     if (shadowF < 0.3f)

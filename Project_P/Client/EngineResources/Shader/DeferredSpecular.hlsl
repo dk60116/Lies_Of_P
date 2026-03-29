@@ -99,6 +99,14 @@ float3 FresnelSchlick(float cosTheta, float3 F0)
     return F0 + (1.0f - F0) * f;
 }
 
+float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
+{
+    float3 oneMinusRoughness = float3(1.0f - roughness, 1.0f - roughness, 1.0f - roughness);
+    float3 fresnelMax = max(oneMinusRoughness, F0);
+    float f = pow(saturate(1.0f - cosTheta), 5.0f);
+    return F0 + (fresnelMax - F0) * f;
+}
+
 float4 PSMain(VSOut i) : SV_Target
 {
     float2 uvScreen = i.uv;
@@ -112,9 +120,10 @@ float4 PSMain(VSOut i) : SV_Target
     float3 albedo = saturate(gAlbedo.Sample(gSampler, uvTex).rgb);
 
     float4 mat = gMaterial.Sample(gSampler, uvTex);
+    float occulusion = saturate(mat.r);
     float roughness = saturate(mat.g);
     float metallic = saturate(mat.b);
-    roughness = roughness * (1.f + metallic * 0.5f);
+    roughness = max(roughness, 0.04f);
 
     float3 posW = ReconstructWorldPos(uvScreen, depth01);
     float3 V = normalize(camPos - posW);
@@ -127,6 +136,7 @@ float4 PSMain(VSOut i) : SV_Target
     float3 specSum = 0;
 
     int lightCount = clamp((int)gLight[0][3][3], 0, MAX_LIGHTS - 1);
+    int dirLightCount = 0;
 
     [loop]
     for (int li = 1; li <= lightCount; ++li)
@@ -149,6 +159,7 @@ float4 PSMain(VSOut i) : SV_Target
         if (lightType == LIGHT_TYPE_DIRECTIONAL)
         {
             L = normalize(-lightDir);
+            ++dirLightCount;
         }
         else if (lightType == LIGHT_TYPE_POINT || lightType == LIGHT_TYPE_SPOT)
         {
@@ -200,6 +211,11 @@ float4 PSMain(VSOut i) : SV_Target
         float3 spec = (D * G * F) / max(4.0f * NdotV * NdotL, 1e-6f);
         specSum += spec * radiance * NdotL;
     }
+
+    float ambient = dirLightCount > 0 ? 0.5f : 0.2f;
+    float3 ambientF = FresnelSchlickRoughness(NdotV, F0, roughness);
+    float specAmbientStrength = lerp(0.02f, 0.25f, metallic) * lerp(1.0f, 0.6f, roughness);
+    specSum += ambient * ambientF * specAmbientStrength * occulusion;
 
     return float4(specSum, 1);
 }

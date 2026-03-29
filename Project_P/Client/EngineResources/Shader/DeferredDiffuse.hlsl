@@ -233,7 +233,7 @@ float4 PSMain(VSOut i) : SV_Target
 
         // Diffuse: metallic일수록 줄어듦 + 에너지 보존(F) 반영
         float3 kS = F;
-        float3 kD = (1.0f - kS) * (1.0f - metallic * PI);
+        float3 kD = (1.0f - kS) * (1.0f - metallic);
 
         float3 diffuse = kD * (albedo);
 
