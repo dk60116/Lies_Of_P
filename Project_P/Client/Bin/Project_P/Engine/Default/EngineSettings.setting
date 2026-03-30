@@ -1,6 +1,6 @@
 TimeFixedStep=0.02
 TimeScale=1
-PhysicsGravity=0,-9.81,0
+PhysicsGravity=0,-18,0
 PhysicsLayerCollision0=4294966286
 PhysicsLayerCollision1=4294966573
 PhysicsLayerCollision2=4294966991

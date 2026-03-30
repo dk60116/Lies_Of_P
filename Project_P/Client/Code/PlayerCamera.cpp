@@ -197,6 +197,19 @@ void CPlayerCamera::Update()
 
     const _float yawRad = Deg2Rad(m_fCurYaw);
     const _float pitchRad = Deg2Rad(m_fCurPitch);
+    const _float zoomInStartPitch = m_sOptions.pitchZoomInStart;
+    const _float zoomInMaxPitch = max(zoomInStartPitch, m_sOptions.pitchMax);
+    const _float zoomInRange = zoomInMaxPitch - zoomInStartPitch;
+    const _float zoomInT = zoomInRange > 0.f ? std::clamp((m_fCurPitch - zoomInStartPitch) / zoomInRange, 0.f, 1.f) : 0.f;
+    const _float effectiveBackOffset = std::clamp
+    (
+        m_fBackOffset - m_sOptions.pitchZoomInAmount * zoomInT,
+        m_sOptions.zoomMin,
+        m_sOptions.zoomMax
+    );
+    const _float zoomRange = max(m_sOptions.zoomMax - m_sOptions.zoomMin, 0.0001f);
+    const _float offsetZoomT = std::clamp((effectiveBackOffset - m_sOptions.zoomMin) / zoomRange, 0.f, 1.f);
+    const _float effectiveXOffset = m_sOptions.xOffset * offsetZoomT;
 
     const _float cy = cos(yawRad);
     const _float sy = sin(yawRad);
@@ -205,14 +218,14 @@ void CPlayerCamera::Update()
 
     const vector3 playerPos = playerTf->Get_Position();
     const vector3 cameraRight = vector3(cy, 0.f, -sy).normalized();
-    const vector3 pivot = playerPos + vector3::up() * m_sOptions.heightOffset + cameraRight * m_sOptions.xOffset;
+    const vector3 pivot = playerPos + vector3::up() * m_sOptions.heightOffset + cameraRight * effectiveXOffset;
 
     vector3 camForward;
     camForward.x = cp * sy;
     camForward.y = sp;
     camForward.z = cp * cy;
 
-    const vector3 finalPos = pivot - camForward * m_fBackOffset;
+    const vector3 finalPos = pivot - camForward * effectiveBackOffset;
 
     tf->Set_Position(finalPos);
     tf->LookAt(pivot);

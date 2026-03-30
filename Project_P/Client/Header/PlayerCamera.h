@@ -9,7 +9,7 @@ class CPlayerCamera final : public CComponent
 public:
     struct PlayerCameraOptions
     {
-        _float xOffset = 1.f;
+        _float xOffset = 1.5f;
         _float heightOffset = 2.5f;
         _float zoomMin = 2.f;
         _float zoomMax = 10.f;
@@ -17,6 +17,8 @@ public:
         _float firstZoomSensor = 4.f;
         _float pitchMin = -35.f;
         _float pitchMax = 70.f;
+        _float pitchZoomInStart = 15.f;
+        _float pitchZoomInAmount = 5.f;
         _float lookSensitivity = 0.15f;
     };
 

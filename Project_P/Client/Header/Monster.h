@@ -12,7 +12,7 @@ public:
 	{
 		_int maxHp = 1000;
 		_int crtHp = 0;
-		_int maxShield = 500;
+		_int maxShield = 1000;
 		_int crtShield = 0;
 		_int maxBalance = 3;
 		_int crtBalance = 0;

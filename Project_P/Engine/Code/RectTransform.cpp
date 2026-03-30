@@ -97,7 +97,7 @@ void CRectTransform::Update()
 {
     CCanvas* canvas = m_pUI ? m_pUI->Get_Canvas() : nullptr;
     if (!canvas && m_pParent)
-        canvas = m_pParent->Find_ComponentParentRecursive<CCanvas>();
+        canvas = m_pParent->Find_ComponentsParentRecursive<CCanvas>();
 
     if (!canvas && !m_pParentRect)
     {
@@ -115,7 +115,7 @@ void CRectTransform::Update_Editor()
 {
     CCanvas* canvas = m_pUI ? m_pUI->Get_Canvas() : nullptr;
     if (!canvas && m_pParent)
-        canvas = m_pParent->Find_ComponentParentRecursive<CCanvas>();
+        canvas = m_pParent->Find_ComponentsParentRecursive<CCanvas>();
 
     if (!canvas && !m_pParentRect)
     {
@@ -136,7 +136,7 @@ void CRectTransform::Render_Gizmo()
 
     CCanvas* canvas = m_pUI ? m_pUI->Get_Canvas() : nullptr;
     if (!canvas && m_pParent)
-        canvas = m_pParent->Find_ComponentParentRecursive<CCanvas>();
+        canvas = m_pParent->Find_ComponentsParentRecursive<CCanvas>();
 
     vector2 canvasSize = {};
 
@@ -349,7 +349,7 @@ void CRectTransform::Set_UI(CUI* _pUI)
 
     CCanvas* canvas = nullptr;
     if (m_pParent)
-        canvas = m_pParent->Find_ComponentParentRecursive<CCanvas>();
+        canvas = m_pParent->Find_ComponentsParentRecursive<CCanvas>();
 
     if (canvas)
     {
@@ -380,7 +380,7 @@ void CRectTransform::SetParent(CTransform* _parent)
         return;
     }
 
-    CCanvas* canvas = _parent->Find_ComponentParentRecursive<CCanvas>();
+    CCanvas* canvas = _parent->Find_ComponentsParentRecursive<CCanvas>();
 
     if (prevCanvas && prevCanvas != canvas && m_pUI)
         prevCanvas->Remove_UIObject(m_pUI);
@@ -797,7 +797,7 @@ vector2 CRectTransform::GetReferenceSize() const
         canvas = m_pUI->Get_Canvas();
 
     if (!canvas && m_pParent)
-        canvas = m_pParent->Find_ComponentParentRecursive<CCanvas>();
+        canvas = m_pParent->Find_ComponentsParentRecursive<CCanvas>();
 
     if (!canvas)
         return vector2::zero();

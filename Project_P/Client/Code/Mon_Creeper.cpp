@@ -31,7 +31,7 @@ HRESULT CMon_Creeper::Initialize()
 
 	m_vHurtBoxInfoList.push_back({ L"FX_Tail_04_end", vector3::one() * 30.f });
 
-	m_vHitBoxInfoList.push_back({ L"Bip001-Pelvis", vector3::one() * 40.f, vector3::up() * 20.f });
+	m_vHitBoxInfoList.push_back({ L"Bip001-Pelvis", vector3::one() * 50.f, vector3::up() * 20.f });
 
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
@@ -42,7 +42,7 @@ HRESULT CMon_Creeper::Initialize()
 
 	m_pBodyCollider->SetCenter(vector3(0.f, 2.5f, 0.f));
 	m_pBodyCollider->SetHeight(2.5f);
-	m_pBodyCollider->SetRadius(1.f);
+	m_pBodyCollider->SetRadius(1.5f);
 
 	m_sStatus.maxHp = 10000;
 	m_sStatus.moveSpeed = 6.f;

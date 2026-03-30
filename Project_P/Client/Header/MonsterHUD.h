@@ -9,6 +9,8 @@ public:
 	struct MonsterHUDOPtions
 	{
 		_float rectSize = 5.f;
+		_int shieldGroupSize = 5;
+		_float shieldGroupSpacing = 1.f;
 	};
 
 	struct HPGaugeSet

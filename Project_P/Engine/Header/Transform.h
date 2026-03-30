@@ -61,7 +61,10 @@ public:
 
 public:
 	template <typename T>
-	T* Find_ComponentParentRecursive();
+	T* Find_ComponentsParentRecursive();
+
+	template<typename T>
+	vector<T*> FindComponentsParentRecursive();
 
 public:
 	const vector3& Get_Position();
@@ -182,7 +185,7 @@ protected:
 NS_END
 
 template<typename T>
-inline T* CTransform::Find_ComponentParentRecursive()
+inline T* CTransform::Find_ComponentsParentRecursive()
 {
 	CTransform* tempParent = this;
 
@@ -195,4 +198,22 @@ inline T* CTransform::Find_ComponentParentRecursive()
 	}
 
 	return nullptr;
+}
+
+template<typename T>
+inline vector<T*> CTransform::FindComponentsParentRecursive()
+{
+	vector<T*> result = {};
+
+	CTransform* tempParent = this;
+
+	while (tempParent)
+	{
+		if (T* com = tempParent->m_pGameObject->GetComponent<T>())
+			result.push_back(com);
+
+		tempParent = tempParent->m_pParent;
+	}
+
+	return result;
 }

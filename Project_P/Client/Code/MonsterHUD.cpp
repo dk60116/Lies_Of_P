@@ -88,6 +88,7 @@ void CMonsterHUD::Update()
 
 	CPlayerCamera* playerCamera = CGameManager::GetInstance().Get_PlayerCamera();
 	CCamera* camera = playerCamera ? playerCamera->GetCamera() : nullptr;
+
 	if (!camera)
 	{
 		SetHUDVisible(false);
@@ -215,27 +216,37 @@ void CMonsterHUD::CreateSHBar()
 
 	const _float rectSize = m_sOption.rectSize;
 	const _int rectCount = 30;
+	const _int shieldGroupSize = max(1, m_sOption.shieldGroupSize);
 
-	for (_int i = 0; i < rectCount; ++i)
+	for (_int groupIndex = 0; groupIndex < rectCount; groupIndex += shieldGroupSize)
 	{
-		CGameObject* shRectObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Monster_SH_Rect_" + to_wstring(i));
-		CRectTransform* shRect = shRectObj->AddComponent<CRectTransform>();
-		shRect->SetParent(rect);
-		shRect->Set_Width(rectSize);
+		const _int currentGroupRectCount = min(shieldGroupSize, rectCount - groupIndex);
 
-		SEGaugeSet set = {};
-		set.rect = shRect;
+		CGameObject* shGroupObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Monster_SH_Group_" + to_wstring(groupIndex / shieldGroupSize));
+		CRectTransform* shGroupRect = shGroupObj->AddComponent<CRectTransform>();
+		shGroupRect->SetParent(rect);
+		shGroupRect->Set_Width(rectSize * static_cast<_float>(currentGroupRectCount));
 
-		for (_int j = 0; j < 1; ++j)
+		for (_int localIndex = 0; localIndex < currentGroupRectCount; ++localIndex)
 		{
-			CGameObject* shEmptyObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Monster_SH_Empty_" + to_wstring(i) + L"_" + to_wstring(j));
+			const _int i = groupIndex + localIndex;
+
+			CGameObject* shRectObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Monster_SH_Rect_" + to_wstring(i));
+			CRectTransform* shRect = shRectObj->AddComponent<CRectTransform>();
+			shRect->SetParent(shGroupRect);
+			shRect->Set_Width(rectSize);
+
+			SEGaugeSet set = {};
+			set.rect = shRect;
+
+			CGameObject* shEmptyObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Monster_SH_Empty_" + to_wstring(i));
 			CImage* shEmptyImg = shEmptyObj->AddComponent<CImage>();
 			shEmptyImg->GetTransform()->SetParent(shRect);
 			shEmptyImg->SetTexture(emptyTex);
 			shEmptyImg->GetRectTransform()->Set_WidthHeight(rectSize, rectSize);
 			set.bg.push_back(shEmptyImg);
 
-			CGameObject* shFullObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Monster_SH_Full_" + to_wstring(i) + L"_" + to_wstring(j));
+			CGameObject* shFullObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Monster_SH_Full_" + to_wstring(i));
 			CImage* shFullImg = shFullObj->AddComponent<CImage>();
 			shFullImg->GetTransform()->SetParent(shEmptyImg->GetRectTransform());
 			shFullImg->SetTexture(fullTex);
@@ -243,19 +254,24 @@ void CMonsterHUD::CreateSHBar()
 			shFullImg->Set_FillMethod(CImage::FillMethod::Horizontal);
 			shFullImg->GetRectTransform()->Set_WidthHeight(shEmptyImg->GetRectTransform()->Get_WidthHeight());
 			set.fill.push_back(shFullImg);
+
+			m_vSHBox.push_back(set);
+
+			CVerticalLayoutGroup* vlg = shRectObj->AddComponent<CVerticalLayoutGroup>();
+			vlg->SetChildAlignment(CLayoutGroup::ChildAlignment::MiddleCenter);
+			vlg->SetSpacing(0.f);
 		}
 
-		m_vSHBox.push_back(set);
-
-		CVerticalLayoutGroup* vlg = shRectObj->AddComponent<CVerticalLayoutGroup>();
-		vlg->SetChildAlignment(CLayoutGroup::ChildAlignment::MiddleCenter);
-		vlg->SetSpacing(0.f);
+		CHorizontalLayoutGroup* groupHlg = shGroupObj->AddComponent<CHorizontalLayoutGroup>();
+		groupHlg->SetControlChildSize(false, true);
+		groupHlg->SetChildAlignment(CLayoutGroup::ChildAlignment::MiddleLeft);
+		groupHlg->SetSpacing(0.f);
 	}
 
 	CHorizontalLayoutGroup* hlg = rectObj->AddComponent<CHorizontalLayoutGroup>();
 	hlg->SetControlChildSize(false, true);
 	hlg->SetChildAlignment(CLayoutGroup::ChildAlignment::MiddleLeft);
-	hlg->SetSpacing(0.f);
+	hlg->SetSpacing(m_sOption.shieldGroupSpacing);
 
 	rect->Set_Height(m_sOption.rectSize);
 }
@@ -335,12 +351,22 @@ void CMonsterHUD::UpdateRectWidthFromMaxHP()
 		return;
 
 	const _int maxCubeCount = 30;
-	const _float hpRectWidth = m_sOption.rectSize;
+	const _float rectWidth = m_sOption.rectSize;
 	const _float maxHp = static_cast<_float>(max(0, m_pMonster->GetStatus().maxHp));
 	const _float hpRectCapacity = max(100.f, ceilf(maxHp / static_cast<_float>(maxCubeCount)));
 	const _float activeRectCount = min(static_cast<_float>(maxCubeCount), ceilf(maxHp / hpRectCapacity));
+	const _float hpBarWidth = activeRectCount * rectWidth;
 
-	m_pRect->Set_Width(max(hpRectWidth, activeRectCount * hpRectWidth));
+	const _float maxShield = static_cast<_float>(max(0, m_pMonster->GetStatus().maxShield));
+	const _float activeShieldRectCount = min(static_cast<_float>(maxCubeCount), ceilf(maxShield / 100.f));
+	const _float shieldGroupSize = static_cast<_float>(max(1, m_sOption.shieldGroupSize));
+	const _float shieldGapCount = max(0.f, ceilf(activeShieldRectCount / shieldGroupSize) - 1.f);
+	const _float shieldBarWidth = activeShieldRectCount * rectWidth + shieldGapCount * m_sOption.shieldGroupSpacing;
+
+	const _float maxBalance = static_cast<_float>(max(0, m_pMonster->GetStatus().maxBalance));
+	const _float balanceBarWidth = min(static_cast<_float>(maxCubeCount), ceilf(maxBalance)) * rectWidth;
+
+	m_pRect->Set_Width(max(rectWidth, max(hpBarWidth, max(shieldBarWidth, balanceBarWidth))));
 }
 
 void CMonsterHUD::Update_HP(const _int _maxValue, const _int _current)

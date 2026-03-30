@@ -165,6 +165,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_SYSKEYDOWN:
+    case WM_SYSKEYUP:
+        if (wParam == VK_MENU || wParam == VK_LMENU || wParam == VK_RMENU)
+            return 0;
+        break;
+    case WM_SYSCOMMAND:
+        if ((wParam & 0xFFF0) == SC_KEYMENU)
+            return 0;
+        break;
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);

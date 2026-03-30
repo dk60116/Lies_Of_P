@@ -247,6 +247,9 @@
     <ClInclude Include="..\Header\GridLayoutGroup.h">
       <Filter>Components\UI\Layout</Filter>
     </ClInclude>
+    <ClInclude Include="..\Header\LODGroup.h">
+      <Filter>Components\Render\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Engine">
@@ -697,6 +700,9 @@
     </ClCompile>
     <ClCompile Include="..\Code\GridLayoutGroup.cpp">
       <Filter>Components\UI\Layout</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Code\LODGroup.cpp">
+      <Filter>Components\Render\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -66,7 +66,6 @@ namespace
         {
             CSceneManager::GetInstance().NameToLayer(L"Player"),
             CSceneManager::GetInstance().NameToLayer(L"HitBox_Player"),
-            CSceneManager::GetInstance().NameToLayer(L"HitBox_Enemy"),
             CSceneManager::GetInstance().NameToLayer(L"HitBox_NPC"),
             CSceneManager::GetInstance().NameToLayer(L"HurtBox_Player"),
             CSceneManager::GetInstance().NameToLayer(L"HurtBox_Ememy"),
