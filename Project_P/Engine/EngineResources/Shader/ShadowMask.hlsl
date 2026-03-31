@@ -168,8 +168,12 @@ float4 PSMain(VSOut i) : SV_Target
     float depthL = ndcL.z;
 
     if (uvL.x < 0 || uvL.x > 1 || uvL.y < 0 || uvL.y > 1 || depthL < 0 || depthL > 1)
-        return float4(1, 1, 1, 1);
+        return float4(1.f, 1.f, 1.f, 1.f);
 
     float lit = PCSS(uvL, depthL);
+    
+    if (lit > 0.8f)
+        lit = 1.f;
+    
     return float4(lit, lit, lit, 1.0f);
 }

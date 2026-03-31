@@ -171,5 +171,9 @@ float4 PSMain(VSOut i) : SV_Target
         return float4(1, 1, 1, 1);
 
     float lit = PCSS(uvL, depthL);
+    
+    if (lit > 0.8f)
+        lit = 1.f;
+    
     return float4(lit, lit, lit, 1.0f);
 }
