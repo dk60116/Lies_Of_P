@@ -12,6 +12,7 @@
 #include "AnimatorController.h"
 #include "Camera.h"
 #include "Light.h"
+#include "LODGroup.h"
 #include "MeshRenderer.h"
 #include "SkinnedMeshRenderer.h"
 #include "UI.h"
@@ -96,7 +97,8 @@ namespace
 		if (!source || !source->GetTransform())
 			return nullptr;
 
-		CGameObject* clone = CGameObject::Instantiate(source);
+		CTransform* desiredParent = parentOverride ? parentOverride : source->GetTransform()->Get_Parent();
+		CGameObject* clone = CGameObject::Instantiate(source, desiredParent);
 		if (!clone || !clone->GetTransform())
 			return clone;
 
@@ -105,10 +107,6 @@ namespace
 			wstring originalName = source->Get_ObjectName();
 			clone->Set_ObjectName(originalName);
 		}
-
-		CTransform* desiredParent = parentOverride ? parentOverride : source->GetTransform()->Get_Parent();
-		if (clone->GetTransform()->Get_Parent() != desiredParent)
-			clone->GetTransform()->SetParent(desiredParent);
 
 		if (duplicatedTransformMap)
 			(*duplicatedTransformMap)[source->GetTransform()] = clone->GetTransform();
@@ -180,7 +178,9 @@ namespace
 			if (!object || !object->IsActive())
 				continue;
 
-			if (!object->IsStatic(CGameObject::STATIC_METHOD::NavigationStatic))
+			const _bool isNavigationStatic = object->IsStatic(CGameObject::STATIC_METHOD::NavigationStatic);
+			const _bool isNavigationObstacle = object->IsStatic(CGameObject::STATIC_METHOD::NavigationObstacle);
+			if (!isNavigationStatic && !isNavigationObstacle)
 				continue;
 
 			CMeshBuffer* meshBuffer = ResolveNavigationMeshBuffer(object);
@@ -190,7 +190,7 @@ namespace
 			EngineAI::CNaviMesh::MeshSource source = {};
 			source.meshBuffer = meshBuffer;
 			source.label = object->Get_ObjectNameID();
-			source.walkable = true;
+			source.walkable = isNavigationStatic && !isNavigationObstacle;
 			_matrix worldMatrix = XMMatrixIdentity();
 			if (CTransform* transform = object->GetTransform())
 				worldMatrix = transform->Get_WorldMatrix();
@@ -569,6 +569,7 @@ namespace
 			DrawLineSegment(lineMesh, lineMat, camPos, view, proj, worldCorners[edge[0]], worldCorners[edge[1]]);
 	}
 }
+
 CScene::CScene()
 	: m_iSceneIndex(0)
 	, m_pDevice(nullptr)
@@ -1499,6 +1500,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		if (dynamic_cast<CMeshFilter*>(component)) return L"Mesh Filter";
 		if (dynamic_cast<CMeshRenderer*>(component)) return L"Mesh Renderer";
 		if (dynamic_cast<CSkinnedMeshRenderer*>(component)) return L"Skinned Mesh Renderer";
+		if (dynamic_cast<CLODGroup*>(component)) return L"LODGroup";
 		if (dynamic_cast<CAnimator*>(component)) return L"Animator";
 		if (dynamic_cast<CCanvas*>(component)) return L"Canvas";
 		if (dynamic_cast<CImage*>(component)) return L"Image";
@@ -1545,6 +1547,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 		info.objLayer = (*it)->GetLayer();
 		info.isTransformStatic = (*it)->IsStatic(CGameObject::STATIC_METHOD::TransformStatic);
 		info.isNavigationStatic = (*it)->IsStatic(CGameObject::STATIC_METHOD::NavigationStatic);
+		info.isNavigationObstacleStatic = (*it)->IsStatic(CGameObject::STATIC_METHOD::NavigationObstacle);
 
 		if (CRigidBody* rigidBody = (*it)->GetComponent<CRigidBody>())
 		{
@@ -1646,6 +1649,9 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			info.componentEnabledStates.push_back(component->Get_Enable());
 		}
 
+		if (CLODGroup* lodGroup = (*it)->GetComponent<CLODGroup>())
+			info.lodSwitchDistances = lodGroup->GetSwitchDistances();
+
 		if (CMeshFilter* meshFilter = (*it)->GetComponent<CMeshFilter>())
 		{
 			if (CMeshBuffer* meshBuffer = meshFilter->Get_MeshBuffer())
@@ -1744,6 +1750,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			if (componentName == L"Mesh Filter" && dynamic_cast<CMeshFilter*>(component)) return true;
 			if (componentName == L"Mesh Renderer" && dynamic_cast<CMeshRenderer*>(component)) return true;
 			if (componentName == L"Skinned Mesh Renderer" && dynamic_cast<CSkinnedMeshRenderer*>(component)) return true;
+			if (componentName == L"LODGroup" && dynamic_cast<CLODGroup*>(component)) return true;
 			if (componentName == L"Animator" && dynamic_cast<CAnimator*>(component)) return true;
 			if (componentName == L"Camera" && dynamic_cast<CCamera*>(component)) return true;
 			if (componentName == L"Light" && dynamic_cast<CLight*>(component)) return true;
@@ -1774,6 +1781,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		if (componentName == L"Mesh Filter") obj->AddComponent<CMeshFilter>();
 		else if (componentName == L"Mesh Renderer") obj->AddComponent<CMeshRenderer>();
 		else if (componentName == L"Skinned Mesh Renderer") obj->AddComponent<CSkinnedMeshRenderer>();
+		else if (componentName == L"LODGroup") obj->AddComponent<CLODGroup>();
 		else if (componentName == L"Animator") obj->AddComponent<CAnimator>();
 		else if (componentName == L"Camera") obj->AddComponent<CCamera>();
 		else if (componentName == L"Light") obj->AddComponent<CLight>();
@@ -1845,6 +1853,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 		obj->SetLayer(info.objLayer);
 		obj->SetStatic(CGameObject::STATIC_METHOD::TransformStatic, info.isTransformStatic, false);
 		obj->SetStatic(CGameObject::STATIC_METHOD::NavigationStatic, info.isNavigationStatic, false);
+		obj->SetStatic(CGameObject::STATIC_METHOD::NavigationObstacle, info.isNavigationObstacleStatic, false);
 
 		if (!info.isRect)
 			tf->Set_LocalScale(info.localScale);
@@ -1966,6 +1975,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			if (dynamic_cast<CMeshFilter*>(component)) return L"Mesh Filter";
 			if (dynamic_cast<CMeshRenderer*>(component)) return L"Mesh Renderer";
 			if (dynamic_cast<CSkinnedMeshRenderer*>(component)) return L"Skinned Mesh Renderer";
+			if (dynamic_cast<CLODGroup*>(component)) return L"LODGroup";
 			if (dynamic_cast<CAnimator*>(component)) return L"Animator";
 			if (dynamic_cast<CCanvas*>(component)) return L"Canvas";
 			if (dynamic_cast<CImage*>(component)) return L"Image";
@@ -1999,6 +2009,13 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				component->SetEnable(info.componentEnabledStates[componentIndex]);
 				break;
 			}
+		}
+
+		if (CLODGroup* lodGroup = obj->GetComponent<CLODGroup>())
+		{
+			if (!info.lodSwitchDistances.empty())
+				lodGroup->SetSwitchDistances(info.lodSwitchDistances);
+			lodGroup->RefreshLODLevels();
 		}
 
 		if (!info.meshBufferName.empty())
@@ -2685,9 +2702,16 @@ void CScene::Bind_NavigationInfos(const vector<SCENENAVIGATIONINFO>& _infoList)
 		return;
 
 	const vector<EngineAI::CNaviMesh::MeshSource> meshSources = GatherNavigationStaticMeshSources(this);
-	if (meshSources.empty())
+	_uint walkableMeshCount = 0;
+	for (const auto& meshSource : meshSources)
 	{
-		CDebug::LogError(L"Navigation mesh restore skipped - no NavigationStatic meshes were found in the scene.");
+		if (meshSource.walkable)
+			++walkableMeshCount;
+	}
+
+	if (walkableMeshCount == 0)
+	{
+		CDebug::LogError(L"Navigation mesh restore skipped - no walkable NavigationStatic meshes were found in the scene.");
 		return;
 	}
 

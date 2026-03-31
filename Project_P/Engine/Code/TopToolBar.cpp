@@ -49,7 +49,9 @@ namespace
 			if (!object || !object->IsActive())
 				continue;
 
-			if (!object->IsStatic(CGameObject::STATIC_METHOD::NavigationStatic))
+			const _bool isNavigationStatic = object->IsStatic(CGameObject::STATIC_METHOD::NavigationStatic);
+			const _bool isNavigationObstacle = object->IsStatic(CGameObject::STATIC_METHOD::NavigationObstacle);
+			if (!isNavigationStatic && !isNavigationObstacle)
 				continue;
 
 			CMeshBuffer* meshBuffer = ResolveNavigationMeshBuffer(object);
@@ -59,7 +61,7 @@ namespace
 			EngineAI::CNaviMesh::MeshSource source = {};
 			source.meshBuffer = meshBuffer;
 			source.label = object->Get_ObjectNameID();
-			source.walkable = true;
+			source.walkable = isNavigationStatic && !isNavigationObstacle;
 			_matrix worldMatrix = XMMatrixIdentity();
 			if (CTransform* transform = object->GetTransform())
 				worldMatrix = transform->Get_WorldMatrix();
@@ -88,7 +90,23 @@ namespace
 
 		if (meshSources.empty())
 		{
-			outStatus = "No NavigationStatic meshes were found in the current scene.";
+			outStatus = "No NavigationStatic or NavigationObstacle meshes were found in the current scene.";
+			return false;
+		}
+
+		_bool hasWalkableSource = false;
+		for (const auto& meshSource : meshSources)
+		{
+			if (meshSource.walkable)
+			{
+				hasWalkableSource = true;
+				break;
+			}
+		}
+
+		if (!hasWalkableSource)
+		{
+			outStatus = "No walkable NavigationStatic meshes were found in the current scene.";
 			return false;
 		}
 
@@ -779,12 +797,22 @@ void CTopToolBar::ShowNavigationWindow()
 		m_strNavigationResourceName = BuildDefaultNavigationResourceName(scene);
 
 	const vector<EngineAI::CNaviMesh::MeshSource> meshSources = GatherNavigationStaticMeshSources(scene);
+	_int walkableMeshCount = 0;
+	_int obstacleMeshCount = 0;
+	for (const auto& meshSource : meshSources)
+	{
+		if (meshSource.walkable)
+			++walkableMeshCount;
+		else
+			++obstacleMeshCount;
+	}
 	const string sceneName = scene ? CEngineString::WStringToString(scene->Get_SceneName()) : "None";
 
 	ImGui::Text("Scene: %s", sceneName.c_str());
 	ImGui::Separator();
-	ImGui::Text("NavigationStatic Meshes: %d", static_cast<int>(meshSources.size()));
-	ImGui::TextWrapped("Enable NavigationStatic in the Inspector for the meshes you want to include in the NavigationMesh build.");
+	ImGui::Text("Walkable Meshes: %d", walkableMeshCount);
+	ImGui::Text("Obstacle Meshes: %d", obstacleMeshCount);
+	ImGui::TextWrapped("Use NavigationStatic for walkable surfaces and NavigationObstacle for non-walkable carve/obstacle meshes.");
 	ImGui::Spacing();
 
 	ImGui::InputText("Resource Name", &m_strNavigationResourceName);
@@ -812,7 +840,7 @@ void CTopToolBar::ShowNavigationWindow()
 		ImGui::DragFloat3("Query Half Extents", &m_sNavigationBakeOptions.queryHalfExtents.x, 0.1f, 0.1f, 100.f, "%.2f");
 	}
 
-	const _bool canBuild = scene != nullptr && !meshSources.empty() && !m_strNavigationResourceName.empty();
+	const _bool canBuild = scene != nullptr && walkableMeshCount > 0 && !m_strNavigationResourceName.empty();
 	const _bool canClear = scene != nullptr && !m_strNavigationResourceName.empty();
 	const float buttonSpacing = ImGui::GetStyle().ItemSpacing.x;
 	const float buttonWidth = (ImGui::GetContentRegionAvail().x - buttonSpacing) * 0.5f;
@@ -854,7 +882,9 @@ void CTopToolBar::ShowNavigationWindow()
 	if (!scene)
 		ImGui::TextUnformatted("No active scene.");
 	else if (meshSources.empty())
-		ImGui::TextUnformatted("No active NavigationStatic meshes were found in the current scene.");
+		ImGui::TextUnformatted("No active NavigationStatic or NavigationObstacle meshes were found in the current scene.");
+	else if (walkableMeshCount == 0)
+		ImGui::TextUnformatted("At least one walkable NavigationStatic mesh is required to build a NavigationMesh.");
 	else if (m_strNavigationResourceName.empty())
 		ImGui::TextUnformatted("Enter a resource name before building.");
 

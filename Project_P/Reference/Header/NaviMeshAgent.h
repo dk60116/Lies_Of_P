@@ -62,9 +62,10 @@ public:
 private:
 	EngineAI::CNaviMesh* ResolveNavigationMesh() const;
 	wstring BuildDefaultNavigationMeshResourceName() const;
-	vector3 GetNavigationBaseOffset();
-	_float GetWorldAgentRadius();
-	_float GetWorldAgentHeight();
+	vector3 GetNavigationBaseOffset() const;
+	_float GetWorldAgentRadius() const;
+	_float GetWorldAgentHeight() const;
+	vector3 ComputeSeparationOffset(const vector3& _currentNavigationPosition) const;
 	_bool SnapToNavigation(EngineAI::CNaviMesh* _navMesh, const vector3& _desiredPosition, vector3& _outPosition, _int* _outPolygonIndex = nullptr) const;
 	void RebuildPath(EngineAI::CNaviMesh* _navMesh, const vector3& _currentPosition, const vector3& _destinationOnNavigation);
 	void ClearRuntimePath();

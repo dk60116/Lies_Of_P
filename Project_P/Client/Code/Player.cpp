@@ -183,6 +183,8 @@ HRESULT CPlayer::Initialize()
 	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp + m_sEquipStatus.hp;
 	m_sPlayerStatus.crtPotion = m_sPlayerStatus.maxPotion;
 
+	m_pNavAgent->SetEnable(false);
+
 	return S_OK;
 }
 

@@ -26,7 +26,7 @@ void CEve_Sword::CreateHurtBox()
 {
 	__super::CreateHurtBox();
 
-	m_pHurtBox->CreateHurtBox(CGameManager::GetInstance().Get_Player(), L"Sword", CCollider::ColliderType::Box, vector3(20.f, 5.f, 170.f), vector3(-2.f, 0.f, -100.f));
+	m_pHurtBox->CreateHurtBox(CGameManager::GetInstance().Get_Player(), L"Sword", CCollider::ColliderType::Box, vector3(30.f, 5.f, 160.f), vector3(-2.f, 0.f, -100.f));
 }
 
 void CEve_Sword::OnDestroy()

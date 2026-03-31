@@ -11,6 +11,7 @@
 #include "Scene.h"
 #include "SceneManager.h"
 #include "Transform.h"
+#include <unordered_set>
 
 namespace
 {
@@ -18,6 +19,22 @@ namespace
 	constexpr _float kDestinationRebuildThreshold = 0.05f;
 	constexpr _float kAgentGizmoHeightOffset = 0.03f;
 	constexpr _uint kAgentGizmoSegmentCount = 32u;
+	constexpr _float kAgentSeparationPadding = 0.02f;
+	constexpr _float kAgentSeparationDirectionEpsilon = 0.0001f;
+
+	unordered_set<CNaviMeshAgent*> g_vActiveNavigationAgents = {};
+
+	void RegisterNavigationAgent(CNaviMeshAgent* _agent)
+	{
+		if (_agent)
+			g_vActiveNavigationAgents.insert(_agent);
+	}
+
+	void UnregisterNavigationAgent(CNaviMeshAgent* _agent)
+	{
+		if (_agent)
+			g_vActiveNavigationAgents.erase(_agent);
+	}
 
 	_bool BuildLineWorldMatrix(const _vector& a, const _vector& b, _matrix& outWorld)
 	{
@@ -140,16 +157,19 @@ HRESULT CNaviMeshAgent::Initialize()
 
 void CNaviMeshAgent::Awake()
 {
+	RegisterNavigationAgent(this);
 	m_bPathDirty = m_bHasDestination;
 }
 
 void CNaviMeshAgent::OnEnable()
 {
+	RegisterNavigationAgent(this);
 	m_bPathDirty = m_bHasDestination;
 }
 
 void CNaviMeshAgent::OnDisable()
 {
+	UnregisterNavigationAgent(this);
 	ClearRuntimePath();
 	m_bOnNavigation = false;
 	m_iCurrentPolygonIndex = -1;
@@ -194,6 +214,23 @@ void CNaviMeshAgent::Update()
 
 	currentPosition = snappedWorldPosition;
 	currentNavigationPosition = snappedNavigationPosition;
+
+	const vector3 separationOffset = ComputeSeparationOffset(currentNavigationPosition);
+	if (separationOffset.lengthSq() > 0.f)
+	{
+		vector3 separatedNavigationPosition = currentNavigationPosition + separationOffset;
+		_int separatedPolygonIndex = -1;
+		if (SnapToNavigation(navMesh, separatedNavigationPosition, separatedNavigationPosition, &separatedPolygonIndex))
+		{
+			const vector3 separatedWorldPosition = separatedNavigationPosition + worldGroundingOffset;
+			if (vector3::Distance(currentPosition, separatedWorldPosition) > kAgentPositionEpsilon)
+				transform->Set_Position(separatedWorldPosition);
+
+			currentPosition = separatedWorldPosition;
+			currentNavigationPosition = separatedNavigationPosition;
+			m_iCurrentPolygonIndex = separatedPolygonIndex;
+		}
+	}
 
 	auto rotateTowardsHorizontal = [&](const vector3& worldDirection, const vector3& worldOrigin)
 	{
@@ -432,6 +469,7 @@ void CNaviMeshAgent::Render_Gizmo()
 
 void CNaviMeshAgent::OnDestroy()
 {
+	UnregisterNavigationAgent(this);
 	Safe_Release(m_pLineMesh);
 	Safe_Release(m_pLineMaterial);
 	ClearRuntimePath();
@@ -649,9 +687,9 @@ wstring CNaviMeshAgent::BuildDefaultNavigationMeshResourceName() const
 	return sceneName + L" (NavigationMesh)";
 }
 
-vector3 CNaviMeshAgent::GetNavigationBaseOffset()
+vector3 CNaviMeshAgent::GetNavigationBaseOffset() const
 {
-    CTransform* transform = GetTransform();
+    CTransform* transform = m_pGameObject ? m_pGameObject->GetTransform() : nullptr;
     if (!transform)
         return vector3(0.f, GetWorldAgentHeight() * 0.5f, 0.f);
 
@@ -660,9 +698,9 @@ vector3 CNaviMeshAgent::GetNavigationBaseOffset()
     return vector3(-scaledCenter.x, GetWorldAgentHeight() * 0.5f - scaledCenter.y, -scaledCenter.z);
 }
 
-_float CNaviMeshAgent::GetWorldAgentRadius()
+_float CNaviMeshAgent::GetWorldAgentRadius() const
 {
-	CTransform* transform = GetTransform();
+	CTransform* transform = m_pGameObject ? m_pGameObject->GetTransform() : nullptr;
 	if (!transform)
 		return max(0.05f, m_fAgentRadius);
 
@@ -671,14 +709,88 @@ _float CNaviMeshAgent::GetWorldAgentRadius()
 	return max(m_fAgentRadius * radialScale, 0.05f);
 }
 
-_float CNaviMeshAgent::GetWorldAgentHeight()
+_float CNaviMeshAgent::GetWorldAgentHeight() const
 {
-	CTransform* transform = GetTransform();
+	CTransform* transform = m_pGameObject ? m_pGameObject->GetTransform() : nullptr;
 	if (!transform)
 		return max(0.05f, m_fAgentHeight);
 
 	const vector3 scale = transform->Get_LocalScale();
 	return max(m_fAgentHeight * fabsf(scale.y), 0.05f);
+}
+
+vector3 CNaviMeshAgent::ComputeSeparationOffset(const vector3& _currentNavigationPosition) const
+{
+	if (!m_pGameObject || !Get_Enable() || !m_pGameObject->IsRecursiveActive())
+		return vector3::zero();
+
+	const _float selfRadius = GetWorldAgentRadius();
+	const _float selfHeight = GetWorldAgentHeight();
+	vector3 separation = vector3::zero();
+	_uint overlapCount = 0u;
+
+	for (CNaviMeshAgent* other : g_vActiveNavigationAgents)
+	{
+		if (!other || other == this || !other->Get_Enable() || !other->m_bOnNavigation)
+			continue;
+
+		CGameObject* otherObject = other->Get_GameObject();
+		CTransform* otherTransform = other->GetTransform();
+		if (!otherObject || !otherTransform || !otherObject->IsRecursiveActive())
+			continue;
+
+		if (otherObject->Get_Scene() != m_pGameObject->Get_Scene())
+			continue;
+
+		const vector3 otherGroundingOffset = other->GetNavigationBaseOffset() - vector3(0.f, other->m_fGroundSnapOffset, 0.f);
+		const vector3 otherNavigationPosition = otherTransform->Get_Position() - otherGroundingOffset;
+		const _float otherHeight = other->GetWorldAgentHeight();
+		const _float verticalOverlapThreshold = (selfHeight + otherHeight) * 0.5f;
+		if (fabsf(_currentNavigationPosition.y - otherNavigationPosition.y) > verticalOverlapThreshold)
+			continue;
+
+		vector3 delta = _currentNavigationPosition - otherNavigationPosition;
+		delta.y = 0.f;
+
+		const _float minDistance = selfRadius + other->GetWorldAgentRadius() + kAgentSeparationPadding;
+		const _float distanceSq = delta.lengthSq();
+		if (distanceSq >= (minDistance * minDistance))
+			continue;
+
+		_float distance = 0.f;
+		vector3 pushDirection = vector3::zero();
+		if (distanceSq > (kAgentSeparationDirectionEpsilon * kAgentSeparationDirectionEpsilon))
+		{
+			distance = sqrtf(distanceSq);
+			pushDirection = delta / distance;
+		}
+		else
+		{
+			const _float phase = static_cast<_float>((m_pGameObject->Get_UniqueID() ^ otherObject->Get_UniqueID()) & 1023u);
+			const _float angle = (phase / 1024.f) * XM_2PI;
+			pushDirection = vector3(cosf(angle), 0.f, sinf(angle));
+			distance = 0.f;
+		}
+
+		const _float penetration = minDistance - distance;
+		if (penetration <= 0.f)
+			continue;
+
+		separation += pushDirection * (penetration * 0.5f);
+		++overlapCount;
+	}
+
+	if (overlapCount == 0u)
+		return vector3::zero();
+
+	separation /= static_cast<_float>(overlapCount);
+
+	const _float maxSeparationStep = max(0.05f, selfRadius);
+	const _float separationLength = separation.length();
+	if (separationLength > maxSeparationStep && separationLength > kAgentSeparationDirectionEpsilon)
+		separation = (separation / separationLength) * maxSeparationStep;
+
+	return separation;
 }
 
 _bool CNaviMeshAgent::SnapToNavigation(EngineAI::CNaviMesh* _navMesh, const vector3& _desiredPosition, vector3& _outPosition, _int* _outPolygonIndex) const

@@ -491,7 +491,14 @@ void CHierachyBox::RenderObjectHierarchy(CGameObject* _obj, const string& _filte
 	if (!hasChildren)
 		flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
+	const _bool isInactiveInHierarchy = !_obj->IsRecursiveActive();
+	if (isInactiveInHierarchy)
+		ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+
 	_bool nodeOpen = ImGui::TreeNodeEx((name + "##" + to_string(reinterpret_cast<size_t>(_obj))).c_str(), flags);
+
+	if (isInactiveInHierarchy)
+		ImGui::PopStyleColor();
 
 	if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
 	{

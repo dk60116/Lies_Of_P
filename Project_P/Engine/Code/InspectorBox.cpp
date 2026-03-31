@@ -5,6 +5,7 @@
 #include "RectTransform.h"
 #include "Camera.h"
 #include "Light.h"
+#include "LODGroup.h"
 #include "MeshRenderer.h"
 #include "MeshFilter.h"
 #include "SkinnedMeshRenderer.h"
@@ -382,6 +383,301 @@ static string BuildShortLabel(const string& input, const size_t maxLen)
         return input.substr(0, maxLen);
 
     return input.substr(0, maxLen - 3) + "...";
+}
+
+static _uint ResolveTextureMipLevelCount(const D3D11_TEXTURE2D_DESC& desc)
+{
+    if (desc.MipLevels > 0)
+        return desc.MipLevels;
+
+    if (desc.Width == 0 || desc.Height == 0)
+        return 0;
+
+    _uint mipLevels = 1;
+    _uint width = desc.Width;
+    _uint height = desc.Height;
+
+    while (width > 1 || height > 1)
+    {
+        width = max(1u, width / 2u);
+        height = max(1u, height / 2u);
+        ++mipLevels;
+    }
+
+    return mipLevels;
+}
+
+struct GameSceneRendererProjectionInfo
+{
+    _bool hasGameCamera = false;
+    _bool isProjected = false;
+    _float projectedWidthPx = 0.f;
+    _float projectedHeightPx = 0.f;
+};
+
+static _bool TryBuildInspectorRendererWorldAABB(CRenderer* renderer, BoundingBox& outWorldAABB)
+{
+    if (!renderer)
+        return false;
+
+    if (CSkinnedMeshRenderer* skinnedRenderer = dynamic_cast<CSkinnedMeshRenderer*>(renderer))
+    {
+        _float3 minBound = {};
+        _float3 maxBound = {};
+        if (skinnedRenderer->TryGetAnimatedWorldBounds(minBound, maxBound))
+        {
+            BoundingBox::CreateFromPoints(outWorldAABB, XMLoadFloat3(&minBound), XMLoadFloat3(&maxBound));
+            return true;
+        }
+    }
+
+    CMeshBuffer* meshBuffer = renderer->Get_MeshBuffer();
+    CTransform* transform = renderer->GetTransform();
+    if (!meshBuffer || !transform)
+        return false;
+
+    const BoundingBox& localBounds = meshBuffer->Get_Info().boundingBox;
+    XMFLOAT3 corners[BoundingBox::CORNER_COUNT] = {};
+    localBounds.GetCorners(corners);
+
+    const _matrix world = transform->Get_WorldMatrix();
+    _vector minV = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 1.f);
+    _vector maxV = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 1.f);
+
+    for (const XMFLOAT3& corner : corners)
+    {
+        const _vector local = XMVectorSet(corner.x, corner.y, corner.z, 1.f);
+        const _vector worldPos = XMVector3TransformCoord(local, world);
+        minV = XMVectorMin(minV, worldPos);
+        maxV = XMVectorMax(maxV, worldPos);
+    }
+
+    BoundingBox::CreateFromPoints(outWorldAABB, minV, maxV);
+    return true;
+}
+
+static _bool TryProjectWorldAABBToViewport(const BoundingBox& worldAABB, CCamera* camera, const D3D11_VIEWPORT* viewport, _float& outWidthPx, _float& outHeightPx)
+{
+    if (!camera || !viewport)
+        return false;
+
+    XMFLOAT3 corners[BoundingBox::CORNER_COUNT] = {};
+    worldAABB.GetCorners(corners);
+
+    const _matrix view = camera->GetViewMatrix();
+    const _matrix proj = camera->GetProjectionMatrix();
+
+    _float minX = FLT_MAX;
+    _float minY = FLT_MAX;
+    _float maxX = -FLT_MAX;
+    _float maxY = -FLT_MAX;
+    _bool hasProjectedPoint = false;
+
+    for (const XMFLOAT3& corner : corners)
+    {
+        const _vector worldPos = XMVectorSet(corner.x, corner.y, corner.z, 1.f);
+        const _vector viewPos = XMVector4Transform(worldPos, view);
+        const _float viewZ = XMVectorGetZ(viewPos);
+
+        if (!std::isfinite(viewZ) || viewZ <= 0.f)
+            continue;
+
+        const _vector clipPos = XMVector4Transform(viewPos, proj);
+        const _float w = XMVectorGetW(clipPos);
+        const _float safeW = (fabsf(w) <= 1e-6f) ? (w < 0.f ? -1e-6f : 1e-6f) : w;
+        const _float xNDC = XMVectorGetX(clipPos) / safeW;
+        const _float yNDC = XMVectorGetY(clipPos) / safeW;
+
+        if (!std::isfinite(xNDC) || !std::isfinite(yNDC))
+            continue;
+
+        const _float pixelX = viewport->TopLeftX + (xNDC + 1.f) * 0.5f * viewport->Width;
+        const _float pixelY = viewport->TopLeftY + (1.f - yNDC) * 0.5f * viewport->Height;
+
+        minX = (pixelX < minX) ? pixelX : minX;
+        minY = (pixelY < minY) ? pixelY : minY;
+        maxX = (pixelX > maxX) ? pixelX : maxX;
+        maxY = (pixelY > maxY) ? pixelY : maxY;
+        hasProjectedPoint = true;
+    }
+
+    if (!hasProjectedPoint)
+        return false;
+
+    const _float viewportMinX = viewport->TopLeftX;
+    const _float viewportMinY = viewport->TopLeftY;
+    const _float viewportMaxX = viewport->TopLeftX + viewport->Width;
+    const _float viewportMaxY = viewport->TopLeftY + viewport->Height;
+
+    minX = (minX < viewportMinX) ? viewportMinX : ((minX > viewportMaxX) ? viewportMaxX : minX);
+    minY = (minY < viewportMinY) ? viewportMinY : ((minY > viewportMaxY) ? viewportMaxY : minY);
+    maxX = (maxX < viewportMinX) ? viewportMinX : ((maxX > viewportMaxX) ? viewportMaxX : maxX);
+    maxY = (maxY < viewportMinY) ? viewportMinY : ((maxY > viewportMaxY) ? viewportMaxY : maxY);
+
+    outWidthPx = (maxX > minX) ? (maxX - minX) : 0.f;
+    outHeightPx = (maxY > minY) ? (maxY - minY) : 0.f;
+    return outWidthPx > 0.f && outHeightPx > 0.f;
+}
+
+static GameSceneRendererProjectionInfo BuildGameSceneRendererProjectionInfo(CRenderer* renderer)
+{
+    GameSceneRendererProjectionInfo info = {};
+
+    CScene* scene = CSceneManager::GetInstance().Get_CrtScene();
+    if (!scene)
+        return info;
+
+    CCamera* camera = scene->Get_Camera();
+    const D3D11_VIEWPORT* viewport = CGraphicDevice::GetInstance().Get_GameViewport();
+    if (!viewport)
+        viewport = CGraphicDevice::GetInstance().Get_CurrentViewport();
+
+    if (!camera || !viewport)
+        return info;
+
+    info.hasGameCamera = true;
+
+    BoundingBox worldAABB = {};
+    if (!TryBuildInspectorRendererWorldAABB(renderer, worldAABB))
+        return info;
+
+    info.isProjected = TryProjectWorldAABBToViewport(worldAABB, camera, viewport, info.projectedWidthPx, info.projectedHeightPx);
+    return info;
+}
+
+static _float EstimateTextureMipLevelApprox(const D3D11_TEXTURE2D_DESC& desc, const _float2& tiling, const _float projectedWidthPx, const _float projectedHeightPx)
+{
+    if (desc.Width == 0 || desc.Height == 0 || projectedWidthPx <= 0.f || projectedHeightPx <= 0.f)
+        return 0.f;
+
+    _float tileX = fabsf(tiling.x);
+    _float tileY = fabsf(tiling.y);
+    if (tileX <= 1e-4f)
+        tileX = 1.f;
+    if (tileY <= 1e-4f)
+        tileY = 1.f;
+
+    const _float safeProjectedWidth = (projectedWidthPx > 1.f) ? projectedWidthPx : 1.f;
+    const _float safeProjectedHeight = (projectedHeightPx > 1.f) ? projectedHeightPx : 1.f;
+    const _float texelsPerPixelX = (static_cast<_float>(desc.Width) * tileX) / safeProjectedWidth;
+    const _float texelsPerPixelY = (static_cast<_float>(desc.Height) * tileY) / safeProjectedHeight;
+    const _float texelsPerPixel = (texelsPerPixelX > texelsPerPixelY) ? texelsPerPixelX : texelsPerPixelY;
+    const _uint mipLevelCount = ResolveTextureMipLevelCount(desc);
+    const _float maxMipLevel = (mipLevelCount > 0u) ? static_cast<_float>(mipLevelCount - 1u) : 0.f;
+    const _float safeTexelsPerPixel = (texelsPerPixel > 1e-6f) ? texelsPerPixel : 1e-6f;
+    const _float estimatedMip = log2f(safeTexelsPerPixel);
+
+    if (estimatedMip < 0.f)
+        return 0.f;
+    if (estimatedMip > maxMipLevel)
+        return maxMipLevel;
+
+    return estimatedMip;
+}
+
+static _uint ResolveDisplayMipLODIndex(const _float estimatedMip, const _uint mipLevelCount)
+{
+    if (mipLevelCount <= 1u)
+        return 0u;
+
+    _int roundedLOD = static_cast<_int>(estimatedMip + 0.5f);
+    if (roundedLOD < 0)
+        roundedLOD = 0;
+
+    const _int maxLOD = static_cast<_int>(mipLevelCount - 1u);
+    if (roundedLOD > maxLOD)
+        roundedLOD = maxLOD;
+
+    return static_cast<_uint>(roundedLOD);
+}
+
+static void ResolveMipResolution(const D3D11_TEXTURE2D_DESC& desc, const _uint lodIndex, _uint& outWidth, _uint& outHeight)
+{
+    outWidth = desc.Width;
+    outHeight = desc.Height;
+
+    for (_uint i = 0; i < lodIndex; ++i)
+    {
+        outWidth = max(1u, outWidth / 2u);
+        outHeight = max(1u, outHeight / 2u);
+    }
+}
+
+static void RenderGameSceneMipEstimate(CRenderer* renderer, CMaterial* material)
+{
+    if (!renderer)
+        return;
+
+    ImGui::Separator();
+    ImGui::TextUnformatted("GameScene Mip (Approx)");
+    ImGui::TextDisabled("GPU exact mip varies per pixel.");
+
+    if (!renderer->Get_Enable())
+    {
+        ImGui::TextUnformatted("Renderer is disabled.");
+        return;
+    }
+
+    if (!renderer->IsLODVisible())
+    {
+        ImGui::TextUnformatted("Renderer is hidden by LOD.");
+        return;
+    }
+
+    const GameSceneRendererProjectionInfo projectionInfo = BuildGameSceneRendererProjectionInfo(renderer);
+    if (!projectionInfo.hasGameCamera)
+    {
+        ImGui::TextUnformatted("Game camera or viewport is unavailable.");
+        return;
+    }
+
+    if (!projectionInfo.isProjected)
+    {
+        ImGui::TextUnformatted("Object is not currently visible in GameScene.");
+        return;
+    }
+
+    ImGui::Text("Projected Size: %.1f x %.1f px", projectionInfo.projectedWidthPx, projectionInfo.projectedHeightPx);
+
+    if (!material)
+    {
+        ImGui::TextUnformatted("Material is missing.");
+        return;
+    }
+
+    const _uint textureCount = material->Get_TextureCount();
+    if (textureCount == 0u)
+    {
+        ImGui::TextUnformatted("No textures are bound.");
+        return;
+    }
+
+    _float2 tiling = { 1.f, 1.f };
+    material->Get_Vector2Value(L"gTiling", tiling);
+
+    for (_uint i = 0; i < textureCount; ++i)
+    {
+        CTexture* texture = material->Get_Texture(static_cast<_int>(i));
+        if (!texture || !texture->Get_SRV())
+        {
+            ImGui::Text("Slot %u: None", i);
+            continue;
+        }
+
+        const D3D11_TEXTURE2D_DESC& desc = texture->Get_TextureDesc();
+        const _uint mipLevelCount = ResolveTextureMipLevelCount(desc);
+        const _float estimatedMip = EstimateTextureMipLevelApprox(desc, tiling, projectionInfo.projectedWidthPx, projectionInfo.projectedHeightPx);
+        const _uint displayLOD = ResolveDisplayMipLODIndex(estimatedMip, mipLevelCount);
+        _uint lodWidth = 0u;
+        _uint lodHeight = 0u;
+        ResolveMipResolution(desc, displayLOD, lodWidth, lodHeight);
+        const string textureName = CEngineString::WStringToString(texture->Get_ResourceName());
+        const string shortName = BuildShortLabel(textureName, 18);
+
+        ImGui::Text("Slot %u %s: %u X %u (LOD%u)", i, shortName.c_str(), lodWidth, lodHeight, displayLOD);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("%s\nApprox Mip: %.2f", textureName.c_str(), estimatedMip);
+    }
 }
 
 static void RenderTexturePickerWindow()
@@ -1194,7 +1490,8 @@ void CInspectorBox::Render()
         StaticOption staticOptions[] =
         {
             { "TransformStatic", CGameObject::STATIC_METHOD::TransformStatic },
-            { "NavigationStatic", CGameObject::STATIC_METHOD::NavigationStatic }
+            { "NavigationStatic", CGameObject::STATIC_METHOD::NavigationStatic },
+            { "NavigationObstacle", CGameObject::STATIC_METHOD::NavigationObstacle }
         };
 
         string staticPreview = "None";
@@ -2078,6 +2375,47 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
             if (CMeshFilter* meshFilter = dynamic_cast<CMeshFilter*>(component))
                 RenderMeshFilterComponent(_obj, meshFilter);
 
+            if (CLODGroup* lodGroup = dynamic_cast<CLODGroup*>(component))
+            {
+                const string lodId = to_string(reinterpret_cast<uintptr_t>(lodGroup));
+
+                if (ImGui::Button(("Refresh Renderers##" + lodId).c_str()))
+                    lodGroup->RefreshLODLevels();
+
+                ImGui::SameLine();
+                ImGui::Text("Levels: %u", lodGroup->GetLODLevelCount());
+
+                const _int currentLevelIndex = lodGroup->GetCurrentLODIndex();
+                if (currentLevelIndex >= 0)
+                {
+                    const _int currentSourceIndex = lodGroup->GetLODSourceIndex(static_cast<_uint>(currentLevelIndex));
+                    ImGui::Text("Current LOD: LOD%d", currentSourceIndex);
+                }
+                else
+                {
+                    ImGui::TextUnformatted("Current LOD: All Visible");
+                }
+
+                const vector<_float>& switchDistances = lodGroup->GetSwitchDistances();
+                for (_uint lodLevel = 0; lodLevel < lodGroup->GetLODLevelCount(); ++lodLevel)
+                {
+                    const _int sourceIndex = lodGroup->GetLODSourceIndex(lodLevel);
+                    const _uint rendererCount = lodGroup->GetLODRendererCount(lodLevel);
+                    ImGui::Text("LOD%d Renderers: %u", sourceIndex, rendererCount);
+
+                    if (lodLevel + 1u >= lodGroup->GetLODLevelCount())
+                        continue;
+
+                    _float switchDistance = lodLevel < switchDistances.size() ? switchDistances[lodLevel] : 0.f;
+                    const _int nextSourceIndex = lodGroup->GetLODSourceIndex(lodLevel + 1u);
+                    const string switchLabel =
+                        "Switch To LOD" + to_string(nextSourceIndex) + "##" + lodId + "_" + to_string(lodLevel);
+
+                    if (ImGui::InputFloat(switchLabel.c_str(), &switchDistance, 1.f, 5.f, "%.2f"))
+                        lodGroup->SetSwitchDistance(lodLevel, switchDistance);
+                }
+            }
+
             if (CAnimator* animator = dynamic_cast<CAnimator*>(component))
                 RenderAnimatorComponent(_obj, animator);
 
@@ -2734,12 +3072,14 @@ void CInspectorBox::RenderMeshRendererComponent(CMeshRenderer* _meshRenderer)
             ImGui::TreePop();
         }
 
+        RenderGameSceneMipEstimate(_meshRenderer, material);
     }
     else
     {
         ImGui::TextUnformatted("Material: None");
         ImGui::TextUnformatted("Shader: None");
         ImGui::TextUnformatted("Textures: None");
+        RenderGameSceneMipEstimate(_meshRenderer, nullptr);
     }
 
     CMeshFilter* meshFilter = _meshRenderer->Get_MeshFilter();
@@ -2915,6 +3255,7 @@ void CInspectorBox::RenderSkinnedMeshRendererComponent(CGameObject* _obj, CSkinn
 
             ImGui::TreePop();
         }
+
     }
     else
     {
@@ -3259,6 +3600,12 @@ void CInspectorBox::ShowAddComponentMenu(CGameObject* _obj)
             _obj->AddComponent<CSkinnedMeshRenderer>();
     }
 
+    if (ImGui::MenuItem("LODGroup"))
+    {
+        if (!_obj->GetComponent<CLODGroup>())
+            _obj->AddComponent<CLODGroup>();
+    }
+
     if (ImGui::MenuItem("Animator"))
     {
         if (!_obj->GetComponent<CAnimator>())
@@ -3447,6 +3794,7 @@ void CInspectorBox::RenderSelectedAssetInfo(const fs::path& path)
     _bool hasResolution = false;
     _uint width = 0;
     _uint height = 0;
+    _uint mipLevels = 0;
 
     if (IsPreviewImageExtension(path))
     {
@@ -3474,6 +3822,7 @@ void CInspectorBox::RenderSelectedAssetInfo(const fs::path& path)
                 {
                     width = desc.Width;
                     height = desc.Height;
+                    mipLevels = ResolveTextureMipLevelCount(desc);
                     hasResolution = true;
                 }
             }
@@ -3513,6 +3862,12 @@ void CInspectorBox::RenderSelectedAssetInfo(const fs::path& path)
             ImGui::TextUnformatted("Resolution");
             ImGui::TableSetColumnIndex(1);
             ImGui::Text("%u x %u", width, height);
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::TextUnformatted("Mip Levels");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%u", mipLevels);
         }
 
         ImGui::EndTable();

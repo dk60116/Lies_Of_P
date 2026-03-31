@@ -56,7 +56,7 @@ float4 PSMain(VSOut input) : SV_Target
     if (shadowF < 0.3f)
         shadowF = 0.f;
     
-    float shadowValue = (1.f - shadowF) * 0.2f;
+    float shadowValue = (1.f - shadowF) * 0.15f;
     float4 shadow = float4(shadowValue, shadowValue, shadowValue, 0.f);
     
     float4 ad = diffuse;

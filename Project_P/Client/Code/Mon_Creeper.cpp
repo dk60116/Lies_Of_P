@@ -44,6 +44,8 @@ HRESULT CMon_Creeper::Initialize()
 	m_pBodyCollider->SetHeight(2.5f);
 	m_pBodyCollider->SetRadius(1.5f);
 
+	m_pNavAgent->SetAgentRadius(1.f);
+
 	m_sStatus.maxHp = 10000;
 	m_sStatus.moveSpeed = 6.f;
 	m_sStatus.attackRange = 0.5f;

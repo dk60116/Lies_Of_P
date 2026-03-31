@@ -19,7 +19,7 @@ class ENGINE_DLL CGameObject final : public UObject
 	friend class CTransform;
 
 public:
-	enum class STATIC_METHOD { TransformStatic, NavigationStatic };
+	enum class STATIC_METHOD { TransformStatic, NavigationStatic, NavigationObstacle };
 
 private:
 	explicit CGameObject(const wstring _name, ID3D11Device* _pDevice, ID3D11DeviceContext* _pContext);
@@ -115,7 +115,7 @@ public:
 	const _bool IsBoneTransform() const;
 
 public:
-	static CGameObject* Instantiate(const CGameObject* _rhs);
+	static CGameObject* Instantiate(const CGameObject* _rhs, CTransform* _parentOverride = nullptr);
 
 	template<typename T>
 	static T* FindObjectOfType();
@@ -139,6 +139,7 @@ public:
 private:
 	void Set_RecursiveActive(const _bool _active);
 	void FinalizeAddedComponent(CComponent* _component);
+	void NotifyLODGroupsDirty();
 
 private:
 	ID3D11Device* m_pDevice;
@@ -164,6 +165,7 @@ private:
 private:
 	_bool m_bTransformStatic;
 	_bool m_bNavigationStatic;
+	_bool m_bNavigationObstacleStatic;
 
 private:
 	_uint m_iLayer;

@@ -15,7 +15,7 @@ public:
         _float zoomMax = 10.f;
         _float trackingSpeed = 10.f;
         _float firstZoomSensor = 4.f;
-        _float pitchMin = -35.f;
+        _float pitchMin = -89.f;
         _float pitchMax = 70.f;
         _float pitchZoomInStart = 15.f;
         _float pitchZoomInAmount = 5.f;

@@ -88,6 +88,7 @@ public:
         _uint objLayer = 0u;
         _bool isTransformStatic = false;
         _bool isNavigationStatic = false;
+        _bool isNavigationObstacleStatic = false;
         _bool rigidBodyKinematic = false;
         _bool rigidBodyUseGravity = true;
         _float rigidBodyMass = 1.f;
@@ -114,6 +115,7 @@ public:
         VERTICALLAYOUTGROUPINFO verticalLayoutGroupInfo = {};
         vector<wstring> componentNames = {};
         vector<_bool> componentEnabledStates = {};
+        vector<_float> lodSwitchDistances = {};
         wstring meshBufferName = L"";
         wstring materialName = L"";
         vector<MATERIALTEXTUREINFO> materialTextures = {};

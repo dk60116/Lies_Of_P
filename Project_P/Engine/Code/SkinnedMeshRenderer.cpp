@@ -257,12 +257,18 @@ void CSkinnedMeshRenderer::OnPreRender()
 
 void CSkinnedMeshRenderer::Render_Editor()
 {
+	if (!IsLODVisible())
+		return;
+
 	m_pContext->OMSetDepthStencilState(CSceneManager::GetInstance().Get_CrtScene()->Get_MeshStencillState(), 0);
 	CSceneManager::GetInstance().Get_CrtScene()->Get_EditorCamera()->Add_RenderTarget_Mesh(this);
 }
 
 void CSkinnedMeshRenderer::Render()
 {
+	if (!IsLODVisible())
+		return;
+
 	CSceneManager::GetInstance().Get_CrtScene()->Get_Camera()->Add_RenderTarget_Mesh(this);
 }
 
@@ -659,6 +665,9 @@ void CSkinnedMeshRenderer::CreateBoneHierachy(const vector<CSkinnedMeshBuffer::S
 
 void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 {
+	if (!IsLODVisible())
+		return;
+
 	if (!_cam)
 	{
 		CDebug::LogError("Skinned MeshRenderer: No Camera assigned.");
@@ -724,6 +733,9 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 
 void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const CLight::ShadowMatrices& _shadowMatrix)
 {
+	if (!IsLODVisible())
+		return;
+
 	if (!_shadowDepthMat)
 	{
 		CDebug::LogError(L"SkinnedMeshRenderer::Render_ShadowDepth - shadowDepthMat is null: " + m_pGameObject->Get_ObjectNameID());

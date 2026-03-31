@@ -5,6 +5,7 @@ CRenderer::CRenderer()
 	: m_pMaterial(nullptr)
 	, m_pOutlineMat(nullptr)
 	, m_bCastShadow(true)
+	, m_bLODVisible(true)
 	, m_fSclaeFactor(1.f)
 	, m_bUseInstancing(false)
 	, m_iInstanceCount(0)
@@ -95,6 +96,11 @@ const _bool CRenderer::IsCastShadow() const
 	return m_bCastShadow;
 }
 
+const _bool CRenderer::IsLODVisible() const
+{
+	return m_bLODVisible;
+}
+
 const _bool CRenderer::IsMirroredTransform() const
 {
 	if (!m_pGameObject || !m_pGameObject->GetTransform())
@@ -111,6 +117,11 @@ const _bool CRenderer::IsMirroredWorldMatrix(const _matrix& _world)
 void CRenderer::SetCastShadow(const _bool _on)
 {
 	m_bCastShadow = _on;
+}
+
+void CRenderer::SetLODVisible(const _bool _visible)
+{
+	m_bLODVisible = _visible;
 }
 
 void CRenderer::CreateMeshInstancing(const _uint _count)

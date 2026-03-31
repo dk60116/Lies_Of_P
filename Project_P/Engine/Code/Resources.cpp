@@ -1429,7 +1429,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 19;
+	const _uint version = 22;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -1467,6 +1467,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 		out.write(reinterpret_cast<const char*>(&info.objLayer), sizeof(_uint));
 		out.write(reinterpret_cast<const char*>(&info.isTransformStatic), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.isNavigationStatic), sizeof(_bool));
+		out.write(reinterpret_cast<const char*>(&info.isNavigationObstacleStatic), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyKinematic), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyUseGravity), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyMass), sizeof(_float));
@@ -1496,6 +1497,20 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 			if (componentNameSize > 0)
 				out.write(reinterpret_cast<const char*>(componentName.data()), sizeof(wchar_t) * componentNameSize);
 		}
+
+		_uint componentEnabledCount = componentCount;
+		out.write(reinterpret_cast<const char*>(&componentEnabledCount), sizeof(_uint));
+		for (_uint componentIndex = 0; componentIndex < componentEnabledCount; ++componentIndex)
+		{
+			const _bool enabledState =
+				componentIndex < info.componentEnabledStates.size() ? info.componentEnabledStates[componentIndex] : true;
+			out.write(reinterpret_cast<const char*>(&enabledState), sizeof(_bool));
+		}
+
+		_uint lodSwitchDistanceCount = static_cast<_uint>(info.lodSwitchDistances.size());
+		out.write(reinterpret_cast<const char*>(&lodSwitchDistanceCount), sizeof(_uint));
+		for (const _float lodSwitchDistance : info.lodSwitchDistances)
+			out.write(reinterpret_cast<const char*>(&lodSwitchDistance), sizeof(_float));
 
 		_uint meshBufferNameSize = static_cast<_uint>(info.meshBufferName.size());
 		out.write(reinterpret_cast<const char*>(&meshBufferNameSize), sizeof(_uint));
@@ -1702,6 +1717,9 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 		if (version >= 12)
 			in.read(reinterpret_cast<char*>(&info.isNavigationStatic), sizeof(_bool));
 
+		if (version >= 22)
+			in.read(reinterpret_cast<char*>(&info.isNavigationObstacleStatic), sizeof(_bool));
+
 		if (version >= 8)
 		{
 			in.read(reinterpret_cast<char*>(&info.rigidBodyKinematic), sizeof(_bool));
@@ -1748,6 +1766,36 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 				}
 				else
 					info.componentNames.push_back(L"");
+			}
+		}
+
+		if (version >= 20)
+		{
+			_uint componentEnabledCount = 0;
+			in.read(reinterpret_cast<char*>(&componentEnabledCount), sizeof(_uint));
+			info.componentEnabledStates.reserve(componentEnabledCount);
+			for (_uint componentIndex = 0; componentIndex < componentEnabledCount; ++componentIndex)
+			{
+				_bool enabledState = true;
+				in.read(reinterpret_cast<char*>(&enabledState), sizeof(_bool));
+				info.componentEnabledStates.push_back(enabledState);
+			}
+		}
+		else
+		{
+			info.componentEnabledStates.assign(info.componentNames.size(), true);
+		}
+
+		if (version >= 21)
+		{
+			_uint lodSwitchDistanceCount = 0;
+			in.read(reinterpret_cast<char*>(&lodSwitchDistanceCount), sizeof(_uint));
+			info.lodSwitchDistances.reserve(lodSwitchDistanceCount);
+			for (_uint lodIndex = 0; lodIndex < lodSwitchDistanceCount; ++lodIndex)
+			{
+				_float lodSwitchDistance = 0.f;
+				in.read(reinterpret_cast<char*>(&lodSwitchDistance), sizeof(_float));
+				info.lodSwitchDistances.push_back(lodSwitchDistance);
 			}
 		}
 

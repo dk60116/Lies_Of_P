@@ -6,6 +6,9 @@
 namespace
 {
     constexpr _float PI = 3.141592f;
+    constexpr _float kLowestCameraLift = 0.5f;
+    constexpr _float kHighestCameraZoomOutStartPitch = -10.f;
+    constexpr _float kHighestCameraZoomOutAmount = 3.f;
 
     inline _float Deg2Rad(_float deg) { return deg * (PI / 180.f); }
 
@@ -123,6 +126,12 @@ void CPlayerCamera::Update()
     HWND hWnd = CDisplay::GetInstance().Get_GameWindow();
     if (!hWnd) return;
 
+    if (CInput::GetInstance().GetKeyDown(ESCAPE))
+    {
+        m_bMouseLocked = !m_bMouseLocked;
+        m_bIgnoreNextDelta = true;
+    }
+
     const bool canUpdateMouse = IsOurWindowActive(hWnd);
     CDisplay::GetInstance().SetCursorVisible(!m_bMouseLocked || !canUpdateMouse);
 
@@ -168,7 +177,7 @@ void CPlayerCamera::Update()
         m_fTargetYaw += yawStep;
         m_fTargetPitch += pitchStep;
 
-        const _float pMin = (m_sOptions.pitchMin != 0.f) ? m_sOptions.pitchMin : -35.f;
+        const _float pMin = (m_sOptions.pitchMin != 0.f) ? m_sOptions.pitchMin : -89.f;
         const _float pMax = (m_sOptions.pitchMax != 0.f) ? m_sOptions.pitchMax : 70.f;
         m_fTargetPitch = std::clamp(m_fTargetPitch, pMin, pMax);
 
@@ -177,13 +186,6 @@ void CPlayerCamera::Update()
     else
     {
         m_bIgnoreNextDelta = true;
-    }
-
-    _float wheel = CInput::GetInstance().GetAxis(L"Mouse ScrollWheel");
-    if (wheel != 0.f)
-    {
-        m_fBackOffset -= wheel * m_fZoomSensor * DELTA_TIME;
-        m_fBackOffset = std::clamp(m_fBackOffset, m_sOptions.zoomMin, m_sOptions.zoomMax);
     }
 
     CTransform* tf = GetTransform();
@@ -197,13 +199,16 @@ void CPlayerCamera::Update()
 
     const _float yawRad = Deg2Rad(m_fCurYaw);
     const _float pitchRad = Deg2Rad(m_fCurPitch);
+    const _float pitchMin = (m_sOptions.pitchMin != 0.f) ? m_sOptions.pitchMin : -89.f;
     const _float zoomInStartPitch = m_sOptions.pitchZoomInStart;
     const _float zoomInMaxPitch = max(zoomInStartPitch, m_sOptions.pitchMax);
     const _float zoomInRange = zoomInMaxPitch - zoomInStartPitch;
     const _float zoomInT = zoomInRange > 0.f ? std::clamp((m_fCurPitch - zoomInStartPitch) / zoomInRange, 0.f, 1.f) : 0.f;
+    const _float zoomOutRange = kHighestCameraZoomOutStartPitch - pitchMin;
+    const _float zoomOutT = zoomOutRange > 0.f ? std::clamp((kHighestCameraZoomOutStartPitch - m_fCurPitch) / zoomOutRange, 0.f, 1.f) : 0.f;
     const _float effectiveBackOffset = std::clamp
     (
-        m_fBackOffset - m_sOptions.pitchZoomInAmount * zoomInT,
+        m_fBackOffset - m_sOptions.pitchZoomInAmount * zoomInT + kHighestCameraZoomOutAmount * zoomOutT,
         m_sOptions.zoomMin,
         m_sOptions.zoomMax
     );
@@ -225,7 +230,8 @@ void CPlayerCamera::Update()
     camForward.y = sp;
     camForward.z = cp * cy;
 
-    const vector3 finalPos = pivot - camForward * effectiveBackOffset;
+    vector3 finalPos = pivot - camForward * effectiveBackOffset;
+    finalPos.y += kLowestCameraLift * zoomInT;
 
     tf->Set_Position(finalPos);
     tf->LookAt(pivot);
@@ -267,7 +273,7 @@ const vector3 CPlayerCamera::Get_ForwardVector()
     return forward.normalized();
 }
 
-const float CPlayerCamera::Get_ForwardAngle()
+const _float CPlayerCamera::Get_ForwardAngle()
 {
     vector3 f = Get_ForwardVector();
 

@@ -1,10 +1,48 @@
 #include "epch.h"
 #include "Transform.h"
+#include "GameObject.h"
+#include "LODGroup.h"
 #include "RigidBody.h"
 
 namespace
 {
 	thread_local _uint g_iThreadSnapshotSlot = 0u;
+
+	_matrix BuildRotationGizmoMatrix(const _matrix& _worldMatrix)
+	{
+		_vector scale = {};
+		_vector rotation = {};
+		_vector translation = {};
+
+		if (!XMMatrixDecompose(&scale, &rotation, &translation, _worldMatrix))
+			return _worldMatrix;
+
+		_float3 absScale = {};
+		XMStoreFloat3(&absScale, scale);
+		absScale.x = max(fabsf(absScale.x), 0.0001f);
+		absScale.y = max(fabsf(absScale.y), 0.0001f);
+		absScale.z = max(fabsf(absScale.z), 0.0001f);
+
+		return XMMatrixScaling(absScale.x, absScale.y, absScale.z)
+			* XMMatrixRotationQuaternion(rotation)
+			* XMMatrixTranslationFromVector(translation);
+	}
+
+	void MarkAncestorLODGroupsDirty(CTransform* _transform)
+	{
+		CTransform* current = _transform;
+		while (current)
+		{
+			CGameObject* owner = current->Get_GameObject();
+			if (owner)
+			{
+				if (CLODGroup* lodGroup = owner->GetComponent<CLODGroup>())
+					lodGroup->MarkRefreshNeeded();
+			}
+
+			current = current->Get_Parent();
+		}
+	}
 }
 
 CTransform::CTransform()
@@ -178,6 +216,8 @@ void CTransform::Render_Gizmo()
     else
     {
         gizmoPrev = XMLoadFloat4x4(&m_vMatWorld);
+        if (currentGizmoOperation == ImGuizmo::ROTATE)
+            gizmoPrev = BuildRotationGizmoMatrix(gizmoPrev);
         memcpy(world, &gizmoPrev, sizeof(float) * 16);
     }
 
@@ -228,6 +268,8 @@ void CTransform::Render_Gizmo()
     else
     {
         _matrix newWorldMatrix = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(world));
+        const vector3 preservedLocalPosition = m_vPosition;
+        const vector3 preservedLocalScale = m_vScale;
 
         if (m_pParent)
         {
@@ -237,18 +279,34 @@ void CTransform::Render_Gizmo()
             _vector S, R, T;
             XMMatrixDecompose(&S, &R, &T, localMatrix);
 
-            XMStoreFloat3(reinterpret_cast<_float3*>(&m_vScale), S);
             XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), R);
-            XMStoreFloat3(reinterpret_cast<_float3*>(&m_vPosition), T);
+            if (currentGizmoOperation == ImGuizmo::ROTATE)
+            {
+                m_vPosition = preservedLocalPosition;
+                m_vScale = preservedLocalScale;
+            }
+            else
+            {
+                XMStoreFloat3(reinterpret_cast<_float3*>(&m_vScale), S);
+                XMStoreFloat3(reinterpret_cast<_float3*>(&m_vPosition), T);
+            }
         }
         else
         {
             _vector S, R, T;
             XMMatrixDecompose(&S, &R, &T, newWorldMatrix);
 
-            XMStoreFloat3(reinterpret_cast<_float3*>(&m_vScale), S);
             XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), R);
-            XMStoreFloat3(reinterpret_cast<_float3*>(&m_vPosition), T);
+            if (currentGizmoOperation == ImGuizmo::ROTATE)
+            {
+                m_vPosition = preservedLocalPosition;
+                m_vScale = preservedLocalScale;
+            }
+            else
+            {
+                XMStoreFloat3(reinterpret_cast<_float3*>(&m_vScale), S);
+                XMStoreFloat3(reinterpret_cast<_float3*>(&m_vPosition), T);
+            }
         }
     }
 }
@@ -271,6 +329,7 @@ void CTransform::SetParent(CTransform* _parent)
     if (_parent == m_pParent)
         return;
 
+    CTransform* previousParent = m_pParent;
     _matrix W_old = XMLoadFloat4x4(&m_vMatWorld);
 
     if (m_pParent) {
@@ -325,6 +384,9 @@ void CTransform::SetParent(CTransform* _parent)
     Bind_Direction();
 
     m_bIsRootParent = (m_pParent == nullptr);
+
+    MarkAncestorLODGroupsDirty(previousParent);
+    MarkAncestorLODGroupsDirty(this);
 }
 
 void CTransform::InsertChildBefore(CTransform* _child, CTransform* _beforeChild)

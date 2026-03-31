@@ -4,6 +4,7 @@
 #include "Canvas.h"
 #include "Collider.h"
 #include "Light.h"
+#include "LODGroup.h"
 #include "MeshFilter.h"
 #include "MeshRenderer.h"
 #include "RectTransform.h"
@@ -49,6 +50,22 @@ namespace
 		return fallback;
 	}
 
+	void MarkAncestorLODGroupsDirty(CTransform* _transform)
+	{
+		CTransform* current = _transform;
+		while (current)
+		{
+			CGameObject* owner = current->Get_GameObject();
+			if (owner)
+			{
+				if (CLODGroup* lodGroup = owner->GetComponent<CLODGroup>())
+					lodGroup->MarkRefreshNeeded();
+			}
+
+			current = current->Get_Parent();
+		}
+	}
+
 }
 
 
@@ -71,6 +88,7 @@ CGameObject::CGameObject(const wstring _name, ID3D11Device* _pDevice, ID3D11Devi
 	, m_bKill(false)
 	, m_bTransformStatic(false)
 	, m_bNavigationStatic(false)
+	, m_bNavigationObstacleStatic(false)
 	, m_iLayer(0)
 {
 	m_strName = L"Game Object";
@@ -97,6 +115,7 @@ CGameObject::CGameObject(const CGameObject& _rhs)
 	, m_bKill(false)
 	, m_bTransformStatic(_rhs.m_bTransformStatic)
 	, m_bNavigationStatic(_rhs.m_bNavigationStatic)
+	, m_bNavigationObstacleStatic(_rhs.m_bNavigationObstacleStatic)
 	, m_iLayer(_rhs.m_iLayer)
 {
 	m_iUniqueID = CSceneManager::GetInstance().Get_CrtScene()->Get_UniqueObjectCount();
@@ -413,6 +432,7 @@ _bool CGameObject::RemoveComponent(CComponent* _component)
 	_component->OnDestroy();
 	m_lComponentList.erase(it);
 	Safe_Release(_component);
+	NotifyLODGroupsDirty();
 
 	return true;
 }
@@ -507,6 +527,16 @@ void CGameObject::FinalizeAddedComponent(CComponent* _component)
 		if (!GetComponent<CUI>())
 			AddComponent<CUI>();
 	}
+
+	NotifyLODGroupsDirty();
+}
+
+void CGameObject::NotifyLODGroupsDirty()
+{
+	if (!m_pTransform)
+		return;
+
+	MarkAncestorLODGroupsDirty(m_pTransform);
 }
 
 vector<CMeshRenderer*> CGameObject::CreateMeshHierachy(vector<MeshBundle> _meshInfos, const _float _scaleFactor)
@@ -689,6 +719,7 @@ const wstring CGameObject::Get_ObjectNameID() const
 void CGameObject::Set_ObjectName(wstring& _name)
 {
 	m_strGameObjectName = _name;
+	NotifyLODGroupsDirty();
 }
 
 const wstring& CGameObject::GetTag() const
@@ -733,7 +764,7 @@ const _bool CGameObject::IsBoneTransform() const
 	return m_bIsBoneTransform;
 }
 
-CGameObject* CGameObject::Instantiate(const CGameObject* _rhs)
+CGameObject* CGameObject::Instantiate(const CGameObject* _rhs, CTransform* _parentOverride)
 {
 	if (!_rhs)
 		return nullptr;
@@ -787,6 +818,7 @@ CGameObject* CGameObject::Instantiate(const CGameObject* _rhs)
 
 	CTransform* sourceTransform = _rhs->GetTransform();
 	CRectTransform* sourceRectTransform = dynamic_cast<CRectTransform*>(sourceTransform);
+	CTransform* desiredParent = _parentOverride ? _parentOverride : (sourceTransform ? sourceTransform->Get_Parent() : nullptr);
 	if (sourceRectTransform)
 	{
 		CRectTransform* clonedRectTransform = newGameObj->GetComponent<CRectTransform>();
@@ -801,8 +833,8 @@ CGameObject* CGameObject::Instantiate(const CGameObject* _rhs)
 			if (CUI* clonedUI = newGameObj->GetComponent<CUI>())
 				clonedRectTransform->Set_UI(clonedUI);
 
-			if (CTransform* parent = sourceRectTransform->Get_Parent())
-				clonedRectTransform->SetParent(parent);
+			if (desiredParent)
+				clonedRectTransform->SetParent(desiredParent);
 
 			clonedRectTransform->m_vPosition = sourceRectTransform->m_vPosition;
 			clonedRectTransform->m_vEulerAngles = sourceRectTransform->m_vEulerAngles;
@@ -832,8 +864,8 @@ CGameObject* CGameObject::Instantiate(const CGameObject* _rhs)
 		clonedTransform->m_bEnable = sourceTransform->m_bEnable;
 		clonedTransform->m_bSaveTarget = sourceTransform->m_bSaveTarget;
 
-		if (CTransform* parent = sourceTransform->Get_Parent())
-			clonedTransform->SetParent(parent);
+		if (desiredParent)
+			clonedTransform->SetParent(desiredParent);
 
 		clonedTransform->m_vPosition = sourceTransform->m_vPosition;
 		clonedTransform->m_vEulerAngles = sourceTransform->m_vEulerAngles;
@@ -858,6 +890,7 @@ CGameObject* CGameObject::Instantiate(const CGameObject* _rhs)
 	newGameObj->m_bSaveTarget = _rhs->m_bSaveTarget;
 	newGameObj->m_bTransformStatic = _rhs->m_bTransformStatic;
 	newGameObj->m_bNavigationStatic = _rhs->m_bNavigationStatic;
+	newGameObj->m_bNavigationObstacleStatic = _rhs->m_bNavigationObstacleStatic;
 	newGameObj->m_iLayer = _rhs->m_iLayer;
 
 	CGameObject* sourceObject = const_cast<CGameObject*>(_rhs);
@@ -919,6 +952,8 @@ const _bool CGameObject::IsStatic(STATIC_METHOD _method) const
 		return m_bTransformStatic;
 	case STATIC_METHOD::NavigationStatic:
 		return m_bNavigationStatic;
+	case STATIC_METHOD::NavigationObstacle:
+		return m_bNavigationObstacleStatic;
 	}
 
 	return false;
@@ -933,6 +968,13 @@ void CGameObject::SetStatic(STATIC_METHOD _method, const _bool _value, const _bo
 		break;
 	case STATIC_METHOD::NavigationStatic:
 		m_bNavigationStatic = _value;
+		if (_value)
+			m_bNavigationObstacleStatic = false;
+		break;
+	case STATIC_METHOD::NavigationObstacle:
+		m_bNavigationObstacleStatic = _value;
+		if (_value)
+			m_bNavigationStatic = false;
 		break;
 	}
 
