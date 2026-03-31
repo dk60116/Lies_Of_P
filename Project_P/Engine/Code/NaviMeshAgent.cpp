@@ -36,6 +36,22 @@ namespace
 			g_vActiveNavigationAgents.erase(_agent);
 	}
 
+	_int GetCollisionWeightPriority(const CNaviMeshAgent::CollisionWeight _weight)
+	{
+		switch (_weight)
+		{
+		case CNaviMeshAgent::CollisionWeight::High:
+			return 2;
+
+		case CNaviMeshAgent::CollisionWeight::Default:
+			return 1;
+
+		case CNaviMeshAgent::CollisionWeight::Low:
+		default:
+			return 0;
+		}
+	}
+
 	_bool BuildLineWorldMatrix(const _vector& a, const _vector& b, _matrix& outWorld)
 	{
 		_vector delta = b - a;
@@ -92,6 +108,7 @@ CNaviMeshAgent::CNaviMeshAgent()
 	, m_bAlwaysLookAt(false)
 	, m_pLineMesh(nullptr)
 	, m_pLineMaterial(nullptr)
+	, m_eCollisionWeight(CollisionWeight::Default)
 {
 	m_strName = L"NaviMeshAgent";
 }
@@ -121,6 +138,7 @@ CComponent* CNaviMeshAgent::Clone() const
 	clone->m_fGroundSnapOffset = m_fGroundSnapOffset;
 	clone->m_bHasDestination = m_bHasDestination;
 	clone->m_bAlwaysLookAt = m_bAlwaysLookAt;
+	clone->m_eCollisionWeight = m_eCollisionWeight;
 	clone->m_bPathDirty = true;
 	return clone;
 }
@@ -643,6 +661,16 @@ const _int CNaviMeshAgent::GetPathPointCount() const
 	return static_cast<_int>(m_vPathPoints.size());
 }
 
+const CNaviMeshAgent::CollisionWeight CNaviMeshAgent::GetCollisionWeight() const
+{
+	return m_eCollisionWeight;
+}
+
+void CNaviMeshAgent::SetCollisionWeight(const CollisionWeight _weight)
+{
+	m_eCollisionWeight = _weight;
+}
+
 EngineAI::CNaviMesh* CNaviMeshAgent::ResolveNavigationMesh() const
 {
 	CScene* scene = m_pGameObject ? m_pGameObject->Get_Scene() : nullptr;
@@ -719,6 +747,17 @@ _float CNaviMeshAgent::GetWorldAgentHeight() const
 	return max(m_fAgentHeight * fabsf(scale.y), 0.05f);
 }
 
+_bool CNaviMeshAgent::IsActivelyMovingForCollision() const
+{
+	if (!m_bHasDestination || !m_bOnNavigation)
+		return false;
+
+	if (m_fMoveSpeed <= kAgentPositionEpsilon)
+		return false;
+
+	return m_bHasPath || m_bPathDirty;
+}
+
 vector3 CNaviMeshAgent::ComputeSeparationOffset(const vector3& _currentNavigationPosition) const
 {
 	if (!m_pGameObject || !Get_Enable() || !m_pGameObject->IsRecursiveActive())
@@ -726,6 +765,8 @@ vector3 CNaviMeshAgent::ComputeSeparationOffset(const vector3& _currentNavigatio
 
 	const _float selfRadius = GetWorldAgentRadius();
 	const _float selfHeight = GetWorldAgentHeight();
+	const _int selfCollisionPriority = GetCollisionWeightPriority(m_eCollisionWeight);
+	const _bool selfIsMoving = IsActivelyMovingForCollision();
 	vector3 separation = vector3::zero();
 	_uint overlapCount = 0u;
 
@@ -776,7 +817,28 @@ vector3 CNaviMeshAgent::ComputeSeparationOffset(const vector3& _currentNavigatio
 		if (penetration <= 0.f)
 			continue;
 
-		separation += pushDirection * (penetration * 0.5f);
+		const _int otherCollisionPriority = GetCollisionWeightPriority(other->GetCollisionWeight());
+		_float selfDisplacementShare = 0.5f;
+
+		if (selfCollisionPriority < otherCollisionPriority)
+		{
+			selfDisplacementShare = 1.f;
+		}
+		else if (selfCollisionPriority > otherCollisionPriority)
+		{
+			selfDisplacementShare = 0.f;
+		}
+		else
+		{
+			const _bool otherIsMoving = other->IsActivelyMovingForCollision();
+			if (selfIsMoving != otherIsMoving)
+				selfDisplacementShare = selfIsMoving ? 1.f : 0.f;
+		}
+
+		if (selfDisplacementShare <= 0.f)
+			continue;
+
+		separation += pushDirection * (penetration * selfDisplacementShare);
 		++overlapCount;
 	}
 

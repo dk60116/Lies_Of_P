@@ -2484,6 +2484,11 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 if (ImGui::DragFloat(("Ground Snap Offset##" + navId).c_str(), &groundSnapOffset, 0.001f, 0.f, 1.f, "%.3f"))
                     navMeshAgent->SetGroundSnapOffset(groundSnapOffset);
 
+                static const char* collisionWeightLabels[] = { "High", "Default", "Low" };
+                _int collisionWeight = static_cast<_int>(navMeshAgent->GetCollisionWeight());
+                if (ImGui::Combo(("Collision Weight##" + navId).c_str(), &collisionWeight, collisionWeightLabels, IM_ARRAYSIZE(collisionWeightLabels)))
+                    navMeshAgent->SetCollisionWeight(static_cast<CNaviMeshAgent::CollisionWeight>(collisionWeight));
+
                 vector3 destination = navMeshAgent->GetDestination();
                 _float destinationValues[3] = { destination.x, destination.y, destination.z };
                 if (ImGui::InputFloat3(("Destination##" + navId).c_str(), destinationValues))

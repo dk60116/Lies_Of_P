@@ -1575,6 +1575,7 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
             info.navAgentHeight = navMeshAgent->GetAgentHeight();
             info.navAgentCenter = navMeshAgent->GetAgentCenter();
             info.navAgentGroundSnapOffset = navMeshAgent->GetGroundSnapOffset();
+            info.navAgentCollisionWeight = static_cast<_int>(navMeshAgent->GetCollisionWeight());
         }
 
 		CRectTransform* rect = (*it)->GetComponent<CRectTransform>();
@@ -1910,6 +1911,7 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
                 navMeshAgent->SetAgentHeight(info.navAgentHeight);
                 navMeshAgent->SetAgentCenter(vector3(info.navAgentCenter.x, info.navAgentCenter.y, info.navAgentCenter.z));
                 navMeshAgent->SetGroundSnapOffset(info.navAgentGroundSnapOffset);
+                navMeshAgent->SetCollisionWeight(static_cast<CNaviMeshAgent::CollisionWeight>(std::clamp(info.navAgentCollisionWeight, 0, 2)));
             }
         }
 
@@ -2680,12 +2682,13 @@ vector<CScene::SCENENAVIGATIONINFO> CScene::Convert_NavigationInfos() const
 	for (const auto& [name, resource] : m_mResourceList)
 	{
 		EngineAI::CNaviMesh* navMesh = dynamic_cast<EngineAI::CNaviMesh*>(resource);
-		if (!navMesh || !navMesh->IsBuilt())
+		if (!navMesh)
 			continue;
 
 		SCENENAVIGATIONINFO info = {};
 		info.resourceName = name;
 		info.bakeOptions = navMesh->GetBakeOptions();
+		navMesh->ExportSerializedNavMesh(info.bakedNavMesh);
 		result.push_back(info);
 	}
 
@@ -2700,20 +2703,6 @@ void CScene::Bind_NavigationInfos(const vector<SCENENAVIGATIONINFO>& _infoList)
 {
 	if (_infoList.empty())
 		return;
-
-	const vector<EngineAI::CNaviMesh::MeshSource> meshSources = GatherNavigationStaticMeshSources(this);
-	_uint walkableMeshCount = 0;
-	for (const auto& meshSource : meshSources)
-	{
-		if (meshSource.walkable)
-			++walkableMeshCount;
-	}
-
-	if (walkableMeshCount == 0)
-	{
-		CDebug::LogError(L"Navigation mesh restore skipped - no walkable NavigationStatic meshes were found in the scene.");
-		return;
-	}
 
 	for (const SCENENAVIGATIONINFO& info : _infoList)
 	{
@@ -2746,12 +2735,10 @@ void CScene::Bind_NavigationInfos(const vector<SCENENAVIGATIONINFO>& _infoList)
 		}
 
 		navMesh->SetBakeOptions(info.bakeOptions);
-		if (FAILED(navMesh->BuildFromSources(meshSources)))
+		if (!info.bakedNavMesh.tiles.empty())
 		{
-			CDebug::LogError(L"Navigation mesh restore failed: " + info.resourceName);
-			if (createdNew)
-				Safe_Release(navMesh);
-			continue;
+			if (FAILED(navMesh->ImportSerializedNavMesh(info.bakedNavMesh)))
+				CDebug::LogError(L"Navigation mesh restore failed - baked data import failed: " + info.resourceName);
 		}
 
 		if (createdNew)

@@ -650,6 +650,69 @@ namespace
 		in.read(reinterpret_cast<char*>(&options.queryHalfExtents.z), sizeof(_float));
 		in.read(reinterpret_cast<char*>(&options.rasterizeObstacleMeshes), sizeof(_bool));
 	}
+
+	void WriteSceneSerializedNavMesh(ofstream& out, const EngineAI::CNaviMesh::SerializedNavMeshData& data)
+	{
+		const _bool hasBakedNavMesh = !data.tiles.empty();
+		out.write(reinterpret_cast<const char*>(&hasBakedNavMesh), sizeof(_bool));
+		if (!hasBakedNavMesh)
+			return;
+
+		out.write(reinterpret_cast<const char*>(&data.params), sizeof(dtNavMeshParams));
+
+		const _uint tileCount = static_cast<_uint>(data.tiles.size());
+		out.write(reinterpret_cast<const char*>(&tileCount), sizeof(_uint));
+
+		for (const auto& tile : data.tiles)
+		{
+			out.write(reinterpret_cast<const char*>(&tile.tileRef), sizeof(uint64_t));
+
+			const _uint tileDataSize = static_cast<_uint>(tile.data.size());
+			out.write(reinterpret_cast<const char*>(&tileDataSize), sizeof(_uint));
+			if (tileDataSize > 0)
+				out.write(reinterpret_cast<const char*>(tile.data.data()), tileDataSize);
+		}
+	}
+
+	void ReadSceneSerializedNavMesh(ifstream& in, const _uint version, EngineAI::CNaviMesh::SerializedNavMeshData& data)
+	{
+		data = {};
+
+		if (version < 2)
+			return;
+
+		_bool hasBakedNavMesh = false;
+		in.read(reinterpret_cast<char*>(&hasBakedNavMesh), sizeof(_bool));
+		if (!in || !hasBakedNavMesh)
+			return;
+
+		in.read(reinterpret_cast<char*>(&data.params), sizeof(dtNavMeshParams));
+
+		_uint tileCount = 0;
+		in.read(reinterpret_cast<char*>(&tileCount), sizeof(_uint));
+		if (!in)
+			return;
+
+		data.tiles.reserve(tileCount);
+		for (_uint tileIndex = 0; tileIndex < tileCount; ++tileIndex)
+		{
+			EngineAI::CNaviMesh::SerializedTileData tile = {};
+			in.read(reinterpret_cast<char*>(&tile.tileRef), sizeof(uint64_t));
+
+			_uint tileDataSize = 0;
+			in.read(reinterpret_cast<char*>(&tileDataSize), sizeof(_uint));
+			if (!in)
+				return;
+
+			tile.data.resize(tileDataSize);
+			if (tileDataSize > 0)
+				in.read(reinterpret_cast<char*>(tile.data.data()), tileDataSize);
+			if (!in)
+				return;
+
+			data.tiles.push_back(move(tile));
+		}
+	}
 }
 
 CResources::CResources()
@@ -1472,7 +1535,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 22;
+	const _uint version = 23;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -1613,6 +1676,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
             out.write(reinterpret_cast<const char*>(&info.navAgentHeight), sizeof(_float));
             out.write(reinterpret_cast<const char*>(&info.navAgentCenter), sizeof(_float3));
             out.write(reinterpret_cast<const char*>(&info.navAgentGroundSnapOffset), sizeof(_float));
+            out.write(reinterpret_cast<const char*>(&info.navAgentCollisionWeight), sizeof(_int));
         }
 
 		out.write(reinterpret_cast<const char*>(&info.horizontalLayoutGroupInfo.hasHorizontalLayoutGroup), sizeof(_bool));
@@ -1942,6 +2006,10 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
                 else
                     info.navAgentCenter = _float3(0.f, info.navAgentHeight * 0.5f, 0.f);
                 in.read(reinterpret_cast<char*>(&info.navAgentGroundSnapOffset), sizeof(_float));
+                if (version >= 23)
+                    in.read(reinterpret_cast<char*>(&info.navAgentCollisionWeight), sizeof(_int));
+                else
+                    info.navAgentCollisionWeight = 1;
             }
         }
 
@@ -2002,7 +2070,7 @@ HRESULT CResources::SaveSceneNavigationInfos(const wstring _filePath, const vect
 	}
 
 	const _uint magic = 0x4E415631;
-	const _uint version = 1;
+	const _uint version = 2;
 	const _uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -2012,6 +2080,7 @@ HRESULT CResources::SaveSceneNavigationInfos(const wstring _filePath, const vect
 	{
 		WriteBinaryWString(out, info.resourceName);
 		WriteSceneNavBakeOptions(out, info.bakeOptions);
+		WriteSceneSerializedNavMesh(out, info.bakedNavMesh);
 	}
 
 	out.close();
@@ -2035,7 +2104,7 @@ vector<CScene::SCENENAVIGATIONINFO> CResources::ReadSceneNavigationInfos(const w
 	in.read(reinterpret_cast<char*>(&version), sizeof(_uint));
 	in.read(reinterpret_cast<char*>(&count), sizeof(_uint));
 
-	if (!in || magic != 0x4E415631 || version != 1)
+	if (!in || magic != 0x4E415631 || version < 1 || version > 2)
 		return {};
 
 	resultInfo.reserve(count);
@@ -2044,6 +2113,7 @@ vector<CScene::SCENENAVIGATIONINFO> CResources::ReadSceneNavigationInfos(const w
 		CScene::SCENENAVIGATIONINFO info = {};
 		info.resourceName = ReadBinaryWString(in);
 		ReadSceneNavBakeOptions(in, info.bakeOptions);
+		ReadSceneSerializedNavMesh(in, version, info.bakedNavMesh);
 		if (!in)
 			return {};
 

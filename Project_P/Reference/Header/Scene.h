@@ -109,6 +109,7 @@ public:
         _float navAgentHeight = 2.f;
         _float3 navAgentCenter = { 0.f, 1.f, 0.f };
         _float navAgentGroundSnapOffset = 0.02f;
+        _int navAgentCollisionWeight = 1;
         _bool isRect = false;
         SCENERECTINFO rectInfo = {};
         HORIZONTALLAYOUTGROUPINFO horizontalLayoutGroupInfo = {};
@@ -131,6 +132,7 @@ public:
     {
         wstring resourceName = L"";
         EngineAI::CNaviMesh::NavBakeOptions bakeOptions = {};
+        EngineAI::CNaviMesh::SerializedNavMeshData bakedNavMesh = {};
     }SCENENAVIGATIONINFO;
 
 public:

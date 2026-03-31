@@ -57,6 +57,18 @@ public:
 		vector3 end = vector3::zero();
 	};
 
+	struct SerializedTileData
+	{
+		uint64_t tileRef = 0;
+		vector<uint8_t> data = {};
+	};
+
+	struct SerializedNavMeshData
+	{
+		dtNavMeshParams params = {};
+		vector<SerializedTileData> tiles = {};
+	};
+
 	struct PathNode
 	{
 		_uint polygonIndex = 0;
@@ -77,6 +89,8 @@ public:
 	int FindContainingPolygon(const vector3& _position);
 	void SetBakeOptions(const NavBakeOptions& _options);
 	const NavBakeOptions& GetBakeOptions() const;
+	bool ExportSerializedNavMesh(SerializedNavMeshData& _outData) const;
+	HRESULT ImportSerializedNavMesh(const SerializedNavMeshData& _data);
 	const _bool IsBuilt() const;
 	const vector<NaviPolygon>& GetPolygons() const;
 	const vector<BoundaryEdge>& GetBoundaryEdges() const;
@@ -86,6 +100,7 @@ public:
 
 private:
 	static CNaviMesh* Create();
+	HRESULT InitializeQuery();
 	void ReleaseNavigation();
 	void RebuildPolygonCache();
 	void ReleaseRenderMesh();

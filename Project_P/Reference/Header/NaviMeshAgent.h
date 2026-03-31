@@ -15,6 +15,9 @@ protected:
 	CNaviMeshAgent();
 	~CNaviMeshAgent();
 
+public:
+	enum class CollisionWeight { High, Default, Low };
+
 private:
 	static CNaviMeshAgent* Create();
 	CComponent* Clone() const override;
@@ -59,12 +62,16 @@ public:
 	const _int GetCurrentPolygonIndex() const;
 	const _int GetPathPointCount() const;
 
+	const CollisionWeight GetCollisionWeight() const;
+	void SetCollisionWeight(const CollisionWeight _weight);
+
 private:
 	EngineAI::CNaviMesh* ResolveNavigationMesh() const;
 	wstring BuildDefaultNavigationMeshResourceName() const;
 	vector3 GetNavigationBaseOffset() const;
 	_float GetWorldAgentRadius() const;
 	_float GetWorldAgentHeight() const;
+	_bool IsActivelyMovingForCollision() const;
 	vector3 ComputeSeparationOffset(const vector3& _currentNavigationPosition) const;
 	_bool SnapToNavigation(EngineAI::CNaviMesh* _navMesh, const vector3& _desiredPosition, vector3& _outPosition, _int* _outPolygonIndex = nullptr) const;
 	void RebuildPath(EngineAI::CNaviMesh* _navMesh, const vector3& _currentPosition, const vector3& _destinationOnNavigation);
@@ -92,6 +99,7 @@ private:
 	_bool m_bAlwaysLookAt;
 	class CMeshBuffer* m_pLineMesh;
 	class CMaterial* m_pLineMaterial;
+	CollisionWeight m_eCollisionWeight;
 };
 
 NS_END

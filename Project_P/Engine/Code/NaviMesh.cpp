@@ -642,19 +642,9 @@ HRESULT CNaviMesh::BuildFromSources(const vector<MeshSource>& _sources)
 		return E_FAIL;
 	}
 
-	m_pNavMeshQuery = dtAllocNavMeshQuery();
-	if (!m_pNavMeshQuery)
+	if (FAILED(InitializeQuery()))
 	{
 		ReleaseNavigation();
-		CDebug::LogError(L"Navigation build failed - dtAllocNavMeshQuery failed.");
-		return E_OUTOFMEMORY;
-	}
-
-	const int queryNodeCount = max(kMinQueryNodeCount, polyMesh->npolys * 16);
-	if (dtStatusFailed(m_pNavMeshQuery->init(m_pNavMesh, queryNodeCount)))
-	{
-		ReleaseNavigation();
-		CDebug::LogError(L"Navigation build failed - dtNavMeshQuery::init failed.");
 		return E_FAIL;
 	}
 
@@ -790,6 +780,106 @@ const CNaviMesh::NavBakeOptions& CNaviMesh::GetBakeOptions() const
 	return m_sBakeOptions;
 }
 
+bool CNaviMesh::ExportSerializedNavMesh(SerializedNavMeshData& _outData) const
+{
+	_outData = {};
+
+	if (!m_pNavMesh)
+		return false;
+
+	const dtNavMeshParams* params = m_pNavMesh->getParams();
+	if (!params)
+		return false;
+
+	_outData.params = *params;
+	const dtNavMesh* navMesh = m_pNavMesh;
+	_outData.tiles.reserve(navMesh->getMaxTiles());
+
+	for (int tileIndex = 0; tileIndex < navMesh->getMaxTiles(); ++tileIndex)
+	{
+		const dtMeshTile* tile = navMesh->getTile(tileIndex);
+		if (!tile || !tile->header || !tile->data || tile->dataSize <= 0)
+			continue;
+
+		SerializedTileData serializedTile = {};
+		serializedTile.tileRef = static_cast<uint64_t>(navMesh->getTileRef(tile));
+		serializedTile.data.assign(tile->data, tile->data + tile->dataSize);
+		_outData.tiles.push_back(move(serializedTile));
+	}
+
+	return !_outData.tiles.empty();
+}
+
+HRESULT CNaviMesh::ImportSerializedNavMesh(const SerializedNavMeshData& _data)
+{
+	ReleaseNavigation();
+
+	if (_data.tiles.empty())
+		return S_FALSE;
+
+	if (_data.params.maxTiles <= 0 || _data.params.maxPolys <= 0 || _data.params.tileWidth <= 0.f || _data.params.tileHeight <= 0.f)
+	{
+		CDebug::LogError(L"Navigation mesh restore failed - invalid serialized navmesh params.");
+		return E_INVALIDARG;
+	}
+
+	m_pNavMesh = dtAllocNavMesh();
+	if (!m_pNavMesh)
+	{
+		CDebug::LogError(L"Navigation mesh restore failed - dtAllocNavMesh failed.");
+		return E_OUTOFMEMORY;
+	}
+
+	if (dtStatusFailed(m_pNavMesh->init(&_data.params)))
+	{
+		dtFreeNavMesh(m_pNavMesh);
+		m_pNavMesh = nullptr;
+		CDebug::LogError(L"Navigation mesh restore failed - dtNavMesh::init failed.");
+		return E_FAIL;
+	}
+
+	for (const SerializedTileData& serializedTile : _data.tiles)
+	{
+		if (serializedTile.data.empty())
+		{
+			ReleaseNavigation();
+			CDebug::LogError(L"Navigation mesh restore failed - serialized tile data is empty.");
+			return E_FAIL;
+		}
+
+		unsigned char* tileData = static_cast<unsigned char*>(dtAlloc(serializedTile.data.size(), DT_ALLOC_PERM));
+		if (!tileData)
+		{
+			ReleaseNavigation();
+			CDebug::LogError(L"Navigation mesh restore failed - tile allocation failed.");
+			return E_OUTOFMEMORY;
+		}
+
+		memcpy(tileData, serializedTile.data.data(), serializedTile.data.size());
+
+		dtTileRef restoredTileRef = 0;
+		if (dtStatusFailed(m_pNavMesh->addTile(tileData, static_cast<int>(serializedTile.data.size()), DT_TILE_FREE_DATA, static_cast<dtTileRef>(serializedTile.tileRef), &restoredTileRef)))
+		{
+			dtFree(tileData);
+			ReleaseNavigation();
+			CDebug::LogError(L"Navigation mesh restore failed - dtNavMesh::addTile failed.");
+			return E_FAIL;
+		}
+	}
+
+	if (FAILED(InitializeQuery()))
+	{
+		ReleaseNavigation();
+		return E_FAIL;
+	}
+
+	RebuildPolygonCache();
+	if (FAILED(RebuildRenderMesh()))
+		CDebug::LogError(L"Navigation mesh overlay build failed after restore - the navmesh will still be usable for pathfinding.");
+
+	return S_OK;
+}
+
 const _bool CNaviMesh::IsBuilt() const
 {
 	return m_pNavMesh != nullptr && m_pNavMeshQuery != nullptr;
@@ -846,6 +936,55 @@ CNaviMesh* CNaviMesh::CreateRuntime(const wstring& _name)
 CNaviMesh* CNaviMesh::Create()
 {
 	return new CNaviMesh();
+}
+
+HRESULT CNaviMesh::InitializeQuery()
+{
+	if (!m_pNavMesh)
+		return E_FAIL;
+
+	if (m_pNavMeshQuery)
+	{
+		dtFreeNavMeshQuery(m_pNavMeshQuery);
+		m_pNavMeshQuery = nullptr;
+	}
+
+	m_pNavMeshQuery = dtAllocNavMeshQuery();
+	if (!m_pNavMeshQuery)
+	{
+		CDebug::LogError(L"Navigation query initialization failed - dtAllocNavMeshQuery failed.");
+		return E_OUTOFMEMORY;
+	}
+
+	int totalPolygonCount = 0;
+	const dtNavMesh* navMesh = m_pNavMesh;
+	for (int tileIndex = 0; tileIndex < navMesh->getMaxTiles(); ++tileIndex)
+	{
+		const dtMeshTile* tile = navMesh->getTile(tileIndex);
+		if (!tile || !tile->header)
+			continue;
+
+		totalPolygonCount += tile->header->polyCount;
+	}
+
+	if (totalPolygonCount <= 0)
+	{
+		dtFreeNavMeshQuery(m_pNavMeshQuery);
+		m_pNavMeshQuery = nullptr;
+		CDebug::LogError(L"Navigation query initialization failed - no polygons are available.");
+		return E_FAIL;
+	}
+
+	const int queryNodeCount = max(kMinQueryNodeCount, totalPolygonCount * 16);
+	if (dtStatusFailed(m_pNavMeshQuery->init(m_pNavMesh, queryNodeCount)))
+	{
+		dtFreeNavMeshQuery(m_pNavMeshQuery);
+		m_pNavMeshQuery = nullptr;
+		CDebug::LogError(L"Navigation query initialization failed - dtNavMeshQuery::init failed.");
+		return E_FAIL;
+	}
+
+	return S_OK;
 }
 
 void CNaviMesh::ReleaseNavigation()
