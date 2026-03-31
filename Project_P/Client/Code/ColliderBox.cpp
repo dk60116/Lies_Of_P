@@ -11,8 +11,9 @@ namespace
 
 		if (CRigidBody* rigidBody = _gameObject->GetComponent<CRigidBody>())
 		{
+			// Defer body rebuild to the engine's normal fixed-update pass.
+			// Rebuilding immediately here can re-enter Jolt while contact callbacks are running.
 			rigidBody->MarkBodyDirty();
-			rigidBody->FixedUpdate();
 		}
 	}
 }

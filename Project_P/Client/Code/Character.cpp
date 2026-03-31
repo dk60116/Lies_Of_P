@@ -71,6 +71,9 @@ void CCharacter::Die()
 
 	if (m_pAnimator)
 		m_pAnimator->SetBool(L"isDead", true);
+
+	m_pBodyCollider->SetEnable(false);
+	m_pNavAgent->SetEnable(false);
 }
 
 const _bool CCharacter::IsDead() const
