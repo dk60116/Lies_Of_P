@@ -110,34 +110,32 @@ namespace
 			(static_cast<UINT32>(color.a) << 24);
 	}
 
-	UINT32 PackFloatBits(const _float value)
-	{
-		UINT32 bits = 0;
-		memcpy(&bits, &value, sizeof(UINT32));
-		return bits;
-	}
-
 	struct UIImageBatchKey
 	{
 		CMeshBuffer* mesh = nullptr;
 		CTexture* texture = nullptr;
 		UINT32 color = 0;
-		CImage::FillMethod fillMethod = CImage::FillMethod::None;
-		_int fillOrigin = 0;
-		UINT32 fillClockwise = 0;
-		UINT32 fillAmountBits = 0;
 
 		bool operator==(const UIImageBatchKey& rhs) const
 		{
 			return mesh == rhs.mesh
 				&& texture == rhs.texture
-				&& color == rhs.color
-				&& fillMethod == rhs.fillMethod
-				&& fillOrigin == rhs.fillOrigin
-				&& fillClockwise == rhs.fillClockwise
-				&& fillAmountBits == rhs.fillAmountBits;
+				&& color == rhs.color;
 		}
 	};
+
+	struct UIImageBatchKeyHash
+	{
+		size_t operator()(const UIImageBatchKey& key) const
+		{
+			const size_t h1 = hash<void*>()(static_cast<void*>(key.mesh));
+			const size_t h2 = hash<void*>()(static_cast<void*>(key.texture));
+			const size_t h3 = hash<UINT32>()(key.color);
+			return h1 ^ (h2 << 1) ^ (h3 << 2);
+		}
+	};
+
+	constexpr _int kInvalidUIImageBatchGroupId = -1;
 
 	UIImageBatchKey BuildUIImageBatchKey(CImage* image)
 	{
@@ -148,11 +146,170 @@ namespace
 		key.mesh = image->Get_Mesh();
 		key.texture = image->GetTexture();
 		key.color = PackColorValue(image->GetColor());
-		key.fillMethod = image->Get_FillMethod();
-		key.fillOrigin = image->Get_FillOrigin();
-		key.fillClockwise = image->Get_FillClockwise() ? 1u : 0u;
-		key.fillAmountBits = PackFloatBits(image->GetFillAmount());
 		return key;
+	}
+
+	struct UIBatchDebugAggregate
+	{
+		_uint batches = 0u;
+		_uint instances = 0u;
+		_uint singleBatches = 0u;
+	};
+
+	struct UILayeredBatchEntry
+	{
+		UIImageBatchKey key = {};
+		vector<CImage*> images = {};
+	};
+
+	struct UIGroupedBatchEntry
+	{
+		UIImageBatchKey key = {};
+		vector<CImage*> images = {};
+	};
+
+	_bool HasUIImageBatchGroup(CImage* image)
+	{
+		return image && image->GetGroupID() >= 0;
+	}
+
+	wstring BuildUIImageDebugKeyLabel(CImage* image)
+	{
+		if (!image)
+			return L"<Null Image>";
+
+		wstring label = L"Tex=";
+		if (CTexture* texture = image->GetTexture())
+			label += texture->Get_ResourceName();
+		else
+			label += L"<None>";
+
+		const ColorValue color = image->GetColor();
+		label += L" | RGBA(";
+		label += to_wstring(static_cast<_uint>(color.r));
+		label += L",";
+		label += to_wstring(static_cast<_uint>(color.g));
+		label += L",";
+		label += to_wstring(static_cast<_uint>(color.b));
+		label += L",";
+		label += to_wstring(static_cast<_uint>(color.a));
+		label += L")";
+
+		if (HasUIImageBatchGroup(image))
+		{
+			label += L" | Group=";
+			label += to_wstring(static_cast<_int>(image->GetGroupID()));
+		}
+
+		if (image->HasBatchLayer())
+		{
+			label += L" | Layer=";
+			label += to_wstring(image->GetBatchLayer());
+		}
+
+		return label;
+	}
+
+	void RecordUIBatchDebugAggregate(
+		unordered_map<wstring, UIBatchDebugAggregate>& aggregates,
+		const vector<CImage*>& batch)
+	{
+		if (batch.empty())
+			return;
+
+		const wstring keyLabel = BuildUIImageDebugKeyLabel(batch.front());
+		UIBatchDebugAggregate& aggregate = aggregates[keyLabel];
+		aggregate.batches += 1u;
+		aggregate.instances += static_cast<_uint>(batch.size());
+		if (batch.size() == 1u)
+			aggregate.singleBatches += 1u;
+	}
+
+	void FinalizeUIBatchDebugEntries(
+		CCamera::RenderStats& stats,
+		const unordered_map<wstring, UIBatchDebugAggregate>& aggregates)
+	{
+		stats.uiTopImageBatchEntries.clear();
+		stats.uiTopImageBatchEntries.reserve(min<size_t>(aggregates.size(), 8u));
+
+		for (const auto& [keyLabel, aggregate] : aggregates)
+		{
+			CCamera::RenderStats::UIBatchDebugEntry entry = {};
+			entry.keyLabel = keyLabel;
+			entry.batches = aggregate.batches;
+			entry.instances = aggregate.instances;
+			entry.singleBatches = aggregate.singleBatches;
+			stats.uiTopImageBatchEntries.push_back(entry);
+		}
+
+		sort(
+			stats.uiTopImageBatchEntries.begin(),
+			stats.uiTopImageBatchEntries.end(),
+			[](const CCamera::RenderStats::UIBatchDebugEntry& lhs, const CCamera::RenderStats::UIBatchDebugEntry& rhs)
+			{
+				if (lhs.batches != rhs.batches)
+					return lhs.batches > rhs.batches;
+				if (lhs.instances != rhs.instances)
+					return lhs.instances > rhs.instances;
+				if (lhs.singleBatches != rhs.singleBatches)
+					return lhs.singleBatches > rhs.singleBatches;
+				return lhs.keyLabel < rhs.keyLabel;
+			});
+
+		if (stats.uiTopImageBatchEntries.size() > 8u)
+			stats.uiTopImageBatchEntries.resize(8u);
+	}
+
+	void QueueLayeredUIImage(
+		map<_int, vector<UILayeredBatchEntry>>& layeredBatches,
+		CImage* image)
+	{
+		if (!image)
+			return;
+
+		const _int layer = image->GetBatchLayer();
+		vector<UILayeredBatchEntry>& layerEntries = layeredBatches[layer];
+		const UIImageBatchKey key = BuildUIImageBatchKey(image);
+
+		for (UILayeredBatchEntry& entry : layerEntries)
+		{
+			if (entry.key == key)
+			{
+				entry.images.push_back(image);
+				return;
+			}
+		}
+
+		UILayeredBatchEntry newEntry = {};
+		newEntry.key = key;
+		newEntry.images.push_back(image);
+		layerEntries.push_back(newEntry);
+	}
+
+	void QueueGroupedUIImage(
+		map<_int, vector<UIGroupedBatchEntry>>& groupedBatches,
+		CImage* image)
+	{
+		if (!image)
+			return;
+
+		const _int groupId = image->GetGroupID();
+		vector<UIGroupedBatchEntry>& groupEntries = groupedBatches[groupId];
+		const UIImageBatchKey key = BuildUIImageBatchKey(image);
+
+		for (UIGroupedBatchEntry& entry : groupEntries)
+		{
+			if (entry.key == key)
+			{
+				entry.images.push_back(image);
+				return;
+			}
+		}
+
+		UIGroupedBatchEntry newEntry = {};
+		newEntry.key = key;
+		newEntry.images.push_back(image);
+		groupEntries.push_back(newEntry);
 	}
 
 	void BindUIInstanceBuffer(ID3D11DeviceContext* context, ID3D11Buffer* instanceBuffer, const vector<CImage*>& images)
@@ -170,11 +327,18 @@ namespace
 				continue;
 
 			cb.worlds[i] = XMMatrixTranspose(image->GetTransform()->Get_WorldMatrix());
+			cb.fillParams[i] = _float4(
+				image->GetFillAmount(),
+				static_cast<_float>(image->Get_FillMethod()),
+				static_cast<_float>(image->Get_FillOrigin()),
+				image->Get_FillClockwise() ? 1.f : 0.f
+			);
 		}
 
 		cb.instanceCount = static_cast<_uint>(count);
 		context->UpdateSubresource(instanceBuffer, 0, nullptr, &cb, 0, 0);
 		context->VSSetConstantBuffers(4, 1, &instanceBuffer);
+		context->PSSetConstantBuffers(4, 1, &instanceBuffer);
 	}
 
 	void BindUIInstanceBufferEmpty(ID3D11DeviceContext* context, ID3D11Buffer* instanceBuffer)
@@ -185,6 +349,7 @@ namespace
 		InstanceCB cb = {};
 		context->UpdateSubresource(instanceBuffer, 0, nullptr, &cb, 0, 0);
 		context->VSSetConstantBuffers(4, 1, &instanceBuffer);
+		context->PSSetConstantBuffers(4, 1, &instanceBuffer);
 	}
 }
 const ColorValue CCamera::s_vDefaultCameraColor = ColorValue(49, 77, 121, 255);
@@ -1298,6 +1463,10 @@ void CCamera::RenderUI()
 	BindUIInstanceBufferEmpty(context, m_pUIInstanceBuffer);
 
 	vector<CImage*> imageBatch = {};
+	vector<CImage*> deferredImages = {};
+	map<_int, vector<UIGroupedBatchEntry>> groupedImageBatches = {};
+	map<_int, vector<UILayeredBatchEntry>> layeredImageBatches = {};
+	unordered_map<wstring, UIBatchDebugAggregate> uiBatchAggregates = {};
 	UIImageBatchKey batchKey = {};
 	_bool hasBatchKey = false;
 
@@ -1313,32 +1482,101 @@ void CCamera::RenderUI()
 		img->Bind_Mesh();
 	};
 
-	auto flushImageBatch = [&]()
+	auto renderBatch = [&](const vector<CImage*>& batch)
 	{
-		if (imageBatch.empty())
+		if (batch.empty())
 			return;
 
-		m_sRenderStats.uiImageBatches += 1u;
-		m_sRenderStats.uiImageInstances += static_cast<_uint>(imageBatch.size());
+		for (size_t offset = 0; offset < batch.size(); offset += 128u)
+		{
+			vector<CImage*> chunk = {};
+			chunk.reserve(min<size_t>(batch.size() - offset, 128u));
 
-		if (imageBatch.size() == 1)
-		{
-			renderSingleImage(imageBatch.front());
-		}
-		else
-		{
-			CImage* leader = imageBatch.front();
-			BindUIInstanceBuffer(context, m_pUIInstanceBuffer, imageBatch);
+			for (size_t i = offset; i < batch.size() && chunk.size() < 128u; ++i)
+				chunk.push_back(batch[i]);
+
+			if (chunk.empty())
+				continue;
+
+			m_sRenderStats.uiImageBatches += 1u;
+			m_sRenderStats.uiImageInstances += static_cast<_uint>(chunk.size());
+			RecordUIBatchDebugAggregate(uiBatchAggregates, chunk);
+
+			if (chunk.size() == 1u)
+			{
+				m_sRenderStats.uiImageSingleBatches += 1u;
+				renderSingleImage(chunk.front());
+				continue;
+			}
+
+			CImage* leader = chunk.front();
+			BindUIInstanceBuffer(context, m_pUIInstanceBuffer, chunk);
 			leader->Bind_UIMaterial();
 			leader->Bind_Matrix();
 			leader->Bind_Camera(inverseMat, projMat);
 			if (CMeshBuffer* mesh = leader->Get_Mesh())
-				mesh->Render_Instanced(static_cast<_uint>(imageBatch.size()));
+				mesh->Render_Instanced(static_cast<_uint>(chunk.size()));
 			BindUIInstanceBufferEmpty(context, m_pUIInstanceBuffer);
 		}
+	};
 
+	auto flushImageBatch = [&]()
+	{
+		renderBatch(imageBatch);
 		imageBatch.clear();
 		hasBatchKey = false;
+
+		if (!deferredImages.empty())
+		{
+			UIImageBatchKey dKey = {};
+			_bool hasDKey = false;
+			vector<CImage*> dBatch;
+
+			for (CImage* dImg : deferredImages)
+			{
+				UIImageBatchKey nextDKey = BuildUIImageBatchKey(dImg);
+				if (!hasDKey || !(dKey == nextDKey) || dBatch.size() >= 128)
+				{
+					renderBatch(dBatch);
+					dBatch.clear();
+					dKey = nextDKey;
+					hasDKey = true;
+				}
+				dBatch.push_back(dImg);
+			}
+			renderBatch(dBatch);
+			dBatch.clear();
+			deferredImages.clear();
+		}
+	};
+
+	auto flushLayeredImageBatches = [&]()
+	{
+		if (layeredImageBatches.empty())
+			return;
+
+		flushImageBatch();
+
+		for (auto& layerEntryPair : layeredImageBatches)
+		{
+			vector<UILayeredBatchEntry>& entries = layerEntryPair.second;
+			for (UILayeredBatchEntry& entry : entries)
+				renderBatch(entry.images);
+		}
+
+		layeredImageBatches.clear();
+	};
+
+	auto renderGroupedImageBatches = [&]()
+	{
+		for (auto& groupedEntryPair : groupedImageBatches)
+		{
+			vector<UIGroupedBatchEntry>& entries = groupedEntryPair.second;
+			for (UIGroupedBatchEntry& entry : entries)
+				renderBatch(entry.images);
+		}
+
+		groupedImageBatches.clear();
 	};
 
 	for (TRAVERSAL_ITER(m_vUIList, it))
@@ -1349,7 +1587,45 @@ void CCamera::RenderUI()
 
 		if (CImage* img = dynamic_cast<CImage*>(ui))
 		{
+			const _bool hasFill = img->Get_FillMethod() != CImage::FillMethod::None;
+
+			if (hasFill && img->GetFillAmount() <= 0.f)
+			{
+				m_sRenderStats.uiImageZeroFillSkipped += 1u;
+				continue;
+			}
+
+			if (hasFill && img->GetFillAmount() < 1.f)
+				m_sRenderStats.uiImagePartialFillImages += 1u;
+
+			if (HasUIImageBatchGroup(img))
+			{
+				flushLayeredImageBatches();
+				flushImageBatch();
+				QueueGroupedUIImage(groupedImageBatches, img);
+				continue;
+			}
+
+			if (img->HasBatchLayer())
+			{
+				flushImageBatch();
+				QueueLayeredUIImage(layeredImageBatches, img);
+				continue;
+			}
+
+			if (!layeredImageBatches.empty())
+				flushLayeredImageBatches();
+
 			const UIImageBatchKey nextKey = BuildUIImageBatchKey(img);
+
+			if (hasFill && img->GetFillAmount() >= 1.f
+				&& hasBatchKey && !(batchKey == nextKey))
+			{
+				m_sRenderStats.uiImageDeferredFullFillImages += 1u;
+				deferredImages.push_back(img);
+				continue;
+			}
+
 			if (!hasBatchKey || !(batchKey == nextKey) || imageBatch.size() >= 128)
 			{
 				flushImageBatch();
@@ -1361,13 +1637,19 @@ void CCamera::RenderUI()
 			continue;
 		}
 
+		if (!imageBatch.empty() || !deferredImages.empty() || !layeredImageBatches.empty())
+			m_sRenderStats.uiTextFlushes += 1u;
+		flushLayeredImageBatches();
 		flushImageBatch();
 
 		if (CText* txt = dynamic_cast<CText*>(ui))
 			txt->RenderText();
 	}
 
+	flushLayeredImageBatches();
 	flushImageBatch();
+	renderGroupedImageBatches();
+	FinalizeUIBatchDebugEntries(m_sRenderStats, uiBatchAggregates);
 
 	m_vUIList.clear();
 }
@@ -1386,6 +1668,10 @@ void CCamera::RenderUI_Editor()
 	BindUIInstanceBufferEmpty(context, m_pUIInstanceBuffer);
 
 	vector<CImage*> imageBatch = {};
+	vector<CImage*> deferredImages = {};
+	map<_int, vector<UIGroupedBatchEntry>> groupedImageBatches = {};
+	map<_int, vector<UILayeredBatchEntry>> layeredImageBatches = {};
+	unordered_map<wstring, UIBatchDebugAggregate> uiBatchAggregates = {};
 	UIImageBatchKey batchKey = {};
 	_bool hasBatchKey = false;
 
@@ -1401,32 +1687,101 @@ void CCamera::RenderUI_Editor()
 		img->Bind_Mesh();
 	};
 
-	auto flushImageBatch = [&]()
+	auto renderBatch = [&](const vector<CImage*>& batch)
 	{
-		if (imageBatch.empty())
+		if (batch.empty())
 			return;
 
-		m_sRenderStats.uiImageBatches += 1u;
-		m_sRenderStats.uiImageInstances += static_cast<_uint>(imageBatch.size());
+		for (size_t offset = 0; offset < batch.size(); offset += 128u)
+		{
+			vector<CImage*> chunk = {};
+			chunk.reserve(min<size_t>(batch.size() - offset, 128u));
 
-		if (imageBatch.size() == 1)
-		{
-			renderSingleImage(imageBatch.front());
-		}
-		else
-		{
-			CImage* leader = imageBatch.front();
-			BindUIInstanceBuffer(context, m_pUIInstanceBuffer, imageBatch);
+			for (size_t i = offset; i < batch.size() && chunk.size() < 128u; ++i)
+				chunk.push_back(batch[i]);
+
+			if (chunk.empty())
+				continue;
+
+			m_sRenderStats.uiImageBatches += 1u;
+			m_sRenderStats.uiImageInstances += static_cast<_uint>(chunk.size());
+			RecordUIBatchDebugAggregate(uiBatchAggregates, chunk);
+
+			if (chunk.size() == 1u)
+			{
+				m_sRenderStats.uiImageSingleBatches += 1u;
+				renderSingleImage(chunk.front());
+				continue;
+			}
+
+			CImage* leader = chunk.front();
+			BindUIInstanceBuffer(context, m_pUIInstanceBuffer, chunk);
 			leader->Bind_UIMaterial();
 			leader->Bind_Matrix();
 			leader->Bind_Camera(viewMat, projMat);
 			if (CMeshBuffer* mesh = leader->Get_Mesh())
-				mesh->Render_Instanced(static_cast<_uint>(imageBatch.size()));
+				mesh->Render_Instanced(static_cast<_uint>(chunk.size()));
 			BindUIInstanceBufferEmpty(context, m_pUIInstanceBuffer);
 		}
+	};
 
+	auto flushImageBatch = [&]()
+	{
+		renderBatch(imageBatch);
 		imageBatch.clear();
 		hasBatchKey = false;
+
+		if (!deferredImages.empty())
+		{
+			UIImageBatchKey dKey = {};
+			_bool hasDKey = false;
+			vector<CImage*> dBatch;
+
+			for (CImage* dImg : deferredImages)
+			{
+				UIImageBatchKey nextDKey = BuildUIImageBatchKey(dImg);
+				if (!hasDKey || !(dKey == nextDKey) || dBatch.size() >= 128)
+				{
+					renderBatch(dBatch);
+					dBatch.clear();
+					dKey = nextDKey;
+					hasDKey = true;
+				}
+				dBatch.push_back(dImg);
+			}
+			renderBatch(dBatch);
+			dBatch.clear();
+			deferredImages.clear();
+		}
+	};
+
+	auto flushLayeredImageBatches = [&]()
+	{
+		if (layeredImageBatches.empty())
+			return;
+
+		flushImageBatch();
+
+		for (auto& layerEntryPair : layeredImageBatches)
+		{
+			vector<UILayeredBatchEntry>& entries = layerEntryPair.second;
+			for (UILayeredBatchEntry& entry : entries)
+				renderBatch(entry.images);
+		}
+
+		layeredImageBatches.clear();
+	};
+
+	auto renderGroupedImageBatches = [&]()
+	{
+		for (auto& groupedEntryPair : groupedImageBatches)
+		{
+			vector<UIGroupedBatchEntry>& entries = groupedEntryPair.second;
+			for (UIGroupedBatchEntry& entry : entries)
+				renderBatch(entry.images);
+		}
+
+		groupedImageBatches.clear();
 	};
 
 	for (TRAVERSAL_ITER(m_vUIList, it))
@@ -1437,7 +1792,45 @@ void CCamera::RenderUI_Editor()
 
 		if (CImage* img = dynamic_cast<CImage*>(ui))
 		{
+			const _bool hasFill = img->Get_FillMethod() != CImage::FillMethod::None;
+
+			if (hasFill && img->GetFillAmount() <= 0.f)
+			{
+				m_sRenderStats.uiImageZeroFillSkipped += 1u;
+				continue;
+			}
+
+			if (hasFill && img->GetFillAmount() < 1.f)
+				m_sRenderStats.uiImagePartialFillImages += 1u;
+
+			if (HasUIImageBatchGroup(img))
+			{
+				flushLayeredImageBatches();
+				flushImageBatch();
+				QueueGroupedUIImage(groupedImageBatches, img);
+				continue;
+			}
+
+			if (img->HasBatchLayer())
+			{
+				flushImageBatch();
+				QueueLayeredUIImage(layeredImageBatches, img);
+				continue;
+			}
+
+			if (!layeredImageBatches.empty())
+				flushLayeredImageBatches();
+
 			const UIImageBatchKey nextKey = BuildUIImageBatchKey(img);
+
+			if (hasFill && img->GetFillAmount() >= 1.f
+				&& hasBatchKey && !(batchKey == nextKey))
+			{
+				m_sRenderStats.uiImageDeferredFullFillImages += 1u;
+				deferredImages.push_back(img);
+				continue;
+			}
+
 			if (!hasBatchKey || !(batchKey == nextKey) || imageBatch.size() >= 128)
 			{
 				flushImageBatch();
@@ -1449,6 +1842,9 @@ void CCamera::RenderUI_Editor()
 		}
 		else
 		{
+			if (!imageBatch.empty() || !deferredImages.empty() || !layeredImageBatches.empty())
+				m_sRenderStats.uiTextFlushes += 1u;
+			flushLayeredImageBatches();
 			flushImageBatch();
 
 			if (CText* txt = dynamic_cast<CText*>(ui))
@@ -1456,7 +1852,10 @@ void CCamera::RenderUI_Editor()
 		}
 	}
 
+	flushLayeredImageBatches();
 	flushImageBatch();
+	renderGroupedImageBatches();
+	FinalizeUIBatchDebugEntries(m_sRenderStats, uiBatchAggregates);
 
 	m_vUIList.clear();
 }

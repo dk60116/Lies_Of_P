@@ -723,7 +723,7 @@ void CTopToolBar::ShowGameStatusWindow()
 	if (!isOpen)
 		return;
 
-	ImGui::SetNextWindowSize(ImVec2(320.f, 180.f), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(520.f, 420.f), ImGuiCond_FirstUseEver);
 	if (!ImGui::Begin("Game Status", &isOpen, ImGuiWindowFlags_NoCollapse))
 	{
 		ImGui::End();
@@ -748,14 +748,44 @@ void CTopToolBar::ShowGameStatusWindow()
 	}
 
 	const CCamera::RenderStats& stats = camera->GetRenderStats();
+	const _float averageUIImageBatchSize = (stats.uiImageBatches > 0u)
+		? (static_cast<_float>(stats.uiImageInstances) / static_cast<_float>(stats.uiImageBatches))
+		: 0.f;
 	ImGui::Text("FPS: %d", CTime::GetInstance().Get_FPS());
 	ImGui::Text("Batches: %u", stats.batches);
 	ImGui::Text("Tris: %u", stats.tris);
 	ImGui::Text("Verts: %u", stats.verts);
 	ImGui::Text("UIImageBatches: %u", stats.uiImageBatches);
 	ImGui::Text("UIImageInstances: %u", stats.uiImageInstances);
+	ImGui::Text("UIImageAvgBatchSize: %.2f", averageUIImageBatchSize);
+	ImGui::Text("UISingleImageBatches: %u", stats.uiImageSingleBatches);
+	ImGui::Text("UIZeroFillSkipped: %u", stats.uiImageZeroFillSkipped);
+	ImGui::Text("UIPartialFillImages: %u", stats.uiImagePartialFillImages);
+	ImGui::Text("UIDeferredFullFill: %u", stats.uiImageDeferredFullFillImages);
+	ImGui::Text("UITextFlushes: %u", stats.uiTextFlushes);
 	ImGui::Text("Screen: %u x %u", screenWidth, screenHeight);
 	ImGui::Text("VisibleSkinnedMeshes: %u", stats.visibleSkinnedMeshes);
+
+	if (ImGui::CollapsingHeader("Top UI Batch Keys", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		if (stats.uiTopImageBatchEntries.empty())
+		{
+			ImGui::TextUnformatted("No UI image batches recorded this frame.");
+		}
+		else
+		{
+			for (const auto& entry : stats.uiTopImageBatchEntries)
+			{
+				const string keyLabel = CEngineString::WStringToString(entry.keyLabel);
+				ImGui::TextWrapped(
+					"%s | batches=%u instances=%u singles=%u",
+					keyLabel.c_str(),
+					entry.batches,
+					entry.instances,
+					entry.singleBatches);
+			}
+		}
+	}
 
 	ImGui::End();
 

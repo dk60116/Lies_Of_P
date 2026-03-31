@@ -28,6 +28,7 @@ CImage::CImage()
 	, m_fFillAmount(1.f)
 	, m_iFillOrigin(0)
 	, m_bFillClockwise(true)
+	, m_iBatchGroupId(-1)
 {
 	m_strName = L"Image";
 }
@@ -49,6 +50,7 @@ CComponent* CImage::Clone() const
 	clone->m_fFillAmount = this->m_fFillAmount;
 	clone->m_iFillOrigin = this->m_iFillOrigin;
 	clone->m_bFillClockwise = this->m_bFillClockwise;
+	clone->m_iBatchGroupId = this->m_iBatchGroupId;
 
 	if (this->m_pTexture)
 		clone->SetTexture(this->m_pTexture);
@@ -144,6 +146,16 @@ void CImage::Bind_UIMaterial()
 	};
 	m_pContext->UpdateSubresource(m_pImageBuffer, 0, nullptr, &imageValue, 0, 0);
 	m_pContext->PSSetConstantBuffers(3, 1, &m_pImageBuffer);
+}
+
+const _int CImage::GetGroupID() const
+{
+	return m_iBatchGroupId;
+}
+
+void CImage::SetGroupID(const _int _id)
+{
+	m_iBatchGroupId = max(-1, _id);
 }
 
 void CImage::SetTexture(CTexture* _texture)

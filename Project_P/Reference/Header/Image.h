@@ -81,6 +81,9 @@ public:
 	void SetFillAmount(_float _fill);
 
 	void Bind_UIMaterial();
+
+	const _int GetGroupID() const;
+	void SetGroupID(const _int _id);
 	
 public:
 	void SetTexture(CTexture* _texture);
@@ -96,6 +99,8 @@ private:
 	FillMethod m_eFillMethod;
 
 	ID3D11Buffer* m_pImageBuffer;
+
+	_int m_iBatchGroupId;
 };
 
 NS_END

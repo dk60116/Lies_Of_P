@@ -1,6 +1,19 @@
 #include "cpch.h"
 #include "PlayerHUD.h"
 
+namespace
+{
+	enum GaugeBatchGroupId : _int
+	{
+		BatchGroup_HP_BG = 200,
+		BatchGroup_HP_FILL,
+		BatchGroup_SH_BG,
+		BatchGroup_SH_FILL,
+		BatchGroup_BA_BG,
+		BatchGroup_BA_FILL
+	};
+}
+
 CPlayerHUD::CPlayerHUD()
 	: m_pPlayer(nullptr)
 	, m_pCanvas(nullptr)
@@ -271,6 +284,7 @@ void CPlayerHUD::CreateGauge_HP(CRectTransform* _parent)
 			CImage* hpRect = hpEmptyObj->AddComponent<CImage>();
 			hpRect->GetTransform()->SetParent(rect);
 			hpRect->SetTexture(emptyTex);
+			hpRect->SetGroupID(BatchGroup_HP_BG);
 			hpRect->GetRectTransform()->Set_WidthHeight(rectSize, rectSize);
 			set.bg.push_back(hpRect);
 
@@ -278,6 +292,7 @@ void CPlayerHUD::CreateGauge_HP(CRectTransform* _parent)
 			CImage* hpFullRect = hpFullObj->AddComponent<CImage>();
 			hpFullRect->GetTransform()->SetParent(hpRect->GetRectTransform());
 			hpFullRect->SetTexture(fullTex);
+			hpFullRect->SetGroupID(BatchGroup_HP_FILL);
 			hpFullRect->Set_FillMethod(CImage::FillMethod::Horizontal);
 			hpFullRect->GetRectTransform()->Set_WidthHeight(hpRect->GetRectTransform()->Get_WidthHeight());
 			set.fill.push_back(hpFullRect);
@@ -328,6 +343,7 @@ void CPlayerHUD::CreateGauge_SH(CRectTransform* _parent)
 				CImage* hpRect = hpEmptyObj->AddComponent<CImage>();
 				hpRect->GetTransform()->SetParent(rect);
 				hpRect->SetTexture(emptyTex);
+				hpRect->SetGroupID(BatchGroup_SH_BG);
 				hpRect->GetRectTransform()->Set_WidthHeight(rectSize, rectSize);
 				set.bg.push_back(hpRect);
 
@@ -335,6 +351,7 @@ void CPlayerHUD::CreateGauge_SH(CRectTransform* _parent)
 				CImage * hpFullRect = hpFullObj->AddComponent<CImage>();
 				hpFullRect->GetTransform()->SetParent(hpRect->GetRectTransform());
 				hpFullRect->SetTexture(fullTex);
+				hpFullRect->SetGroupID(BatchGroup_SH_FILL);
 				hpFullRect->SetColor(ColorValue(173, 209, 196));
 				hpFullRect->Set_FillMethod(CImage::FillMethod::Horizontal);
 				hpFullRect->GetRectTransform()->Set_WidthHeight(hpRect->GetRectTransform()->Get_WidthHeight());

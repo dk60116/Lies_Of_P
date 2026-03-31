@@ -10,6 +10,7 @@ CUI::CUI()
 	, m_pMaterial(nullptr)
 	, m_bIsCanvas(false)
 	, m_vColor(ColorValue::white())
+	, m_iBatchLayer(-1)
 {
 }
 
@@ -104,7 +105,7 @@ void CUI::Set_Mesh(CMeshBuffer* _mesh)
 	if (_mesh == m_pRectMesh)
 		return;
 
-	Safe_Release(m_pMaterial);
+	Safe_Release(m_pRectMesh);
 
 	m_pRectMesh = _mesh;
 
@@ -123,6 +124,11 @@ void CUI::Set_Material(CMaterial* _material)
 
 	if (m_pMaterial)
 		m_pMaterial->AddRef();
+}
+
+void CUI::SetBatchLayer(_int _layer)
+{
+	m_iBatchLayer = _layer;
 }
 
 void CUI::Bind_Mesh()
@@ -159,6 +165,16 @@ CCanvas* CUI::Get_Canvas() const
 ColorValue CUI::GetColor() const
 {
 	return m_vColor;
+}
+
+_int CUI::GetBatchLayer() const
+{
+	return m_iBatchLayer;
+}
+
+_bool CUI::HasBatchLayer() const
+{
+	return m_iBatchLayer >= 0;
 }
 
 void CUI::Set_Canvas(CCanvas* _canvas)

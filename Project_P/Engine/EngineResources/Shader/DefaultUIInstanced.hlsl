@@ -27,6 +27,7 @@ cbuffer PerFillAmount : register(b3)
 cbuffer PerInstance : register(b4)
 {
     float4x4 gInstanceWorlds[128];
+    float4 gInstanceFillParams[128];
     uint gInstanceCount;
     float3 gInstancePadding;
 }
@@ -41,6 +42,7 @@ struct VSOut
 {
     float4 posH : SV_POSITION;
     float2 uv : TEXCOORD0;
+    nointerpolation uint instanceID : TEXCOORD1;
 };
 
 Texture2D gTexture : register(t0);
@@ -158,6 +160,7 @@ VSOut VSMain(VSIn input, uint instanceID : SV_InstanceID)
     float4 viewPos = mul(worldPos, gView);
     output.posH = mul(viewPos, gProj);
     output.uv = input.uv;
+    output.instanceID = instanceID;
 
     return output;
 }
@@ -169,10 +172,14 @@ float4 PSMain(VSOut input) : SV_TARGET
     if (resultColor.a < 0.01f)
         discard;
 
-    const float fillAmount = saturate(gImageParams.x);
-    const uint fillMethod = (uint)round(gImageParams.y);
-    const uint fillOrigin = (uint)round(gImageParams.z);
-    const bool fillClockwise = (gImageParams.w >= 0.5f);
+    float4 fillData = gImageParams;
+    if (gInstanceCount > 0 && input.instanceID < gInstanceCount)
+        fillData = gInstanceFillParams[input.instanceID];
+
+    const float fillAmount = saturate(fillData.x);
+    const uint fillMethod = (uint)round(fillData.y);
+    const uint fillOrigin = (uint)round(fillData.z);
+    const bool fillClockwise = (fillData.w >= 0.5f);
 
     if (!ApplyFilledMask(input.uv, fillAmount, fillMethod, fillOrigin, fillClockwise))
         discard;

@@ -40,12 +40,26 @@ public:
 	enum class ViewMode { Perspective, Orthographic };
 	struct RenderStats
 	{
+		struct UIBatchDebugEntry
+		{
+			wstring keyLabel = L"";
+			_uint batches = 0u;
+			_uint instances = 0u;
+			_uint singleBatches = 0u;
+		};
+
 		_uint batches = 0u;
 		_uint tris = 0u;
 		_uint verts = 0u;
 		_uint visibleSkinnedMeshes = 0u;
 		_uint uiImageBatches = 0u;
 		_uint uiImageInstances = 0u;
+		_uint uiImageSingleBatches = 0u;
+		_uint uiImageZeroFillSkipped = 0u;
+		_uint uiImagePartialFillImages = 0u;
+		_uint uiImageDeferredFullFillImages = 0u;
+		_uint uiTextFlushes = 0u;
+		vector<UIBatchDebugEntry> uiTopImageBatchEntries = {};
 	};
 
 protected:

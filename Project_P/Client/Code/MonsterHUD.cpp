@@ -1,9 +1,20 @@
 #include "cpch.h"
 #include "MonsterHUD.h"
 #include "Monster.h"
+#include "PlayerHUD.h"
 
 namespace
 {
+	enum GaugeBatchGroupId : _int
+	{
+		BatchGroup_HP_BG = 100,
+		BatchGroup_HP_FILL,
+		BatchGroup_SH_BG,
+		BatchGroup_SH_FILL,
+		BatchGroup_BA_BG,
+		BatchGroup_BA_FILL
+	};
+
 	vector2 ToAnchoredPosition(const vector2& _screenPoint, const vector2& _resolution)
 	{
 		return vector2
@@ -16,6 +27,35 @@ namespace
 	_bool IsValidScreenPoint(const vector2& _screenPoint)
 	{
 		return _screenPoint.x > -FLT_MAX && _screenPoint.y > -FLT_MAX;
+	}
+
+	void AttachMonsterHUDUnderPlayerHUD(CTransform* monsterTransform)
+	{
+		if (!monsterTransform)
+			return;
+
+		CPlayerHUD* playerHUD = CGameManager::GetInstance().Get_PlayerHUD();
+		if (!playerHUD)
+			return;
+
+		CTransform* playerTransform = playerHUD->GetTransform();
+		if (!playerTransform)
+			return;
+
+		monsterTransform->SetParent(playerTransform);
+
+		CTransform* firstNonMonsterChild = nullptr;
+		for (CTransform* child : playerTransform->Get_ChldList())
+		{
+			if (!child || child == monsterTransform)
+				continue;
+
+			firstNonMonsterChild = child;
+			break;
+		}
+
+		if (firstNonMonsterChild)
+			playerTransform->InsertChildBefore(monsterTransform, firstNonMonsterChild);
 	}
 }
 
@@ -50,7 +90,7 @@ HRESULT CMonsterHUD::Initialize()
 {
 	m_pRect = m_pGameObject->AddComponent<CRectTransform>();
 
-	GetTransform()->SetParent(CGameManager::GetInstance().Get_PlayerHUD()->GetTransform());
+	AttachMonsterHUDUnderPlayerHUD(GetTransform());
 
 	m_pRect->Set_WidthHeight(90.f, m_sOption.rectSize * 3.f);
 
@@ -80,7 +120,7 @@ void CMonsterHUD::Update()
 	if (!m_pMonster || !m_pRect)
 		return;
 
-	if (m_pMonster->IsDead())
+	if (!m_pMonster->Get_GameObject()->IsActive() || m_pMonster->IsDead())
 	{
 		SetHUDVisible(false);
 		return;
@@ -175,6 +215,7 @@ void CMonsterHUD::CreateHPBar()
 			CImage* hpEmptyImg = hpEmptyObj->AddComponent<CImage>();
 			hpEmptyImg->GetTransform()->SetParent(hpRect);
 			hpEmptyImg->SetTexture(emptyTex);
+			hpEmptyImg->SetGroupID(BatchGroup_HP_BG);
 			hpEmptyImg->GetRectTransform()->Set_WidthHeight(rectSize, rectSize);
 			set.bg.push_back(hpEmptyImg);
 
@@ -182,6 +223,7 @@ void CMonsterHUD::CreateHPBar()
 			CImage* hpFullImg = hpFullObj->AddComponent<CImage>();
 			hpFullImg->GetTransform()->SetParent(hpEmptyImg->GetRectTransform());
 			hpFullImg->SetTexture(fullTex);
+			hpFullImg->SetGroupID(BatchGroup_HP_FILL);
 			hpFullImg->Set_FillMethod(CImage::FillMethod::Horizontal);
 			hpFullImg->GetRectTransform()->Set_WidthHeight(hpEmptyImg->GetRectTransform()->Get_WidthHeight());
 			set.fill.push_back(hpFullImg);
@@ -243,6 +285,7 @@ void CMonsterHUD::CreateSHBar()
 			CImage* shEmptyImg = shEmptyObj->AddComponent<CImage>();
 			shEmptyImg->GetTransform()->SetParent(shRect);
 			shEmptyImg->SetTexture(emptyTex);
+			shEmptyImg->SetGroupID(BatchGroup_SH_BG);
 			shEmptyImg->GetRectTransform()->Set_WidthHeight(rectSize, rectSize);
 			set.bg.push_back(shEmptyImg);
 
@@ -250,6 +293,7 @@ void CMonsterHUD::CreateSHBar()
 			CImage* shFullImg = shFullObj->AddComponent<CImage>();
 			shFullImg->GetTransform()->SetParent(shEmptyImg->GetRectTransform());
 			shFullImg->SetTexture(fullTex);
+			shFullImg->SetGroupID(BatchGroup_SH_FILL);
 			shFullImg->SetColor(ColorValue(173, 209, 196));
 			shFullImg->Set_FillMethod(CImage::FillMethod::Horizontal);
 			shFullImg->GetRectTransform()->Set_WidthHeight(shEmptyImg->GetRectTransform()->Get_WidthHeight());
@@ -305,6 +349,7 @@ void CMonsterHUD::CreateBABar()
 			CImage* baEmptyImg = baEmptyObj->AddComponent<CImage>();
 			baEmptyImg->GetTransform()->SetParent(baRect);
 			baEmptyImg->SetTexture(emptyTex);
+			baEmptyImg->SetGroupID(BatchGroup_BA_BG);
 			baEmptyImg->GetRectTransform()->Set_WidthHeight(rectSize, rectSize);
 			set.bg.push_back(baEmptyImg);
 
@@ -312,6 +357,7 @@ void CMonsterHUD::CreateBABar()
 			CImage* baFullImg = baFullObj->AddComponent<CImage>();
 			baFullImg->GetTransform()->SetParent(baEmptyImg->GetRectTransform());
 			baFullImg->SetTexture(fullTex);
+			baFullImg->SetGroupID(BatchGroup_BA_FILL);
 			baFullImg->SetColor(ColorValue(239, 255, 155));
 			baFullImg->Set_FillMethod(CImage::FillMethod::Horizontal);
 			baFullImg->GetRectTransform()->Set_WidthHeight(baEmptyImg->GetRectTransform()->Get_WidthHeight());

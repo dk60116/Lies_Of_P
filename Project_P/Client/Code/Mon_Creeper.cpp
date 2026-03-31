@@ -46,7 +46,7 @@ HRESULT CMon_Creeper::Initialize()
 
 	m_pNavAgent->SetAgentRadius(1.f);
 
-	m_sStatus.maxHp = 10000;
+	m_sStatus.maxHp = 1200;
 	m_sStatus.moveSpeed = 6.f;
 	m_sStatus.attackRange = 0.5f;
 	m_sStatus.attackPower = 80;

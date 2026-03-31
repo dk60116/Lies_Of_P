@@ -2669,6 +2669,15 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 _float fillAmount = image->GetFillAmount();
                 if (ImGui::SliderFloat(("Fill Amount##Image" + imageId).c_str(), &fillAmount, 0.f, 1.f, "%.3f"))
                     image->SetFillAmount(fillAmount);
+
+                _int batchGroupId = image->GetGroupID();
+                if (ImGui::InputInt(("Batch Group ID##Image" + imageId).c_str(), &batchGroupId))
+                    image->SetGroupID(batchGroupId);
+
+                ImGui::SameLine();
+                ImGui::TextDisabled("(-1 keeps order)");
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("Images with -1 keep their original draw order. Images with the same group ID >= 0 can be merged regardless of overlap order.");
             }
 
 			if (CHorizontalLayoutGroup* horizontalLayout = dynamic_cast<CHorizontalLayoutGroup*>(component))

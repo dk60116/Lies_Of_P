@@ -25,6 +25,7 @@ private:
 public:
 	void Set_Mesh(CMeshBuffer* _mesh);
 	void Set_Material(CMaterial* _material);
+	void SetBatchLayer(_int _layer);
 
 public:
 	void Bind_Mesh();
@@ -37,6 +38,8 @@ public:
 public:
 	CCanvas* Get_Canvas() const;
 	ColorValue GetColor() const;
+	_int GetBatchLayer() const;
+	_bool HasBatchLayer() const;
 	void SetColor(ColorValue _color);
 	void SetAlpha(const _float _value);
 
@@ -61,6 +64,7 @@ protected:
 
 protected:
 	ColorValue m_vColor;
+	_int m_iBatchLayer;
 };
 
 NS_END

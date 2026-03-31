@@ -1370,6 +1370,7 @@ namespace Engine
     struct InstanceCB
     {
         _matrix worlds[128];
+        _float4 fillParams[128];
         _uint instanceCount;
         _float3 padding;
     };
