@@ -75,6 +75,7 @@ public:
 	const TimeSettings& Get_TimeSetting();
 	const PhysicsSettings& Get_PhysicsSetting();
 	const LightSettings& Get_LightSetting();
+	static const _uint Get_ShadowMapSizeForQuality(const shadowQualityOptions option);
 	void Set_FixedTimeStep(const _float value);
 	void Set_TimeScale(const _float value);
 	void Set_PhysicsSettings(const PhysicsSettings& settings);

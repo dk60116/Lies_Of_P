@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git -C \"/c/Git/Lies_Of_P\" log --oneline -- \"Project_P/Client/Bin/BinaryAssets/SkinnedMeshData/Weapon_Eve_Sword.skinneddata\")"
+      "Bash(git -C \"/c/Git/Lies_Of_P\" log --oneline -- \"Project_P/Client/Bin/BinaryAssets/SkinnedMeshData/Weapon_Eve_Sword.skinneddata\")",
+      "Bash(find C:GitLies_Of_P -type f -name *shadow*)",
+      "Bash(xargs grep:*)",
+      "Bash(find C:GitLies_Of_PProject_P/Engine -type f -name *.h)",
+      "Bash(find C:GitLies_Of_PProject_P/Engine -type f -name *.cpp)",
+      "Bash(grep -rn \"ShadowMask\\\\|gShadowBias\\\\|gShadowInvMapSize\" C:GitLies_Of_PProject_P/Engine --include=*.h --include=*.cpp)",
+      "Bash(grep -rn \"struct ShadowCB\\\\|shadowViewProj\\\\|shadowBias\\\\|invShadowMapSize\\\\|lightSize\" C:GitLies_Of_PProject_P/Engine --include=*.h --include=*.cpp)",
+      "Bash(find C:GitLies_Of_PProject_P -type f \\\\\\(-name *.cso -o -name *.csh \\\\\\))",
+      "Bash(grep -E \"\\\\.\\(h|cpp\\)$\")"
     ]
   }
 }

@@ -6,6 +6,12 @@
 
 namespace
 {
+	static constexpr _uint kShadowMapSizeLow = 1024u;
+	static constexpr _uint kShadowMapSizeMiddle = 2048u;
+	static constexpr _uint kShadowMapSizeHigh = 4096u;
+	static constexpr _uint kShadowMapSizeSuperHigh = 5120u;
+	static constexpr _uint kShadowMapSizeUltra = 6144u;
+
 	static fs::path ResolveEngineSettingsPath(const _bool forSave)
 	{
 		const fs::path candidates[] =
@@ -394,6 +400,25 @@ const CSceneManager::LightSettings& CSceneManager::Get_LightSetting()
 	return m_sLightSetting;
 }
 
+const _uint CSceneManager::Get_ShadowMapSizeForQuality(const shadowQualityOptions option)
+{
+	switch (option)
+	{
+	case Low:
+		return kShadowMapSizeLow;
+	case Middle:
+		return kShadowMapSizeMiddle;
+	case High:
+		return kShadowMapSizeHigh;
+	case SuperHigh:
+		return kShadowMapSizeSuperHigh;
+	case Ultra:
+		return kShadowMapSizeUltra;
+	default:
+		return kShadowMapSizeHigh;
+	}
+}
+
 void CSceneManager::Set_FixedTimeStep(const _float value)
 {
 	_float newValue = value;
@@ -421,25 +446,8 @@ void CSceneManager::Set_PhysicsSettings(const PhysicsSettings& settings)
 void CSceneManager::Set_ShadowQuality(const shadowQualityOptions option)
 {
 	m_sLightSetting.shadowQuality = option;
-
-	switch (option)
-	{
-	case Low:
-		m_sLightSetting.shadowMapSize = 1024;
-		break;
-	case Middle:
-		m_sLightSetting.shadowMapSize = 2048;
-		break;
-	case High:
-		m_sLightSetting.shadowMapSize = 4096;
-		break;
-	case SuperHigh:
-		m_sLightSetting.shadowMapSize = 8192;
-		break;
-	case Ultra:
-		m_sLightSetting.shadowMapSize = 16384;
-		break;
-	}
+	// Keep top presets below 16K to avoid excessive VRAM pressure and fill-rate spikes.
+	m_sLightSetting.shadowMapSize = Get_ShadowMapSizeForQuality(option);
 
 	if (IsPlayMode())
 		CRenderTargetManager::GetInstance().RefreshShadowDepthTarget();

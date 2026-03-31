@@ -345,7 +345,9 @@ HRESULT CCamera::Initialize()
 	{
 		D3D11_RASTERIZER_DESC srs = {};
 		srs.FillMode = D3D11_FILL_SOLID;
-		srs.CullMode = D3D11_CULL_FRONT;
+		// Keep shadow casting two-sided so backface-culled render surfaces still
+		// participate in shadowing, while the depth test keeps the nearest blocker.
+		srs.CullMode = D3D11_CULL_NONE;
 		srs.FrontCounterClockwise = FALSE;
 		srs.DepthClipEnable = TRUE;
 		srs.DepthBias = 1000;
@@ -1883,6 +1885,8 @@ void CCamera::RenderLightingCombined(const D3D11_VIEWPORT* vp)
 		scb.invShadowMapSize = _float2(1.0f / shadowSize, 1.0f / shadowSize);
 		scb.bias = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().shadowBias;
 		scb.lightSize = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().softShadowLightSize;
+		vector3 lightDir = m_pMainLight->GetTransform()->Get_Directions().forward.normalized();
+		scb.lightDirWS = _float3(lightDir.x, lightDir.y, lightDir.z);
 	}
 	ctx->UpdateSubresource(m_pShadowCB, 0, nullptr, &scb, 0, 0);
 	ctx->PSSetConstantBuffers(6, 1, &m_pShadowCB);
@@ -2450,10 +2454,11 @@ void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 	}
 
 	ID3D11ShaderResourceView* srvSceneDepth = rtm.GetSRV(CRenderTarget::RTType::Depth, m_bIsEditor);
+	ID3D11ShaderResourceView* srvSceneNormal = rtm.GetSRV(CRenderTarget::RTType::Normal, m_bIsEditor);
 	ID3D11ShaderResourceView* srvShadowDepth = rtm.GetSRV(CRenderTarget::RTType::ShadowDepth, false);
 	CMaterial* shadowMaskMat = Find_RectMaterial(CRenderTarget::RTType::ShadowMask);
 
-	if (!srvSceneDepth || !srvShadowDepth || !shadowMaskMat || !m_pMainLight)
+	if (!srvSceneDepth || !srvSceneNormal || !srvShadowDepth || !shadowMaskMat || !m_pMainLight)
 	{
 		ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
 		if (prevVPCount > 0)
@@ -2515,6 +2520,8 @@ void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 
 	scb.bias = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().shadowBias;
 	scb.lightSize = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().softShadowLightSize;
+	vector3 lightDir = m_pMainLight->GetTransform()->Get_Directions().forward.normalized();
+	scb.lightDirWS = _float3(lightDir.x, lightDir.y, lightDir.z);
 
 	ctx->UpdateSubresource(m_pShadowCB, 0, nullptr, &scb, 0, 0);
 	ctx->PSSetConstantBuffers(6, 1, &m_pShadowCB);
@@ -2522,8 +2529,8 @@ void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 	shadowMaskMat->Bind_Matrix(w);
 	shadowMaskMat->Bind_Camera(camPos, v, p, 0);
 
-	ID3D11ShaderResourceView* srvs[2] = { srvSceneDepth, srvShadowDepth };
-	ctx->PSSetShaderResources(0, 2, srvs);
+	ID3D11ShaderResourceView* srvs[3] = { srvSceneDepth, srvSceneNormal, srvShadowDepth };
+	ctx->PSSetShaderResources(0, 3, srvs);
 
 	m_pRectBuffer->Render();
 

@@ -28,7 +28,9 @@ cbuffer ShadowCB : register(b6)
     float4x4 gShadowViewProj;
     float2 gShadowInvMapSize;
     float gShadowBias;
-    float _padShadow0;
+    float gLightSize;
+    float3 gShadowLightDir;
+    float _padShadow1;
 };
 
 Texture2D gAlbedo : register(t0);
@@ -135,9 +137,17 @@ float SampleShadowPCF(float2 uv, float receiverDepth)
     return sum / 9.0f;
 }
 
-float ComputeShadow(float3 posW)
+float ComputeShadow(float3 posW, float3 normalW)
 {
     if (gShadowInvMapSize.x <= 0.0f || gShadowInvMapSize.y <= 0.0f)
+        return 1.0f;
+
+    float3 lightDir = -gShadowLightDir;
+    if (dot(lightDir, lightDir) <= 1e-6f)
+        return 1.0f;
+
+    lightDir = normalize(lightDir);
+    if (dot(normalW, lightDir) <= 1e-6f)
         return 1.0f;
 
     float4 posL = mul(float4(posW, 1.0f), gShadowViewProj);
@@ -270,7 +280,7 @@ float4 PSMain(VSOut i) : SV_Target
     float3 ambientSpec = ambient * ambientF * specAmbientStrength * occulusion;
     float3 color = ambientDiffuse + ambientSpec + Lo;
 
-    float shadowF = ComputeShadow(posW);
+    float shadowF = ComputeShadow(posW, N);
     if (shadowF < 0.3f)
         shadowF = 0.0f;
 

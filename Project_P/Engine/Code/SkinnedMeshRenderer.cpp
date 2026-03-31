@@ -757,12 +757,6 @@ void CSkinnedMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const 
 	const _matrix matWorld = m_pGameObject->GetTransform()->GetSnapshotWorldMatrix();
 	const _matrix matView = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.view));
 	const _matrix matProj = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(&_shadowMatrix.proj));
-	const _bool isMirrored = CRenderer::IsMirroredWorldMatrix(matWorld);
-	ScopedRasterizerOverride mirroredRasterizer
-	(
-		m_pContext,
-		isMirrored ? CGraphicDevice::GetInstance().Get_Rasterizer_CullFrontMirrored() : nullptr
-	);
 
 	_uint boneCount = 0;
 	if (!TryUpdateSkinningCache(&boneCount))

@@ -1358,6 +1358,8 @@ namespace Engine
         _float2 invShadowMapSize;
         _float bias;
         _float lightSize;
+        _float3 lightDirWS;
+        _float shadowPadding0;
     };
 
     struct ImageCB

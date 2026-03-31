@@ -23,10 +23,13 @@ cbuffer ShadowCB : register(b6)
     float2 gShadowInvMapSize;
     float gShadowBias;
     float gLightSize;
+    float3 gShadowLightDir;
+    float _padShadow1;
 };
 
 Texture2D<float> gSceneDepth : register(t0);
-Texture2D<float> gShadowDepth : register(t1);
+Texture2D gNormal : register(t1);
+Texture2D<float> gShadowDepth : register(t2);
 SamplerState gSampler : register(s0);
 
 struct VSIn
@@ -49,6 +52,11 @@ VSOut VSMain(VSIn v)
     o.posH = mul(posV, proj);
     o.uv = v.uv;
     return o;
+}
+
+float3 DecodeNormal(float3 enc01)
+{
+    return normalize(enc01 * 2.0f - 1.0f);
 }
 
 static const float2 gPoissonDisk[16] =
@@ -132,6 +140,17 @@ float4 PSMain(VSOut i) : SV_Target
     float sceneDepth = gSceneDepth.SampleLevel(gSampler, uv, 0);
 
     if (sceneDepth >= 0.999999f)
+        return float4(1, 1, 1, 1);
+
+    float3 lightDir = -gShadowLightDir;
+    float lightLenSq = dot(lightDir, lightDir);
+    if (lightLenSq <= 1e-6f)
+        return float4(1, 1, 1, 1);
+
+    lightDir *= rsqrt(lightLenSq);
+
+    float3 N = DecodeNormal(gNormal.Sample(gSampler, uv).xyz);
+    if (dot(N, lightDir) <= 1e-6f)
         return float4(1, 1, 1, 1);
 
     float2 ndcXY = float2(

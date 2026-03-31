@@ -632,25 +632,8 @@ void CTopToolBar::ShowProjectSettingsLight()
 
 	ImGui::Combo("Shadow Quality", &m_iPendingShadowQuality, qualityNames, IM_ARRAYSIZE(qualityNames));
 
-	_uint shadowMapSize = 1024u;
-	switch (m_iPendingShadowQuality)
-	{
-	case static_cast<_int>(CSceneManager::shadowQualityOptions::Low):
-		shadowMapSize = 1024u;
-		break;
-	case static_cast<_int>(CSceneManager::shadowQualityOptions::Middle):
-		shadowMapSize = 2048u;
-		break;
-	case static_cast<_int>(CSceneManager::shadowQualityOptions::High):
-		shadowMapSize = 4096u;
-		break;
-	case static_cast<_int>(CSceneManager::shadowQualityOptions::SuperHigh):
-		shadowMapSize = 8192u;
-		break;
-	case static_cast<_int>(CSceneManager::shadowQualityOptions::Ultra):
-		shadowMapSize = 16384u;
-		break;
-	}
+	const _uint shadowMapSize = CSceneManager::Get_ShadowMapSizeForQuality(
+		static_cast<CSceneManager::shadowQualityOptions>(m_iPendingShadowQuality));
 
 	ImGui::Text("Shadow Map Size: %u", shadowMapSize);
 }

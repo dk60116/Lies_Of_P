@@ -190,12 +190,6 @@ void CMeshRenderer::Render_ShadowDepth(CMaterial* _shadowDepthMat, const CLight:
 
 	// World
 	_matrix matWorld = GetTransform()->GetSnapshotWorldMatrix();
-	const _bool isMirrored = CRenderer::IsMirroredWorldMatrix(matWorld);
-	ScopedRasterizerOverride mirroredRasterizer
-	(
-		m_pContext,
-		isMirrored ? CGraphicDevice::GetInstance().Get_Rasterizer_CullFrontMirrored() : nullptr
-	);
 
 	// Light View/Proj (shadow matrices)
 	_matrix matView = XMLoadFloat4x4(reinterpret_cast<const _float4x4*>(&_shadowMatrix.view));
