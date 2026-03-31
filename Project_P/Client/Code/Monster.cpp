@@ -1,7 +1,9 @@
 #include "cpch.h"
 #include "Monster.h"
 #include "MonsterController.h"
+#include "GameManager.h"
 #include "HurtBox.h"
+#include "Player.h"
 
 CMonster::CMonster()
 	: m_iCurrentState(0)
@@ -272,11 +274,19 @@ void CMonster::GetHitHandler(const HurtDescription& _hurtDesc)
 	{
 		if (CTransform* transform = GetTransform())
 		{
-			vector3 knockbackDir = _hurtDesc.forward;
+			vector3 knockbackDir = vector3::zero();
+
+			CPlayer* player = CGameManager::GetInstance().Get_Player();
+			if (player)
+			{
+				if (CTransform* playerTransform = player->GetTransform())
+					knockbackDir = transform->Get_Position() - playerTransform->Get_Position();
+			}
+
 			knockbackDir.y = 0.f;
 
 			if (knockbackDir.lengthSq() <= 0.0001f)
-				knockbackDir = transform->Get_Position() - _hurtDesc.position;
+				knockbackDir = _hurtDesc.forward;
 
 			knockbackDir.y = 0.f;
 
