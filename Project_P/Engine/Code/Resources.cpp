@@ -724,31 +724,74 @@ HRESULT CResources::ConvertFBXToMeshBufferData(const wstring _filePath)
 	const _bool hasMaterial = aiScene->HasMaterials();
 	using VTX = VertexTexNormalTangentBuffer;
 
-	vector<aiMatrix4x4> meshGlobalMats(aiScene->mNumMeshes, aiMatrix4x4());
+	struct StaticMeshNodeInstance
+	{
+		const aiMesh* mesh = nullptr;
+		aiNode* node = nullptr;
+		aiMatrix4x4 globalTransform = aiMatrix4x4();
+		_uint meshIndex = 0u;
+		_uint nodeMeshSlot = 0u;
+	};
 
-	function<void(aiNode*, const aiMatrix4x4&)> BuildMeshTransforms =
+	vector<StaticMeshNodeInstance> meshInstances = {};
+	meshInstances.reserve(aiScene->mNumMeshes);
+
+	function<void(aiNode*, const aiMatrix4x4&)> CollectMeshInstances =
 		[&](aiNode* node, const aiMatrix4x4& parentTrafo)
 		{
-			aiMatrix4x4 current = parentTrafo * node->mTransformation;
+			if (!node)
+				return;
+
+			const aiMatrix4x4 current = parentTrafo * node->mTransformation;
 			for (_uint mi = 0; mi < node->mNumMeshes; ++mi)
-				meshGlobalMats[node->mMeshes[mi]] = current;
+			{
+				const _uint meshIndex = node->mMeshes[mi];
+				if (meshIndex >= aiScene->mNumMeshes)
+					continue;
+
+				StaticMeshNodeInstance instance = {};
+				instance.mesh = aiScene->mMeshes[meshIndex];
+				instance.node = node;
+				instance.globalTransform = current;
+				instance.meshIndex = meshIndex;
+				instance.nodeMeshSlot = mi;
+				meshInstances.push_back(instance);
+			}
 
 			for (_uint ci = 0; ci < node->mNumChildren; ++ci)
-				BuildMeshTransforms(node->mChildren[ci], current);
+				CollectMeshInstances(node->mChildren[ci], current);
 		};
-	BuildMeshTransforms(aiScene->mRootNode, aiMatrix4x4());
+	CollectMeshInstances(aiScene->mRootNode, aiMatrix4x4());
 
 	vector<CMeshBuffer::MeshBufferInitiaizeInfo> bufferInfoList;
+	bufferInfoList.reserve(meshInstances.size());
+	unordered_map<wstring, _uint> meshNameCounts = {};
 
-	for (_uint i = 0; i < aiScene->mNumMeshes; ++i)
+	for (const StaticMeshNodeInstance& instance : meshInstances)
 	{
-		const aiMesh* mesh = aiScene->mMeshes[i];
-		const aiMatrix4x4& gMat = meshGlobalMats[i];
+		const aiMesh* mesh = instance.mesh;
+		if (!mesh)
+			continue;
+
+		const aiMatrix4x4& gMat = instance.globalTransform;
 		aiMatrix3x3 gMat3 = aiMatrix3x3(gMat).Inverse().Transpose();
 
 		CMeshBuffer::MeshBufferInitiaizeInfo info{};
-		info.meshName = CMeshBuffer::FindMeshName(aiScene, i);
 		info.sourceAssetPath = CEngineString::Replace(_filePath, L"\\", L"/");
+
+		wstring baseMeshName = {};
+		if (instance.node && instance.node->mName.length > 0)
+			baseMeshName = CEngineString::StringToWString(instance.node->mName.C_Str());
+		if (baseMeshName.empty() && mesh->mName.length > 0)
+			baseMeshName = CEngineString::StringToWString(mesh->mName.C_Str());
+		if (baseMeshName.empty())
+			baseMeshName = L"Mesh_" + to_wstring(instance.meshIndex);
+		if (instance.node && instance.node->mNumMeshes > 1)
+			baseMeshName += L"_" + to_wstring(instance.nodeMeshSlot);
+
+		_uint& meshNameCount = meshNameCounts[baseMeshName];
+		info.meshName = (meshNameCount == 0u) ? baseMeshName : (baseMeshName + L"_" + to_wstring(meshNameCount));
+		++meshNameCount;
 
 		vector<VTX>   vertices;
 		vector<_uint> indices;

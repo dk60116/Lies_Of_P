@@ -1,7 +1,7 @@
 SceneName : Game Scene
 SceneSkyBox : DefaultSky (SkyBox)
 SceneAmbient : 0.200000
-SceneDirectionalLightShadowDist : 200.000000
+SceneDirectionalLightShadowDist : 300.000000
 SceneShadowBias : 0.000000
 SceneSoftShadowLightSize : 5.000000
 // Eve Model
@@ -207,12 +207,11 @@ Building_14_Stage01_Building_14_00_Auto_1774900602716 : Map/Map01/Building_14/St
 Building_14_Stage01_Building_14_01_Auto_1774904385197 : Map/Map01/Building_14/Stage01_Building_14_01.fbx : [Mesh]
 Building_14_Stage01_Building_14_02_Auto_1774914770997 : Map/Map01/Building_14/Stage01_Building_14_02.fbx : [Mesh]
 Building_14_Stage01_Building_14_03_Auto_1774924566427 : Map/Map01/Building_14/Stage01_Building_14_03.fbx : [Mesh]
+Terapod_Terapod_Auto_1774979955083 : Map/Terapod/Terapod.fbx : [Mesh]
 003_B_SM_LOD0 : Map/Map01/Building_10/Stage01_Building_10_02.fbx : [Mesh] [Editor]
 004_Aa_SM_LOD0 : Map/Map01/Building_6/Stage01_Building_06_02.fbx : [Mesh] [Editor]
 004_B_SM_LOD0 : Map/Map01/Building_9/Stage01_Building_09_06.fbx : [Mesh] [Editor]
 004_E_SM_LOD0 : Map/Map01/Building_6/Stage01_Building_06_03.fbx : [Mesh] [Editor]
-InspectorTexture/004_G_TAoRM.png_14181584357347439914 : Map/Map01/Building_1/004_G_TAoRM.png : [Texture] [Editor]
-InspectorTexture/Stage01_Building_01_TD_0.png_16387449343324560354 : Map/Map01/Building_1/Stage01_Building_01_TD_0.png : [Texture] [Editor]
 SceneTexture/Building_0_004_C_TAoRM.dds_431109363440719641 : BinaryAssets/TextureData/Building_0_004_C_TAoRM.dds : [Texture] [Editor]
 SceneTexture/Building_0_Stage01_Building_00_TD_0.dds_18281719154232444330 : BinaryAssets/TextureData/Building_0_Stage01_Building_00_TD_0.dds : [Texture] [Editor]
 SceneTexture/Building_0_Stage01_Building_00_TD_1.dds_892922895400749697 : BinaryAssets/TextureData/Building_0_Stage01_Building_00_TD_1.dds : [Texture] [Editor]

@@ -2881,6 +2881,22 @@ CEngineResource* CScene::Add_TempResource(const wstring& _name, CEngineResource*
 
 void CScene::Add_MeshBundle(const wstring& _name, vector<MeshBundle> _resource)
 {
+	auto releaseBundles = [](vector<MeshBundle>& bundles)
+	{
+		for (MeshBundle& bundle : bundles)
+		{
+			Safe_Release(bundle.meshBuffer);
+			Safe_Release(bundle.material);
+			Safe_Release(bundle.texture);
+		}
+
+		bundles.clear();
+	};
+
+	auto existing = m_mMeshBundleList.find(_name);
+	if (existing != m_mMeshBundleList.end())
+		releaseBundles(existing->second);
+
 	for (TRAVERSAL_ITER(_resource, it))
 	{
 		if ((*it).meshBuffer)
@@ -2891,7 +2907,7 @@ void CScene::Add_MeshBundle(const wstring& _name, vector<MeshBundle> _resource)
 			(*it).texture->AddRef();
 	}
 
-	m_mMeshBundleList.emplace(_name, _resource);
+	m_mMeshBundleList[_name] = _resource;
 }
 
 void CScene::Add_SkinnedBundle(const wstring& _name, vector<SkinnedMeshBundle> _resource)
@@ -2911,6 +2927,22 @@ void CScene::Add_SkinnedBundle(const wstring& _name, vector<SkinnedMeshBundle> _
 
 void CScene::Add_TempMeshBundle(const wstring& _name, vector<MeshBundle> _resource)
 {
+	auto releaseBundles = [](vector<MeshBundle>& bundles)
+	{
+		for (MeshBundle& bundle : bundles)
+		{
+			Safe_Release(bundle.meshBuffer);
+			Safe_Release(bundle.material);
+			Safe_Release(bundle.texture);
+		}
+
+		bundles.clear();
+	};
+
+	auto existing = m_mTempMeshBundleList.find(_name);
+	if (existing != m_mTempMeshBundleList.end())
+		releaseBundles(existing->second);
+
 	for (TRAVERSAL_ITER(_resource, it))
 	{
 		if ((*it).meshBuffer)
@@ -2921,7 +2953,7 @@ void CScene::Add_TempMeshBundle(const wstring& _name, vector<MeshBundle> _resour
 			(*it).texture->AddRef();
 	}
 
-	m_mTempMeshBundleList.emplace(_name, _resource);
+	m_mTempMeshBundleList[_name] = _resource;
 }
 
 void CScene::Add_TempSkinnedBundle(const wstring& _name, vector<SkinnedMeshBundle> _resource)

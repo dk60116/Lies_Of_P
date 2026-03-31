@@ -972,11 +972,14 @@ static _bool RemoveSpecificMeshFilterComponent(CGameObject* obj, CMeshFilter* me
 }
 
 
-static vector<MeshBundle> EnsureSceneMeshBundles(const wstring& sceneMeshResourceName, const string& meshDataFile)
+static vector<MeshBundle> EnsureSceneMeshBundles(const wstring& sceneMeshResourceName, const string& meshDataFile, const _bool forceReload = false)
 {
-    vector<MeshBundle> bundles = CResources::GetInstance().LoadMeshBuffersOnScene(sceneMeshResourceName);
-    if (!bundles.empty())
-        return bundles;
+    if (!forceReload)
+    {
+        vector<MeshBundle> bundles = CResources::GetInstance().LoadMeshBuffersOnScene(sceneMeshResourceName);
+        if (!bundles.empty())
+            return bundles;
+    }
 
     vector<CMeshBuffer::MeshBufferInitiaizeInfo> meshInfos = CResources::GetInstance().ReadMeshBufferInfos(CEngineString::StringToWString(meshDataFile));
     if (meshInfos.empty())
@@ -997,6 +1000,22 @@ static vector<SkinnedMeshBundle> EnsureSceneSkinnedMeshBundles(const wstring& sc
         return {};
 
     return CResources::GetInstance().CreateSceneSkinnedBundle(sceneMeshResourceName, skinnedInfos.initList, skinnedInfos.skeletalList, FILTER_MESHBUFFER | FILTER_MATERIAL, nullptr, false);
+}
+
+static void ClearMeshRendererMaterialTextures(const vector<CMeshRenderer*>& renderers)
+{
+    for (CMeshRenderer* renderer : renderers)
+    {
+        if (!renderer)
+            continue;
+
+        CMaterial* material = renderer->Get_Material();
+        if (!material)
+            continue;
+
+        while (material->Get_TextureCount() > 0u)
+            material->Remove_Texture(static_cast<_int>(material->Get_TextureCount() - 1u));
+    }
 }
 
 static void ApplyMeshSelectionToObject(CGameObject* obj, CMeshFilter* meshFilter, const string& relPath, const _bool selectedMeshData)
@@ -1025,51 +1044,38 @@ static void ApplyMeshSelectionToObject(CGameObject* obj, CMeshFilter* meshFilter
 
     const string expectedMeshDataFile = sceneEntryName + ".meshdata";
     const fs::path expectedMeshDataPath = fs::path("BinaryAssets/MeshData") / expectedMeshDataFile;
-    const _bool meshDataExistsInitially = fs::exists(expectedMeshDataPath);
     const wstring sceneMeshResourceName = CEngineString::StringToWString(sceneEntryName + " (MeshBuffer)");
     // MeshFilter scale/rotation factors live on the selected mesh object's local transform.
     // Rebuilding the mesh hierarchy under this object should therefore use identity child scale.
     constexpr _float kReloadHierarchyScaleFactor = 1.f;
 
-    if (meshDataExistsInitially)
+    if (!selectedMeshData)
     {
-        vector<MeshBundle> bundles = EnsureSceneMeshBundles(sceneMeshResourceName, expectedMeshDataFile);
-        if (bundles.empty())
+        CResources::GetInstance().ConvertFBXToMeshBufferData(CEngineString::StringToWString(normalizedRelPath));
+
+        const string convertedBase = BuildMeshDataBaseName(normalizedRelPath);
+        const fs::path convertedMeshDataPath = fs::path("BinaryAssets/MeshData") / (convertedBase + ".meshdata");
+        if (!fs::exists(convertedMeshDataPath))
             return;
 
-        meshFilter->Set_MeshBuffer(nullptr);
-        RemoveFirstMeshRendererComponent(obj);
-        RemoveSpecificMeshFilterComponent(obj, meshFilter);
-        obj->CreateMeshHierachy(bundles, kReloadHierarchyScaleFactor);
-        return;
+        if (convertedMeshDataPath != expectedMeshDataPath)
+        {
+            error_code ec;
+            fs::copy_file(convertedMeshDataPath, expectedMeshDataPath, fs::copy_options::overwrite_existing, ec);
+            if (ec)
+                return;
+        }
     }
 
-    if (selectedMeshData)
-        return;
-
-    CResources::GetInstance().ConvertFBXToMeshBufferData(CEngineString::StringToWString(normalizedRelPath));
-
-    const string convertedBase = BuildMeshDataBaseName(normalizedRelPath);
-    const fs::path convertedMeshDataPath = fs::path("BinaryAssets/MeshData") / (convertedBase + ".meshdata");
-    if (!fs::exists(convertedMeshDataPath))
-        return;
-
-    if (convertedMeshDataPath != expectedMeshDataPath)
-    {
-        error_code ec;
-        fs::copy_file(convertedMeshDataPath, expectedMeshDataPath, fs::copy_options::overwrite_existing, ec);
-        if (ec)
-            return;
-    }
-
-    vector<MeshBundle> bundles = EnsureSceneMeshBundles(sceneMeshResourceName, expectedMeshDataFile);
+    vector<MeshBundle> bundles = EnsureSceneMeshBundles(sceneMeshResourceName, expectedMeshDataFile, !selectedMeshData);
     if (bundles.empty())
         return;
 
     meshFilter->Set_MeshBuffer(nullptr);
     RemoveFirstMeshRendererComponent(obj);
     RemoveSpecificMeshFilterComponent(obj, meshFilter);
-    obj->CreateMeshHierachy(bundles, kReloadHierarchyScaleFactor);
+    vector<CMeshRenderer*> renderers = obj->CreateMeshHierachy(bundles, kReloadHierarchyScaleFactor);
+    ClearMeshRendererMaterialTextures(renderers);
 }
 
 static void QueueMeshSelectionRequest(CGameObject* obj, CMeshFilter* meshFilter, const string& relPath, const _bool selectedMeshData)
