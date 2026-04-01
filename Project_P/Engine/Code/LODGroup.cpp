@@ -368,6 +368,11 @@ _uint CLODGroup::GetLODRendererCount(const _uint _index) const
 	return static_cast<_uint>(m_vLODLevels[_index].renderers.size());
 }
 
+void CLODGroup::EvaluateLODForCamera(CCamera* _camera)
+{
+	UpdateLODForCamera(_camera);
+}
+
 void CLODGroup::UpdateLODForCamera(CCamera* _camera)
 {
 	if (m_vLODLevels.empty())

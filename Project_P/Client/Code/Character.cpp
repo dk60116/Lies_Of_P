@@ -16,6 +16,7 @@ CCharacter::CCharacter()
 	, m_vHurtBoxInfoList({})
 	, m_vHitBoxInfoList({})
 	, m_mHurtBoxList({})
+	, m_mHitBoxList({})
 {
 }
 
@@ -74,6 +75,11 @@ void CCharacter::Die()
 
 	m_pBodyCollider->SetEnable(false);
 	m_pNavAgent->SetEnable(false);
+
+	for (TRAVERSAL_ITER(m_mHurtBoxList, it))
+		(*it).second->DisableBox();
+	for (TRAVERSAL_ITER(m_mHitBoxList, it))
+		(*it).second->DisableBox();
 }
 
 const _bool CCharacter::IsDead() const

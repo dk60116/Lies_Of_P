@@ -3075,6 +3075,16 @@ void CResources::Ready_GameResources()
 	}
 
 	{
+		CShader::SHADERDESC textureLODPreviewShaderDesc = { L"../EngineResources/Shader/TextureLODPreview.hlsl", L"", VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
+		LoadResourceComplete_Game<CShader>(L"TextureLODPreview (Shader)", L"", &textureLODPreviewShaderDesc);
+
+		CShader* textureLODPreviewShader = LoadOnGame<CShader>(L"TextureLODPreview (Shader)");
+		CMaterial::MATERIALDESC textureLODPreviewMatDesc = { textureLODPreviewShader, false, false };
+		textureLODPreviewMatDesc.customVector4Values.push_back({ L"gPreviewParams", {0.f, 1.f, 1.f, 0.f} });
+		LoadResourceComplete_Game<CMaterial>(L"TextureLODPreview (Material)", L"", &textureLODPreviewMatDesc);
+	}
+
+	{
 		CShader::SHADERDESC g_BufferCutoutLitShaderDesc = { L"../EngineResources/Shader/GbufferCutoutLit.hlsl", L"", VertexSkinnedBuffer::numElements, VertexSkinnedBuffer::elementDesc };
 		LoadResourceComplete_Game<CShader>(L"G_BufferCutoutLit (Shader)", L"", &g_BufferCutoutLitShaderDesc);
 

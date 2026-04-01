@@ -114,6 +114,11 @@ void CMeshRenderer::OnDestroy()
 
 void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 {
+	Render_WithCameraOverrideMaterial(_cam, nullptr);
+}
+
+void CMeshRenderer::Render_WithCameraOverrideMaterial(CCamera* _cam, CMaterial* _overrideMaterial)
+{
 	if (!_cam)
 	{
 		CDebug::LogError(L"MeshRenderer: No Camera assigned." + m_pGameObject->Get_ObjectNameID());
@@ -126,7 +131,8 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 		return;
 	}
 
-	if (!m_pMaterial)
+	CMaterial* renderMaterial = _overrideMaterial ? _overrideMaterial : m_pMaterial;
+	if (!renderMaterial)
 	{
 		CDebug::LogError(L"MeshRenderer: No material assigned: " + m_pGameObject->Get_ObjectNameID());
 		return;
@@ -140,7 +146,7 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 
 	// World / View / Projection  
 
-	if (m_pMaterial)
+	if (!_overrideMaterial && m_pMaterial)
 		m_pMaterial->Set_IntValue(L"gObjectID", m_pGameObject->Get_UniqueID());
 
 	vector3 cPos = _cam->GetTransform()->Get_Position();
@@ -156,8 +162,8 @@ void CMeshRenderer::Render_WithCamera(CCamera* _cam)
 	);
 
 	// ̴ + ؽó +   ε
-	m_pMaterial->Bind_Matrix(matWorld);
-	m_pMaterial->Bind_Camera(camPos, matView, matProj, 0);
+	renderMaterial->Bind_Matrix(matWorld);
+	renderMaterial->Bind_Camera(camPos, matView, matProj, 0);
 
 	Bind_InstanceBuffer(matWorld);
 	if (IsInstancingEnabled())

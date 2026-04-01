@@ -91,10 +91,15 @@ void CMainProcess::Update_MainApp()
 
 	if (scene)
 	{
-		scene->CollectCompletedRenderFrames();
-		scene->Update_Editor();
+		CSceneManager& sceneManager = CSceneManager::GetInstance();
+		CEditor& editor = CEditor::GetInstance();
+		const _bool hideEditorWhilePlaying = sceneManager.IsPlayMode() && editor.IsHideEditorWhilePlaying();
 
-		const _bool runSimulationFrame = CSceneManager::GetInstance().IsPlaying() || CSceneManager::GetInstance().ConsumeStepFrameRequest();
+		scene->CollectCompletedRenderFrames();
+		if (!hideEditorWhilePlaying)
+			scene->Update_Editor();
+
+		const _bool runSimulationFrame = sceneManager.IsPlaying() || sceneManager.ConsumeStepFrameRequest();
 		if (runSimulationFrame)
 		{
 			CPhysics::GetInstance().Tick(DELTA_TIME);
@@ -104,7 +109,8 @@ void CMainProcess::Update_MainApp()
 		}
 		else
 		{
-			scene->LateUpdateEditor();
+            if (!hideEditorWhilePlaying)
+			    scene->LateUpdate_Editor();
 		}
 
 		scene->EndFrame();
@@ -121,11 +127,26 @@ void CMainProcess::Update_MainApp()
 #ifndef _CLIENT_BUILD
 		CRenderThread::GetInstance().WaitIdle();
 		scene->CollectCompletedRenderFrames();
-		graphicDev.Set_RenderTarget(CEditor::GetInstance().Get_EditorWindow());
-		CEditor::GetInstance().Editor_Update_Begin();
-		CEditor::GetInstance().Editor_Update_During();
-		scene->Render_Editor();
-		CEditor::GetInstance().Editor_Update_End();
+		if (!sceneManager.IsPlayMode() && editor.IsHideEditorWhilePlaying())
+			editor.SetHideEditorWhilePlaying(false);
+
+		graphicDev.Set_RenderTarget(editor.Get_EditorWindow());
+		editor.Editor_Update_Begin();
+		editor.Editor_Update_During();
+		editor.Editor_Update_During();
+
+		if (sceneManager.IsPlayMode() && editor.IsHideEditorWhilePlaying())
+		{
+			const ColorValue clearColor = ColorValue::black();
+			graphicDev.Clear_BackBuffer_View(&clearColor);
+			graphicDev.Clear_DepthStencil_View();
+		}
+		else
+		{
+			scene->Render_Editor();
+		}
+
+		editor.Editor_Update_End();
 		graphicDev.Present();
 #endif
     }

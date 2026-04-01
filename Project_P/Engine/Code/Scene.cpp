@@ -568,6 +568,21 @@ namespace
 		for (const auto& edge : edges)
 			DrawLineSegment(lineMesh, lineMat, camPos, view, proj, worldCorners[edge[0]], worldCorners[edge[1]]);
 	}
+
+	void EvaluateSceneLODGroupsForCamera(CScene* scene, CCamera* camera)
+	{
+		if (!scene)
+			return;
+
+		for (CGameObject* object : scene->Get_ObjectList())
+		{
+			if (!object || !object->IsRecursiveActive())
+				continue;
+
+			if (CLODGroup* lodGroup = object->GetComponent<CLODGroup>())
+				lodGroup->EvaluateLODForCamera(camera);
+		}
+	}
 }
 
 CScene::CScene()
@@ -925,7 +940,7 @@ void CScene::FixedUpdate()
 	}
 }
 
-void CScene::LateUpdateEditor()
+void CScene::LateUpdate_Editor()
 {
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
@@ -1153,9 +1168,23 @@ void CScene::Render_Editor()
 		(*it)->Render_Editor(); 
 	}
 
+	CCamera* selectedPreviewCamera = CEditor::GetInstance().Get_SelectedCamera();
+	const _bool useSelectedCameraLODPreview =
+		selectedPreviewCamera != nullptr
+		&& selectedPreviewCamera != m_pEditorCamera
+		&& selectedPreviewCamera->Get_GameObject() != nullptr
+		&& selectedPreviewCamera->Get_GameObject()->IsRecursiveActive()
+		&& selectedPreviewCamera->Get_Enable();
+
+	if (useSelectedCameraLODPreview)
+		EvaluateSceneLODGroupsForCamera(this, selectedPreviewCamera);
+
 	DrawSelectedMeshBoundingBox(m_pEditorCamera);
 	DrawSelectedCameraFrustum(m_pEditorCamera);
 	m_pEditorCamera->RenderMesh();
+
+	if (useSelectedCameraLODPreview)
+		EvaluateSceneLODGroupsForCamera(this, m_pEditorCamera);
 
 	m_pEditorCamera->RenderShadowDepthPass(rtVP);
 	m_pEditorCamera->RenderObjectIDPass(rtVP);
@@ -3709,6 +3738,12 @@ HRESULT CScene::PreLoadResources()
 
 void CScene::PickObjectInEditor_Start()
 {
+	if (CSceneManager::GetInstance().IsPlayMode() && CEditor::GetInstance().IsHideEditorWhilePlaying())
+	{
+		m_vTempPickMousePos = vector2Int(-1, -1);
+		return;
+	}
+
 	if (ImGui::GetIO().WantCaptureMouse)
 		return;
 
@@ -3718,6 +3753,12 @@ void CScene::PickObjectInEditor_Start()
 
 void CScene::PickObjectInEditor_End()
 {
+	if (CSceneManager::GetInstance().IsPlayMode() && CEditor::GetInstance().IsHideEditorWhilePlaying())
+	{
+		m_vTempPickMousePos = vector2Int(-1, -1);
+		return;
+	}
+
 	if (ImGui::GetIO().WantCaptureMouse)
 		return;
 

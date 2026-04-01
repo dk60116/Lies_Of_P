@@ -48,6 +48,7 @@ public:
 	const _bool IsTransparnet() const;
 	const _bool IsUseLight() const;
 	class CShader* Get_Shader() const;
+	const _float4& Get_BaseColor() const;
 	const _uint Get_TextureCount() const;
 	class CTexture* Get_Texture(_int _index) const;
 

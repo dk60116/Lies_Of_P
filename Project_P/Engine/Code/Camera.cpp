@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "Camera.h"
+#include "Editor.h"
 #include "MeshRenderer.h"
 #include "SkinnedMeshRenderer.h"
 
@@ -24,6 +25,118 @@ namespace
 			&& nearlyEqual(lhs.Extents.x, rhs.Extents.x)
 			&& nearlyEqual(lhs.Extents.y, rhs.Extents.y)
 			&& nearlyEqual(lhs.Extents.z, rhs.Extents.z);
+	}
+
+	_uint ResolveTextureMipLevelCount(const D3D11_TEXTURE2D_DESC& desc)
+	{
+		if (desc.MipLevels > 0)
+			return desc.MipLevels;
+
+		if (desc.Width == 0 || desc.Height == 0)
+			return 0u;
+
+		_uint mipLevels = 1u;
+		_uint width = desc.Width;
+		_uint height = desc.Height;
+
+		while (width > 1u || height > 1u)
+		{
+			width = max(1u, width / 2u);
+			height = max(1u, height / 2u);
+			++mipLevels;
+		}
+
+		return mipLevels;
+	}
+
+	_bool TryProjectWorldAABBToViewport(const BoundingBox& worldAABB, CCamera* camera, const D3D11_VIEWPORT* viewport, _float& outWidthPx, _float& outHeightPx)
+	{
+		if (!camera || !viewport)
+			return false;
+
+		const auto clampFloat = [](_float value, const _float minValue, const _float maxValue)
+		{
+			return (value < minValue) ? minValue : ((value > maxValue) ? maxValue : value);
+		};
+
+		XMFLOAT3 corners[BoundingBox::CORNER_COUNT] = {};
+		worldAABB.GetCorners(corners);
+
+		const _matrix view = camera->GetViewMatrix();
+		const _matrix proj = camera->GetProjectionMatrix();
+
+		_float minX = FLT_MAX;
+		_float minY = FLT_MAX;
+		_float maxX = -FLT_MAX;
+		_float maxY = -FLT_MAX;
+		_bool hasProjectedPoint = false;
+
+		for (const XMFLOAT3& corner : corners)
+		{
+			const _vector worldPos = XMVectorSet(corner.x, corner.y, corner.z, 1.f);
+			const _vector viewPos = XMVector4Transform(worldPos, view);
+			const _float viewZ = XMVectorGetZ(viewPos);
+			if (!std::isfinite(viewZ) || viewZ <= 0.f)
+				continue;
+
+			const _vector clipPos = XMVector4Transform(viewPos, proj);
+			const _float w = XMVectorGetW(clipPos);
+			const _float safeW = (fabsf(w) <= 1e-6f) ? (w < 0.f ? -1e-6f : 1e-6f) : w;
+			const _float xNDC = XMVectorGetX(clipPos) / safeW;
+			const _float yNDC = XMVectorGetY(clipPos) / safeW;
+			if (!std::isfinite(xNDC) || !std::isfinite(yNDC))
+				continue;
+
+			const _float pixelX = viewport->TopLeftX + (xNDC + 1.f) * 0.5f * viewport->Width;
+			const _float pixelY = viewport->TopLeftY + (1.f - yNDC) * 0.5f * viewport->Height;
+
+			minX = min(minX, pixelX);
+			minY = min(minY, pixelY);
+			maxX = max(maxX, pixelX);
+			maxY = max(maxY, pixelY);
+			hasProjectedPoint = true;
+		}
+
+		if (!hasProjectedPoint)
+			return false;
+
+		const _float viewportMinX = viewport->TopLeftX;
+		const _float viewportMinY = viewport->TopLeftY;
+		const _float viewportMaxX = viewport->TopLeftX + viewport->Width;
+		const _float viewportMaxY = viewport->TopLeftY + viewport->Height;
+
+		minX = clampFloat(minX, viewportMinX, viewportMaxX);
+		minY = clampFloat(minY, viewportMinY, viewportMaxY);
+		maxX = clampFloat(maxX, viewportMinX, viewportMaxX);
+		maxY = clampFloat(maxY, viewportMinY, viewportMaxY);
+
+		outWidthPx = (maxX > minX) ? (maxX - minX) : 0.f;
+		outHeightPx = (maxY > minY) ? (maxY - minY) : 0.f;
+		return outWidthPx > 0.f && outHeightPx > 0.f;
+	}
+
+	_float EstimateTextureMipLevelApprox(const D3D11_TEXTURE2D_DESC& desc, const _float2& tiling, const _float projectedWidthPx, const _float projectedHeightPx)
+	{
+		if (desc.Width == 0 || desc.Height == 0 || projectedWidthPx <= 0.f || projectedHeightPx <= 0.f)
+			return 0.f;
+
+		_float tileX = fabsf(tiling.x);
+		_float tileY = fabsf(tiling.y);
+		if (tileX <= 1e-4f)
+			tileX = 1.f;
+		if (tileY <= 1e-4f)
+			tileY = 1.f;
+
+		const _float safeProjectedWidth = max(projectedWidthPx, 1.f);
+		const _float safeProjectedHeight = max(projectedHeightPx, 1.f);
+		const _float texelsPerPixelX = (static_cast<_float>(desc.Width) * tileX) / safeProjectedWidth;
+		const _float texelsPerPixelY = (static_cast<_float>(desc.Height) * tileY) / safeProjectedHeight;
+		const _float texelsPerPixel = max(texelsPerPixelX, texelsPerPixelY);
+		const _uint mipLevelCount = ResolveTextureMipLevelCount(desc);
+		const _float maxMipLevel = (mipLevelCount > 0u) ? static_cast<_float>(mipLevelCount - 1u) : 0.f;
+		const _float estimatedMip = log2f(max(texelsPerPixel, 1e-6f));
+
+		return (estimatedMip < 0.f) ? 0.f : ((estimatedMip > maxMipLevel) ? maxMipLevel : estimatedMip);
 	}
 
 	struct RendererBatchKey
@@ -875,6 +988,70 @@ void CCamera::RenderMesh()
 	Collect_VisibleRenderers();
 	ResetRenderStats();
 
+	CCamera* selectedPreviewCamera = nullptr;
+	CMaterial* textureLODPreviewMaterial = nullptr;
+	if (m_bIsEditor)
+	{
+		CCamera* selectedCamera = CEditor::GetInstance().Get_SelectedCamera();
+		if (selectedCamera && selectedCamera != this && selectedCamera->Get_GameObject() && selectedCamera->Get_GameObject()->IsRecursiveActive() && selectedCamera->Get_Enable())
+		{
+			selectedPreviewCamera = selectedCamera;
+			textureLODPreviewMaterial = CResources::GetInstance().LoadOnGame<CMaterial>(L"TextureLODPreview (Material)");
+		}
+	}
+
+	const auto renderWithOptionalPreview = [&](CRenderer* renderer, const _bool allowPreview)
+	{
+		if (!renderer || !renderer->Get_GameObject())
+			return;
+		if (!renderer->Get_GameObject()->IsRecursiveActive() || !renderer->Get_Enable() || !renderer->IsLODVisible())
+			return;
+
+		_bool renderedPreview = false;
+		if (allowPreview && selectedPreviewCamera && textureLODPreviewMaterial)
+		{
+			CMaterial* originalMaterial = renderer->Get_Material();
+			CTexture* baseTexture = originalMaterial ? originalMaterial->Get_Texture(0) : nullptr;
+			const D3D11_VIEWPORT* previewViewport = nullptr;
+
+			if (selectedPreviewCamera->m_bIsEditor)
+				previewViewport = CGraphicDevice::GetInstance().Get_EditorViewport();
+			else
+				previewViewport = CGraphicDevice::GetInstance().Get_GameViewport();
+
+			if (!previewViewport)
+				previewViewport = CGraphicDevice::GetInstance().Get_CurrentViewport();
+
+			if (originalMaterial && !originalMaterial->IsTransparnet() && baseTexture && baseTexture->Get_SRV() && previewViewport)
+			{
+				BoundingBox worldAABB = {};
+				_float projectedWidthPx = 0.f;
+				_float projectedHeightPx = 0.f;
+				if (selectedPreviewCamera->TryBuildRendererWorldAABB(renderer, worldAABB)
+					&& TryProjectWorldAABBToViewport(worldAABB, selectedPreviewCamera, previewViewport, projectedWidthPx, projectedHeightPx))
+				{
+					_float2 tiling = { 1.f, 1.f };
+					const auto& vector2Values = originalMaterial->Get_Vector2Values();
+					const auto foundTiling = vector2Values.find(L"gTiling");
+					if (foundTiling != vector2Values.end())
+						tiling = foundTiling->second;
+
+					const _float previewMip = EstimateTextureMipLevelApprox(baseTexture->Get_TextureDesc(), tiling, projectedWidthPx, projectedHeightPx);
+					textureLODPreviewMaterial->Set_Texture(baseTexture, 0);
+					textureLODPreviewMaterial->Set_BaseColor(originalMaterial->Get_BaseColor());
+					textureLODPreviewMaterial->Set_Vector4Value(L"gPreviewParams", _float4(previewMip, tiling.x, tiling.y, 0.f));
+					renderer->Render_WithCameraOverrideMaterial(this, textureLODPreviewMaterial);
+					renderedPreview = true;
+				}
+			}
+		}
+
+		if (!renderedPreview)
+			renderer->Render_WithCamera(this);
+
+		AccumulateRenderStats(renderer);
+	};
+
 	if (!m_bIsEditor)
 	{
 		unordered_map<RendererBatchKey, vector<CRenderer*>, RendererBatchKeyHash> staticBatches = {};
@@ -887,7 +1064,7 @@ void CCamera::RenderMesh()
 		{
 			if (!renderer || !renderer->Get_GameObject())
 				continue;
-			if (!renderer->Get_GameObject()->IsRecursiveActive() || !renderer->Get_Enable())
+			if (!renderer->Get_GameObject()->IsRecursiveActive() || !renderer->Get_Enable() || !renderer->IsLODVisible())
 				continue;
 
 			auto* meshRenderer = dynamic_cast<CMeshRenderer*>(renderer);
@@ -904,10 +1081,7 @@ void CCamera::RenderMesh()
 		}
 
 		for (auto* renderer : nonBatchedStatic)
-		{
-			renderer->Render_WithCamera(this);
-			AccumulateRenderStats(renderer);
-		}
+			renderWithOptionalPreview(renderer, false);
 
 		for (auto& kv : staticBatches)
 		{
@@ -921,8 +1095,7 @@ void CCamera::RenderMesh()
 
 			if (batch.size() == 1)
 			{
-				leader->Render_WithCamera(this);
-				AccumulateRenderStats(leader);
+				renderWithOptionalPreview(leader, false);
 				continue;
 			}
 
@@ -942,23 +1115,11 @@ void CCamera::RenderMesh()
 	else
 	{
 		for (TRAVERSAL_ITER(m_vVisibleStaticMeshList, it))
-		{
-			if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
-			{
-				(*it)->Render_WithCamera(this);
-				AccumulateRenderStats(*it);
-			}
-		}
+			renderWithOptionalPreview(*it, true);
 	}
 
 	for (TRAVERSAL_ITER(m_vVisibleDynamicMeshList, it))
-	{
-		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
-		{
-			(*it)->Render_WithCamera(this);
-			AccumulateRenderStats(*it);
-		}
-	}
+		renderWithOptionalPreview(*it, m_bIsEditor);
 
 	SortTransparentRenderersByCameraDistance(m_vVisibleStaticMeshList_Transparent);
 	SortTransparentRenderersByCameraDistance(m_vVisibleDynamicMeshList_Transparent);
@@ -982,22 +1143,10 @@ void CCamera::RenderMesh()
 	context->OMSetDepthStencilState(scene->Get_TransparentDepthStencillState(), prevStencilRef);
 
 	for (TRAVERSAL_ITER(m_vVisibleStaticMeshList_Transparent, it))
-	{
-		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
-		{
-			(*it)->Render_WithCamera(this);
-			AccumulateRenderStats(*it);
-		}
-	}
+		renderWithOptionalPreview(*it, false);
 
 	for (TRAVERSAL_ITER(m_vVisibleDynamicMeshList_Transparent, it))
-	{
-		if ((*it)->Get_GameObject()->IsRecursiveActive() && (*it)->Get_Enable())
-		{
-			(*it)->Render_WithCamera(this);
-			AccumulateRenderStats(*it);
-		}
-	}
+		renderWithOptionalPreview(*it, false);
 
 	context->OMSetBlendState(prevBS, prevBlendFactor, prevSampleMask);
 	context->OMSetDepthStencilState(prevDS, prevStencilRef);

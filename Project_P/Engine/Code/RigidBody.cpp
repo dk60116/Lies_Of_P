@@ -66,6 +66,7 @@ namespace
         {
             CSceneManager::GetInstance().NameToLayer(L"Player"),
             CSceneManager::GetInstance().NameToLayer(L"HitBox_Player"),
+            CSceneManager::GetInstance().NameToLayer(L"HitBox_Enemy"),
             CSceneManager::GetInstance().NameToLayer(L"HitBox_NPC"),
             CSceneManager::GetInstance().NameToLayer(L"HurtBox_Player"),
             CSceneManager::GetInstance().NameToLayer(L"HurtBox_Ememy"),
@@ -921,12 +922,30 @@ CCollider* CRigidBody::GetEventCollider(_bool _triggerEvent) const
         if (!collider)
             continue;
 
+        if (!collider->Get_Enable())
+            continue;
+
+        if (CGameObject* colliderObject = collider->Get_GameObject())
+        {
+            if (!colliderObject->IsRecursiveActive())
+                continue;
+        }
+
         if (collider->IsTrigger() == _triggerEvent)
             return collider;
     }
 
     for (CCollider* collider : m_lColliderList)
     {
+        if (!collider || !collider->Get_Enable())
+            continue;
+
+        if (CGameObject* colliderObject = collider->Get_GameObject())
+        {
+            if (!colliderObject->IsRecursiveActive())
+                continue;
+        }
+
         if (collider)
             return collider;
     }

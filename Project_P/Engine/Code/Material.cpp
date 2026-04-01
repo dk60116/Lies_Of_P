@@ -366,6 +366,11 @@ CShader* CMaterial::Get_Shader() const
 	return m_pShader;
 }
 
+const _float4& CMaterial::Get_BaseColor() const
+{
+	return m_vBaseColor;
+}
+
 const _uint CMaterial::Get_TextureCount() const
 {
 	return static_cast<_uint>(m_vTextureList.size());

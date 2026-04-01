@@ -48,7 +48,7 @@ namespace
         { L"Eve_Attack_SS23 (Animation Clip)", L"Eve_Attack_SS23", 4, 27, 32, false, 0.f },
         { L"Eve_Attack_SS34 (Animation Clip)", L"Eve_Attack_SS34", 4, 16, 20, false, 0.f },
         { L"Eve_Attack_SL23 (Animation Clip)", L"Eve_Attack_SL23", 4, 18, 24, false, 0.f },
-        { L"Eve_Attack_SL12 (Animation Clip)", L"Eve_Attack_SL12", 4, 15, 18, false, 0.f },
+        { L"Eve_Attack_SL12 (Animation Clip)", L"Eve_Attack_SL12", 4, 20, 24, false, 0.f },
         { L"Eve_Attack_LS23 (Animation Clip)", L"Eve_Attack_LS23", 4, 18, 21, false, 0.f },
         { L"Eve_Attack_SL34 (Animation Clip)", L"Eve_Attack_SL34", 4, 20, 23, false, 0.f },
         { L"Eve_Attack_LS45 (Animation Clip)", L"Eve_Attack_LS45", 4, 32, 35, false, 0.f },

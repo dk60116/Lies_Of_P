@@ -28,6 +28,7 @@ public:
 
 public:
 	void Render_WithCamera(CCamera* _cam) override;
+	void Render_WithCameraOverrideMaterial(CCamera* _cam, CMaterial* _overrideMaterial) override;
 	void Render_ShadowDepth(CMaterial* _shadowDepthMat, const CLight::ShadowMatrices& _shadowMatrix) override;
 	void Render_Outline(CCamera* _cam) override;
 

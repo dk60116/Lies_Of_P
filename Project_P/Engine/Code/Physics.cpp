@@ -26,26 +26,41 @@ namespace Engine
 	{
 		constexpr uint64 colliderUserDataFlag = 1ull;
 
-		inline CGameObject* ResolveHitObject(const Body& _body)
+		inline CCollider* ResolveHitCollider(const Body& _body)
 		{
-			CGameObject* obj = nullptr;
 			const uint64 userData = _body.GetUserData();
 			if (userData == 0)
-				return obj;
+				return nullptr;
 
 			if ((userData & colliderUserDataFlag) != 0)
 			{
 				const uint64 ptrValue = userData & ~colliderUserDataFlag;
 				CCollider* collider = reinterpret_cast<CCollider*>(static_cast<uintptr_t>(ptrValue));
-				obj = collider ? collider->Get_GameObject() : nullptr;
-			}
-			else
-			{
-				CRigidBody* rigidBody = reinterpret_cast<CRigidBody*>(static_cast<uintptr_t>(userData));
-				obj = rigidBody ? rigidBody->Get_GameObject() : nullptr;
+				if (!collider || !collider->Get_Enable())
+					return nullptr;
+
+				CGameObject* colliderObject = collider->Get_GameObject();
+				if (!colliderObject || !colliderObject->IsRecursiveActive())
+					return nullptr;
+
+				return collider;
 			}
 
-			return obj;
+			CRigidBody* rigidBody = reinterpret_cast<CRigidBody*>(static_cast<uintptr_t>(userData));
+			if (!rigidBody || !rigidBody->Get_Enable())
+				return nullptr;
+
+			CGameObject* object = rigidBody->Get_GameObject();
+			if (!object || !object->IsRecursiveActive())
+				return nullptr;
+
+			return rigidBody->GetEventCollider(_body.IsSensor());
+		}
+
+		inline CGameObject* ResolveHitObject(const Body& _body)
+		{
+			CCollider* collider = ResolveHitCollider(_body);
+			return collider ? collider->Get_GameObject() : nullptr;
 		}
 
 		inline _bool PassLayerMask(CGameObject* _obj, const CSceneManager::LayerMask _mask)

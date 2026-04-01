@@ -156,7 +156,7 @@ public:
     virtual void Update_Editor();
     virtual void Update();
     virtual void FixedUpdate();
-    virtual void LateUpdateEditor();
+    virtual void LateUpdate_Editor();
     virtual void LateUpdate();
     virtual _uint PrepareRender();
     virtual void Render_Editor();

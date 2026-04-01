@@ -72,5 +72,6 @@ protected:
 
 	vector<ColliderBoxBonesInfo> m_vHurtBoxInfoList, m_vHitBoxInfoList;
 	map<wstring, class CHurtBox*> m_mHurtBoxList;
+	map<wstring, class CHitBox*> m_mHitBoxList;
 };
 

@@ -665,6 +665,11 @@ void CSkinnedMeshRenderer::CreateBoneHierachy(const vector<CSkinnedMeshBuffer::S
 
 void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 {
+	Render_WithCameraOverrideMaterial(_cam, nullptr);
+}
+
+void CSkinnedMeshRenderer::Render_WithCameraOverrideMaterial(CCamera* _cam, CMaterial* _overrideMaterial)
+{
 	if (!IsLODVisible())
 		return;
 
@@ -674,7 +679,8 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 		return;
 	}
 
-	if (!m_pMaterial)
+	CMaterial* renderMaterial = _overrideMaterial ? _overrideMaterial : m_pMaterial;
+	if (!renderMaterial)
 	{
 		CDebug::LogError(L"Skinned MeshRenderer - No material assigned: " + m_pGameObject->Get_ObjectNameID());
 		return;
@@ -686,7 +692,8 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 		return;
 	}
 
-	m_pMaterial->Set_IntValue(L"gObjectID", m_pGameObject->Get_UniqueID());
+	if (!_overrideMaterial && m_pMaterial)
+		m_pMaterial->Set_IntValue(L"gObjectID", m_pGameObject->Get_UniqueID());
 
 	vector3 cPos = _cam->GetTransform()->Get_Position();
 	const _float3 camPos = cPos.toFloat3();
@@ -721,8 +728,8 @@ void CSkinnedMeshRenderer::Render_WithCamera(CCamera* _cam)
 	}
 
 	Bind_InstanceBuffer(matWorld);
-	m_pMaterial->Bind_Matrix(matWorld);
-	m_pMaterial->Bind_Camera(camPos, matView, matProj, boneCount);
+	renderMaterial->Bind_Matrix(matWorld);
+	renderMaterial->Bind_Camera(camPos, matView, matProj, boneCount);
 	m_pContext->VSSetConstantBuffers(3, 1, &m_pBoneMatrixBuffer);
 
 	if (IsInstancingEnabled())

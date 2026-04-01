@@ -641,6 +641,7 @@ void CTopToolBar::ShowProjectSettingsLight()
 void CTopToolBar::ShowPlayButtons()
 {
 	CSceneManager& sceneManager = CSceneManager::GetInstance();
+	CEditor& editor = CEditor::GetInstance();
 
 	ImGui::SameLine();
 
@@ -651,12 +652,20 @@ void CTopToolBar::ShowPlayButtons()
 
 	const _float buttonWidth = 36.f;
 	const ImVec2 buttonSize(buttonWidth, 0.f);
+	const char* hideEditorLabel = "Hide Editor";
 	const _float spacing = ImGui::GetStyle().ItemSpacing.x;
-	const _float totalWidth = buttonWidth * 3.f + spacing * 2.f;
+	const _float toggleWidth =
+		ImGui::CalcTextSize(hideEditorLabel).x +
+		ImGui::GetFrameHeight() +
+		ImGui::GetStyle().FramePadding.x * 2.f;
+	const _float totalWidth = buttonWidth * 3.f + toggleWidth + spacing * 3.f;
 	_float startX = (ImGui::GetWindowWidth() - totalWidth) * 0.5f;
 	if (startX < 0.f)
 		startX = 0.f;
 	ImGui::SetCursorPosX(startX);
+
+	if (!sceneManager.IsPlayMode() && editor.IsHideEditorWhilePlaying())
+		editor.SetHideEditorWhilePlaying(false);
 
 	if (!sceneManager.IsPlayMode())
 	{
@@ -666,7 +675,10 @@ void CTopToolBar::ShowPlayButtons()
 	else
 	{
 		if (ImGui::Button(stopLabel, buttonSize))
+		{
+			editor.SetHideEditorWhilePlaying(false);
 			sceneManager.StopScene();
+		}
 	}
 
 	ImGui::SameLine();
@@ -701,6 +713,18 @@ void CTopToolBar::ShowPlayButtons()
 		ImGui::Button(stepLabel, buttonSize);
 		ImGui::EndDisabled();
 	}
+
+	ImGui::SameLine();
+
+	_bool hideEditorWhilePlaying = editor.IsHideEditorWhilePlaying();
+	if (!sceneManager.IsPlayMode())
+		ImGui::BeginDisabled();
+
+	if (ImGui::Checkbox(hideEditorLabel, &hideEditorWhilePlaying))
+		editor.SetHideEditorWhilePlaying(sceneManager.IsPlayMode() ? hideEditorWhilePlaying : false);
+
+	if (!sceneManager.IsPlayMode())
+		ImGui::EndDisabled();
 }
 
 void CTopToolBar::Show2DButton()

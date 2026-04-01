@@ -48,6 +48,7 @@ public:
 	void Set_SelectedGameObject(class CGameObject* _target, _bool _openHierarchy = false);
 	void MoveTo_SelectedGameObject(class CGameObject* _target);
 	CGameObject* Get_SelectedGameObject() const;
+	class CCamera* Get_SelectedCamera() const;
 	_bool Consume_OpenSelectedInHierarchyRequest();
 
 	void Set_MultiSelectedObjects(const vector<CGameObject*>& _objects);
@@ -70,6 +71,8 @@ public:
 	void SetNavigationMeshVisible(const _bool visible);
 	const _bool IsGameStatusWindowVisible() const;
 	void SetGameStatusWindowVisible(const _bool visible);
+	const _bool IsHideEditorWhilePlaying() const;
+	void SetHideEditorWhilePlaying(const _bool hide);
 
 	static string ToLowerCopy(string s)
 	{
@@ -119,6 +122,7 @@ private:
 	_bool m_bShowMeshColliderGizmo;
 	_bool m_bShowNavigationMesh;
 	_bool m_bShowGameStatusWindow;
+	_bool m_bHideEditorWhilePlaying;
 	fs::path m_selectedAssetPath;
 
 private:

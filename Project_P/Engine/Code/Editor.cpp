@@ -5,6 +5,7 @@
 #include "InspectorBox.h"
 #include "AnimatorControllerEditorBox.h"
 #include "Physics.h"
+#include "Camera.h"
 
 namespace
 {
@@ -45,6 +46,7 @@ CEditor::CEditor()
 	, m_bShowMeshColliderGizmo(true)
 	, m_bShowNavigationMesh(true)
 	, m_bShowGameStatusWindow(false)
+	, m_bHideEditorWhilePlaying(false)
 	, m_vCameraPos({})
 	, m_vCameraQuat({})
 	, m_bDoubleClicked(false)
@@ -154,6 +156,13 @@ void CEditor::Editor_Update_Begin()
 
 void CEditor::Editor_Update_During()
 {
+	if (CSceneManager::GetInstance().IsPlayMode() && IsHideEditorWhilePlaying())
+	{
+		m_bIsMovingCamera = false;
+		m_fCameraMoveProgress = 0.f;
+		return;
+	}
+
 	ChangeControleTool();
 
 	if (m_bIsMovingCamera)
@@ -414,6 +423,16 @@ void CEditor::SetGameStatusWindowVisible(const _bool visible)
 	SaveViewSettings();
 }
 
+const _bool CEditor::IsHideEditorWhilePlaying() const
+{
+	return m_bHideEditorWhilePlaying;
+}
+
+void CEditor::SetHideEditorWhilePlaying(const _bool hide)
+{
+	m_bHideEditorWhilePlaying = hide;
+}
+
 const vector2Int CEditor::Get_WindowResolution() const
 {
 	return vector2Int(m_sOptions.windowWidth, m_sOptions.windowHeight);
@@ -546,6 +565,14 @@ void CEditor::MoveTo_SelectedGameObject(CGameObject* _target)
 CGameObject* CEditor::Get_SelectedGameObject() const
 {
 	return m_pSelectedGameObject;
+}
+
+CCamera* CEditor::Get_SelectedCamera() const
+{
+	if (!m_pSelectedGameObject)
+		return nullptr;
+
+	return m_pSelectedGameObject->GetComponent<CCamera>();
 }
 
 void CEditor::OpenAsset(const fs::path& path)

@@ -51,6 +51,7 @@ public:
 	_int GetCurrentLODIndex() const;
 	_int GetLODSourceIndex(const _uint _index) const;
 	_uint GetLODRendererCount(const _uint _index) const;
+	void EvaluateLODForCamera(CCamera* _camera);
 
 private:
 	void UpdateLODForCamera(CCamera* _camera);
