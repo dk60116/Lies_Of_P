@@ -1550,9 +1550,6 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 
 	for (TRAVERSAL_ITER(m_lObjectList, it))
 	{
-		if (CEngineString::Contains((*it)->Get_ObjectName(), L"(Clone)"))
-			continue;
-
 		if (!(*it)->Is_SaveTarget())
 			continue;
 
@@ -3442,9 +3439,6 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 			continue;
 
 		if (!obj->Is_SaveTarget())
-			continue;
-
-		if (CEngineString::Contains(obj->Get_ObjectName(), L"(Clone)"))
 			continue;
 
 		for (CComponent* component : obj->Get_ComponentList())

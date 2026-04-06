@@ -27,12 +27,6 @@ HRESULT CGameScene::Initialize()
 	CGameObject* cameraObject = Add_GameObject(L"Player Camera");
 	m_pPlayerCamera = cameraObject->AddComponent<CPlayerCamera>();
 
-	CGameObject* lightObject = Add_GameObject(L"Directional Light");
-	m_pDirLight = lightObject->AddComponent<CLight>();
-	m_pDirLight->Set_Intensity(0.3f);
-	m_pDirLight->Set_Color(ColorValue(170, 230, 160));
-	m_pDirLight->GetTransform()->Set_EulerAngles(45.f, 160.f, 0.f);
-
 	CGameObject* hudObject = Add_GameObject(L"Player HUD");
 	m_pHUD = hudObject->AddComponent<CPlayerHUD>();
 
