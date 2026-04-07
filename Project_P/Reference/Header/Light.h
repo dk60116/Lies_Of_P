@@ -9,11 +9,27 @@ class ENGINE_DLL CLight final : public CComponent
 	friend class CGameObject;
 
 public:
-	struct ShadowMatrices
-	{
-		_float4x4 view;
-		_float4x4 proj;
-	};
+    struct ShadowCascadeMatrix
+    {
+        _float4x4 view = {};
+        _float4x4 proj = {};
+        _float splitDepth = 0.f;
+        _float shadowPadding0 = 0.f;
+        _float4 atlasScaleOffset = { 1.f, 1.f, 0.f, 0.f };
+        _float4 lightSpaceBounds = { 0.f, 0.f, 0.f, 0.f };
+        _float4 lightSpaceDepthRange = { 0.f, 0.f, 0.f, 0.f };
+    };
+
+    struct ShadowMatrices
+    {
+        _float4x4 view = {};
+        _float4x4 proj = {};
+        ShadowCascadeMatrix cascades[kMaxShadowCascades] = {};
+        _uint cascadeCount = 1u;
+        _float shadowDistance = 0.f;
+        _float splitLambda = 0.f;
+        _float shadowPadding0 = 0.f;
+    };
 
 public:
 	enum class Type : _uint { Directional = 0, point = 1, spot = 2 };

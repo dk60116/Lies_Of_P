@@ -15,6 +15,7 @@ cbuffer PerCamera : register(b1)
 cbuffer InvViewProjCB : register(b5)
 {
     float4x4 gInvViewProj;
+    float4x4 gSceneView;
 };
 
 cbuffer ShadowCB : register(b6)
@@ -25,6 +26,13 @@ cbuffer ShadowCB : register(b6)
     float gLightSize;
     float3 gShadowLightDir;
     float _padShadow1;
+    float4x4 gCascadeShadowViewProj[4];
+    float4 gCascadeSplits;
+    float4 gCascadeAtlasScaleOffsets[4];
+    uint gCascadeCount;
+    float gShadowDistance;
+    float gShadowSplitLambda;
+    float gCascadeBlendFactor;
 };
 
 Texture2D<float> gSceneDepth : register(t0);
@@ -79,7 +87,38 @@ static const float2 gPoissonDisk[16] =
     float2( 0.14383161f, -0.14100790f)
 };
 
-float FindBlockerDistance(float2 uv, float receiverDepth, float searchWidth)
+int SelectShadowCascade(float viewDepth)
+{
+    int cascadeCount = max((int)gCascadeCount, 1);
+
+    [unroll]
+    for (int cascadeIndex = 0; cascadeIndex < 4; ++cascadeIndex)
+    {
+        if (cascadeIndex >= cascadeCount)
+            break;
+
+        if (viewDepth <= gCascadeSplits[cascadeIndex])
+            return cascadeIndex;
+    }
+
+    return cascadeCount - 1;
+}
+
+float2 TransformShadowAtlasUV(int cascadeIndex, float2 uvLocal)
+{
+    float4 atlasScaleOffset = gCascadeAtlasScaleOffsets[cascadeIndex];
+    return uvLocal * atlasScaleOffset.xy + atlasScaleOffset.zw;
+}
+
+float2 ClampShadowAtlasUV(int cascadeIndex, float2 atlasUV)
+{
+    float4 atlasScaleOffset = gCascadeAtlasScaleOffsets[cascadeIndex];
+    float2 atlasMin = atlasScaleOffset.zw + gShadowInvMapSize * 0.5f;
+    float2 atlasMax = atlasScaleOffset.zw + atlasScaleOffset.xy - gShadowInvMapSize * 0.5f;
+    return clamp(atlasUV, atlasMin, atlasMax);
+}
+
+float FindBlockerDistance(int cascadeIndex, float2 atlasUV, float receiverDepth, float searchWidth)
 {
     float blockerSum = 0.0f;
     int numBlockers = 0;
@@ -88,7 +127,8 @@ float FindBlockerDistance(float2 uv, float receiverDepth, float searchWidth)
     for (int i = 0; i < 16; ++i)
     {
         float2 offset = gPoissonDisk[i] * searchWidth;
-        float sd = gShadowDepth.SampleLevel(gSampler, uv + offset, 0);
+        float2 sampleUV = ClampShadowAtlasUV(cascadeIndex, atlasUV + offset);
+        float sd = gShadowDepth.SampleLevel(gSampler, sampleUV, 0);
         if (sd + gShadowBias < receiverDepth)
         {
             blockerSum += sd;
@@ -102,7 +142,7 @@ float FindBlockerDistance(float2 uv, float receiverDepth, float searchWidth)
     return blockerSum / (float)numBlockers;
 }
 
-float PCF_Filter(float2 uv, float receiverDepth, float filterRadius)
+float PCF_Filter(int cascadeIndex, float2 atlasUV, float receiverDepth, float filterRadius)
 {
     float sum = 0.0f;
 
@@ -110,17 +150,18 @@ float PCF_Filter(float2 uv, float receiverDepth, float filterRadius)
     for (int i = 0; i < 16; ++i)
     {
         float2 offset = gPoissonDisk[i] * filterRadius;
-        float sd = gShadowDepth.SampleLevel(gSampler, uv + offset, 0);
+        float2 sampleUV = ClampShadowAtlasUV(cascadeIndex, atlasUV + offset);
+        float sd = gShadowDepth.SampleLevel(gSampler, sampleUV, 0);
         sum += (sd + gShadowBias < receiverDepth) ? 0.0f : 1.0f;
     }
 
     return sum / 16.0f;
 }
 
-float PCSS(float2 uv, float receiverDepth)
+float PCSS(int cascadeIndex, float2 atlasUV, float receiverDepth)
 {
     float searchWidth = gLightSize * gShadowInvMapSize.x;
-    float avgBlockerDepth = FindBlockerDistance(uv, receiverDepth, searchWidth);
+    float avgBlockerDepth = FindBlockerDistance(cascadeIndex, atlasUV, receiverDepth, searchWidth);
 
     if (avgBlockerDepth < 0.0f)
         return 1.0f;
@@ -129,7 +170,36 @@ float PCSS(float2 uv, float receiverDepth)
     float filterRadius = penumbraRatio * gLightSize * gShadowInvMapSize.x;
     filterRadius = clamp(filterRadius, gShadowInvMapSize.x, gShadowInvMapSize.x * 64.0f);
 
-    return PCF_Filter(uv, receiverDepth, filterRadius);
+    return PCF_Filter(cascadeIndex, atlasUV, receiverDepth, filterRadius);
+}
+
+float SampleCascadeShadowPCSS(int cascadeIndex, float3 posW)
+{
+    float4 posL = mul(float4(posW, 1.0f), gCascadeShadowViewProj[cascadeIndex]);
+    float3 ndcL = posL.xyz / max(posL.w, 1e-6f);
+
+    float2 uvL = float2(ndcL.x * 0.5f + 0.5f, -ndcL.y * 0.5f + 0.5f);
+    float depthL = ndcL.z;
+
+    if (uvL.x < 0 || uvL.x > 1 || uvL.y < 0 || uvL.y > 1 || depthL < 0 || depthL > 1)
+        return 1.0f;
+
+    float2 atlasUV = TransformShadowAtlasUV(cascadeIndex, uvL);
+    return PCSS(cascadeIndex, atlasUV, depthL);
+}
+
+float ComputeCascadeBlendWeight(int cascadeIndex, float viewDepth)
+{
+    int cascadeCount = max((int)gCascadeCount, 1);
+    if (cascadeIndex < 0 || cascadeIndex >= cascadeCount - 1)
+        return 0.0f;
+
+    float prevSplit = (cascadeIndex > 0) ? gCascadeSplits[cascadeIndex - 1] : 0.0f;
+    float splitDepth = gCascadeSplits[cascadeIndex];
+    float interval = max(splitDepth - prevSplit, 1e-3f);
+    float blendRange = max(interval * gCascadeBlendFactor, 0.5f);
+    float blendStart = splitDepth - blendRange;
+    return saturate((viewDepth - blendStart) / blendRange);
 }
 
 float4 PSMain(VSOut i) : SV_Target
@@ -160,17 +230,16 @@ float4 PSMain(VSOut i) : SV_Target
     float4 posW4 = mul(posH, gInvViewProj);
     posW4.xyz /= posW4.w;
 
-    float4 posL = mul(float4(posW4.xyz, 1.0f), gShadowViewProj);
-    float3 ndcL = posL.xyz / posL.w;
-
-    float2 uvL = float2(ndcL.x * 0.5f + 0.5f, -ndcL.y * 0.5f + 0.5f);
-
-    float depthL = ndcL.z;
-
-    if (uvL.x < 0 || uvL.x > 1 || uvL.y < 0 || uvL.y > 1 || depthL < 0 || depthL > 1)
-        return float4(1.f, 1.f, 1.f, 1.f);
-
-    float lit = PCSS(uvL, depthL);
+    float3 posV = mul(float4(posW4.xyz, 1.0f), gSceneView).xyz;
+    float viewDepth = posV.z;
+    int cascadeIndex = SelectShadowCascade(max(viewDepth, 0.0f));
+    float lit = SampleCascadeShadowPCSS(cascadeIndex, posW4.xyz);
+    float blendWeight = ComputeCascadeBlendWeight(cascadeIndex, max(viewDepth, 0.0f));
+    if (blendWeight > 0.0f)
+    {
+        float nextLit = SampleCascadeShadowPCSS(cascadeIndex + 1, posW4.xyz);
+        lit = lerp(lit, nextLit, blendWeight);
+    }
     
     if (lit > 0.8f)
         lit = 1.f;

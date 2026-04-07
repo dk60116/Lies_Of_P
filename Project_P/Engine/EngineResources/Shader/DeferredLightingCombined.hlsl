@@ -21,6 +21,7 @@ cbuffer PerLight : register(b4)
 cbuffer InvViewProjCB : register(b5)
 {
     float4x4 gInvViewProj;
+    float4x4 gSceneView;
 };
 
 cbuffer ShadowCB : register(b6)
@@ -31,6 +32,13 @@ cbuffer ShadowCB : register(b6)
     float gLightSize;
     float3 gShadowLightDir;
     float _padShadow1;
+    float4x4 gCascadeShadowViewProj[4];
+    float4 gCascadeSplits;
+    float4 gCascadeAtlasScaleOffsets[4];
+    uint gCascadeCount;
+    float gShadowDistance;
+    float gShadowSplitLambda;
+    float gCascadeBlendFactor;
 };
 
 Texture2D gAlbedo : register(t0);
@@ -115,7 +123,38 @@ float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
     return F0 + (fresnelMax - F0) * f;
 }
 
-float SampleShadowPCF(float2 uv, float receiverDepth)
+int SelectShadowCascade(float viewDepth)
+{
+    int cascadeCount = max((int)gCascadeCount, 1);
+
+    [unroll]
+    for (int cascadeIndex = 0; cascadeIndex < 4; ++cascadeIndex)
+    {
+        if (cascadeIndex >= cascadeCount)
+            break;
+
+        if (viewDepth <= gCascadeSplits[cascadeIndex])
+            return cascadeIndex;
+    }
+
+    return cascadeCount - 1;
+}
+
+float2 TransformShadowAtlasUV(int cascadeIndex, float2 uvLocal)
+{
+    float4 atlasScaleOffset = gCascadeAtlasScaleOffsets[cascadeIndex];
+    return uvLocal * atlasScaleOffset.xy + atlasScaleOffset.zw;
+}
+
+float2 ClampShadowAtlasUV(int cascadeIndex, float2 atlasUV)
+{
+    float4 atlasScaleOffset = gCascadeAtlasScaleOffsets[cascadeIndex];
+    float2 atlasMin = atlasScaleOffset.zw + gShadowInvMapSize * 0.5f;
+    float2 atlasMax = atlasScaleOffset.zw + atlasScaleOffset.xy - gShadowInvMapSize * 0.5f;
+    return clamp(atlasUV, atlasMin, atlasMax);
+}
+
+float SampleShadowPCF(int cascadeIndex, float2 atlasUV, float receiverDepth)
 {
     if (gShadowInvMapSize.x <= 0.0f || gShadowInvMapSize.y <= 0.0f)
         return 1.0f;
@@ -129,7 +168,8 @@ float SampleShadowPCF(float2 uv, float receiverDepth)
         for (int x = -1; x <= 1; ++x)
         {
             float2 duv = float2(x, y) * gShadowInvMapSize;
-            float sd = gShadowDepth.SampleLevel(gSampler, uv + duv, 0);
+            float2 sampleUV = ClampShadowAtlasUV(cascadeIndex, atlasUV + duv);
+            float sd = gShadowDepth.SampleLevel(gSampler, sampleUV, 0);
             sum += (sd + gShadowBias < receiverDepth) ? 0.0f : 1.0f;
         }
     }
@@ -137,7 +177,36 @@ float SampleShadowPCF(float2 uv, float receiverDepth)
     return sum / 9.0f;
 }
 
-float ComputeShadow(float3 posW, float3 normalW)
+float SampleCascadeShadow(int cascadeIndex, float3 posW)
+{
+    float4 posL = mul(float4(posW, 1.0f), gCascadeShadowViewProj[cascadeIndex]);
+    float3 ndcL = posL.xyz / max(posL.w, 1e-6f);
+
+    float2 uvLocal = float2(ndcL.x * 0.5f + 0.5f, -ndcL.y * 0.5f + 0.5f);
+    float depthL = ndcL.z;
+
+    if (uvLocal.x < 0.0f || uvLocal.x > 1.0f || uvLocal.y < 0.0f || uvLocal.y > 1.0f || depthL < 0.0f || depthL > 1.0f)
+        return 1.0f;
+
+    float2 atlasUV = TransformShadowAtlasUV(cascadeIndex, uvLocal);
+    return SampleShadowPCF(cascadeIndex, atlasUV, depthL);
+}
+
+float ComputeCascadeBlendWeight(int cascadeIndex, float viewDepth)
+{
+    int cascadeCount = max((int)gCascadeCount, 1);
+    if (cascadeIndex < 0 || cascadeIndex >= cascadeCount - 1)
+        return 0.0f;
+
+    float prevSplit = (cascadeIndex > 0) ? gCascadeSplits[cascadeIndex - 1] : 0.0f;
+    float splitDepth = gCascadeSplits[cascadeIndex];
+    float interval = max(splitDepth - prevSplit, 1e-3f);
+    float blendRange = max(interval * gCascadeBlendFactor, 0.5f);
+    float blendStart = splitDepth - blendRange;
+    return saturate((viewDepth - blendStart) / blendRange);
+}
+
+float ComputeShadow(float3 posW, float3 normalW, float viewDepth)
 {
     if (gShadowInvMapSize.x <= 0.0f || gShadowInvMapSize.y <= 0.0f)
         return 1.0f;
@@ -150,16 +219,16 @@ float ComputeShadow(float3 posW, float3 normalW)
     if (dot(normalW, lightDir) <= 1e-6f)
         return 1.0f;
 
-    float4 posL = mul(float4(posW, 1.0f), gShadowViewProj);
-    float3 ndcL = posL.xyz / max(posL.w, 1e-6f);
+    int cascadeIndex = SelectShadowCascade(max(viewDepth, 0.0f));
+    float shadow = SampleCascadeShadow(cascadeIndex, posW);
+    float blendWeight = ComputeCascadeBlendWeight(cascadeIndex, max(viewDepth, 0.0f));
+    if (blendWeight > 0.0f)
+    {
+        float nextShadow = SampleCascadeShadow(cascadeIndex + 1, posW);
+        shadow = lerp(shadow, nextShadow, blendWeight);
+    }
 
-    float2 uvL = float2(ndcL.x * 0.5f + 0.5f, -ndcL.y * 0.5f + 0.5f);
-    float depthL = ndcL.z;
-
-    if (uvL.x < 0.0f || uvL.x > 1.0f || uvL.y < 0.0f || uvL.y > 1.0f || depthL < 0.0f || depthL > 1.0f)
-        return 1.0f;
-
-    return SampleShadowPCF(uvL, depthL);
+    return shadow;
 }
 
 float4 PSMain(VSOut i) : SV_Target
@@ -183,6 +252,8 @@ float4 PSMain(VSOut i) : SV_Target
     float roughnessSpecular = max(roughness, 0.04f);
 
     float3 posW = ReconstructWorldPos(uvScreen, depth01);
+    float3 posV = mul(float4(posW, 1.0f), gSceneView).xyz;
+    float viewDepth = posV.z;
     float3 V = normalize(camPos - posW);
     float NdotV = saturate(dot(N, V));
 
@@ -280,7 +351,7 @@ float4 PSMain(VSOut i) : SV_Target
     float3 ambientSpec = ambient * ambientF * specAmbientStrength * occulusion;
     float3 color = ambientDiffuse + ambientSpec + Lo;
 
-    float shadowF = ComputeShadow(posW, N);
+    float shadowF = ComputeShadow(posW, N, viewDepth);
     if (shadowF < 0.3f)
         shadowF = 0.0f;
 

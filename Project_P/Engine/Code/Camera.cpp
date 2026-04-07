@@ -6,6 +6,8 @@
 
 namespace
 {
+	constexpr _float kDefaultShadowCascadeBlendFactor = 0.1f;
+
 	bool IsSameWorldMatrix(const _float4x4& lhs, const _float4x4& rhs)
 	{
 		return memcmp(&lhs, &rhs, sizeof(_float4x4)) == 0;
@@ -137,6 +139,61 @@ namespace
 		const _float estimatedMip = log2f(max(texelsPerPixel, 1e-6f));
 
 		return (estimatedMip < 0.f) ? 0.f : ((estimatedMip > maxMipLevel) ? maxMipLevel : estimatedMip);
+	}
+
+	void PopulateShadowConstantBuffer
+	(
+		CLight* mainLight,
+		const CLight::ShadowMatrices& shadowMatrices,
+		const _float shadowMapSize,
+		const _float shadowBias,
+		const _float lightSize,
+		ShadowCB& outShadowCB
+	)
+	{
+		outShadowCB = {};
+
+		if (!mainLight)
+			return;
+
+		const _matrix lightView = XMLoadFloat4x4(&shadowMatrices.view);
+		const _matrix lightProj = XMLoadFloat4x4(&shadowMatrices.proj);
+		const _matrix lightVP = XMMatrixMultiply(lightView, lightProj);
+		XMStoreFloat4x4(&outShadowCB.shadowViewProj, lightVP);
+
+		if (shadowMapSize > 0.f)
+			outShadowCB.invShadowMapSize = _float2(1.0f / shadowMapSize, 1.0f / shadowMapSize);
+
+		outShadowCB.bias = shadowBias;
+		outShadowCB.lightSize = lightSize;
+
+		const vector3 lightDir = mainLight->GetTransform()->Get_Directions().forward.normalized();
+		outShadowCB.lightDirWS = _float3(lightDir.x, lightDir.y, lightDir.z);
+
+		const _uint cascadeCount = (shadowMatrices.cascadeCount > 0u)
+			? min(shadowMatrices.cascadeCount, kMaxShadowCascades)
+			: 1u;
+
+		outShadowCB.cascadeCount = cascadeCount;
+		outShadowCB.shadowDistance = shadowMatrices.shadowDistance;
+		outShadowCB.splitLambda = shadowMatrices.splitLambda;
+		outShadowCB.cascadeBlendFactor = kDefaultShadowCascadeBlendFactor;
+
+		_float splitDepths[kMaxShadowCascades] = {};
+
+		for (_uint cascadeIndex = 0u; cascadeIndex < kMaxShadowCascades; ++cascadeIndex)
+		{
+			const CLight::ShadowCascadeMatrix& cascade = shadowMatrices.cascades[cascadeIndex];
+			const _matrix cascadeView = XMLoadFloat4x4(&cascade.view);
+			const _matrix cascadeProj = XMLoadFloat4x4(&cascade.proj);
+			const _matrix cascadeVP = XMMatrixMultiply(cascadeView, cascadeProj);
+
+			XMStoreFloat4x4(&outShadowCB.cascadeShadowViewProj[cascadeIndex], cascadeVP);
+			outShadowCB.cascadeAtlasScaleOffsets[cascadeIndex] = cascade.atlasScaleOffset;
+			splitDepths[cascadeIndex] = cascade.splitDepth;
+		}
+
+		outShadowCB.cascadeSplits = _float4(splitDepths[0], splitDepths[1], splitDepths[2], splitDepths[3]);
 	}
 
 	struct RendererBatchKey
@@ -2397,25 +2454,18 @@ void CCamera::RenderLightingCombined(const D3D11_VIEWPORT* vp)
 	_matrix w = XMMatrixScaling(W, H, 1.f) * XMMatrixTranslation(W * 0.5f, H * 0.5f, 0.f);
 	_float3 camPos = GetTransform()->Get_Position();
 
-	InvViewProjCB invCB = { m_vVPInverseMatrix };
+	InvViewProjCB invCB = {};
+	invCB.gInvViewProj = m_vVPInverseMatrix;
+	invCB.gSceneView = m_vViewMatrix;
 	ctx->UpdateSubresource(m_pInvViewProjCB, 0, nullptr, &invCB, 0, 0);
 	ctx->PSSetConstantBuffers(5, 1, &m_pInvViewProjCB);
 
 	ShadowCB scb = {};
 	if (m_pMainLight && srvShadowDepth)
 	{
-		_matrix lv = XMLoadFloat4x4(&m_sMainLightMatrix.view);
-		_matrix lp = XMLoadFloat4x4(&m_sMainLightMatrix.proj);
-		_matrix lightVP = XMMatrixMultiply(lv, lp);
-
-		XMStoreFloat4x4(&scb.shadowViewProj, lightVP);
-
 		const _float shadowSize = (_float)CSceneManager::GetInstance().Get_LightSetting().shadowMapSize;
-		scb.invShadowMapSize = _float2(1.0f / shadowSize, 1.0f / shadowSize);
-		scb.bias = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().shadowBias;
-		scb.lightSize = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().softShadowLightSize;
-		vector3 lightDir = m_pMainLight->GetTransform()->Get_Directions().forward.normalized();
-		scb.lightDirWS = _float3(lightDir.x, lightDir.y, lightDir.z);
+		const auto& envSettings = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting();
+		PopulateShadowConstantBuffer(m_pMainLight, m_sMainLightMatrix, shadowSize, envSettings.shadowBias, envSettings.softShadowLightSize, scb);
 	}
 	ctx->UpdateSubresource(m_pShadowCB, 0, nullptr, &scb, 0, 0);
 	ctx->PSSetConstantBuffers(6, 1, &m_pShadowCB);
@@ -2533,7 +2583,9 @@ void CCamera::RenderLightingPass_ToDiffuse(const D3D11_VIEWPORT* vp)
 	_matrix w = XMMatrixScaling(W, H, 1.f) * XMMatrixTranslation(W * 0.5f, H * 0.5f, 0.f);
 	_float3 camPos = GetTransform()->Get_Position();
 
-	InvViewProjCB invCB = { m_vVPInverseMatrix };
+	InvViewProjCB invCB = {};
+	invCB.gInvViewProj = m_vVPInverseMatrix;
+	invCB.gSceneView = m_vViewMatrix;
 	ctx->UpdateSubresource(m_pInvViewProjCB, 0, nullptr, &invCB, 0, 0);
 	ctx->PSSetConstantBuffers(5, 1, &m_pInvViewProjCB);
 
@@ -2650,7 +2702,9 @@ void CCamera::RenderLightingPass_ToSpecular(const D3D11_VIEWPORT* vp)
 
 	_float3 camPos = GetTransform()->Get_Position();
 
-	InvViewProjCB invCB = { m_vVPInverseMatrix };
+	InvViewProjCB invCB = {};
+	invCB.gInvViewProj = m_vVPInverseMatrix;
+	invCB.gSceneView = m_vViewMatrix;
 	ctx->UpdateSubresource(m_pInvViewProjCB, 0, nullptr, &invCB, 0, 0);
 	ctx->PSSetConstantBuffers(5, 1, &m_pInvViewProjCB);
 
@@ -2722,15 +2776,6 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	ctx->OMSetRenderTargets(0, nullptr, dsvShadow);
 
 	const _uint shadowSize = (_uint)CSceneManager::GetInstance().Get_LightSetting().shadowMapSize;
-	D3D11_VIEWPORT vpt = {};
-	vpt.TopLeftX = 0.f;
-	vpt.TopLeftY = 0.f;
-	vpt.Width = (_float)shadowSize;
-	vpt.Height = (_float)shadowSize;
-	vpt.MinDepth = 0.f;
-	vpt.MaxDepth = 1.f;
-	ctx->RSSetViewports(1, &vpt);
-
 	ctx->ClearDepthStencilView(dsvShadow, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	if (m_pRTShadowDepthDS)
@@ -2742,12 +2787,20 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	ctx->OMSetBlendState(nullptr, bf, 0xFFFFFFFF);
 
 	CMaterial* shadowDepthMat = Find_RectMaterial(CRenderTarget::RTType::ShadowDepth);
-
-	_matrix lightView = XMLoadFloat4x4(&m_sMainLightMatrix.view);
-	const _float shadowDistance = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().directionalLightShadowDist;
-	const _float lightHalfExtent = shadowDistance * 0.5f;
-	const _float lightNear = 0.0f;
-	const _float lightFar = shadowDistance * 2.0f;
+	if (!shadowDepthMat)
+	{
+		ctx->OMSetRenderTargets(1, &prevRTV, prevDSV);
+		if (prevVPCount > 0) ctx->RSSetViewports(1, &prevVP);
+		ctx->OMSetDepthStencilState(prevDS, prevStencilRef);
+		ctx->RSSetState(prevRS);
+		ctx->OMSetBlendState(prevBS, prevBlendFactor, prevSampleMask);
+		Safe_Release(prevRTV);
+		Safe_Release(prevDSV);
+		Safe_Release(prevDS);
+		Safe_Release(prevRS);
+		Safe_Release(prevBS);
+		return;
+	}
 
 	auto isRenderableShadowTarget = [](CRenderer* r)
 	{
@@ -2764,12 +2817,13 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 		return true;
 	};
 
-	auto isShadowVisible = [this, &lightView, lightHalfExtent, lightNear, lightFar](CRenderer* r)
+	auto isShadowVisibleInCascade = [this](CRenderer* r, const CLight::ShadowCascadeMatrix& cascadeInfo)
 	{
 		BoundingBox worldAABB = {};
 		if (!TryBuildRendererWorldAABB(r, worldAABB))
 			return false;
 
+		const _matrix lightView = XMLoadFloat4x4(&cascadeInfo.view);
 		XMFLOAT3 corners[8] = {};
 		worldAABB.GetCorners(corners);
 
@@ -2788,11 +2842,15 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 		XMStoreFloat3(&aabbMin, minV);
 		XMStoreFloat3(&aabbMax, maxV);
 
-		if (aabbMax.x < -lightHalfExtent || aabbMin.x > lightHalfExtent)
+		const _float4& bounds = cascadeInfo.lightSpaceBounds;
+		const _float4& depthRange = cascadeInfo.lightSpaceDepthRange;
+		const _float lightSpacePadding = 0.1f;
+
+		if (aabbMax.x < (bounds.x - lightSpacePadding) || aabbMin.x > (bounds.y + lightSpacePadding))
 			return false;
-		if (aabbMax.y < -lightHalfExtent || aabbMin.y > lightHalfExtent)
+		if (aabbMax.y < (bounds.z - lightSpacePadding) || aabbMin.y > (bounds.w + lightSpacePadding))
 			return false;
-		if (aabbMax.z < lightNear || aabbMin.z > lightFar)
+		if (aabbMax.z < (depthRange.x - lightSpacePadding) || aabbMin.z > (depthRange.y + lightSpacePadding))
 			return false;
 
 		return true;
@@ -2833,55 +2891,101 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 	{
 		if (!isRenderableShadowTarget(r))
 			continue;
-		if (!isShadowVisible(r))
-			continue;
 
 		ShadowBatchKey key = { r->Get_MeshBuffer(), r->Get_Material(), r->IsCastShadow(), r->IsMirroredTransform() };
 		staticBatches[key].push_back(r);
 	}
 
-	for (auto& kv : staticBatches)
+	const _uint cascadeCount = (m_sMainLightMatrix.cascadeCount > 0u)
+		? min(m_sMainLightMatrix.cascadeCount, kMaxShadowCascades)
+		: 1u;
+
+	auto buildCascadeViewport = [shadowSize](const _float4& atlasScaleOffset)
 	{
-		auto& batch = kv.second;
-		if (batch.empty())
-			continue;
+		D3D11_VIEWPORT viewport = {};
+		viewport.TopLeftX = atlasScaleOffset.z * static_cast<_float>(shadowSize);
+		viewport.TopLeftY = atlasScaleOffset.w * static_cast<_float>(shadowSize);
+		viewport.Width = max(1.f, atlasScaleOffset.x * static_cast<_float>(shadowSize));
+		viewport.Height = max(1.f, atlasScaleOffset.y * static_cast<_float>(shadowSize));
+		viewport.MinDepth = 0.f;
+		viewport.MaxDepth = 1.f;
+		return viewport;
+	};
 
-		CRenderer* leader = batch[0];
-		if (!leader || !leader->Get_GameObject() || !leader->GetTransform())
-			continue;
+	auto buildCascadeShadowMatrices = [this](const _uint cascadeIndex)
+	{
+		CLight::ShadowMatrices cascadeMatrices = {};
+		cascadeMatrices.view = m_sMainLightMatrix.cascades[cascadeIndex].view;
+		cascadeMatrices.proj = m_sMainLightMatrix.cascades[cascadeIndex].proj;
+		cascadeMatrices.cascadeCount = 1u;
+		cascadeMatrices.shadowDistance = m_sMainLightMatrix.cascades[cascadeIndex].splitDepth;
+		cascadeMatrices.splitLambda = m_sMainLightMatrix.splitLambda;
+		cascadeMatrices.cascades[0] = m_sMainLightMatrix.cascades[cascadeIndex];
+		return cascadeMatrices;
+	};
 
-		const _uint maxInstanceCount = 128u;
+	for (_uint cascadeIndex = 0u; cascadeIndex < cascadeCount; ++cascadeIndex)
+	{
+		const CLight::ShadowCascadeMatrix& cascadeInfo = m_sMainLightMatrix.cascades[cascadeIndex];
+		const D3D11_VIEWPORT cascadeViewport = buildCascadeViewport(cascadeInfo.atlasScaleOffset);
+		ctx->RSSetViewports(1, &cascadeViewport);
+		const CLight::ShadowMatrices cascadeShadowMatrices = buildCascadeShadowMatrices(cascadeIndex);
 
-		for (size_t offset = 0; offset < batch.size(); offset += maxInstanceCount)
+		for (auto& kv : staticBatches)
 		{
-			const size_t remain = batch.size() - offset;
-			const _uint chunkCount = static_cast<_uint>(min<size_t>(remain, maxInstanceCount));
+			auto& batch = kv.second;
+			if (batch.empty())
+				continue;
 
-			leader->CreateMeshInstancing(chunkCount);
+			vector<CRenderer*> visibleBatch = {};
+			visibleBatch.reserve(batch.size());
 
-			for (_uint i = 0; i < chunkCount; ++i)
+			for (auto* renderer : batch)
 			{
-				CRenderer* r = batch[offset + i];
-				if (!r || !r->GetTransform())
-					continue;
-
-				leader->SetInstancingWorldMatrix(i, r->GetTransform()->GetSnapshotWorldMatrix());
+				if (isShadowVisibleInCascade(renderer, cascadeInfo))
+					visibleBatch.push_back(renderer);
 			}
 
-			leader->Render_ShadowDepth(shadowDepthMat, m_sMainLightMatrix);
-			leader->CreateMeshInstancing(0);
+			if (visibleBatch.empty())
+				continue;
+
+			CRenderer* leader = visibleBatch[0];
+			if (!leader || !leader->Get_GameObject() || !leader->GetTransform())
+				continue;
+
+			const _uint maxInstanceCount = 128u;
+
+			for (size_t offset = 0; offset < visibleBatch.size(); offset += maxInstanceCount)
+			{
+				const size_t remain = visibleBatch.size() - offset;
+				const _uint chunkCount = static_cast<_uint>(min<size_t>(remain, maxInstanceCount));
+
+				leader->CreateMeshInstancing(chunkCount);
+
+				for (_uint i = 0; i < chunkCount; ++i)
+				{
+					CRenderer* r = visibleBatch[offset + i];
+					if (!r || !r->GetTransform())
+						continue;
+
+					leader->SetInstancingWorldMatrix(i, r->GetTransform()->GetSnapshotWorldMatrix());
+				}
+
+				leader->Render_ShadowDepth(shadowDepthMat, cascadeShadowMatrices);
+				leader->CreateMeshInstancing(0);
+			}
 		}
-	}
 
-	for (auto& entry : m_vDynamicMeshEntries)
-	{
-		auto* r = entry.renderer;
-		if (!isRenderableShadowTarget(r))
-			continue;
-		if (!isShadowVisible(r))
-			continue;
+		for (auto& entry : m_vDynamicMeshEntries)
+		{
+			auto* r = entry.renderer;
+			if (!isRenderableShadowTarget(r))
+				continue;
+			if (!isShadowVisibleInCascade(r, cascadeInfo))
+				continue;
 
-		r->Render_ShadowDepth(shadowDepthMat, m_sMainLightMatrix);
+			r->Render_ShadowDepth(shadowDepthMat, cascadeShadowMatrices);
+		}
 	}
 
 	rtm.Unbind_AllSRVs_PS(ctx, m_bIsEditor);
@@ -3014,25 +3118,16 @@ void CCamera::RenderShadowMaskPass(const D3D11_VIEWPORT* vp)
 	_matrix w = XMMatrixScaling(W, H, 1.f) * XMMatrixTranslation(W * 0.5f, H * 0.5f, 0.f);
 	_float3 camPos = GetTransform()->Get_Position();
 
-	InvViewProjCB invCB = { m_vVPInverseMatrix };
+	InvViewProjCB invCB = {};
+	invCB.gInvViewProj = m_vVPInverseMatrix;
+	invCB.gSceneView = m_vViewMatrix;
 	ctx->UpdateSubresource(m_pInvViewProjCB, 0, nullptr, &invCB, 0, 0);
 	ctx->PSSetConstantBuffers(5, 1, &m_pInvViewProjCB);
 
-	_matrix lv = XMLoadFloat4x4(&m_sMainLightMatrix.view);
-	_matrix lp = XMLoadFloat4x4(&m_sMainLightMatrix.proj);
-
-	_matrix lightVP = XMMatrixMultiply(lv, lp);
-
 	ShadowCB scb = {};
-	XMStoreFloat4x4(&scb.shadowViewProj, lightVP);
-
 	const _float shadowSize = (_float)CSceneManager::GetInstance().Get_LightSetting().shadowMapSize;
-	scb.invShadowMapSize = _float2(1.0f / shadowSize, 1.0f / shadowSize);
-
-	scb.bias = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().shadowBias;
-	scb.lightSize = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting().softShadowLightSize;
-	vector3 lightDir = m_pMainLight->GetTransform()->Get_Directions().forward.normalized();
-	scb.lightDirWS = _float3(lightDir.x, lightDir.y, lightDir.z);
+	const auto& envSettings = CSceneManager::GetInstance().Get_CrtScene()->Get_EnviromentSetting();
+	PopulateShadowConstantBuffer(m_pMainLight, m_sMainLightMatrix, shadowSize, envSettings.shadowBias, envSettings.softShadowLightSize, scb);
 
 	ctx->UpdateSubresource(m_pShadowCB, 0, nullptr, &scb, 0, 0);
 	ctx->PSSetConstantBuffers(6, 1, &m_pShadowCB);

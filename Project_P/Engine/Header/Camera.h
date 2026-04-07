@@ -24,6 +24,7 @@ class ENGINE_DLL CCamera : public CComponent
 	struct InvViewProjCB
 	{
 		_float4x4 gInvViewProj;
+		_float4x4 gSceneView;
 	};
 
 	struct SpecularParamsCB

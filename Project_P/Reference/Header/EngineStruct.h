@@ -1347,6 +1347,8 @@ namespace Engine
         _uint materialPadding2;
     };
 
+    inline constexpr _uint kMaxShadowCascades = 4u;
+
     struct LightCB
     {
         _matrix lights[64];
@@ -1360,6 +1362,13 @@ namespace Engine
         _float lightSize;
         _float3 lightDirWS;
         _float shadowPadding0;
+        _float4x4 cascadeShadowViewProj[kMaxShadowCascades];
+        _float4 cascadeSplits;
+        _float4 cascadeAtlasScaleOffsets[kMaxShadowCascades];
+        _uint cascadeCount;
+        _float shadowDistance;
+        _float splitLambda;
+        _float cascadeBlendFactor;
     };
 
     struct ImageCB
