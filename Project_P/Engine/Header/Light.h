@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Component.h"
+#include <array>
 
 NS_BEGIN(Engine)
 
@@ -13,6 +14,23 @@ public:
 	{
 		_float4x4 view;
 		_float4x4 proj;
+	};
+
+	struct ShadowCascade
+	{
+		ShadowMatrices matrices = {};
+		_float splitDepth = 0.f;
+		_float3 lightSpaceMin = {};
+		_float padding0 = 0.f;
+		_float3 lightSpaceMax = {};
+		_float padding1 = 0.f;
+	};
+
+	struct DirectionalShadowData
+	{
+		array<ShadowCascade, kMaxShadowCascades> cascades = {};
+		_uint cascadeCount = 0u;
+		_float3 padding = {};
 	};
 
 public:
@@ -56,7 +74,7 @@ public:
 	const bool IsCastShadow() const;
 	void SetCastShadow(_bool _value);
 
-	void BuildDirectionalShadow(class CCamera* _cam, _float _shadowDistance, ShadowMatrices& _outShadowMatix);
+	void BuildDirectionalShadows(class CCamera* _cam, _float _shadowDistance, DirectionalShadowData& _outShadowData);
 
 private:
 	Type m_eType;

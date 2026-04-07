@@ -11,7 +11,7 @@ cbuffer PerCamera : register(b1)
     float4x4 proj;
 };
 
-Texture2D<float> gShadowDepth : register(t0);
+Texture2DArray<float> gShadowDepth : register(t0);
 SamplerState gSampler : register(s0);
 
 struct VSIn
@@ -45,9 +45,16 @@ float RemapDepthForView(float d)
 
 float4 PSMain(VSOut i) : SV_Target
 {
-    float2 uvTex = float2(i.uv.x, 1.0f - i.uv.y);
+    float2 atlasUV = saturate(i.uv);
+    float2 tiledUV = atlasUV * 2.0f;
+    uint tileX = min((uint)tiledUV.x, 1u);
+    uint tileY = min((uint)tiledUV.y, 1u);
+    uint cascadeIndex = tileX + tileY * 2u;
 
-    float d = gShadowDepth.SampleLevel(gSampler, uvTex, 0);
+    float2 uvTex = frac(tiledUV);
+    uvTex.y = 1.0f - uvTex.y;
+
+    float d = gShadowDepth.SampleLevel(gSampler, float3(uvTex, cascadeIndex), 0);
 
     float v = RemapDepthForView(d);
     

@@ -177,6 +177,18 @@ void CRenderTargetManager::Clear_RenderTarget(const CRenderTarget::RTType type, 
 
     if (type == CRenderTarget::RTType::Depth || type == CRenderTarget::RTType::ShadowDepth)
     {
+        if (type == CRenderTarget::RTType::ShadowDepth)
+        {
+            for (_uint slice = 0u; slice < kMaxShadowCascades; ++slice)
+            {
+                ID3D11DepthStencilView* dsvSlice = rt.GetDSV(slice);
+                if (dsvSlice)
+                    context->ClearDepthStencilView(dsvSlice, D3D11_CLEAR_DEPTH, 1.0f, 0);
+            }
+
+            return;
+        }
+
         ID3D11DepthStencilView* dsv = rt.GetDSV();
 
         if (!dsv)
@@ -246,13 +258,13 @@ ID3D11ShaderResourceView* CRenderTargetManager::GetSRV(const CRenderTarget::RTTy
     return it->second.GetSRV();
 }
 
-ID3D11DepthStencilView* CRenderTargetManager::GetDSV(const CRenderTarget::RTType type, const _bool _isEditor) const
+ID3D11DepthStencilView* CRenderTargetManager::GetDSV(const CRenderTarget::RTType type, const _bool _isEditor, _uint slice) const
 {
     auto& rtMap = PickRTMapConst(this, _isEditor);
     auto it = rtMap.find(type);
     if (it == rtMap.end())
         return nullptr;
-    return it->second.GetDSV();
+    return it->second.GetDSV(slice);
 }
 
 const _uint CRenderTargetManager::GetWidth(const _bool _isEditor) const

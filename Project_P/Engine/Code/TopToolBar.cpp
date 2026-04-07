@@ -429,7 +429,7 @@ void CTopToolBar::ShowSceneSettingsWindow()
 		return;
 	}
 
-	ImGui::SetNextWindowSize(ImVec2(420.f, 220.f), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(420.f, 300.f), ImGuiCond_FirstUseEver);
 
 	if (ImGui::Begin("Scene Settings", &m_bSceneSettingsWindowOpen))
 	{
@@ -438,6 +438,8 @@ void CTopToolBar::ShowSceneSettingsWindow()
 		_float shadowDist = setting.directionalLightShadowDist;
 		_float shadowBias = setting.shadowBias;
 		_float softShadowLightSize = setting.softShadowLightSize;
+		_float shadowSplitLambda = setting.directionalShadowSplitLambda;
+		_float shadowCascadeBlendRatio = setting.shadowCascadeBlendRatio;
 
 		ImGui::Text("Scene");
 		ImGui::Separator();
@@ -455,6 +457,12 @@ void CTopToolBar::ShowSceneSettingsWindow()
 
 		if (ImGui::DragFloat("Soft Shadow Light Size", &softShadowLightSize, 0.1f, 0.f, 50.f, "%.1f"))
 			currentScene->Set_SoftShadowLightSize(softShadowLightSize);
+
+		if (ImGui::SliderFloat("CSM Split Lambda", &shadowSplitLambda, 0.f, 1.f, "%.2f"))
+			currentScene->Set_DirectionalShadowSplitLambda(shadowSplitLambda);
+
+		if (ImGui::SliderFloat("CSM Cascade Blend", &shadowCascadeBlendRatio, 0.f, 0.5f, "%.2f"))
+			currentScene->Set_ShadowCascadeBlendRatio(shadowCascadeBlendRatio);
 
 		ImGui::Spacing();
 		if (ImGui::Button("Save"))

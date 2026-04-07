@@ -42,6 +42,8 @@ HRESULT CMeshBuffer::Initialize(const wstring& _name, const wstring& _filePath, 
         info = CreateSphere();
     else if (_filePath == L"../Assets/Cylinder")
         info = CreateCylinder();
+    else if (_filePath == L"../Assets/Plane")
+        info = CreatePlane();
     else if (_filePath == L"../Assets/Quad")
         info = CreateQuad();
     else if (_filePath == L"../Assets/Terrain")
@@ -633,6 +635,40 @@ CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreateQuad()
 
     info.buffer.assign(reinterpret_cast<uint8_t*>(quadVertices),reinterpret_cast<uint8_t*>(quadVertices) + sizeof(quadVertices));
     info.indices.assign(begin(quadIndices), end(quadIndices));
+    info.desc = desc;
+
+    return info;
+}
+
+CMeshBuffer::MeshBufferInitiaizeInfo CMeshBuffer::CreatePlane()
+{
+    MeshBufferInitiaizeInfo info = {};
+
+    const _float length = 0.5f;
+
+    VertexTexNormalTangentBuffer planeVertices[4] =
+    {
+            {{-length, 0.f, -length}, { 0.f, 1.f,  0.f}, {0.f, 1.f}, {1.f, 0.f, 0.f}},
+            {{ length, 0.f, -length}, { 0.f, 1.f,  0.f}, {1.f, 1.f}, {1.f, 0.f, 0.f}},
+            {{ length, 0.f,  length}, { 0.f, 1.f,  0.f}, {1.f, 0.f}, {1.f, 0.f, 0.f}},
+            {{-length, 0.f,  length}, { 0.f, 1.f,  0.f}, {0.f, 0.f}, {1.f, 0.f, 0.f}},
+    };
+
+    static _uint planeIndices[6] =
+    {
+        2, 1, 0, 3, 2, 0
+    };
+
+    CMeshBuffer::MESHBUFFERDESC desc{};
+    desc.topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    desc.vertexSize = sizeof(VertexTexNormalTangentBuffer);
+    desc.vertextCount = _countof(planeVertices);
+    desc.indexCount = _countof(planeIndices);
+    desc.boundingBox.Center = _float3(0.f, 0.f, 0.f);
+    desc.boundingBox.Extents = _float3(length, 0.f, length);
+
+    info.buffer.assign(reinterpret_cast<uint8_t*>(planeVertices), reinterpret_cast<uint8_t*>(planeVertices) + sizeof(planeVertices));
+    info.indices.assign(begin(planeIndices), end(planeIndices));
     info.desc = desc;
 
     return info;

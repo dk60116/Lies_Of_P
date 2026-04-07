@@ -232,7 +232,7 @@ private:
 	ID3D11Buffer* m_pUIInstanceBuffer;
 
 	CLight* m_pMainLight;
-	CLight::ShadowMatrices m_sMainLightMatrix;
+	CLight::DirectionalShadowData m_sMainLightShadowData;
 
 	ID3D11Texture2D* m_pPickStaging;
 

@@ -1288,6 +1288,18 @@ void CScene::Render_Game(const _uint _frameIndex)
 		camera->RenderMesh();
 		camera->RenderShadowDepthPass(vp);
 		camera->RenderObjectIDPass(vp);
+
+		const _bool renderGameRTDebugIntermediates =
+			(dynamic_cast<CEditorCamera*>(camera) == nullptr) &&
+			CEditor::GetInstance().IsSelected(camera->Get_GameObject());
+
+		if (renderGameRTDebugIntermediates)
+		{
+			camera->RenderLightingPass_ToDiffuse(vp);
+			camera->RenderLightingPass_ToSpecular(vp);
+			camera->RenderShadowMaskPass(vp);
+		}
+
 		camera->RenderLightingCombined(vp);
 
 		CGraphicDevice::GetInstance().Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
@@ -1719,6 +1731,8 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			if (CMaterial* material = meshRenderer->Get_Material())
 			{
 				info.materialName = resolveSharedResourceName(material, material->Get_ResourceName(), sharedMaterialResourceNames);
+				info.hasMaterialBaseColor = true;
+				info.materialBaseColor = material->Get_BaseColor();
 
 				const _uint textureCount = material->Get_TextureCount();
 				info.materialTextures.reserve(textureCount);
@@ -2220,7 +2234,15 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			}
 		}
 
-		const _bool hasMaterialOverrides = !info.materialTextures.empty() || !info.materialFloatValues.empty() || !info.materialIntValues.empty() || !info.materialVector2Values.empty() || !info.materialVector3Values.empty() || !info.materialVector4Values.empty() || !info.materialMatrixValues.empty();
+		const _bool hasMaterialOverrides =
+			info.hasMaterialBaseColor ||
+			!info.materialTextures.empty() ||
+			!info.materialFloatValues.empty() ||
+			!info.materialIntValues.empty() ||
+			!info.materialVector2Values.empty() ||
+			!info.materialVector3Values.empty() ||
+			!info.materialVector4Values.empty() ||
+			!info.materialMatrixValues.empty();
 
 		if (!info.materialName.empty() || hasMaterialOverrides)
 		{
@@ -2267,6 +2289,9 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 				{
 					if (!material)
 						return;
+
+					if (info.hasMaterialBaseColor)
+						material->Set_BaseColor(info.materialBaseColor);
 
 					CResources& resources = CResources::GetInstance();
 					auto makeTextureResourceNameFromPath = [](const wstring& path)
@@ -3097,7 +3122,7 @@ vector<CRenderer*> CScene::Get_MeshObjects()
 	return result;
 }
 
-const CScene::EnviromentSettings& CScene::Get_EnviromentSetting()
+const CScene::EnviromentSettings& CScene::Get_EnviromentSetting() const
 {
 	return m_sEnviromentSettings;
 }
@@ -3139,6 +3164,16 @@ void CScene::Set_ShadwoBias(const _float _value)
 void CScene::Set_SoftShadowLightSize(const _float _value)
 {
 	m_sEnviromentSettings.softShadowLightSize = _value;
+}
+
+void CScene::Set_DirectionalShadowSplitLambda(const _float _value)
+{
+	m_sEnviromentSettings.directionalShadowSplitLambda = std::clamp(_value, 0.f, 1.f);
+}
+
+void CScene::Set_ShadowCascadeBlendRatio(const _float _value)
+{
+	m_sEnviromentSettings.shadowCascadeBlendRatio = std::clamp(_value, 0.f, 1.f);
 }
 
 CCamera* CScene::Get_Camera() const
@@ -3315,6 +3350,8 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 	string sceneDirectionalLightShadowDistLine = "SceneDirectionalLightShadowDist : " + to_string(m_sEnviromentSettings.directionalLightShadowDist);
 	string sceneShadowBiasLine = "SceneShadowBias : " + to_string(m_sEnviromentSettings.shadowBias);
 	string sceneSoftShadowLightSizeLine = "SceneSoftShadowLightSize : " + to_string(m_sEnviromentSettings.softShadowLightSize);
+	string sceneDirectionalShadowSplitLambdaLine = "SceneDirectionalShadowSplitLambda : " + to_string(m_sEnviromentSettings.directionalShadowSplitLambda);
+	string sceneShadowCascadeBlendRatioLine = "SceneShadowCascadeBlendRatio : " + to_string(m_sEnviromentSettings.shadowCascadeBlendRatio);
 	vector<string> preservedManualLines;
 	unordered_map<wstring, SceneResourceEntry> previousEntries;
 	unordered_set<wstring> previousNonEditorClipPaths;
@@ -3343,7 +3380,7 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 			}
 
 
-			if (key == "SceneSkyBox" || key == "SceneAmbient" || key == "SceneDirectionalLightShadowDist" || key == "SceneShadowBias" || key == "SceneSoftShadowLightSize")
+			if (key == "SceneSkyBox" || key == "SceneAmbient" || key == "SceneDirectionalLightShadowDist" || key == "SceneShadowBias" || key == "SceneSoftShadowLightSize" || key == "SceneDirectionalShadowSplitLambda" || key == "SceneShadowCascadeBlendRatio")
 			{
 				continue;
 			}
@@ -3522,6 +3559,8 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 	out << sceneDirectionalLightShadowDistLine << "\n";
 	out << sceneShadowBiasLine << "\n";
 	out << sceneSoftShadowLightSizeLine << "\n";
+	out << sceneDirectionalShadowSplitLambdaLine << "\n";
+	out << sceneShadowCascadeBlendRatioLine << "\n";
 	for (const auto& preservedLine : preservedManualLines)
 		out << preservedLine << "\n";
 	for (const auto& entry : sortedEntries)
@@ -3735,6 +3774,18 @@ HRESULT CScene::PreLoadResources()
 			if (name == "SceneSoftShadowLightSize")
 			{
 				try { m_sEnviromentSettings.softShadowLightSize = stof(filepath); } catch (...) {}
+				continue;
+			}
+
+			if (name == "SceneDirectionalShadowSplitLambda")
+			{
+				try { m_sEnviromentSettings.directionalShadowSplitLambda = std::clamp(stof(filepath), 0.f, 1.f); } catch (...) {}
+				continue;
+			}
+
+			if (name == "SceneShadowCascadeBlendRatio")
+			{
+				try { m_sEnviromentSettings.shadowCascadeBlendRatio = std::clamp(stof(filepath), 0.f, 1.f); } catch (...) {}
 				continue;
 			}
 

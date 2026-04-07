@@ -385,6 +385,123 @@ static string BuildShortLabel(const string& input, const size_t maxLen)
     return input.substr(0, maxLen - 3) + "...";
 }
 
+static _bool IsMaterialColorLikeKey(const wstring& key)
+{
+    const string lowerKey = CEditor::ToLowerCopy(CEngineString::WStringToString(key));
+
+    return lowerKey.find("color") != string::npos
+        || lowerKey.find("colour") != string::npos
+        || lowerKey.find("tint") != string::npos;
+}
+
+static void RenderMaterialPropertyEditors(CMaterial* material, const string& idSuffix)
+{
+    if (!material)
+        return;
+
+    if (ImGui::TreeNode(("Material Properties##" + idSuffix).c_str()))
+    {
+        const _float4 baseColor = material->Get_BaseColor();
+        _float baseColorValues[4] = { baseColor.x, baseColor.y, baseColor.z, baseColor.w };
+        if (ImGui::ColorEdit4(("Base Color##" + idSuffix).c_str(), baseColorValues))
+            material->Set_BaseColor({ baseColorValues[0], baseColorValues[1], baseColorValues[2], baseColorValues[3] });
+
+        for (const auto& [key, value] : material->Get_FloatValues())
+        {
+            _float v = value;
+            const string keyStr = CEngineString::WStringToString(key);
+            if (ImGui::InputFloat((keyStr + "##CustomFloat" + idSuffix).c_str(), &v))
+                material->Set_FloatValue(key, v);
+        }
+
+        for (const auto& [key, value] : material->Get_IntValues())
+        {
+            _int v = value;
+            const string keyStr = CEngineString::WStringToString(key);
+            if (ImGui::InputInt((keyStr + "##CustomInt" + idSuffix).c_str(), &v))
+                material->Set_IntValue(key, v);
+        }
+
+        for (const auto& [key, value] : material->Get_Vector2Values())
+        {
+            _float2 v = value;
+            _float arr[2] = { v.x, v.y };
+            const string keyStr = CEngineString::WStringToString(key);
+            if (ImGui::InputFloat2((keyStr + "##CustomVec2" + idSuffix).c_str(), arr))
+                material->Set_Vector2Value(key, { arr[0], arr[1] });
+        }
+
+        for (const auto& [key, value] : material->Get_Vector3Values())
+        {
+            _float3 v = value;
+            _float arr[3] = { v.x, v.y, v.z };
+            const string keyStr = CEngineString::WStringToString(key);
+            const _bool isColorLike = IsMaterialColorLikeKey(key);
+            const string widgetId = isColorLike
+                ? (keyStr + "##CustomColor3" + idSuffix)
+                : (keyStr + "##CustomVec3" + idSuffix);
+
+            const _bool changed = isColorLike
+                ? ImGui::ColorEdit3(widgetId.c_str(), arr)
+                : ImGui::InputFloat3(widgetId.c_str(), arr);
+
+            if (changed)
+                material->Set_Vector3Value(key, { arr[0], arr[1], arr[2] });
+        }
+
+        for (const auto& [key, value] : material->Get_Vector4Values())
+        {
+            _float4 v = value;
+            _float arr[4] = { v.x, v.y, v.z, v.w };
+            const string keyStr = CEngineString::WStringToString(key);
+            const _bool isColorLike = IsMaterialColorLikeKey(key);
+            const string widgetId = isColorLike
+                ? (keyStr + "##CustomColor4" + idSuffix)
+                : (keyStr + "##CustomVec4" + idSuffix);
+
+            const _bool changed = isColorLike
+                ? ImGui::ColorEdit4(widgetId.c_str(), arr)
+                : ImGui::InputFloat4(widgetId.c_str(), arr);
+
+            if (changed)
+                material->Set_Vector4Value(key, { arr[0], arr[1], arr[2], arr[3] });
+        }
+
+        for (const auto& [key, value] : material->Get_MatrixValues())
+        {
+            const string keyStr = CEngineString::WStringToString(key);
+            if (ImGui::TreeNode((keyStr + "##CustomMat" + idSuffix).c_str()))
+            {
+                _float4x4 mat = value;
+                _float row1[4] = { mat._11, mat._12, mat._13, mat._14 };
+                _float row2[4] = { mat._21, mat._22, mat._23, mat._24 };
+                _float row3[4] = { mat._31, mat._32, mat._33, mat._34 };
+                _float row4[4] = { mat._41, mat._42, mat._43, mat._44 };
+
+                _bool changed = false;
+                changed |= ImGui::InputFloat4(("R1##" + keyStr + idSuffix).c_str(), row1);
+                changed |= ImGui::InputFloat4(("R2##" + keyStr + idSuffix).c_str(), row2);
+                changed |= ImGui::InputFloat4(("R3##" + keyStr + idSuffix).c_str(), row3);
+                changed |= ImGui::InputFloat4(("R4##" + keyStr + idSuffix).c_str(), row4);
+
+                if (changed)
+                {
+                    _float4x4 newMat = {};
+                    newMat._11 = row1[0]; newMat._12 = row1[1]; newMat._13 = row1[2]; newMat._14 = row1[3];
+                    newMat._21 = row2[0]; newMat._22 = row2[1]; newMat._23 = row2[2]; newMat._24 = row2[3];
+                    newMat._31 = row3[0]; newMat._32 = row3[1]; newMat._33 = row3[2]; newMat._34 = row3[3];
+                    newMat._41 = row4[0]; newMat._42 = row4[1]; newMat._43 = row4[2]; newMat._44 = row4[3];
+                    material->Set_MatrixValue(key, newMat);
+                }
+
+                ImGui::TreePop();
+            }
+        }
+
+        ImGui::TreePop();
+    }
+}
+
 static _uint ResolveTextureMipLevelCount(const D3D11_TEXTURE2D_DESC& desc)
 {
     if (desc.MipLevels > 0)
@@ -3013,84 +3130,7 @@ void CInspectorBox::RenderMeshRendererComponent(CMeshRenderer* _meshRenderer)
             }
         }
 
-        if (ImGui::TreeNode("Custom Values"))
-        {
-            for (const auto& [key, value] : material->Get_FloatValues())
-            {
-                _float v = value;
-                const string keyStr = CEngineString::WStringToString(key);
-                if (ImGui::InputFloat((keyStr + "##CustomFloat").c_str(), &v))
-                    material->Set_FloatValue(key, v);
-            }
-
-            for (const auto& [key, value] : material->Get_IntValues())
-            {
-                _int v = value;
-                const string keyStr = CEngineString::WStringToString(key);
-                if (ImGui::InputInt((keyStr + "##CustomInt").c_str(), &v))
-                    material->Set_IntValue(key, v);
-            }
-
-            for (const auto& [key, value] : material->Get_Vector2Values())
-            {
-                _float2 v = value;
-                _float arr[2] = { v.x, v.y };
-                const string keyStr = CEngineString::WStringToString(key);
-                if (ImGui::InputFloat2((keyStr + "##CustomVec2").c_str(), arr))
-                    material->Set_Vector2Value(key, { arr[0], arr[1] });
-            }
-
-            for (const auto& [key, value] : material->Get_Vector3Values())
-            {
-                _float3 v = value;
-                _float arr[3] = { v.x, v.y, v.z };
-                const string keyStr = CEngineString::WStringToString(key);
-                if (ImGui::InputFloat3((keyStr + "##CustomVec3").c_str(), arr))
-                    material->Set_Vector3Value(key, { arr[0], arr[1], arr[2] });
-            }
-
-            for (const auto& [key, value] : material->Get_Vector4Values())
-            {
-                _float4 v = value;
-                _float arr[4] = { v.x, v.y, v.z, v.w };
-                const string keyStr = CEngineString::WStringToString(key);
-                if (ImGui::InputFloat4((keyStr + "##CustomVec4").c_str(), arr))
-                    material->Set_Vector4Value(key, { arr[0], arr[1], arr[2], arr[3] });
-            }
-
-            for (const auto& [key, value] : material->Get_MatrixValues())
-            {
-                const string keyStr = CEngineString::WStringToString(key);
-                if (ImGui::TreeNode((keyStr + "##CustomMat").c_str()))
-                {
-                    _float4x4 mat = value;
-                    _float row1[4] = { mat._11, mat._12, mat._13, mat._14 };
-                    _float row2[4] = { mat._21, mat._22, mat._23, mat._24 };
-                    _float row3[4] = { mat._31, mat._32, mat._33, mat._34 };
-                    _float row4[4] = { mat._41, mat._42, mat._43, mat._44 };
-
-                    _bool changed = false;
-                    changed |= ImGui::InputFloat4(("R1##" + keyStr).c_str(), row1);
-                    changed |= ImGui::InputFloat4(("R2##" + keyStr).c_str(), row2);
-                    changed |= ImGui::InputFloat4(("R3##" + keyStr).c_str(), row3);
-                    changed |= ImGui::InputFloat4(("R4##" + keyStr).c_str(), row4);
-
-                    if (changed)
-                    {
-                        _float4x4 newMat = {};
-                        newMat._11 = row1[0]; newMat._12 = row1[1]; newMat._13 = row1[2]; newMat._14 = row1[3];
-                        newMat._21 = row2[0]; newMat._22 = row2[1]; newMat._23 = row2[2]; newMat._24 = row2[3];
-                        newMat._31 = row3[0]; newMat._32 = row3[1]; newMat._33 = row3[2]; newMat._34 = row3[3];
-                        newMat._41 = row4[0]; newMat._42 = row4[1]; newMat._43 = row4[2]; newMat._44 = row4[3];
-                        material->Set_MatrixValue(key, newMat);
-                    }
-
-                    ImGui::TreePop();
-                }
-            }
-
-            ImGui::TreePop();
-        }
+        RenderMaterialPropertyEditors(material, to_string(reinterpret_cast<uintptr_t>(_meshRenderer)));
 
         RenderGameSceneMipEstimate(_meshRenderer, material);
     }
@@ -3197,84 +3237,7 @@ void CInspectorBox::RenderSkinnedMeshRendererComponent(CGameObject* _obj, CSkinn
             }
         }
 
-        if (ImGui::TreeNode("Material Properties"))
-        {
-            for (const auto& [key, value] : material->Get_FloatValues())
-            {
-                _float v = value;
-                const string keyStr = CEngineString::WStringToString(key);
-                if (ImGui::InputFloat((keyStr + "##CustomFloat").c_str(), &v))
-                    material->Set_FloatValue(key, v);
-            }
-
-            for (const auto& [key, value] : material->Get_IntValues())
-            {
-                _int v = value;
-                const string keyStr = CEngineString::WStringToString(key);
-                if (ImGui::InputInt((keyStr + "##CustomInt").c_str(), &v))
-                    material->Set_IntValue(key, v);
-            }
-
-            for (const auto& [key, value] : material->Get_Vector2Values())
-            {
-                _float2 v = value;
-                _float arr[2] = { v.x, v.y };
-                const string keyStr = CEngineString::WStringToString(key);
-                if (ImGui::InputFloat2((keyStr + "##CustomVec2").c_str(), arr))
-                    material->Set_Vector2Value(key, { arr[0], arr[1] });
-            }
-
-            for (const auto& [key, value] : material->Get_Vector3Values())
-            {
-                _float3 v = value;
-                _float arr[3] = { v.x, v.y, v.z };
-                const string keyStr = CEngineString::WStringToString(key);
-                if (ImGui::InputFloat3((keyStr + "##CustomVec3").c_str(), arr))
-                    material->Set_Vector3Value(key, { arr[0], arr[1], arr[2] });
-            }
-
-            for (const auto& [key, value] : material->Get_Vector4Values())
-            {
-                _float4 v = value;
-                _float arr[4] = { v.x, v.y, v.z, v.w };
-                const string keyStr = CEngineString::WStringToString(key);
-                if (ImGui::InputFloat4((keyStr + "##CustomVec4").c_str(), arr))
-                    material->Set_Vector4Value(key, { arr[0], arr[1], arr[2], arr[3] });
-            }
-
-            for (const auto& [key, value] : material->Get_MatrixValues())
-            {
-                const string keyStr = CEngineString::WStringToString(key);
-                if (ImGui::TreeNode((keyStr + "##CustomMat").c_str()))
-                {
-                    _float4x4 mat = value;
-                    _float row1[4] = { mat._11, mat._12, mat._13, mat._14 };
-                    _float row2[4] = { mat._21, mat._22, mat._23, mat._24 };
-                    _float row3[4] = { mat._31, mat._32, mat._33, mat._34 };
-                    _float row4[4] = { mat._41, mat._42, mat._43, mat._44 };
-
-                    _bool changed = false;
-                    changed |= ImGui::InputFloat4(("R1##" + keyStr).c_str(), row1);
-                    changed |= ImGui::InputFloat4(("R2##" + keyStr).c_str(), row2);
-                    changed |= ImGui::InputFloat4(("R3##" + keyStr).c_str(), row3);
-                    changed |= ImGui::InputFloat4(("R4##" + keyStr).c_str(), row4);
-
-                    if (changed)
-                    {
-                        _float4x4 newMat = {};
-                        newMat._11 = row1[0]; newMat._12 = row1[1]; newMat._13 = row1[2]; newMat._14 = row1[3];
-                        newMat._21 = row2[0]; newMat._22 = row2[1]; newMat._23 = row2[2]; newMat._24 = row2[3];
-                        newMat._31 = row3[0]; newMat._32 = row3[1]; newMat._33 = row3[2]; newMat._34 = row3[3];
-                        newMat._41 = row4[0]; newMat._42 = row4[1]; newMat._43 = row4[2]; newMat._44 = row4[3];
-                        material->Set_MatrixValue(key, newMat);
-                    }
-
-                    ImGui::TreePop();
-                }
-            }
-
-            ImGui::TreePop();
-        }
+        RenderMaterialPropertyEditors(material, to_string(reinterpret_cast<uintptr_t>(_skinnedMeshRenderer)));
 
     }
     else

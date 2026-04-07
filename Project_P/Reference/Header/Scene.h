@@ -132,6 +132,8 @@ public:
         vector<_float> lodSwitchDistances = {};
         wstring meshBufferName = L"";
         wstring materialName = L"";
+        _bool hasMaterialBaseColor = false;
+        _float4 materialBaseColor = { 1.f, 1.f, 1.f, 1.f };
         vector<MATERIALTEXTUREINFO> materialTextures = {};
         vector<pair<wstring, _float>> materialFloatValues = {};
         vector<pair<wstring, _int>> materialIntValues = {};
@@ -157,6 +159,8 @@ public:
         _float directionalLightShadowDist = 200.f;
         _float shadowBias = 0.f;
         _float softShadowLightSize = 5.f;
+        _float directionalShadowSplitLambda = 0.6f;
+        _float shadowCascadeBlendRatio = 0.1f;
     };
 
 protected:
@@ -216,13 +220,15 @@ public:
     vector<CGameObject*> Get_RootObjects();
     vector<CRenderer*> Get_MeshObjects();
 
-    const EnviromentSettings& Get_EnviromentSetting();
+    const EnviromentSettings& Get_EnviromentSetting() const;
     ID3D11ShaderResourceView* GetSkyBoxEnvironmentSRV() const;
 
     void Set_Ambient(const _float _value);
     void Set_DirectionalLightShadowDist(const _float _value);
     void Set_ShadwoBias(const _float _value);
     void Set_SoftShadowLightSize(const _float _value);
+    void Set_DirectionalShadowSplitLambda(const _float _value);
+    void Set_ShadowCascadeBlendRatio(const _float _value);
 
     class CCamera* Get_Camera() const;
     CCamera* Get_Camera(const _int _index) const;

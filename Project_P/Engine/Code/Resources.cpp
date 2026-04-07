@@ -1535,7 +1535,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 24;
+	const _uint version = 25;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -1627,6 +1627,10 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 		out.write(reinterpret_cast<const char*>(&materialNameSize), sizeof(_uint));
 		if (materialNameSize > 0)
 			out.write(reinterpret_cast<const char*>(info.materialName.data()), sizeof(wchar_t) * materialNameSize);
+
+		out.write(reinterpret_cast<const char*>(&info.hasMaterialBaseColor), sizeof(_bool));
+		if (info.hasMaterialBaseColor)
+			out.write(reinterpret_cast<const char*>(&info.materialBaseColor), sizeof(_float4));
 
 		_uint materialTextureCount = static_cast<_uint>(info.materialTextures.size());
 		out.write(reinterpret_cast<const char*>(&materialTextureCount), sizeof(_uint));
@@ -1937,6 +1941,13 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 				wstring materialName(materialNameSize, L'\0');
 				in.read(reinterpret_cast<char*>(&materialName[0]), sizeof(wchar_t) * materialNameSize);
 				info.materialName = move(materialName);
+			}
+
+			if (version >= 25)
+			{
+				in.read(reinterpret_cast<char*>(&info.hasMaterialBaseColor), sizeof(_bool));
+				if (info.hasMaterialBaseColor)
+					in.read(reinterpret_cast<char*>(&info.materialBaseColor), sizeof(_float4));
 			}
 		}
 
@@ -3051,6 +3062,7 @@ void CResources::Ready_GameResources()
 	LoadResourceComplete_Game<CMeshBuffer>(L"Cube (Mesh Buffer)", L"Cube");
 	LoadResourceComplete_Game<CMeshBuffer>(L"Sphere (Mesh Buffer)", L"Sphere");
 	LoadResourceComplete_Game<CMeshBuffer>(L"Cylinder (Mesh Buffer)", L"Cylinder");
+	LoadResourceComplete_Game<CMeshBuffer>(L"Plane (Mesh Buffer)", L"Plane");
 	LoadResourceComplete_Game<CMeshBuffer>(L"Quad (Mesh Buffer)", L"Quad");
 
 	LoadResourceComplete_Game<CTexture>(L"DefaultSky (Texture)", L"../EngineResources/Image/DefaultSkyBox.png");

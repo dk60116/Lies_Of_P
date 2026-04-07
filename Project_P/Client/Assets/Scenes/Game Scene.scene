@@ -1,9 +1,11 @@
 SceneName : Game Scene
 SceneSkyBox : DefaultSky (SkyBox)
 SceneAmbient : 0.200000
-SceneDirectionalLightShadowDist : 300.000000
+SceneDirectionalLightShadowDist : 250.000000
 SceneShadowBias : 0.000000
-SceneSoftShadowLightSize : 0.000000
+SceneSoftShadowLightSize : 3.000000
+SceneDirectionalShadowSplitLambda : 0.600000
+SceneShadowCascadeBlendRatio : 0.100000
 // Eve Model
 EveBody_Model : Player/Eve/EveBody.fbx :  [Skinned Mesh] [Root : Root]
 EveHead_Model : Player/Eve/EveHead.fbx :  [Skinned Mesh]
@@ -215,6 +217,7 @@ Floor_7_Stage01_Floor_07_Auto_1775504434030 : Map/Map01/Floor_7/Stage01_Floor_07
 004_Ba_D_SM.001_1 : Map/Map01/Building_9/Stage01_Building_09_00.fbx : [Mesh] [Editor]
 004_E_SM_LOD0 : Map/Map01/Building_6/Stage01_Building_06_03.fbx : [Mesh] [Editor]
 034_D_SM.001 : Map/Map01/Floor_7/Stage01_Floor_07.fbx : [Mesh] [Editor]
+Plane (Mesh Buffer) : Plane : [Mesh] [Editor]
 SceneTexture/Building_0_004_C_TAoRM.dds_431109363440719641 : BinaryAssets/TextureData/Building_0_004_C_TAoRM.dds : [Texture] [Editor]
 SceneTexture/Building_0_Stage01_Building_00_TD_0.dds_18281719154232444330 : BinaryAssets/TextureData/Building_0_Stage01_Building_00_TD_0.dds : [Texture] [Editor]
 SceneTexture/Building_0_Stage01_Building_00_TD_1.dds_892922895400749697 : BinaryAssets/TextureData/Building_0_Stage01_Building_00_TD_1.dds : [Texture] [Editor]
@@ -314,6 +317,8 @@ SceneTexture/Prop_0_022_C_TN.dds_7928800858756578083 : BinaryAssets/TextureData/
 SceneTexture/Statue_0_008_B_TAoRM.dds_2551440465045130366 : BinaryAssets/TextureData/Statue_0_008_B_TAoRM.dds : [Texture] [Editor]
 SceneTexture/Statue_0_008_B_TD.dds_4375859343488658831 : BinaryAssets/TextureData/Statue_0_008_B_TD.dds : [Texture] [Editor]
 SceneTexture/Statue_0_008_B_TN.dds_7346304129515286373 : BinaryAssets/TextureData/Statue_0_008_B_TN.dds : [Texture] [Editor]
+callD_003_Aa_A_SM.001_0 : Map/Map01/Building_10/Stage01_Building_10_00.fbx : [Mesh] [Editor]
+callD_003_Aa_A_SM.001_1 : Map/Map01/Building_10/Stage01_Building_10_00.fbx : [Mesh] [Editor]
 callD_003_Aa_A_SM_LOD0 : Map/Map01/Building_8/Stage01_Building_08_06.fbx : [Mesh] [Editor]
 callD_003_Aa_B_SM_LOD0 : Map/Map01/Building_8/Stage01_Building_08_05.fbx : [Mesh] [Editor]
 callD_006_Aa_A_SM_LOD0 : Map/Map01/Building_14/Stage01_Building_14_00.fbx : [Mesh] [Editor]

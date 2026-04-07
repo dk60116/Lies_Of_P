@@ -10,6 +10,7 @@ CRenderTarget::CRenderTarget()
     , m_texture(nullptr)
     , m_rtv(nullptr)
     , m_dsv(nullptr)
+    , m_dsvSlices({})
     , m_srv(nullptr)
 {
 }
@@ -22,6 +23,8 @@ CRenderTarget::~CRenderTarget()
 void CRenderTarget::Destroy()
 {
     Safe_Release(m_srv);
+    for (ID3D11DepthStencilView*& dsvSlice : m_dsvSlices)
+        Safe_Release(dsvSlice);
     Safe_Release(m_dsv);
     Safe_Release(m_rtv);
     Safe_Release(m_texture);
@@ -63,8 +66,16 @@ ID3D11RenderTargetView* CRenderTarget::GetRTV() const
     return m_rtv;
 }
 
-ID3D11DepthStencilView* CRenderTarget::GetDSV() const
+ID3D11DepthStencilView* CRenderTarget::GetDSV(_uint slice) const
 {
+    if (m_type == RTType::ShadowDepth)
+    {
+        if (slice < kMaxShadowCascades && m_dsvSlices[slice])
+            return m_dsvSlices[slice];
+
+        return m_dsvSlices[0];
+    }
+
     return m_dsv;
 }
 
@@ -85,6 +96,17 @@ const bool CRenderTarget::HasRTV() const
 
 const bool CRenderTarget::HasDSV() const
 {
+    if (m_type == RTType::ShadowDepth)
+    {
+        for (ID3D11DepthStencilView* dsvSlice : m_dsvSlices)
+        {
+            if (dsvSlice)
+                return true;
+        }
+
+        return false;
+    }
+
     return m_dsv != nullptr;
 }
 
@@ -156,7 +178,7 @@ HRESULT CRenderTarget::Create(RTType type, ID3D11Device* device, _uint width, _u
         td.Width = width;
         td.Height = height;
         td.MipLevels = 1;
-        td.ArraySize = 1;
+        td.ArraySize = kMaxShadowCascades;
         td.Format = DXGI_FORMAT_R32_TYPELESS;
         td.SampleDesc.Count = 1;
         td.SampleDesc.Quality = 0;
@@ -169,22 +191,29 @@ HRESULT CRenderTarget::Create(RTType type, ID3D11Device* device, _uint width, _u
         if (FAILED(hr))
             return hr;
 
-        D3D11_DEPTH_STENCIL_VIEW_DESC dsvd{};
-        dsvd.Format = DXGI_FORMAT_D32_FLOAT;
-        dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-        dsvd.Texture2D.MipSlice = 0;
+        for (_uint slice = 0u; slice < kMaxShadowCascades; ++slice)
+        {
+            D3D11_DEPTH_STENCIL_VIEW_DESC dsvd{};
+            dsvd.Format = DXGI_FORMAT_D32_FLOAT;
+            dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
+            dsvd.Texture2DArray.MipSlice = 0;
+            dsvd.Texture2DArray.FirstArraySlice = slice;
+            dsvd.Texture2DArray.ArraySize = 1;
 
-        hr = device->CreateDepthStencilView(m_texture, &dsvd, &m_dsv);
-        if (FAILED(hr)) 
-            return hr;
+            hr = device->CreateDepthStencilView(m_texture, &dsvd, &m_dsvSlices[slice]);
+            if (FAILED(hr))
+                return hr;
+        }
 
         if (createSRV)
         {
             D3D11_SHADER_RESOURCE_VIEW_DESC srvd = {};
             srvd.Format = DXGI_FORMAT_R32_FLOAT;
-            srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-            srvd.Texture2D.MostDetailedMip = 0;
-            srvd.Texture2D.MipLevels = 1;
+            srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+            srvd.Texture2DArray.MostDetailedMip = 0;
+            srvd.Texture2DArray.MipLevels = 1;
+            srvd.Texture2DArray.FirstArraySlice = 0;
+            srvd.Texture2DArray.ArraySize = kMaxShadowCascades;
 
             hr = device->CreateShaderResourceView(m_texture, &srvd, &m_srv);
             if (FAILED(hr)) return hr;

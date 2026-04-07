@@ -7,6 +7,8 @@
 
 namespace Engine
 {
+    inline constexpr _uint kMaxShadowCascades = 4u;
+
 #pragma region Serialize
     enum class FieldType
     {
@@ -1354,12 +1356,11 @@ namespace Engine
 
     struct ShadowCB
     {
-        _float4x4 shadowViewProj;
-        _float2 invShadowMapSize;
-        _float bias;
-        _float lightSize;
-        _float3 lightDirWS;
-        _float shadowPadding0;
+        _float4x4 shadowViewProj[kMaxShadowCascades];
+        _float4 cascadeSplits;
+        _float4 shadowParams;
+        _float4 lightDirAndCount;
+        _float4 cameraForwardWS;
     };
 
     struct ImageCB

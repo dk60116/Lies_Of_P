@@ -25,26 +25,32 @@ cbuffer InvViewProjCB : register(b5)
 
 cbuffer ShadowCB : register(b6)
 {
-    float4x4 gShadowViewProj;
-    float2 gShadowInvMapSize;
-    float gShadowBias;
-    float gLightSize;
-    float3 gShadowLightDir;
-    float _padShadow1;
+    float4x4 gShadowViewProj[4];
+    float4 gCascadeSplits;
+    float4 gShadowParams;
+    float4 gShadowLightDirAndCount;
+    float4 gShadowCameraForwardWS;
 };
 
 Texture2D gAlbedo : register(t0);
 Texture2D gNormal : register(t1);
 Texture2D<float> gDepth : register(t2);
 Texture2D gMaterial : register(t3);
-Texture2D<float> gShadowDepth : register(t4);
+Texture2DArray<float> gShadowDepth : register(t4);
 SamplerState gSampler : register(s0);
 
 #define PI 3.14159265359
 #define MAX_LIGHTS 64
+#define MAX_SHADOW_CASCADES 4
 #define LIGHT_TYPE_DIRECTIONAL 0
 #define LIGHT_TYPE_POINT 1
 #define LIGHT_TYPE_SPOT 2
+#define gShadowInvMapSize (gShadowParams.xy)
+#define gShadowBias (gShadowParams.z)
+#define gLightSize (gShadowParams.w)
+#define gShadowLightDir (gShadowLightDirAndCount.xyz)
+#define gShadowCascadeCount ((int)(gShadowLightDirAndCount.w + 0.5f))
+#define gShadowCascadeBlend (gShadowCameraForwardWS.w)
 
 struct VSIn
 {
@@ -115,7 +121,56 @@ float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
     return F0 + (fresnelMax - F0) * f;
 }
 
-float SampleShadowPCF(float2 uv, float receiverDepth)
+float GetShadowViewDepth(float3 posW)
+{
+    return dot(posW - camPos, gShadowCameraForwardWS.xyz);
+}
+
+float GetCascadeSplit(int cascadeIndex)
+{
+    if (cascadeIndex <= 0)
+        return gCascadeSplits.x;
+    if (cascadeIndex == 1)
+        return gCascadeSplits.y;
+    if (cascadeIndex == 2)
+        return gCascadeSplits.z;
+    return gCascadeSplits.w;
+}
+
+int SelectShadowCascade(float3 posW)
+{
+    const int cascadeCount = clamp(gShadowCascadeCount, 0, MAX_SHADOW_CASCADES);
+    if (cascadeCount <= 0)
+        return -1;
+
+    const float viewDepth = GetShadowViewDepth(posW);
+    const float splits[MAX_SHADOW_CASCADES] =
+    {
+        gCascadeSplits.x,
+        gCascadeSplits.y,
+        gCascadeSplits.z,
+        gCascadeSplits.w
+    };
+
+    int cascadeIndex = cascadeCount - 1;
+
+    [unroll]
+    for (int i = 0; i < MAX_SHADOW_CASCADES; ++i)
+    {
+        if (i >= cascadeCount)
+            break;
+
+        if (viewDepth <= splits[i])
+        {
+            cascadeIndex = i;
+            break;
+        }
+    }
+
+    return cascadeIndex;
+}
+
+float SampleShadowPCF(float3 uvw, float receiverDepth)
 {
     if (gShadowInvMapSize.x <= 0.0f || gShadowInvMapSize.y <= 0.0f)
         return 1.0f;
@@ -129,7 +184,7 @@ float SampleShadowPCF(float2 uv, float receiverDepth)
         for (int x = -1; x <= 1; ++x)
         {
             float2 duv = float2(x, y) * gShadowInvMapSize;
-            float sd = gShadowDepth.SampleLevel(gSampler, uv + duv, 0);
+            float sd = gShadowDepth.SampleLevel(gSampler, float3(uvw.xy + duv, uvw.z), 0);
             sum += (sd + gShadowBias < receiverDepth) ? 0.0f : 1.0f;
         }
     }
@@ -137,8 +192,10 @@ float SampleShadowPCF(float2 uv, float receiverDepth)
     return sum / 9.0f;
 }
 
-float ComputeShadow(float3 posW, float3 normalW)
+float SampleShadowCascade(int cascadeIndex, float3 posW, float3 normalW, out bool valid)
 {
+    valid = false;
+
     if (gShadowInvMapSize.x <= 0.0f || gShadowInvMapSize.y <= 0.0f)
         return 1.0f;
 
@@ -148,9 +205,12 @@ float ComputeShadow(float3 posW, float3 normalW)
 
     lightDir = normalize(lightDir);
     if (dot(normalW, lightDir) <= 1e-6f)
+    {
+        valid = true;
         return 1.0f;
+    }
 
-    float4 posL = mul(float4(posW, 1.0f), gShadowViewProj);
+    float4 posL = mul(float4(posW, 1.0f), gShadowViewProj[cascadeIndex]);
     float3 ndcL = posL.xyz / max(posL.w, 1e-6f);
 
     float2 uvL = float2(ndcL.x * 0.5f + 0.5f, -ndcL.y * 0.5f + 0.5f);
@@ -159,7 +219,46 @@ float ComputeShadow(float3 posW, float3 normalW)
     if (uvL.x < 0.0f || uvL.x > 1.0f || uvL.y < 0.0f || uvL.y > 1.0f || depthL < 0.0f || depthL > 1.0f)
         return 1.0f;
 
-    return SampleShadowPCF(uvL, depthL);
+    valid = true;
+    return SampleShadowPCF(float3(uvL, (float)cascadeIndex), depthL);
+}
+
+float ComputeShadow(float3 posW, float3 normalW)
+{
+    const int cascadeIndex = SelectShadowCascade(posW);
+    if (cascadeIndex < 0)
+        return 1.0f;
+
+    bool currentValid = false;
+    float currentShadow = SampleShadowCascade(cascadeIndex, posW, normalW, currentValid);
+    if (!currentValid)
+        return currentShadow;
+
+    const int cascadeCount = clamp(gShadowCascadeCount, 0, MAX_SHADOW_CASCADES);
+    if (cascadeIndex + 1 >= cascadeCount)
+        return currentShadow;
+
+    const float blendRatio = saturate(gShadowCascadeBlend);
+    if (blendRatio <= 1e-4f)
+        return currentShadow;
+
+    const float currentSplit = GetCascadeSplit(cascadeIndex);
+    const float previousSplit = (cascadeIndex > 0) ? GetCascadeSplit(cascadeIndex - 1) : 0.0f;
+    const float cascadeSpan = max(currentSplit - previousSplit, 1e-3f);
+    const float blendWidth = cascadeSpan * blendRatio;
+    const float blendStart = currentSplit - blendWidth;
+    const float viewDepth = GetShadowViewDepth(posW);
+
+    if (viewDepth <= blendStart)
+        return currentShadow;
+
+    bool nextValid = false;
+    float nextShadow = SampleShadowCascade(cascadeIndex + 1, posW, normalW, nextValid);
+    if (!nextValid)
+        return currentShadow;
+
+    const float blendFactor = smoothstep(blendStart, currentSplit, viewDepth);
+    return lerp(currentShadow, nextShadow, blendFactor);
 }
 
 float4 PSMain(VSOut i) : SV_Target

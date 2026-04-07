@@ -48,10 +48,10 @@ public:
     DXGI_FORMAT GetFormat() const;
     bool IsCreateSRV() const;
 
-    ID3D11Texture2D* GetTexture() const;
-    ID3D11RenderTargetView* GetRTV() const;
-    ID3D11DepthStencilView* GetDSV() const;
-    ID3D11ShaderResourceView* GetSRV() const;
+	ID3D11Texture2D* GetTexture() const;
+	ID3D11RenderTargetView* GetRTV() const;
+	ID3D11DepthStencilView* GetDSV(_uint slice = 0u) const;
+	ID3D11ShaderResourceView* GetSRV() const;
 
     const bool IsDepth() const;
     const bool HasRTV() const;
@@ -77,10 +77,11 @@ private:
     DXGI_FORMAT m_format;
     bool m_createSRV;
 
-    ID3D11Texture2D* m_texture;
-    ID3D11RenderTargetView* m_rtv;
-    ID3D11DepthStencilView* m_dsv;
-    ID3D11ShaderResourceView* m_srv;
+	ID3D11Texture2D* m_texture;
+	ID3D11RenderTargetView* m_rtv;
+	ID3D11DepthStencilView* m_dsv;
+	array<ID3D11DepthStencilView*, kMaxShadowCascades> m_dsvSlices;
+	ID3D11ShaderResourceView* m_srv;
 };
 
 NS_END

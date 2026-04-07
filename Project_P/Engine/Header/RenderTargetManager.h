@@ -23,10 +23,10 @@ public:
     void Clear_GBuffer(const _bool _isEditor = false);
 
 public:
-    ID3D11Texture2D* GetTexture(const CRenderTarget::RTType type, const _bool _isEditor = false) const;
-    ID3D11RenderTargetView* GetRTV(const CRenderTarget::RTType type, const _bool _isEditor = false) const;
-    ID3D11ShaderResourceView* GetSRV(const CRenderTarget::RTType type, const _bool _isEditor = false) const;
-    ID3D11DepthStencilView* GetDSV(const CRenderTarget::RTType type, const _bool _isEditor = false) const;
+	ID3D11Texture2D* GetTexture(const CRenderTarget::RTType type, const _bool _isEditor = false) const;
+	ID3D11RenderTargetView* GetRTV(const CRenderTarget::RTType type, const _bool _isEditor = false) const;
+	ID3D11ShaderResourceView* GetSRV(const CRenderTarget::RTType type, const _bool _isEditor = false) const;
+	ID3D11DepthStencilView* GetDSV(const CRenderTarget::RTType type, const _bool _isEditor = false, _uint slice = 0u) const;
 
     const _uint GetWidth(const _bool _isEditor = false) const;
     const _uint GetHeight(const _bool _isEditor = false) const;
