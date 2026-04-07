@@ -181,35 +181,16 @@ namespace
 			chunkRenderers.push_back(renderer);
 		}
 
-		if (chunkRenderers.empty())
-			return false;
+	if (chunkRenderers.empty())
+		return false;
 
-		leader->CreateMeshInstancing(static_cast<_uint>(chunkRenderers.size()));
+	leader->CreateMeshInstancing(static_cast<_uint>(chunkRenderers.size()));
 
-		const vector3 leaderPos = leader->GetTransform()->Get_Position();
-		const vector3 leaderRot = leader->GetTransform()->Get_EulerAngles();
-		const vector3 leaderScale = leader->GetTransform()->Get_LocalScale();
-
-		for (_uint i = 0; i < static_cast<_uint>(chunkRenderers.size()); ++i)
-		{
-			CRenderer* renderer = chunkRenderers[i];
-			const vector3 pos = renderer->GetTransform()->Get_Position();
-			const vector3 rot = renderer->GetTransform()->Get_EulerAngles();
-			const vector3 scale = renderer->GetTransform()->Get_LocalScale();
-
-			const vector3 relPos = pos - leaderPos;
-			const vector3 relRot = rot - leaderRot;
-			const vector3 relScale =
-			{
-				leaderScale.x != 0.f ? scale.x / leaderScale.x : 1.f,
-				leaderScale.y != 0.f ? scale.y / leaderScale.y : 1.f,
-				leaderScale.z != 0.f ? scale.z / leaderScale.z : 1.f
-			};
-
-			leader->SetInstancingPosition(i, relPos);
-			leader->SetInstancingRotation(i, relRot);
-			leader->SetInstancingSize(i, relScale);
-		}
+	for (_uint i = 0; i < static_cast<_uint>(chunkRenderers.size()); ++i)
+	{
+		CRenderer* renderer = chunkRenderers[i];
+		leader->SetInstancingWorldMatrix(i, renderer->GetTransform()->GetSnapshotWorldMatrix());
+	}
 
 		return true;
 	}
@@ -2870,9 +2851,6 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 			continue;
 
 		const _uint maxInstanceCount = 128u;
-		const vector3 leaderPos = leader->GetTransform()->Get_Position();
-		const vector3 leaderRot = leader->GetTransform()->Get_EulerAngles();
-		const vector3 leaderScale = leader->GetTransform()->Get_LocalScale();
 
 		for (size_t offset = 0; offset < batch.size(); offset += maxInstanceCount)
 		{
@@ -2887,22 +2865,7 @@ void CCamera::RenderShadowDepthPass(const D3D11_VIEWPORT* vp)
 				if (!r || !r->GetTransform())
 					continue;
 
-				const vector3 pos = r->GetTransform()->Get_Position();
-				const vector3 rot = r->GetTransform()->Get_EulerAngles();
-				const vector3 scale = r->GetTransform()->Get_LocalScale();
-
-				const vector3 relPos = pos - leaderPos;
-				const vector3 relRot = rot - leaderRot;
-				const vector3 relScale = vector3
-				(
-					leaderScale.x != 0.f ? scale.x / leaderScale.x : 1.f,
-					leaderScale.y != 0.f ? scale.y / leaderScale.y : 1.f,
-					leaderScale.z != 0.f ? scale.z / leaderScale.z : 1.f
-				);
-
-				leader->SetInstancingPosition(i, relPos);
-				leader->SetInstancingRotation(i, relRot);
-				leader->SetInstancingSize(i, relScale);
+				leader->SetInstancingWorldMatrix(i, r->GetTransform()->GetSnapshotWorldMatrix());
 			}
 
 			leader->Render_ShadowDepth(shadowDepthMat, m_sMainLightMatrix);

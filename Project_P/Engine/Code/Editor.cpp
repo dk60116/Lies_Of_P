@@ -39,6 +39,7 @@ CEditor::CEditor()
 	, m_mBoxList({})
 	, m_sOptions({})
 	, m_eControleTool(TransformControleTool::MOVE)
+	, m_eLastGizmoTool(TransformControleTool::MOVE)
 	, m_pSelectedGameObject(nullptr)
 	, m_pMoveTargetGameObject(nullptr)
 	, m_bOpenSelectedInHierarchyRequested(false)
@@ -269,7 +270,11 @@ LRESULT CEditor::EditorWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 void CEditor::ChangeControleTool()
 {
-	if (!CInput::GetInstance().GetMouseButton_Editor(1))
+	if (ImGui::GetIO().WantTextInput || ImGui::IsAnyItemActive() || IsAnimatorControllerEditorFocused())
+		return;
+
+	if (!CInput::GetInstance().GetMouseButton_Editor(1) &&
+		!CInput::GetInstance().GetMouseButton_Editor(2))
 	{
 		if (CInput::GetInstance().GetKeyDown_Editor(Q))
 			Change_ControleTool(TransformControleTool::VIEW);
@@ -451,9 +456,29 @@ const CEditor::TransformControleTool CEditor::Get_ControleTool() const
 	return m_eControleTool;
 }
 
+const CEditor::TransformControleTool CEditor::Get_GizmoControleTool() const
+{
+	switch (m_eControleTool)
+	{
+	case TransformControleTool::MOVE:
+	case TransformControleTool::ROTATE:
+	case TransformControleTool::SCALE:
+		return m_eControleTool;
+	default:
+		return m_eLastGizmoTool;
+	}
+}
+
 void CEditor::Change_ControleTool(const TransformControleTool _tool)
 {
 	m_eControleTool = _tool;
+
+	if (_tool == TransformControleTool::MOVE ||
+		_tool == TransformControleTool::ROTATE ||
+		_tool == TransformControleTool::SCALE)
+	{
+		m_eLastGizmoTool = _tool;
+	}
 }
 
 const vector3 CEditor::Get_EditorCamPositon() const

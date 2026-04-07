@@ -188,7 +188,7 @@ float4 PSMain(VSOut i) : SV_Target
             
             ++dirLightCount;
         }
-        else if (lightType == LIGHT_TYPE_POINT)
+        else if (lightType == LIGHT_TYPE_POINT || lightType == LIGHT_TYPE_SPOT)
         {
             float3 toL = lightPos - posW;
             float distSq = dot(toL, toL);
@@ -206,7 +206,17 @@ float4 PSMain(VSOut i) : SV_Target
             float invSqNorm = rangeSq / max(distSq, 1e-3f);
             invSqNorm = min(invSqNorm, 16.0f);
 
-            att = falloff * invSqNorm;
+            att = falloff * invSqNorm * max(attenK, 0.0f);
+
+            if (lightType == LIGHT_TYPE_SPOT)
+            {
+                float coneCos = dot(normalize(-L), normalize(lightDir));
+                if (coneCos <= spotCos)
+                    continue;
+
+                float coneAtt = saturate((coneCos - spotCos) / max(1.0f - spotCos, 1e-4f));
+                att *= coneAtt * coneAtt;
+            }
         }
         else
         {

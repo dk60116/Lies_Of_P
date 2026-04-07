@@ -174,15 +174,13 @@ void CTransform::Render_Gizmo()
         ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
     }
 
-    static ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;
+    const CEditor::TransformControleTool gizmoTool = editor.Get_GizmoControleTool();
+    ImGuizmo::OPERATION gizmoOperation = ImGuizmo::TRANSLATE;
 
-    CEditor::TransformControleTool mode = editor.Get_ControleTool();
-    if (mode == CEditor::TransformControleTool::MOVE)
-        currentGizmoOperation = ImGuizmo::TRANSLATE;
-    if (mode == CEditor::TransformControleTool::ROTATE)
-        currentGizmoOperation = ImGuizmo::ROTATE;
-    if (mode == CEditor::TransformControleTool::SCALE)
-        currentGizmoOperation = ImGuizmo::SCALE;
+    if (gizmoTool == CEditor::TransformControleTool::ROTATE)
+        gizmoOperation = ImGuizmo::ROTATE;
+    else if (gizmoTool == CEditor::TransformControleTool::SCALE)
+        gizmoOperation = ImGuizmo::SCALE;
 
     const _bool lockStaticGizmo = CSceneManager::GetInstance().IsPlaying() && m_pGameObject->IsStatic(CGameObject::STATIC_METHOD::TransformStatic);
     ImGuizmo::Enable(!lockStaticGizmo);
@@ -216,14 +214,14 @@ void CTransform::Render_Gizmo()
     else
     {
         gizmoPrev = XMLoadFloat4x4(&m_vMatWorld);
-        if (currentGizmoOperation == ImGuizmo::ROTATE)
+        if (gizmoOperation == ImGuizmo::ROTATE)
             gizmoPrev = BuildRotationGizmoMatrix(gizmoPrev);
         memcpy(world, &gizmoPrev, sizeof(float) * 16);
     }
 
     ImGuizmo::MODE gizmoMode = isMultiSelect ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
 
-    _bool manipulated = ImGuizmo::Manipulate(view, projection, currentGizmoOperation, gizmoMode, world);
+    _bool manipulated = ImGuizmo::Manipulate(view, projection, gizmoOperation, gizmoMode, world);
 
     ImGuizmo::Enable(true);
 
@@ -280,7 +278,7 @@ void CTransform::Render_Gizmo()
             XMMatrixDecompose(&S, &R, &T, localMatrix);
 
             XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), R);
-            if (currentGizmoOperation == ImGuizmo::ROTATE)
+            if (gizmoOperation == ImGuizmo::ROTATE)
             {
                 m_vPosition = preservedLocalPosition;
                 m_vScale = preservedLocalScale;
@@ -297,7 +295,7 @@ void CTransform::Render_Gizmo()
             XMMatrixDecompose(&S, &R, &T, newWorldMatrix);
 
             XMStoreFloat4(reinterpret_cast<_float4*>(&m_vQuaternion), R);
-            if (currentGizmoOperation == ImGuizmo::ROTATE)
+            if (gizmoOperation == ImGuizmo::ROTATE)
             {
                 m_vPosition = preservedLocalPosition;
                 m_vScale = preservedLocalScale;

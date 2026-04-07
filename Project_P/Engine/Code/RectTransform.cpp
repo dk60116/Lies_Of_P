@@ -218,22 +218,19 @@ void CRectTransform::Render_Gizmo()
         ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
     }
 
-    static ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;
+    const CEditor::TransformControleTool gizmoTool = editor.Get_GizmoControleTool();
+    ImGuizmo::OPERATION gizmoOperation = ImGuizmo::TRANSLATE;
 
-    CEditor::TransformControleTool mode = editor.Get_ControleTool();
-
-    if (mode == CEditor::TransformControleTool::MOVE)
-        currentGizmoOperation = ImGuizmo::TRANSLATE;
-    if (mode == CEditor::TransformControleTool::ROTATE)
-        currentGizmoOperation = ImGuizmo::ROTATE;
-    if (mode == CEditor::TransformControleTool::SCALE)
-        currentGizmoOperation = ImGuizmo::SCALE;
+    if (gizmoTool == CEditor::TransformControleTool::ROTATE)
+        gizmoOperation = ImGuizmo::ROTATE;
+    else if (gizmoTool == CEditor::TransformControleTool::SCALE)
+        gizmoOperation = ImGuizmo::SCALE;
 
     _bool manipulated = ImGuizmo::Manipulate
     (
         view,
         projection,
-        currentGizmoOperation,
+        gizmoOperation,
         ImGuizmo::LOCAL,
         world
     );
@@ -265,7 +262,7 @@ void CRectTransform::Render_Gizmo()
 
             if (hasCanvas)
             {
-                if (currentGizmoOperation == ImGuizmo::SCALE)
+                if (gizmoOperation == ImGuizmo::SCALE)
                 {
                     const _float baseScaleX = (fabsf(m_vSizeScale.x) > 1e-4f) ? (previousScale.x / m_vSizeScale.x) : previousScale.x;
                     const _float baseScaleY = (fabsf(m_vSizeScale.y) > 1e-4f) ? (previousScale.y / m_vSizeScale.y) : previousScale.y;
@@ -294,7 +291,7 @@ void CRectTransform::Render_Gizmo()
 
             if (hasCanvas)
             {
-                if (currentGizmoOperation == ImGuizmo::SCALE)
+                if (gizmoOperation == ImGuizmo::SCALE)
                 {
                     const _float baseScaleX = (fabsf(m_vSizeScale.x) > 1e-4f) ? (previousScale.x / m_vSizeScale.x) : previousScale.x;
                     const _float baseScaleY = (fabsf(m_vSizeScale.y) > 1e-4f) ? (previousScale.y / m_vSizeScale.y) : previousScale.y;

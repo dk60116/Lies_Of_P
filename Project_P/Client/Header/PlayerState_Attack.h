@@ -30,6 +30,8 @@ private:
     _bool m_bCanContinue, m_bPressedContinue, m_bUnderTerm, m_bUnderLimit;
     _bool m_bComboTransitionQueued;
     _bool m_bBufferedComboInput;
+    _bool m_bDashAttackHoldTracking;
+    _bool m_bDashAttackRequested;
 
     _uint m_iCrtCombo;
     _uint m_iComboTerm[4];
@@ -37,6 +39,7 @@ private:
     _uint m_iComboTerm_S[3];
     _uint m_iComboLimit_S[3];
     _float m_fBufferedComboInputTime;
+    _float m_fDashAttackHoldTime;
 
     _bool m_bStrong;
     _bool m_bThrust;

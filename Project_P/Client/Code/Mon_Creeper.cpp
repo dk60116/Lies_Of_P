@@ -45,6 +45,7 @@ HRESULT CMon_Creeper::Initialize()
 	m_pBodyCollider->SetRadius(1.5f);
 
 	m_pNavAgent->SetAgentRadius(1.f);
+	m_pNavAgent->SetCollisionWeight(CNaviMeshAgent::CollisionWeight::Low);
 
 	m_sStatus.maxHp = 1200;
 	m_sStatus.moveSpeed = 6.f;

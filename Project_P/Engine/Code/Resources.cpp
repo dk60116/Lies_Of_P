@@ -1535,7 +1535,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 23;
+	const _uint version = 24;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -1678,6 +1678,19 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
             out.write(reinterpret_cast<const char*>(&info.navAgentGroundSnapOffset), sizeof(_float));
             out.write(reinterpret_cast<const char*>(&info.navAgentCollisionWeight), sizeof(_int));
         }
+
+		out.write(reinterpret_cast<const char*>(&info.lightInfo.hasLight), sizeof(_bool));
+		if (info.lightInfo.hasLight)
+		{
+			out.write(reinterpret_cast<const char*>(&info.lightInfo.type), sizeof(_uint));
+			out.write(reinterpret_cast<const char*>(&info.lightInfo.intensity), sizeof(_float));
+			out.write(reinterpret_cast<const char*>(&info.lightInfo.range), sizeof(_float));
+			out.write(reinterpret_cast<const char*>(&info.lightInfo.spotAngle), sizeof(_float));
+			out.write(reinterpret_cast<const char*>(&info.lightInfo.attenuation), sizeof(_float));
+			out.write(reinterpret_cast<const char*>(&info.lightInfo.diffuseColor), sizeof(ColorValue));
+			out.write(reinterpret_cast<const char*>(&info.lightInfo.specularColor), sizeof(ColorValue));
+			out.write(reinterpret_cast<const char*>(&info.lightInfo.castShadow), sizeof(_bool));
+		}
 
 		out.write(reinterpret_cast<const char*>(&info.horizontalLayoutGroupInfo.hasHorizontalLayoutGroup), sizeof(_bool));
 		if (info.horizontalLayoutGroupInfo.hasHorizontalLayoutGroup)
@@ -2012,6 +2025,22 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
                     info.navAgentCollisionWeight = 1;
             }
         }
+
+		if (version >= 24)
+		{
+			in.read(reinterpret_cast<char*>(&info.lightInfo.hasLight), sizeof(_bool));
+			if (info.lightInfo.hasLight)
+			{
+				in.read(reinterpret_cast<char*>(&info.lightInfo.type), sizeof(_uint));
+				in.read(reinterpret_cast<char*>(&info.lightInfo.intensity), sizeof(_float));
+				in.read(reinterpret_cast<char*>(&info.lightInfo.range), sizeof(_float));
+				in.read(reinterpret_cast<char*>(&info.lightInfo.spotAngle), sizeof(_float));
+				in.read(reinterpret_cast<char*>(&info.lightInfo.attenuation), sizeof(_float));
+				in.read(reinterpret_cast<char*>(&info.lightInfo.diffuseColor), sizeof(ColorValue));
+				in.read(reinterpret_cast<char*>(&info.lightInfo.specularColor), sizeof(ColorValue));
+				in.read(reinterpret_cast<char*>(&info.lightInfo.castShadow), sizeof(_bool));
+			}
+		}
 
 		if (version >= 18)
 		{

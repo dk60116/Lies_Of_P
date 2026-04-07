@@ -31,6 +31,7 @@ cbuffer PerBones : register(b3)
 cbuffer PerInstance : register(b4)
 {
     float4x4 gInstanceWorlds[128];
+    float4 gInstanceFillParams[128];
     uint gInstanceCount;
     float3 gInstancePadding;
 };

@@ -34,6 +34,7 @@ CComponent* CLight::Clone() const
 	clone->m_fAttenuation = this->m_fAttenuation;
 	clone->m_vDiffuseColor = this->m_vDiffuseColor;
 	clone->m_vSpecularColor = this->m_vSpecularColor;
+	clone->m_bCastShadow = this->m_bCastShadow;
 
 	return clone;
 }

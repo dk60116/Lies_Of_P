@@ -74,6 +74,19 @@ public:
             wstring path = L"";
         }MATERIALTEXTUREINFO;
 
+        typedef struct LightInfo
+        {
+            _bool hasLight = false;
+            _uint type = 0u;
+            _float intensity = 1.f;
+            _float range = 10.f;
+            _float spotAngle = 45.f;
+            _float attenuation = 1.f;
+            ColorValue diffuseColor = ColorValue::white();
+            ColorValue specularColor = ColorValue::white();
+            _bool castShadow = true;
+        }LIGHTINFO;
+
         _uint objID = 0;
         wstring objGuid = L"";
         wstring objName = L"";
@@ -126,6 +139,7 @@ public:
         vector<pair<wstring, _float3>> materialVector3Values = {};
         vector<pair<wstring, _float4>> materialVector4Values = {};
         vector<pair<wstring, _float4x4>> materialMatrixValues = {};
+        LIGHTINFO lightInfo = {};
     }SCENETRANSFORMINFO;
 
     typedef struct SceneNavigationInfo

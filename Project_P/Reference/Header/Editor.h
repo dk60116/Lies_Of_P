@@ -41,6 +41,7 @@ public:
 
 public:
 	const TransformControleTool Get_ControleTool() const;
+	const TransformControleTool Get_GizmoControleTool() const;
 	void Change_ControleTool(const TransformControleTool _tool);
 	const vector3 Get_EditorCamPositon() const;
 	const quaternion Get_EditorCamQuaternion() const;
@@ -114,6 +115,7 @@ private:
 
 private:
 	TransformControleTool m_eControleTool;
+	TransformControleTool m_eLastGizmoTool;
 	CGameObject* m_pSelectedGameObject;
 	CGameObject* m_pMoveTargetGameObject;
 	_bool m_bOpenSelectedInHierarchyRequested;

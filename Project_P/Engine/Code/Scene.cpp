@@ -1288,10 +1288,7 @@ void CScene::Render_Game(const _uint _frameIndex)
 		camera->RenderMesh();
 		camera->RenderShadowDepthPass(vp);
 		camera->RenderObjectIDPass(vp);
-		camera->RenderLightingPass_ToDiffuse(vp);
-		camera->RenderLightingPass_ToSpecular(vp);
-		camera->RenderShadowMaskPass(vp);
-		camera->RenderCombine(vp);
+		camera->RenderLightingCombined(vp);
 
 		CGraphicDevice::GetInstance().Set_RenderTarget(CDisplay::GetInstance().Get_GameWindow());
 		if (camera->GetClearFlags() == CCamera::ClearFlags::Skybox || camera->GetClearFlags() == CCamera::ClearFlags::SolidColor)
@@ -1751,6 +1748,22 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			}
 		}
 
+		if (CLight* light = (*it)->GetComponent<CLight>())
+		{
+			if (light->Is_SaveTarget())
+			{
+				info.lightInfo.hasLight = true;
+				info.lightInfo.type = static_cast<_uint>(light->Get_Type());
+				info.lightInfo.intensity = light->Get_Intensity();
+				info.lightInfo.range = light->Get_Range();
+				info.lightInfo.spotAngle = light->Get_SpotAngle();
+				info.lightInfo.attenuation = light->Get_Attenuation();
+				info.lightInfo.diffuseColor = light->Get_DiffuseColor();
+				info.lightInfo.specularColor = light->Get_SpecularColor();
+				info.lightInfo.castShadow = light->IsCastShadow();
+			}
+		}
+
 		if (!(*it)->m_bIsBoneTransform)
 			result.push_back(info);
 	}
@@ -1940,6 +1953,23 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
                 navMeshAgent->SetCollisionWeight(static_cast<CNaviMeshAgent::CollisionWeight>(std::clamp(info.navAgentCollisionWeight, 0, 2)));
             }
         }
+
+		if (info.lightInfo.hasLight)
+		{
+			ensureComponentByName(obj, L"Light");
+			if (CLight* light = obj->GetComponent<CLight>())
+			{
+				const _uint lightType = min<_uint>(info.lightInfo.type, static_cast<_uint>(CLight::Type::spot));
+				light->Set_Type(static_cast<CLight::Type>(lightType));
+				light->Set_Intensity(info.lightInfo.intensity);
+				light->Set_Range(info.lightInfo.range);
+				light->Set_SpotAngle(info.lightInfo.spotAngle);
+				light->Set_Attenuation(info.lightInfo.attenuation);
+				light->Set_Color(info.lightInfo.diffuseColor);
+				light->Set_SpecularColor(info.lightInfo.specularColor);
+				light->SetCastShadow(info.lightInfo.castShadow);
+			}
+		}
 
 		if (info.horizontalLayoutGroupInfo.hasHorizontalLayoutGroup)
 		{

@@ -40,6 +40,7 @@ public:
 
 public:
 	void CreateMeshInstancing(const _uint _count);
+	void SetInstancingWorldMatrix(const _uint _index, const _matrix& _world);
 	void SetInstancingPosition(const _uint _index, const vector3& _pos);
 	void SetInstancingRotation(const _uint _index, const vector3& _rot);
 	void SetInstancingSize(const _uint _index, const vector3& _size);
@@ -64,6 +65,8 @@ protected:
 
 	struct InstanceTransform
 	{
+		_float4x4 worldMatrix = {};
+		_bool useWorldMatrix = false;
 		vector3 position = vector3::zero();
 		vector3 rotation = vector3::zero();
 		vector3 scale = vector3::one();

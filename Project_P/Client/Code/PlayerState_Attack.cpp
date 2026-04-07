@@ -59,6 +59,7 @@ namespace
     constexpr _uint kThrustEnableBoxFrame = 11;
     constexpr _float kThrustKnockbackAmount = 0.f;
     constexpr _float kComboInputBufferLife = 0.25f;
+    constexpr _float kDashAttackHoldThreshold = 0.3f;
 
     _float GetAttackEnterKnockbackAmount(const _bool isStrong)
     {
@@ -71,6 +72,8 @@ CPlayerState_Attack::CPlayerState_Attack()
     , m_bPressedContinue(false)
     , m_bComboTransitionQueued(false)
     , m_bBufferedComboInput(false)
+    , m_bDashAttackHoldTracking(false)
+    , m_bDashAttackRequested(false)
     , m_iCrtCombo(0)
     , m_bUnderTerm(false)
     , m_bUnderLimit(false)
@@ -79,6 +82,7 @@ CPlayerState_Attack::CPlayerState_Attack()
     , m_iComboTerm_S()
     , m_iComboLimit_S()
     , m_fBufferedComboInputTime(0.f)
+    , m_fDashAttackHoldTime(0.f)
     , m_bStrong(false)
     , m_bThrust(false)
 {
@@ -327,6 +331,9 @@ void CPlayerState_Attack::Enter()
     m_bBufferedComboInput = false;
     m_fBufferedComboInputTime = 0.f;
     m_bThrust = false;
+    m_bDashAttackHoldTracking = false;
+    m_bDashAttackRequested = false;
+    m_fDashAttackHoldTime = 0.f;
 
     m_pCtx->Get_Player()->OffSwordAttackHandler();
     m_pCtx->Get_Player()->SetWeaponKnockbackAmount(GetAttackEnterKnockbackAmount(m_bStrong));
@@ -355,6 +362,34 @@ void CPlayerState_Attack::Update()
 
     const _bool isLightAttackDown = m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack);
     const _bool isStrongAttackDown = m_pCtx->IsKeyPressed_Down(CPlayerController::PlayerState::Attack_S);
+    const _bool isStrongAttackHold = m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Attack_S);
+    const _bool isStrongAttackUp = m_pCtx->IsKeyPressed_UP(CPlayerController::PlayerState::Attack_S);
+
+    if (isStrongAttackDown && m_pCtx->Get_Player()->IsDashAttackReady())
+    {
+        m_bDashAttackHoldTracking = true;
+        m_bDashAttackRequested = false;
+        m_fDashAttackHoldTime = 0.f;
+    }
+
+    if (m_bDashAttackHoldTracking)
+    {
+        if (isStrongAttackHold)
+        {
+            m_fDashAttackHoldTime += DELTA_TIME;
+
+            if (m_fDashAttackHoldTime >= kDashAttackHoldThreshold)
+            {
+                m_bDashAttackHoldTracking = false;
+                m_bDashAttackRequested = true;
+            }
+        }
+        else if (isStrongAttackUp)
+        {
+            m_bDashAttackHoldTracking = false;
+            m_fDashAttackHoldTime = 0.f;
+        }
+    }
 
     if (isLightAttackDown)
         m_bStrong = false;
@@ -377,7 +412,14 @@ void CPlayerState_Attack::Update()
 
     if (m_bThrust)
     {
-        m_pCtx->AddPosition(m_pCtx->GetCharacterDir() * 10.f * DELTA_TIME);
+        m_pCtx->AddPosition(m_pCtx->Get_Player()->GetTransform()->Get_Directions().forward * 10.f * DELTA_TIME);
+    }
+
+    if (m_bDashAttackRequested && !m_bUnderLimit)
+    {
+        Exit();
+        m_pCtx->BufferAction(CPlayerController::PlayerState::DashAttack);
+        return;
     }
 
     if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move) && !m_bUnderLimit)
@@ -404,6 +446,9 @@ void CPlayerState_Attack::Exit()
     m_bComboTransitionQueued = false;
     m_bBufferedComboInput = false;
     m_fBufferedComboInputTime = 0.f;
+    m_bDashAttackHoldTracking = false;
+    m_bDashAttackRequested = false;
+    m_fDashAttackHoldTime = 0.f;
 
     m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionX(false);
     m_pCtx->Get_Player()->GetRigidBody()->SetConstPositionY(false);

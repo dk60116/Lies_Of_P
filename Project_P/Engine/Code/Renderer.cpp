@@ -139,19 +139,31 @@ void CRenderer::CreateMeshInstancing(const _uint _count)
 	m_bUseInstancing = true;
 
 	m_vInstanceTransforms.assign(m_iInstanceCount, InstanceTransform{});
+	for (auto& transform : m_vInstanceTransforms)
+		XMStoreFloat4x4(&transform.worldMatrix, XMMatrixIdentity());
 
-	Safe_Release(m_pInstanceBuffer);
-
-	D3D11_BUFFER_DESC desc = {};
-	desc.ByteWidth = sizeof(InstanceCB);
-	desc.Usage = D3D11_USAGE_DEFAULT;
-	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-
-	if (FAILED(m_pDevice->CreateBuffer(&desc, nullptr, &m_pInstanceBuffer)))
+	if (!m_pInstanceBuffer)
 	{
-		m_bUseInstancing = false;
-		m_iInstanceCount = 0;
+		D3D11_BUFFER_DESC desc = {};
+		desc.ByteWidth = sizeof(InstanceCB);
+		desc.Usage = D3D11_USAGE_DEFAULT;
+		desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+		if (FAILED(m_pDevice->CreateBuffer(&desc, nullptr, &m_pInstanceBuffer)))
+		{
+			m_bUseInstancing = false;
+			m_iInstanceCount = 0;
+		}
 	}
+}
+
+void CRenderer::SetInstancingWorldMatrix(const _uint _index, const _matrix& _world)
+{
+	if (!m_bUseInstancing || _index >= m_vInstanceTransforms.size())
+		return;
+
+	XMStoreFloat4x4(&m_vInstanceTransforms[_index].worldMatrix, _world);
+	m_vInstanceTransforms[_index].useWorldMatrix = true;
 }
 
 void CRenderer::SetInstancingPosition(const _uint _index, const vector3& _pos)
@@ -159,6 +171,7 @@ void CRenderer::SetInstancingPosition(const _uint _index, const vector3& _pos)
 	if (!m_bUseInstancing || _index >= m_vInstanceTransforms.size())
 		return;
 
+	m_vInstanceTransforms[_index].useWorldMatrix = false;
 	m_vInstanceTransforms[_index].position = _pos;
 }
 
@@ -167,6 +180,7 @@ void CRenderer::SetInstancingRotation(const _uint _index, const vector3& _rot)
 	if (!m_bUseInstancing || _index >= m_vInstanceTransforms.size())
 		return;
 
+	m_vInstanceTransforms[_index].useWorldMatrix = false;
 	m_vInstanceTransforms[_index].rotation = _rot;
 }
 
@@ -175,6 +189,7 @@ void CRenderer::SetInstancingSize(const _uint _index, const vector3& _size)
 	if (!m_bUseInstancing || _index >= m_vInstanceTransforms.size())
 		return;
 
+	m_vInstanceTransforms[_index].useWorldMatrix = false;
 	m_vInstanceTransforms[_index].scale = _size;
 }
 
@@ -225,24 +240,34 @@ void CRenderer::Bind_InstanceBuffer(const _matrix& _baseWorld)
 		for (size_t i = 0; i < count; ++i)
 		{
 			const auto& tr = m_vInstanceTransforms[i];
-			const vector3 finalScale = vector3(
-				baseScale.x * tr.scale.x,
-				baseScale.y * tr.scale.y,
-				baseScale.z * tr.scale.z
-			);
-			const vector3 finalRotation = baseRotation + tr.rotation;
-			const vector3 finalPosition = basePosition + tr.position;
+			_matrix worldMat = XMMatrixIdentity();
 
-			_matrix scaleMat = XMMatrixScaling(finalScale.x, finalScale.y, finalScale.z);
-			_vector rotVec = XMVectorSet(
-				XMConvertToRadians(finalRotation.x),
-				XMConvertToRadians(finalRotation.y),
-				XMConvertToRadians(finalRotation.z),
-				0.f
-			);
-			_matrix rotMat = XMMatrixRotationRollPitchYawFromVector(rotVec);
-			_matrix transMat = XMMatrixTranslation(finalPosition.x, finalPosition.y, finalPosition.z);
-			_matrix worldMat = scaleMat * rotMat * transMat;
+			if (tr.useWorldMatrix)
+			{
+				worldMat = XMLoadFloat4x4(&tr.worldMatrix);
+			}
+			else
+			{
+				const vector3 finalScale = vector3(
+					baseScale.x * tr.scale.x,
+					baseScale.y * tr.scale.y,
+					baseScale.z * tr.scale.z
+				);
+				const vector3 finalRotation = baseRotation + tr.rotation;
+				const vector3 finalPosition = basePosition + tr.position;
+
+				_matrix scaleMat = XMMatrixScaling(finalScale.x, finalScale.y, finalScale.z);
+				_vector rotVec = XMVectorSet(
+					XMConvertToRadians(finalRotation.x),
+					XMConvertToRadians(finalRotation.y),
+					XMConvertToRadians(finalRotation.z),
+					0.f
+				);
+				_matrix rotMat = XMMatrixRotationRollPitchYawFromVector(rotVec);
+				_matrix transMat = XMMatrixTranslation(finalPosition.x, finalPosition.y, finalPosition.z);
+				worldMat = scaleMat * rotMat * transMat;
+			}
+
 			cb.worlds[i] = XMMatrixTranspose(worldMat);
 		}
 	}

@@ -38,6 +38,10 @@ void CPlayerState_DashAttack::Initialize(CPlayerControllerContext* _ctx, const C
 	registerActionTrigger(1, L"DashAttack_Start", [this]()
 		{
 			m_bDash = true;
+		});
+
+	registerActionTrigger(4, L"DashAttack_EnableBox", [this]()
+		{
 			m_pCtx->Get_Player()->OnSwordAttackHandler();
 		});
 
@@ -45,7 +49,11 @@ void CPlayerState_DashAttack::Initialize(CPlayerControllerContext* _ctx, const C
 		{
 			m_bDash = false;
 			m_pCtx->StopMoveImmediate();
-			m_pCtx->Get_Player()->OffSwordAttackHandler();
+		});
+
+	registerActionTrigger(13, L"DashAttack_DisableBox", [this]()
+		{
+
 		});
 
 	registerActionTrigger(18, L"DashAttack_StartRun", [this]()

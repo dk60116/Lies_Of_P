@@ -3,7 +3,7 @@ SceneSkyBox : DefaultSky (SkyBox)
 SceneAmbient : 0.200000
 SceneDirectionalLightShadowDist : 300.000000
 SceneShadowBias : 0.000000
-SceneSoftShadowLightSize : 5.000000
+SceneSoftShadowLightSize : 0.000000
 // Eve Model
 EveBody_Model : Player/Eve/EveBody.fbx :  [Skinned Mesh] [Root : Root]
 EveHead_Model : Player/Eve/EveHead.fbx :  [Skinned Mesh]
@@ -211,7 +211,8 @@ Terapod_Terapod_Auto_1774979955083 : Map/Terapod/Terapod.fbx : [Mesh]
 Floor_7_Stage01_Floor_07_Auto_1775504434030 : Map/Map01/Floor_7/Stage01_Floor_07.fbx : [Mesh]
 003_B_SM_LOD0 : Map/Map01/Building_10/Stage01_Building_10_02.fbx : [Mesh] [Editor]
 004_Aa_SM_LOD0 : Map/Map01/Building_6/Stage01_Building_06_02.fbx : [Mesh] [Editor]
-004_B_SM_LOD0 : Map/Map01/Building_9/Stage01_Building_09_06.fbx : [Mesh] [Editor]
+004_Ba_D_SM.001_0 : Map/Map01/Building_9/Stage01_Building_09_00.fbx : [Mesh] [Editor]
+004_Ba_D_SM.001_1 : Map/Map01/Building_9/Stage01_Building_09_00.fbx : [Mesh] [Editor]
 004_E_SM_LOD0 : Map/Map01/Building_6/Stage01_Building_06_03.fbx : [Mesh] [Editor]
 034_D_SM.001 : Map/Map01/Floor_7/Stage01_Floor_07.fbx : [Mesh] [Editor]
 SceneTexture/Building_0_004_C_TAoRM.dds_431109363440719641 : BinaryAssets/TextureData/Building_0_004_C_TAoRM.dds : [Texture] [Editor]
