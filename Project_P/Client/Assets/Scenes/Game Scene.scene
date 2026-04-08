@@ -6,15 +6,14 @@ SceneShadowBias : 0.000000
 SceneSoftShadowLightSize : 3.000000
 SceneDirectionalShadowSplitLambda : 0.600000
 SceneShadowCascadeBlendRatio : 0.100000
-004_B_SM_LOD0_0 : Map/Map01/BigWall/BigWall_01.fbx : [Mesh] [Editor]
-004_B_SM_LOD0_1 : Map/Map01/BigWall/BigWall_01.fbx : [Mesh] [Editor]
-004_B_SM_LOD0_2 : Map/Map01/BigWall/BigWall_01.fbx : [Mesh] [Editor]
-004_B_SM_LOD0_3 : Map/Map01/BigWall/BigWall_01.fbx : [Mesh] [Editor]
+004_B_SM.001_0 : Map/Map01/BigWall/BigWall_00.fbx : [Mesh] [Editor]
+004_B_SM.001_1 : Map/Map01/BigWall/BigWall_00.fbx : [Mesh] [Editor]
+004_B_SM.001_2 : Map/Map01/BigWall/BigWall_00.fbx : [Mesh] [Editor]
+004_B_SM.001_3 : Map/Map01/BigWall/BigWall_00.fbx : [Mesh] [Editor]
 004_E_SM_LOD0 : Map/Map01/BigWall/BigWall_02.fbx : [Mesh] [Editor]
-005_A_SM_LOD0_0 : Map/Map01/BigWall/BigWall_00.fbx : [Mesh] [Editor]
-005_A_SM_LOD0_1 : Map/Map01/BigWall/BigWall_00.fbx : [Mesh] [Editor]
-005_A_SM_LOD0_2 : Map/Map01/BigWall/BigWall_00.fbx : [Mesh] [Editor]
-BigWall_BigWall_00_Auto_1775628095241 : Map/Map01/BigWall/BigWall_00.fbx : [Mesh]
-BigWall_BigWall_01_Auto_1775640133566 : Map/Map01/BigWall/BigWall_01.fbx : [Mesh]
+005_A_SM_LOD0_0 : Map/Map01/BigWall/BigWall_01.fbx : [Mesh] [Editor]
+005_A_SM_LOD0_1 : Map/Map01/BigWall/BigWall_01.fbx : [Mesh] [Editor]
+005_A_SM_LOD0_2 : Map/Map01/BigWall/BigWall_01.fbx : [Mesh] [Editor]
+BigWall_BigWall_01_Auto_1775648979369 : Map/Map01/BigWall/BigWall_01.fbx : [Mesh]
 BigWall_BigWall_02_Auto_1775645635743 : Map/Map01/BigWall/BigWall_02.fbx : [Mesh]
 Plane (Mesh Buffer) : Plane : [Mesh] [Editor]

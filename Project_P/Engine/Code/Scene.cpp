@@ -3406,13 +3406,6 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 
 	unordered_map<wstring, SceneResourceEntry> entries;
 
-	// Preserve non-Editor entries (SceneLoader resources: Map meshes, textures, etc.)
-	for (auto& [key, e] : previousEntries)
-	{
-		if (!isEditorFormat(e.format))
-			entries[key] = e;
-	}
-
 	auto trimResourceSuffix = [](const wstring& resourceName)
 	{
 		static const vector<wstring> suffixes =
@@ -3437,6 +3430,85 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 
 		return resourceName;
 	};
+
+	auto isMeshSceneEntryFormat = [](const wstring& format)
+	{
+		return CEngineString::Contains(format, L"[Mesh]") || CEngineString::Contains(format, L"[Skinned Mesh]");
+	};
+
+	unordered_set<wstring> referencedSceneMeshEntryNames;
+
+	auto findMeshEntryNameInStaticBundles = [&](CMeshBuffer* meshBuffer, const auto& bundleMap) -> wstring
+	{
+		if (!meshBuffer)
+			return L"";
+
+		for (const auto& [bundleName, bundleList] : bundleMap)
+		{
+			for (const MeshBundle& bundle : bundleList)
+			{
+				if (bundle.meshBuffer == meshBuffer)
+					return trimResourceSuffix(bundleName);
+			}
+		}
+
+		return L"";
+	};
+
+	auto findMeshEntryNameInSkinnedBundles = [&](CMeshBuffer* meshBuffer, const auto& bundleMap) -> wstring
+	{
+		if (!meshBuffer)
+			return L"";
+
+		for (const auto& [bundleName, bundleList] : bundleMap)
+		{
+			for (const SkinnedMeshBundle& bundle : bundleList)
+			{
+				if (bundle.meshBuffer == meshBuffer)
+					return trimResourceSuffix(bundleName);
+			}
+		}
+
+		return L"";
+	};
+
+	auto registerReferencedMeshEntryName = [&](CMeshBuffer* meshBuffer)
+	{
+		wstring entryName = findMeshEntryNameInStaticBundles(meshBuffer, m_mMeshBundleList);
+		if (entryName.empty())
+			entryName = findMeshEntryNameInStaticBundles(meshBuffer, m_mTempMeshBundleList);
+		if (entryName.empty())
+			entryName = findMeshEntryNameInSkinnedBundles(meshBuffer, m_mSkinnedBundleList);
+		if (entryName.empty())
+			entryName = findMeshEntryNameInSkinnedBundles(meshBuffer, m_mTempSkinnedBundleList);
+
+		if (!entryName.empty())
+			referencedSceneMeshEntryNames.insert(entryName);
+	};
+
+	for (CGameObject* obj : m_lObjectList)
+	{
+		if (!obj || !obj->Is_SaveTarget())
+			continue;
+
+		if (CMeshFilter* meshFilter = obj->GetComponent<CMeshFilter>())
+			registerReferencedMeshEntryName(meshFilter->Get_MeshBuffer());
+
+		if (CSkinnedMeshRenderer* skinnedMeshRenderer = obj->GetComponent<CSkinnedMeshRenderer>())
+			registerReferencedMeshEntryName(skinnedMeshRenderer->Get_MeshBuffer());
+	}
+
+	// Preserve non-Editor entries (SceneLoader resources: Map meshes, textures, etc.)
+	for (auto& [key, e] : previousEntries)
+	{
+		if (isEditorFormat(e.format))
+			continue;
+
+		if (isMeshSceneEntryFormat(e.format) && referencedSceneMeshEntryNames.find(e.name) == referencedSceneMeshEntryNames.end())
+			continue;
+
+		entries[key] = e;
+	}
 
 	auto addEntry = [&](const wstring& name, const wstring& path, const wstring& format)
 	{
