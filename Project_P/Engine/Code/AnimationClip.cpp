@@ -5,6 +5,7 @@ CAnimationClip::CAnimationClip()
 	: m_vBoneAnimation({})
 	, m_vActionTriggerList({})
 	, m_bLoopTime(false)
+	, m_fSpeed(1.f)
 	, m_fDuration(0.f)
 	, m_fTicksPerSecond(0.f)
 {
@@ -41,6 +42,8 @@ HRESULT CAnimationClip::Initiailize_Custom(AnimationClipInitInfo _info, void* _d
 {
 	m_fDuration = _info.duration;
 	m_fTicksPerSecond = _info.ticksPerSecond;
+	m_bLoopTime = _info.loop;
+	m_fSpeed = _info.speed;
 
 	m_vBoneAnimation = {};
 
@@ -57,7 +60,7 @@ _int CAnimationClip::Sample(_float _timeSec, unordered_map<wstring, BoneTransfor
 	if (m_vBoneAnimation.empty() || m_fDuration == 0.f)
 		return frameIndex;
 
-	double ticks = _timeSec * m_fTicksPerSecond;
+	double ticks = _timeSec * m_fTicksPerSecond * m_fSpeed;
 	double time = ticks;
 	if (m_bLoopTime)
 	{
@@ -141,7 +144,7 @@ _int CAnimationClip::SampleIndexed(_float _timeSec, const vector<_int>& boneToTr
 	if (m_vBoneAnimation.empty() || m_fDuration == 0.f)
 		return frameIndex;
 
-	double ticks = _timeSec * m_fTicksPerSecond;
+	double ticks = _timeSec * m_fTicksPerSecond * m_fSpeed;
 	double time = ticks;
 	if (m_bLoopTime)
 	{
@@ -193,6 +196,16 @@ const _bool CAnimationClip::IsLoop() const
 void CAnimationClip::SetLoop(const _bool _loop)
 {
 	m_bLoopTime = _loop;
+}
+
+const _float CAnimationClip::Get_Speed() const
+{
+	return m_fSpeed;
+}
+
+void CAnimationClip::SetSpeed(const _float _speed)
+{
+	m_fSpeed = _speed;
 }
 
 const _float CAnimationClip::Get_Duration() const

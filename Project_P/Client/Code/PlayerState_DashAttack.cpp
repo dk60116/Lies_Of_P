@@ -81,6 +81,9 @@ void CPlayerState_DashAttack::Enter()
 	m_pCtx->Get_Player()->OffSwordAttackHandler();
 
 	m_pCtx->SetBattle(true);
+
+	m_pCtx->Get_Player()->SetAbleNavAgent(true);
+
 	m_pCtx->StopMoveImmediate();
 	m_pCtx->Animator()->SetTrigger(L"dashAttack");
 	m_pCtx->Animator()->SetBool(L"isStrongAttack", true);
@@ -116,6 +119,8 @@ void CPlayerState_DashAttack::Exit()
 	__super::Exit();
 
 	m_bDash = false;
+
+	m_pCtx->Get_Player()->SetAbleNavAgent(false);
 
 	m_pCtx->Get_Player()->OffSwordAttackHandler();
 	m_pCtx->SetCanDashAttack(true);

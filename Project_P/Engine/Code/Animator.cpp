@@ -90,12 +90,14 @@ HRESULT CAnimator::Initialize()
 
 	if (!m_pSkinnedRenderer)
 	{
-		m_pSkinnedRenderer = m_pGameObject->GetTransform()
-			->Get_Child(0)->Get_GameObject()
-			->GetComponent<CSkinnedMeshRenderer>();
+		CTransform* childTransform = m_pGameObject->GetTransform()->Get_Child(0);
+		if (childTransform)
+		{
+			m_pSkinnedRenderer = childTransform->Get_GameObject()->GetComponent<CSkinnedMeshRenderer>();
 
-		if (m_pSkinnedRenderer)
-			m_pSkinnedRenderer->AddRef();
+			if (m_pSkinnedRenderer)
+				m_pSkinnedRenderer->AddRef();
+		}
 	}
 
 	if (m_pController)
@@ -735,6 +737,41 @@ void CAnimator::Stop()
 	m_bIsPlaying = false;
 }
 
+static wstring StripFirstPrefix(const wstring& name)
+{
+	const size_t pos = name.find(L'_');
+	if (pos == wstring::npos)
+		return name;
+	return name.substr(pos + 1);
+}
+
+static wstring StripFbxExtension(const wstring& name)
+{
+	if (name.size() > 4)
+	{
+		wstring ext = name.substr(name.size() - 4);
+		for (auto& c : ext) c = towlower(c);
+		if (ext == L".fbx")
+			return name.substr(0, name.size() - 4);
+	}
+	return name;
+}
+
+static CAnimationClip* LoadAnimClipFromFile(const wstring& motionName, const fs::path& entry)
+{
+	const wstring animdataName = entry.filename().stem().wstring();
+	const wstring animdataPath = animdataName + L".animdata";
+	auto infoList = CResources::GetInstance().ReadAnimationClipBufferInfos(animdataPath);
+
+	const wstring clipResourceName = motionName + L" (Animation Clip)";
+	CAnimationClip* newClip = CResources::LoadResourceComplete_Scene<CAnimationClip>(clipResourceName, L"BinaryAssets/AnimationClipData/" + animdataPath, nullptr, false);
+
+	if (newClip && !infoList.empty())
+		newClip->Initiailize_Custom(infoList[0], nullptr);
+
+	return newClip;
+}
+
 static CAnimationClip* TryLoadAnimationClipFromBinary(const wstring& motionName)
 {
 	const fs::path animDir = fs::path("BinaryAssets/AnimationClipData");
@@ -742,36 +779,31 @@ static CAnimationClip* TryLoadAnimationClipFromBinary(const wstring& motionName)
 	if (!fs::exists(animDir, ec))
 		return nullptr;
 
-	const wstring suffix = L"_" + motionName + L".animdata";
+	const wstring cleanMotion = StripFbxExtension(motionName);
 
+	// 1) Suffix match: file ends with _motionName.animdata (e.g. "Animations_Eve_Idle.animdata" for "Eve_Idle")
+	const wstring suffix = L"_" + cleanMotion + L".animdata";
 	for (const auto& entry : fs::directory_iterator(animDir, ec))
 	{
 		if (!entry.is_regular_file())
 			continue;
-
 		const wstring filename = entry.path().filename().wstring();
 		if (filename.size() >= suffix.size() &&
 			filename.compare(filename.size() - suffix.size(), suffix.size(), suffix) == 0)
-		{
-			const wstring animdataName = entry.path().filename().stem().wstring();
-			// e.g. "Animations_Eve_Attack_LLS23"
-			// Split into folder part and file part using first underscore
-			const size_t underscorePos = animdataName.find(L'_');
-			if (underscorePos == wstring::npos)
-				continue;
-
-			const wstring animdataPath = animdataName + L".animdata";
-			auto infoList = CResources::GetInstance().ReadAnimationClipBufferInfos(animdataPath);
-
-			const wstring clipResourceName = motionName + L" (Animation Clip)";
-			CAnimationClip* newClip = CResources::LoadResourceComplete_Scene<CAnimationClip>(clipResourceName, L"BinaryAssets/AnimationClipData/" + animdataPath, nullptr, false);
-
-			if (newClip && !infoList.empty())
-				newClip->Initiailize_Custom(infoList[0], nullptr);
-
-			return newClip;
-		}
+			return LoadAnimClipFromFile(motionName, entry.path());
 	}
+
+	// 2) Core match: strip first prefix from both and compare (e.g. "Anim_Mon_X" -> "Mon_X", "Animations_Mon_X" -> "Mon_X")
+	const wstring motionCore = StripFirstPrefix(cleanMotion);
+	for (const auto& entry : fs::directory_iterator(animDir, ec))
+	{
+		if (!entry.is_regular_file())
+			continue;
+		const wstring fileCore = StripFirstPrefix(entry.path().filename().stem().wstring());
+		if (fileCore == motionCore)
+			return LoadAnimClipFromFile(motionName, entry.path());
+	}
+
 	return nullptr;
 }
 

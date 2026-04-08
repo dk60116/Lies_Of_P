@@ -1419,6 +1419,9 @@ CInspectorBox::CInspectorBox()
     , m_fRZDrag(0.f)
     , m_pPreviewTexture(nullptr)
     , m_previewAssetPath()
+    , m_animDataCachePath()
+    , m_vAnimDataCache({})
+    , m_bAnimDataDirty(false)
 {
 }
 
@@ -1813,6 +1816,8 @@ void CInspectorBox::Render()
         RenderSelectedAssetInfo(editor.Get_SelectedAssetPath());
         RenderSelectedAssetPreview(editor.Get_SelectedAssetPath());
     }
+
+    RenderAnimDataInspector(editor.Get_SelectedAssetPath());
 
     RenderTexturePickerWindow();
 
@@ -3911,8 +3916,77 @@ void CInspectorBox::RenderSelectedAssetPreview(const fs::path& path)
     ImGui::Image(ImTextureRef(texId), size);
 }
 
+void CInspectorBox::RenderAnimDataInspector(const fs::path& path)
+{
+    if (path.empty())
+        return;
 
+    const string ext = path.extension().string();
+    if (ext != ".animdata")
+        return;
 
+    error_code ec;
+    if (!fs::exists(path, ec))
+        return;
+
+    const wstring pathKey = path.wstring();
+
+    // Load cache if path changed
+    if (pathKey != m_animDataCachePath)
+    {
+        m_animDataCachePath = pathKey;
+        m_bAnimDataDirty = false;
+
+        // Extract binary name (filename only) for ReadAnimationClipBufferInfos
+        const wstring binFileName = path.filename().wstring();
+
+        m_vAnimDataCache = CResources::GetInstance().ReadAnimationClipBufferInfos(binFileName);
+    }
+
+    if (m_vAnimDataCache.empty())
+        return;
+
+    ImGui::Separator();
+    ImGui::Text("Animation Clip");
+
+    for (_uint i = 0; i < m_vAnimDataCache.size(); ++i)
+    {
+        auto& clip = m_vAnimDataCache[i];
+        string clipLabel = CEngineString::WStringToString(clip.name);
+        if (clipLabel.empty())
+            clipLabel = "Clip " + to_string(i);
+
+        if (ImGui::TreeNodeEx(clipLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::Text("Duration: %.3f sec", clip.duration / clip.ticksPerSecond);
+            ImGui::Text("Ticks/Sec: %.1f", clip.ticksPerSecond);
+            ImGui::Text("Tracks: %u", static_cast<_uint>(clip.tracks.size()));
+
+            string loopId = "Loop##animdata_loop_" + to_string(i);
+            if (ImGui::Checkbox(loopId.c_str(), &clip.loop))
+                m_bAnimDataDirty = true;
+
+            string speedId = "Speed##animdata_speed_" + to_string(i);
+            if (ImGui::DragFloat(speedId.c_str(), &clip.speed, 0.01f, 0.01f, 10.f, "%.2f"))
+                m_bAnimDataDirty = true;
+
+            ImGui::TreePop();
+        }
+    }
+
+    if (m_bAnimDataDirty)
+    {
+        if (ImGui::Button("Save##animdata_save"))
+        {
+            wstring savePath = path.wstring();
+            if (SUCCEEDED(CResources::GetInstance().SaveAnimationClipBufferInfos(savePath, m_vAnimDataCache)))
+            {
+                m_bAnimDataDirty = false;
+                CDebug::Log(L"Animation clip metadata saved: " + path.filename().wstring());
+            }
+        }
+    }
+}
 
 
 

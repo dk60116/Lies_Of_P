@@ -6,3 +6,8 @@ SceneShadowBias : 0.000000
 SceneSoftShadowLightSize : 3.000000
 SceneDirectionalShadowSplitLambda : 0.600000
 SceneShadowCascadeBlendRatio : 0.100000
+005_A_SM_LOD0_0 : Map/Map01/BigWall/BigWall_00.fbx : [Mesh] [Editor]
+005_A_SM_LOD0_1 : Map/Map01/BigWall/BigWall_00.fbx : [Mesh] [Editor]
+005_A_SM_LOD0_2 : Map/Map01/BigWall/BigWall_00.fbx : [Mesh] [Editor]
+BigWall_BigWall_00_Auto_1775628095241 : Map/Map01/BigWall/BigWall_00.fbx : [Mesh]
+Plane (Mesh Buffer) : Plane : [Mesh] [Editor]

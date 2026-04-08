@@ -54,27 +54,27 @@ HRESULT CPlayer::Initialize()
 	m_pController = m_pGameObject->AddComponent<CPlayerController>();
 	m_pController->Set_Player(this);
 
-	CTexture* suit_BaseTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Suit_Base (Texture)");
-	CTexture* suit_NormalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Suit_Normal (Texture)");
-	CTexture* suit_ORMTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Suit_ORM (Texture)");
+	CTexture* suit_BaseTex = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveBody_Suit_BaseMap.png");
+	CTexture* suit_NormalTex = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveBody_Suit_NormalMap.png");
+	CTexture* suit_ORMTex = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveBody_Suit_ORMMap.png");
 
-	CTexture* skin_BaseTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Skin_Base (Texture)");
-	CTexture* skin_NormalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Skin_Normal (Texture)");
-	
-	CTexture* boost_BaseTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Boost_Base (Texture)");
-	CTexture* boost_NormalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Boost_Normal (Texture)");
-	CTexture* boost_ORMTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Boost_ORM (Texture)");
+	CTexture* skin_BaseTex = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveBody_Skin_BaseMap.png");
+	CTexture* skin_NormalTex = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveBody_Skin_NormalMap.png");
 
-	CTexture* wing_BaseTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Wing_Base (Texture)");
-	CTexture* wing_NormalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Wing_Normal (Texture)");
-	CTexture* wing_ORMTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Wing_ORM (Texture)");
-	CTexture* wing_AlphaTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Wing_Alpha (Texture)");
+	CTexture* boost_BaseTex = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveBody_Boost_BaseMap.png");
+	CTexture* boost_NormalTex = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveBody_Boost_NormalMap.png");
+	CTexture* boost_ORMTex = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveBody_Boost_ORMMap.png");
 
-	CTexture* frill_BaseTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Frill_Base (Texture)");
-	CTexture* frill_NormalTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Frill_Normal (Texture)");
-	CTexture* frill_ORMTex = CResources::GetInstance().LoadOnScene<CTexture>(L"EveBody_Frill_ORM (Texture)");
+	CTexture* wing_BaseTex = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveBody_Wing_BaseMap.png");
+	CTexture* wing_NormalTex = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveBody_Wing_NormalMap.png");
+	CTexture* wing_ORMTex = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveBody_Wing_ORMMap.png");
+	CTexture* wing_AlphaTex = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveBody_Wing_AlphaMap.png");
 
-	m_vBodySuits = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveBody_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveBody_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
+	CTexture* frill_BaseTex = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveBody_Frill_BaseMap.png");
+	CTexture* frill_NormalTex = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveBody_Frill_NormalMap.png");
+	CTexture* frill_ORMTex = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveBody_Frill_ORMMap.png");
+
+	m_vBodySuits = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnPath(L"Player/Eve/EveBody.fbx"), CResources::GetInstance().LoadSkinnedBonesOnPath(L"Player/Eve/EveBody.fbx"), 0.01f, vector3::up() * 270.f);
 
 	CTransform* addRoot = GetTransform()->Find_ChildRecursive(L"Root");
 
@@ -111,21 +111,21 @@ HRESULT CPlayer::Initialize()
 	//m_vBodySuits[5]->Get_Material()->Set_Texture(frill_ORMTex, 2);
 
 	m_pHeadObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Eve_Head");
-	m_vFaces = m_pHeadObj->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveHead_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveHead_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
+	m_vFaces = m_pHeadObj->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnPath(L"Player/Eve/EveHead.fbx"), CResources::GetInstance().LoadSkinnedBonesOnPath(L"Player/Eve/EveHead.fbx"), 0.01f, vector3::up() * 270.f);
 
-	CTexture* faceBase = CResources::GetInstance().LoadOnScene<CTexture>(L"EveFace_Base (Texture)");
-	CTexture* faceNormal = CResources::GetInstance().LoadOnScene<CTexture>(L"EveFace_Normal (Texture)");
-	CTexture* faceORM = CResources::GetInstance().LoadOnScene<CTexture>(L"EveFace_ORM (Texture)");
+	CTexture* faceBase = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveFace_BaseMap.png");
+	CTexture* faceNormal = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveFace_NormalMap.png");
+	CTexture* faceORM = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Eve/Texture/EveFace_ORMMap.png");
 
 	m_vFaces[2]->Get_Material()->Set_Texture(faceBase);
 	m_vFaces[2]->Get_Material()->Set_Texture(faceNormal, 1);
 	//m_vFaces[2]->Get_Material()->Set_Texture(faceORM, 2);
 
 	m_pHairObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Eve_Hear");
-	m_vHairs = m_pHairObj->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveHairMain_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveHairMain_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
+	m_vHairs = m_pHairObj->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnPath(L"Player/Eve/EveHairMain.fbx"), CResources::GetInstance().LoadSkinnedBonesOnPath(L"Player/Eve/EveHairMain.fbx"), 0.01f, vector3::up() * 270.f);
 
 	m_pPonyTailObj = m_pGameObject->Get_Scene()->Add_GameObject(L"EveHairPonyTail_Short");
-	m_vPonyTailas = m_pPonyTailObj->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(L"EveHairPonyTail_Short_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(L"EveHairPonyTail_Short_Model (MeshBuffer)"), 0.01f, vector3::up() * 270.f);
+	m_vPonyTailas = m_pPonyTailObj->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnPath(L"Player/Eve/EveHairPonyTail_Short.fbx"), CResources::GetInstance().LoadSkinnedBonesOnPath(L"Player/Eve/EveHairPonyTail_Short.fbx"), 0.01f, vector3::up() * 270.f);
 
 	for (TRAVERSAL_ITER(m_vHairs, it))
 	{
@@ -142,7 +142,7 @@ HRESULT CPlayer::Initialize()
 	}
 
 	m_pAnimator = m_pGameObject->AddComponent<CAnimator>();
-	CAnimatorController* animCon = CResources::GetInstance().LoadOnScene<CAnimatorController>(L"Eve_AnimatorController (Animator Controller)");
+	CAnimatorController* animCon = CResources::GetInstance().LoadOnPath<CAnimatorController>(L"Player/Eve/AnimatorController/Eve_AnimatorController.animatorcontroller");
 	m_pAnimator->Set_Controller(animCon);
 	m_pAnimator->SetApplyRootmotion(true, GetTransform());
 
@@ -167,7 +167,7 @@ HRESULT CPlayer::Initialize()
 
 	m_pWeaponObj->GetTransform()->SetParent(m_pWeaponHolder);
 	m_pWeaponObj->GetTransform()->Set_LocalPosition(vector3::zero());
-	m_pWeaponObj->GetTransform()->Set_LocalEulerAngles(vector3::back() * 90.f);
+	m_pWeaponObj->GetTransform()->Set_LocalEulerAngles(vector3::zero());
 	m_pWeaponObj->GetTransform()->Set_LocalScale(0.5f);
 
 	m_pBodyCollider = m_pGameObject->AddComponent<CCapsuleCollider>();

@@ -64,9 +64,17 @@ public:
 public:
 	void GetHitHandler(const HurtDescription& _hurtDesc) override;
 
+	struct TexturePathSet
+	{
+		wstring diffuse;
+		wstring normal;
+		wstring orm;
+	};
+
 protected:
 	_uint m_iCurrentState;
 	vector<_bool> m_vMaterialTransparent;
+	vector<TexturePathSet> m_vTexturePathSets;
 	vector<CSkinnedMeshRenderer*> m_vMeshRenderers;
 	CMonsterController* m_pController;
 

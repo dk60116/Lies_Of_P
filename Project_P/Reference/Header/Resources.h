@@ -74,11 +74,16 @@ public:
     template<typename T>
     T* LoadOnScene(const wstring& _name);
     template<typename T>
+    T* LoadOnPath(const wstring& _path);
+    template<typename T>
     T* CloneOnScene(const wstring& _name);
 
     vector<MeshBundle> LoadMeshBuffersOnScene(const wstring& _name);
     vector<SkinnedMeshBundle> LoadSkinnedMeshBuffersOnScene(const wstring& _name);
     vector<CSkinnedMeshBuffer::SKINNEDSKELETAL> LoadSkinnedBonesOnScene(const wstring& _name);
+
+    vector<SkinnedMeshBundle> LoadSkinnedMeshBuffersOnPath(const wstring& _path, _int _filter = FILTER_MESHBUFFER | FILTER_MATERIAL | FILTER_TEXTURE | FILTER_BONE);
+    vector<CSkinnedMeshBuffer::SKINNEDSKELETAL> LoadSkinnedBonesOnPath(const wstring& _path);
 
     static _bool FileExists(const wstring& _path);
     static _bool FileExists(const string& _path);
@@ -234,6 +239,94 @@ inline T* CResources::LoadOnScene(const wstring& _name)
     }
 
     return resultResource;
+}
+
+template<typename T>
+inline T* CResources::LoadOnPath(const wstring& _path)
+{
+    wstring normalizedPath = CEngineString::Replace(_path, L"\\", L"/");
+
+    const fs::path p(normalizedPath);
+    const wstring resourceName = p.stem().wstring();
+
+    // Already loaded
+    if (CScene* scene = CSceneManager::GetInstance().Get_CrtScene())
+    {
+        CEngineResource* r = scene->Find_Resource(resourceName);
+        if (T* result = dynamic_cast<T*>(r))
+            return result;
+    }
+
+    wstring ext = p.extension().wstring();
+    transform(ext.begin(), ext.end(), ext.begin(), towlower);
+
+    auto parts = CEngineString::Split(normalizedPath, L"/");
+
+    // Texture: convert to DDS
+    if (ext == L".png" || ext == L".jpg" || ext == L".jpeg" || ext == L".bmp" || ext == L".tga" || ext == L".tif" || ext == L".tiff")
+    {
+        if (parts.size() >= 2)
+        {
+            const wstring folder = parts[parts.size() - 2];
+            const wstring noExt = p.stem().wstring();
+            const wstring ddsPath = L"BinaryAssets/TextureData/" + folder + L"_" + noExt + L".dds";
+
+            if (!FileExists(ddsPath))
+            {
+                wstring sourcePath = m_strDefaultAssetPath + normalizedPath;
+                if (FAILED(ConvertImageToDDS(sourcePath)))
+                {
+                    CDebug::LogError(L"Failed LoadOnPath - DDS convert failed: " + _path);
+                    return nullptr;
+                }
+            }
+
+            T* newResource = CreateSceneResource<T>(resourceName, ddsPath);
+            if (newResource)
+                newResource->m_strFilePath = m_strDefaultAssetPath + normalizedPath;
+            else
+                CDebug::LogError(L"Failed LoadOnPath: " + _path);
+            return newResource;
+        }
+    }
+
+    // AnimatorController: convert to acdata
+    if (ext == L".animatorcontroller")
+    {
+        if (parts.size() >= 2)
+        {
+            const wstring folder = parts[parts.size() - 2];
+            const wstring acDataPath = folder + L"_" + resourceName + L".acdata";
+
+            if (!FileExists(L"BinaryAssets/AnimatorControllerData/" + acDataPath))
+            {
+                if (FAILED(ConvertAnimatorControllerToBinary(normalizedPath)))
+                {
+                    CDebug::LogError(L"Failed LoadOnPath - AC convert failed: " + _path);
+                    return nullptr;
+                }
+            }
+
+            auto acInfo = ReadAnimatorControllerBufferInfos(acDataPath);
+            T* newResource = CreateSceneResource<T>(resourceName, acDataPath);
+            if (newResource)
+            {
+                newResource->m_strFilePath = m_strDefaultAssetPath + normalizedPath;
+                if (auto ac = dynamic_cast<CAnimatorController*>(static_cast<CEngineResource*>(newResource)))
+                    ac->Initiailize_Custom(acInfo);
+            }
+            else
+                CDebug::LogError(L"Failed LoadOnPath: " + _path);
+            return newResource;
+        }
+    }
+
+    T* newResource = CreateSceneResource<T>(resourceName, normalizedPath);
+
+    if (!newResource)
+        CDebug::LogError(L"Failed LoadOnPath: " + _path);
+
+    return newResource;
 }
 
 template<typename T>

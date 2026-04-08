@@ -884,13 +884,51 @@ void CMeshBuffer::Set_Scalefactor(const _float _value)
 vector<VertexTexNormalTangentBuffer> CMeshBuffer::Get_VertexBuffer() const
 {
     vector<VertexTexNormalTangentBuffer> result;
-    if (!m_pVertexSysMem || m_sInfo.vertexSize != sizeof(VertexTexNormalTangentBuffer))
+    if (!m_pVertexSysMem)
         return result;
 
     const _uint count = m_sInfo.vertextCount;
-    auto* verts = static_cast<VertexTexNormalTangentBuffer*>(m_pVertexSysMem);
+    if (count == 0)
+        return result;
 
-    result.assign(verts, verts + count);
+    if (m_sInfo.vertexSize == sizeof(VertexTexNormalTangentBuffer))
+    {
+        auto* verts = static_cast<VertexTexNormalTangentBuffer*>(m_pVertexSysMem);
+        result.assign(verts, verts + count);
+        return result;
+    }
+
+    result.reserve(count);
+
+    if (m_sInfo.vertexSize == sizeof(VertexSkinnedBuffer))
+    {
+        auto* verts = static_cast<const VertexSkinnedBuffer*>(m_pVertexSysMem);
+        for (_uint i = 0; i < count; ++i)
+        {
+            VertexTexNormalTangentBuffer converted = {};
+            converted.position = verts[i].position;
+            converted.normal = verts[i].normal;
+            converted.uv = verts[i].uv;
+            converted.tangent = verts[i].tangent;
+            result.push_back(converted);
+        }
+        return result;
+    }
+
+    if (m_sInfo.vertexSize == sizeof(VertexColorSkinnedBuffer))
+    {
+        auto* verts = static_cast<const VertexColorSkinnedBuffer*>(m_pVertexSysMem);
+        for (_uint i = 0; i < count; ++i)
+        {
+            VertexTexNormalTangentBuffer converted = {};
+            converted.position = verts[i].position;
+            converted.normal = verts[i].normal;
+            converted.uv = _float2(0.f, 0.f);
+            converted.tangent = verts[i].tangent;
+            result.push_back(converted);
+        }
+    }
+
     return result;
 }
 

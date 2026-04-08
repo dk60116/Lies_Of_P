@@ -576,16 +576,21 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 
                 const string lowerExtension = ToLowerCopy(entry.path().extension().string());
                 const _bool isFbx = (lowerExtension == ".fbx");
+                const _bool isImage = (lowerExtension == ".png" || lowerExtension == ".jpg" || lowerExtension == ".jpeg" || lowerExtension == ".bmp" || lowerExtension == ".tga" || lowerExtension == ".tif" || lowerExtension == ".tiff");
                 _bool isSelected = m_vSelectedPaths.count(pathStr) > 0;
                 _bool fbxNodeOpened = false;
+                _bool imageNodeOpened = false;
 
-                if (isFbx)
+                if (isFbx || isImage)
                 {
                     ImGuiTreeNodeFlags fbxFlags = ImGuiTreeNodeFlags_OpenOnArrow;
                     if (isSelected)
                         fbxFlags |= ImGuiTreeNodeFlags_Selected;
 
-                    fbxNodeOpened = ImGui::TreeNodeEx(buttonId.c_str(), fbxFlags);
+                    _bool treeNodeOpened = ImGui::TreeNodeEx(buttonId.c_str(), fbxFlags);
+
+                    if (isFbx) fbxNodeOpened = treeNodeOpened;
+                    if (isImage) imageNodeOpened = treeNodeOpened;
 
                     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
                     {
@@ -670,7 +675,7 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                 }
                 }
 
-                if (!isFbx && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                if (!isFbx && !isImage && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
                     const fs::path binaryRoot = fs::path(L"BinaryAssets");
                     const fs::path relativeToBinary = entry.path().lexically_relative(binaryRoot);
@@ -875,6 +880,42 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                                     ShowInExplorer(be.path, true);
                             }
+                        }
+
+                        ImGui::TreePop();
+                    }
+                }
+
+                if (isImage)
+                {
+                    if (imageNodeOpened)
+                    {
+                        const string imgStem = entry.path().stem().string();
+                        const string imgFolder = entry.path().parent_path().filename().string();
+                        const string ddsBinaryName = imgFolder + "_" + imgStem + ".dds";
+
+                        fs::path ddsPath = fs::path("BinaryAssets/TextureData") / ddsBinaryName;
+                        error_code ec;
+                        if (fs::exists(ddsPath, ec))
+                        {
+                            const string childId = ddsBinaryName + "##" + ddsPath.string();
+                            const string childPathStr = ddsPath.string();
+                            _bool childSelected = m_vSelectedPaths.count(childPathStr) > 0;
+
+                            if (ImGui::Selectable(childId.c_str(), childSelected))
+                            {
+                                m_vSelectedPaths.clear();
+                                m_vSelectedPaths.insert(childPathStr);
+                                m_strLastClickedPath = childPathStr;
+                                CEditor::GetInstance().Set_SelectedAssetPath(ddsPath);
+                            }
+
+                            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                                ShowInExplorer(ddsPath, true);
+                        }
+                        else
+                        {
+                            ImGui::TextDisabled("No binary data");
                         }
 
                         ImGui::TreePop();

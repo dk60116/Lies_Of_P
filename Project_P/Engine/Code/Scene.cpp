@@ -3406,6 +3406,13 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 
 	unordered_map<wstring, SceneResourceEntry> entries;
 
+	// Preserve non-Editor entries (SceneLoader resources: Map meshes, textures, etc.)
+	for (auto& [key, e] : previousEntries)
+	{
+		if (!isEditorFormat(e.format))
+			entries[key] = e;
+	}
+
 	auto trimResourceSuffix = [](const wstring& resourceName)
 	{
 		static const vector<wstring> suffixes =

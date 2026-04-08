@@ -210,13 +210,11 @@ void CSceneLoader::ThreadLoadingLoop()
 
 					CAnimationClip* newClip = CResources::GetInstance().LoadResourceComplete_Scene<CAnimationClip>(wName + L" (Animation Clip)", wFile, nullptr, true);
 
-					if (CEngineString::Contains(wFormat, L"[Loop]"))
-						newClip->SetLoop(true);
-					else
-						newClip->SetLoop(false);
-
 					if (animaitonInfoList.size() > 0)
 						newClip->Initiailize_Custom(animaitonInfoList[0], nullptr);
+
+					if (CEngineString::Contains(wFormat, L"[Loop]"))
+						newClip->SetLoop(true);
 				}
 			}
 			else if (CEngineString::Contains(wFile, L".animatorcontroller"))

@@ -17,6 +17,8 @@ namespace
 	constexpr int kMinQueryNodeCount = 2048;
 	constexpr int kMaxPathPolygonCount = 512;
 	constexpr int kMaxStraightPathPointCount = 512;
+	constexpr int kMaxNavigationGridDimension = 4096;
+	constexpr int kMaxNavigationGridCellCount = 16 * 1024 * 1024;
 	constexpr float kDegenerateTriangleEpsilon = 1e-6f;
 	constexpr float kPolygonNormalEpsilon = 1e-6f;
 
@@ -100,7 +102,14 @@ namespace
 		vector<unsigned char> areas = {};
 	};
 
-	unsigned char CalculateTriangleArea(const float* a, const float* b, const float* c, const float walkableThreshold)
+	unsigned char CalculateTriangleArea(
+		const float* a,
+		const float* b,
+		const float* c,
+		const _float3* normalA,
+		const _float3* normalB,
+		const _float3* normalC,
+		const float walkableThreshold)
 	{
 		const float abx = b[0] - a[0];
 		const float aby = b[1] - a[1];
@@ -118,7 +127,52 @@ namespace
 			return RC_NULL_AREA;
 
 		const float invLength = 1.f / sqrtf(lengthSq);
-		return (ny * invLength) >= walkableThreshold ? RC_WALKABLE_AREA : RC_NULL_AREA;
+		if ((ny * invLength) >= walkableThreshold)
+			return RC_WALKABLE_AREA;
+
+		if (normalA && normalB && normalC)
+		{
+			const _vector averagedNormal = XMVectorSet(
+				normalA->x + normalB->x + normalC->x,
+				normalA->y + normalB->y + normalC->y,
+				normalA->z + normalB->z + normalC->z,
+				0.f);
+			const float averagedNormalLengthSq = XMVectorGetX(XMVector3LengthSq(averagedNormal));
+			if (averagedNormalLengthSq > kPolygonNormalEpsilon)
+			{
+				const _vector normalizedAverage = XMVector3Normalize(averagedNormal);
+				if (XMVectorGetY(normalizedAverage) >= walkableThreshold)
+					return RC_WALKABLE_AREA;
+			}
+		}
+
+		return RC_NULL_AREA;
+	}
+
+	int CountWalkableTriangles(const NavigationGeometry& geometry)
+	{
+		return static_cast<int>(count_if(
+			geometry.areas.begin(),
+			geometry.areas.end(),
+			[](const unsigned char area)
+			{
+				return area != RC_NULL_AREA;
+			}));
+	}
+
+	int CountWalkableCompactSpans(const rcCompactHeightfield& compactHeightField)
+	{
+		if (!compactHeightField.areas || compactHeightField.spanCount <= 0)
+			return 0;
+
+		int walkableSpanCount = 0;
+		for (int spanIndex = 0; spanIndex < compactHeightField.spanCount; ++spanIndex)
+		{
+			if (compactHeightField.areas[spanIndex] != RC_NULL_AREA)
+				++walkableSpanCount;
+		}
+
+		return walkableSpanCount;
 	}
 
 	void BuildQueryHalfExtents(const CNaviMesh::NavBakeOptions& options, float* outHalfExtents)
@@ -380,10 +434,32 @@ namespace
 				outGeometry.vertices[cOffset + 2]
 			};
 
+			_float3 transformedNormals[3] = {};
+			const VertexTexNormalTangentBuffer* triangleVertices[3] =
+			{
+				&vertices[ia],
+				&vertices[ib],
+				&vertices[ic]
+			};
+
+			for (_uint normalIndex = 0; normalIndex < 3u; ++normalIndex)
+			{
+				const _vector localNormal = XMVectorSet(
+					triangleVertices[normalIndex]->normal.x,
+					triangleVertices[normalIndex]->normal.y,
+					triangleVertices[normalIndex]->normal.z,
+					0.f);
+				const _vector worldNormal = XMVector3Normalize(XMVector3TransformNormal(localNormal, world));
+				XMStoreFloat3(&transformedNormals[normalIndex], worldNormal);
+			}
+
 			outGeometry.indices.push_back(static_cast<int>(baseVertex + static_cast<size_t>(ia)));
 			outGeometry.indices.push_back(static_cast<int>(baseVertex + static_cast<size_t>(ib)));
 			outGeometry.indices.push_back(static_cast<int>(baseVertex + static_cast<size_t>(ic)));
-			outGeometry.areas.push_back(markWalkable ? CalculateTriangleArea(a, b, c, walkableThreshold) : RC_NULL_AREA);
+			outGeometry.areas.push_back(
+				markWalkable
+				? CalculateTriangleArea(a, b, c, &transformedNormals[0], &transformedNormals[1], &transformedNormals[2], walkableThreshold)
+				: RC_NULL_AREA);
 			++appendedTriangleCount;
 		}
 
@@ -484,31 +560,77 @@ HRESULT CNaviMesh::BuildFromSources(const vector<MeshSource>& _sources)
 
 	const int vertexCount = static_cast<int>(geometry.vertices.size() / 3);
 	const int triangleCount = static_cast<int>(geometry.indices.size() / 3);
+	const int walkableTriangleCount = CountWalkableTriangles(geometry);
 	if (validSourceCount == 0 || vertexCount == 0 || triangleCount == 0)
 	{
 		CDebug::LogError(L"Navigation build failed - no geometry was collected.");
 		return E_FAIL;
 	}
 
+	if (walkableSourceCount > 0 && walkableTriangleCount == 0)
+	{
+		CDebug::LogError(L"Navigation build failed - walkable sources were found, but no triangles were classified as walkable. Check NavigationStatic assignment and mesh normals.");
+		return E_FAIL;
+	}
+
 	CRecastBuildContext buildContext;
+	NavBakeOptions effectiveBakeOptions = m_sBakeOptions;
 
 	rcConfig config = {};
-	config.cs = m_sBakeOptions.cellSize;
-	config.ch = m_sBakeOptions.cellHeight;
+	config.cs = effectiveBakeOptions.cellSize;
+	config.ch = effectiveBakeOptions.cellHeight;
 	config.walkableSlopeAngle = clampedSlope;
-	config.walkableHeight = max(1, static_cast<int>(ceilf(m_sBakeOptions.agentHeight / config.ch)));
-	config.walkableClimb = max(0, static_cast<int>(floorf(m_sBakeOptions.agentMaxClimb / config.ch)));
-	config.walkableRadius = max(0, static_cast<int>(ceilf(m_sBakeOptions.agentRadius / config.cs)));
-	config.maxEdgeLen = max(0, static_cast<int>(floorf(m_sBakeOptions.edgeMaxLen / config.cs)));
-	config.maxSimplificationError = max(0.1f, m_sBakeOptions.edgeMaxError);
-	config.minRegionArea = max(0, m_sBakeOptions.regionMinSize * m_sBakeOptions.regionMinSize);
-	config.mergeRegionArea = max(0, m_sBakeOptions.regionMergeSize * m_sBakeOptions.regionMergeSize);
-	config.maxVertsPerPoly = m_sBakeOptions.vertsPerPoly;
-	config.detailSampleDist = m_sBakeOptions.detailSampleDist < 0.9f ? 0.f : config.cs * m_sBakeOptions.detailSampleDist;
-	config.detailSampleMaxError = max(0.f, config.ch * m_sBakeOptions.detailSampleMaxError);
+	const auto applyBakeOptionsToConfig = [&](const NavBakeOptions& bakeOptions)
+	{
+		config.cs = bakeOptions.cellSize;
+		config.ch = bakeOptions.cellHeight;
+		config.walkableSlopeAngle = clampedSlope;
+		config.walkableHeight = max(1, static_cast<int>(ceilf(bakeOptions.agentHeight / config.ch)));
+		config.walkableClimb = max(0, static_cast<int>(floorf(bakeOptions.agentMaxClimb / config.ch)));
+		config.walkableRadius = max(0, static_cast<int>(ceilf(bakeOptions.agentRadius / config.cs)));
+		config.maxEdgeLen = max(0, static_cast<int>(floorf(bakeOptions.edgeMaxLen / config.cs)));
+		config.maxSimplificationError = max(0.1f, bakeOptions.edgeMaxError);
+		config.minRegionArea = max(0, bakeOptions.regionMinSize * bakeOptions.regionMinSize);
+		config.mergeRegionArea = max(0, bakeOptions.regionMergeSize * bakeOptions.regionMergeSize);
+		config.maxVertsPerPoly = bakeOptions.vertsPerPoly;
+		config.detailSampleDist = bakeOptions.detailSampleDist < 0.9f ? 0.f : config.cs * bakeOptions.detailSampleDist;
+		config.detailSampleMaxError = max(0.f, config.ch * bakeOptions.detailSampleMaxError);
+	};
+	applyBakeOptionsToConfig(effectiveBakeOptions);
 
 	rcCalcBounds(geometry.vertices.data(), vertexCount, config.bmin, config.bmax);
 	rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
+
+	const float boundsSizeX = config.bmax[0] - config.bmin[0];
+	const float boundsSizeZ = config.bmax[2] - config.bmin[2];
+	const float requestedCellSize = effectiveBakeOptions.cellSize;
+	const float requiredCellSizeByDimension = max(boundsSizeX, boundsSizeZ) / static_cast<float>(kMaxNavigationGridDimension);
+	const float boundsAreaXZ = max(0.f, boundsSizeX) * max(0.f, boundsSizeZ);
+	const float requiredCellSizeByCellCount =
+		boundsAreaXZ > 0.f
+		? sqrtf(boundsAreaXZ / static_cast<float>(kMaxNavigationGridCellCount))
+		: 0.f;
+	const float adjustedCellSize = max(requestedCellSize, max(requiredCellSizeByDimension, requiredCellSizeByCellCount));
+	if (adjustedCellSize > requestedCellSize + 0.0001f)
+	{
+		effectiveBakeOptions.cellSize = adjustedCellSize;
+		applyBakeOptionsToConfig(effectiveBakeOptions);
+		rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
+
+		CDebug::LogWarnning(
+			L"Navigation build warning - requested Cell Size " + to_wstring(requestedCellSize) +
+			L" is too dense for BoundsXZ=(" + to_wstring(boundsSizeX) + L", " + to_wstring(boundsSizeZ) + L"). " +
+			L"Using auto-adjusted Cell Size " + to_wstring(config.cs) +
+			L" to keep the build grid within practical limits.");
+	}
+
+	CDebug::Log(
+		L"Navigation build stats - Sources=" + to_wstring(validSourceCount) +
+		L", WalkableSources=" + to_wstring(walkableSourceCount) +
+		L", Triangles=" + to_wstring(triangleCount) +
+		L", WalkableTriangles=" + to_wstring(walkableTriangleCount) +
+		L", Grid=(" + to_wstring(config.width) + L", " + to_wstring(config.height) + L"), " +
+		L"CellSize=" + to_wstring(config.cs));
 
 	if (config.width <= 0 || config.height <= 0)
 	{
@@ -550,9 +672,30 @@ HRESULT CNaviMesh::BuildFromSources(const vector<MeshSource>& _sources)
 		return E_FAIL;
 	}
 
+	const int compactWalkableSpanCount = CountWalkableCompactSpans(*compactHeightField);
+	if (compactWalkableSpanCount == 0)
+	{
+		CDebug::LogError(
+			wstring(L"Navigation build failed - rasterized geometry produced zero walkable spans. ") +
+			L"WalkableTriangles=" + to_wstring(walkableTriangleCount) +
+			L", Grid=(" + to_wstring(config.width) + L", " + to_wstring(config.height) + L"), " +
+			L"CellSize=" + to_wstring(config.cs));
+		return E_FAIL;
+	}
+
 	if (config.walkableRadius > 0 && !rcErodeWalkableArea(&buildContext, config.walkableRadius, *compactHeightField))
 	{
 		CDebug::LogError(L"Navigation build failed - rcErodeWalkableArea failed.");
+		return E_FAIL;
+	}
+
+	const int erodedWalkableSpanCount = CountWalkableCompactSpans(*compactHeightField);
+	if (erodedWalkableSpanCount == 0)
+	{
+		CDebug::LogError(
+			wstring(L"Navigation build failed - all walkable spans were removed after erosion. ") +
+			L"AgentRadius=" + to_wstring(effectiveBakeOptions.agentRadius) +
+			L", CellSize=" + to_wstring(config.cs));
 		return E_FAIL;
 	}
 
@@ -588,6 +731,16 @@ HRESULT CNaviMesh::BuildFromSources(const vector<MeshSource>& _sources)
 
 	if (polyMesh->npolys == 0)
 	{
+		if (walkableSourceCount > 0)
+		{
+			CDebug::LogWarnning(
+				L"Navigation hint - no walkable polygons were generated. "
+				L"Try enlarging the walkable mesh or lowering Agent Radius / Cell Size. "
+				L"BoundsXZ=(" + to_wstring(boundsSizeX) + L", " + to_wstring(boundsSizeZ) + L"), "
+				L"AgentRadius=" + to_wstring(effectiveBakeOptions.agentRadius) + L", CellSize=" + to_wstring(config.cs) + L", "
+				L"WalkableSpansAfterErode=" + to_wstring(erodedWalkableSpanCount) + L", Contours=" + to_wstring(contourSet->nconts));
+		}
+
 		CDebug::LogError(L"Navigation build failed - no walkable polygons were generated.");
 		return E_FAIL;
 	}
@@ -652,6 +805,7 @@ HRESULT CNaviMesh::BuildFromSources(const vector<MeshSource>& _sources)
 	if (FAILED(RebuildRenderMesh()))
 		CDebug::LogError(L"Navigation mesh overlay build failed - the navmesh will still be usable for pathfinding.");
 
+	m_sBakeOptions = effectiveBakeOptions;
 	CDebug::Log(L"Navigation mesh build complete: " + to_wstring(walkableSourceCount) + L" NavigationStatic meshes.");
 
 	return S_OK;

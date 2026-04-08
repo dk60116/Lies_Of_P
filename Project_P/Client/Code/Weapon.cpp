@@ -19,11 +19,12 @@ HRESULT CWeapon::Initialize()
 	if (FAILED(__super::Initialize()))
 		return E_FAIL;
 
-	m_vRenderers = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(m_strWeaponName + L"_Model (MeshBuffer)"), CResources::GetInstance().LoadSkinnedBonesOnScene(m_strWeaponName + L" (MeshBuffer)"), 0.01f, vector3::back() * 90.f);
+	const wstring weaponFbxPath = L"Player/Weapon/" + m_strWeaponName + L".fbx";
+	m_vRenderers = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnPath(weaponFbxPath), CResources::GetInstance().LoadSkinnedBonesOnPath(weaponFbxPath), 1.f, vector3::back() * 90.f);
 
-	CTexture* weaponTD = CResources::GetInstance().LoadOnScene<CTexture>(m_strWeaponName + L"_TD (Texture)");
-	CTexture* weaponTN = CResources::GetInstance().LoadOnScene<CTexture>(m_strWeaponName + L"_TN (Texture)");
-	CTexture* weaponTM = CResources::GetInstance().LoadOnScene<CTexture>(m_strWeaponName + L"_TM (Texture)");
+	CTexture* weaponTD = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Weapon/Textures/CH_W_Sword_02_D.png");
+	CTexture* weaponTN = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Weapon/Textures/CH_W_Sword_02_N.png");
+	CTexture* weaponTM = CResources::GetInstance().LoadOnPath<CTexture>(L"Player/Weapon/Textures/CH_W_Sword_02_M.png");
 
 	for (TRAVERSAL_ITER(m_vRenderers, it))
 	{
@@ -31,7 +32,8 @@ HRESULT CWeapon::Initialize()
 		(*it)->Get_Material()->Set_Texture(weaponTN, 1);
 	}
 
-	m_vRenderers[1]->Get_Material()->Set_Texture(weaponTM, 2);
+	if (m_vRenderers.size() > 1)
+		m_vRenderers[1]->Get_Material()->Set_Texture(weaponTM, 2);
 
 	CreateHurtBox();
 

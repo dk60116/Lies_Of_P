@@ -316,6 +316,8 @@ void CPlayerState_Attack::Enter()
 
     m_pCtx->SetBattle(true);
 
+    m_pCtx->Get_Player()->SetAbleNavAgent(true);
+
     m_pCtx->SetCanMove(false);
     m_pCtx->SetCanTurn(false);
 
@@ -438,6 +440,8 @@ void CPlayerState_Attack::Update()
 void CPlayerState_Attack::Exit()
 {
     __super::Exit();
+
+    m_pCtx->Get_Player()->SetAbleNavAgent(false);
 
     m_pCtx->Animator()->SetBool(L"comboContinue", false);
     m_pCtx->Animator()->SetBool(L"isAttack", false);

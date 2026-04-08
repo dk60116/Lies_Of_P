@@ -193,8 +193,8 @@ void CMonsterHUD::CreateHPBar()
 	rect->SetParent(m_pRect);
 	m_pHPBarRect = rect;
 
-	CTexture* emptyTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_HP_Cube_Empty (Texture)");
-	CTexture* fullTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_HP_Cube_Full (Texture)");
+	CTexture* emptyTex = CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_Hp_Dot1_5x_bg.png");
+	CTexture* fullTex = CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_Hp_Dot1_5x.png");
 
 	const _float rectSize = m_sOption.rectSize;
 	const _int rectCount = 30;
@@ -253,8 +253,8 @@ void CMonsterHUD::CreateSHBar()
 
 	rect->Set_Width(m_sOption.rectSize);
 
-	CTexture* emptyTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SH_Cube_Empty (Texture)");
-	CTexture* fullTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SH_Cube_Full (Texture)");
+	CTexture* emptyTex = CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_Shield_Dot1_5x_Bg.png");
+	CTexture* fullTex = CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_Shield_Dot1_5x.png");
 
 	const _float rectSize = m_sOption.rectSize;
 	const _int rectCount = 30;
@@ -327,8 +327,8 @@ void CMonsterHUD::CreateBABar()
 	rect->SetParent(m_pRect);
 	m_pBABarRect = rect;
 
-	CTexture* emptyTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_BA_Cube_Empty (Texture)");
-	CTexture* fullTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_BA_Cube_Full (Texture)");
+	CTexture* emptyTex = CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_Balancd_Dot_Empty.png");
+	CTexture* fullTex = CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_Balancd_Dot_Full.png");
 
 	const _float rectSize = m_sOption.rectSize;
 	const _int rectCount = 30;

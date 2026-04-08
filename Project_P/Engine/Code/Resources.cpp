@@ -2667,6 +2667,17 @@ HRESULT CResources::SaveAnimationClipBufferInfos(const wstring _filePath, vector
 		}
 	}
 
+	// Metadata: loop + speed per clip
+	_uint metaMarker = 0x414E494D; // 'ANIM'
+	out.write(reinterpret_cast<const char*>(&metaMarker), sizeof(_uint));
+	for (const auto& clip : _infoList)
+	{
+		_bool loop = clip.loop;
+		_float speed = clip.speed;
+		out.write(reinterpret_cast<const char*>(&loop), sizeof(_bool));
+		out.write(reinterpret_cast<const char*>(&speed), sizeof(_float));
+	}
+
 	out.close();
 	CDebug::Log(L"Save complete animation clip data: " + _filePath);
 
@@ -2739,14 +2750,21 @@ vector<CAnimationClip::AnimationClipInitInfo> CResources::ReadAnimationClipBuffe
 		}
 
 		clips.emplace_back(move(clip));
+	}
 
-		for (auto& tr : clip.tracks)
-			if (tr.nodeName == L"FantasyWolf_")
-				for (auto& k : tr.keyframes)
-					printf("k.t=%.2f p=(%.2f,%.2f,%.2f)\n",
-						k.timeStamp, k.position.x, k.position.y, k.position.z);
-
-		int a = 0;
+	// Read metadata (loop + speed) if present
+	_uint metaMarker = 0;
+	if (in.read(reinterpret_cast<char*>(&metaMarker), sizeof(_uint)) && metaMarker == 0x414E494D)
+	{
+		for (_uint c = 0; c < clipCount && c < clips.size(); ++c)
+		{
+			_bool loop = false;
+			_float speed = 1.f;
+			in.read(reinterpret_cast<char*>(&loop), sizeof(_bool));
+			in.read(reinterpret_cast<char*>(&speed), sizeof(_float));
+			clips[c].loop = loop;
+			clips[c].speed = speed;
+		}
 	}
 
 	in.close();
@@ -3118,6 +3136,82 @@ vector<CSkinnedMeshBuffer::SKINNEDSKELETAL> CResources::LoadSkinnedBonesOnScene(
 		r = CSceneManager::GetInstance().Get_CrtScene()->Find_SkinnedBonesResource(_name);
 
 	return r;
+}
+
+vector<SkinnedMeshBundle> CResources::LoadSkinnedMeshBuffersOnPath(const wstring& _path, _int _filter)
+{
+	wstring normalizedPath = CEngineString::Replace(_path, L"\\", L"/");
+	auto parts = CEngineString::Split(normalizedPath, L"/");
+
+	if (parts.size() < 2)
+	{
+		CDebug::LogError(L"Failed LoadSkinnedMeshBuffersOnPath - invalid path: " + _path);
+		return {};
+	}
+
+	const wstring folder = parts[parts.size() - 2];
+	const wstring stem = fs::path(normalizedPath).stem().wstring();
+	const wstring resourceName = stem + L" (MeshBuffer)";
+
+	// Already loaded
+	if (CScene* scene = CSceneManager::GetInstance().Get_CrtScene())
+	{
+		auto r = scene->Find_SkinnedMeshInfoResource(resourceName);
+		if (!r.empty())
+			return r;
+	}
+
+	const wstring skinnedDataPath = folder + L"_" + stem + L".skinneddata";
+
+	if (!FileExists(L"BinaryAssets/SkinnedMeshData/" + skinnedDataPath))
+	{
+		if (FAILED(ConvertFBXToSkinnedBufferData(normalizedPath)))
+		{
+			CDebug::LogError(L"Failed LoadSkinnedMeshBuffersOnPath - convert failed: " + _path);
+			return {};
+		}
+	}
+
+	auto skinnedInfoList = ReadSkinnedBufferInfos(skinnedDataPath);
+	return CreateSceneSkinnedBundle(resourceName, skinnedInfoList.initList, skinnedInfoList.skeletalList, _filter);
+}
+
+vector<CSkinnedMeshBuffer::SKINNEDSKELETAL> CResources::LoadSkinnedBonesOnPath(const wstring& _path)
+{
+	wstring normalizedPath = CEngineString::Replace(_path, L"\\", L"/");
+	auto parts = CEngineString::Split(normalizedPath, L"/");
+
+	if (parts.size() < 2)
+	{
+		CDebug::LogError(L"Failed LoadSkinnedBonesOnPath - invalid path: " + _path);
+		return {};
+	}
+
+	const wstring folder = parts[parts.size() - 2];
+	const wstring stem = fs::path(normalizedPath).stem().wstring();
+	const wstring resourceName = stem + L" (MeshBuffer)";
+
+	// Already loaded
+	if (CScene* scene = CSceneManager::GetInstance().Get_CrtScene())
+	{
+		auto r = scene->Find_SkinnedBonesResource(resourceName);
+		if (!r.empty())
+			return r;
+	}
+
+	const wstring skinnedDataPath = folder + L"_" + stem + L".skinneddata";
+
+	if (!FileExists(L"BinaryAssets/SkinnedMeshData/" + skinnedDataPath))
+	{
+		if (FAILED(ConvertFBXToSkinnedBufferData(normalizedPath)))
+		{
+			CDebug::LogError(L"Failed LoadSkinnedBonesOnPath - convert failed: " + _path);
+			return {};
+		}
+	}
+
+	auto skinnedInfoList = ReadSkinnedBufferInfos(skinnedDataPath);
+	return skinnedInfoList.skeletalList;
 }
 
 _bool CResources::FileExists(const wstring& _path)

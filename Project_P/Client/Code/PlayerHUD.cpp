@@ -105,7 +105,7 @@ void CPlayerHUD::CreateAim()
 	aimImageObj->GetTransform()->SetParent(GetTransform());
 
 	m_pAimImage->GetRectTransform()->Set_WidthHeight(3, 3);
-	m_pAimImage->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Aim (Texture)"));
+	m_pAimImage->SetTexture(CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_Aim.png"));
 }
 
 void CPlayerHUD::CreatePotions()
@@ -115,7 +115,7 @@ void CPlayerHUD::CreatePotions()
 	potionHolderObj->GetTransform()->SetParent(GetTransform());
 
 	m_pPotionHolderImage->GetRectTransform()->Set_WidthHeight(90, 90);
-	m_pPotionHolderImage->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Potion_Holder (Texture)"));
+	m_pPotionHolderImage->SetTexture(CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_Potion_Holder.png"));
 
 	m_pPotionHolderImage->GetRectTransform()->Set_Pivot(0.f, 0.f);
 	m_pPotionHolderImage->GetRectTransform()->Set_AnchorsMin(0.f, 0.f);
@@ -126,7 +126,7 @@ void CPlayerHUD::CreatePotions()
 	pcBtnObj->GetTransform()->SetParent(GetTransform());
 
 	m_pPCBtnImage->GetRectTransform()->Set_WidthHeight(90, 90);
-	m_pPCBtnImage->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Btn_PcEmpty (Texture)"));
+	m_pPCBtnImage->SetTexture(CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_Btn_PcEmpty.png"));
 
 	m_pPCBtnImage->GetRectTransform()->Set_Pivot(0.f, 0.f);
 	m_pPCBtnImage->GetRectTransform()->Set_AnchorsMin(0.f, 0.f);
@@ -161,7 +161,7 @@ void CPlayerHUD::CreatePotions()
 		CGameObject* stackObj = m_pGameObject->Get_Scene()->Add_GameObject(L"PotionStack_" + to_wstring(i));
 		m_vPotionStacks.push_back(stackObj->AddComponent<CImage>());
 		m_vPotionStacks.back()->GetRectTransform()->SetParent(stackRect);
-		m_vPotionStacks.back()->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Potion_Stack (Texture)"));
+		m_vPotionStacks.back()->SetTexture(CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_potion_stack.png"));
 	}
 
 	CVerticalLayoutGroup* vlg =  stackRect->Get_GameObject()->AddComponent<CVerticalLayoutGroup>();
@@ -232,8 +232,8 @@ void CPlayerHUD::CreateGauge_BE(CRectTransform* _parent)
 {
 	_parent->Set_PivotX(0.f);
 
-	CTexture* emptyTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Beta_Cube_Empty (Texture)");
-	CTexture* fullTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_Beta_Cube_Full (Texture)");
+	CTexture* emptyTex = CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_Beta_cube_00.png");
+	CTexture* fullTex = CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_Beta_cube_05.png");
 
 	for (_int i = 0; i < 14; ++i)
 	{
@@ -263,8 +263,8 @@ void CPlayerHUD::CreateGauge_BE(CRectTransform* _parent)
 
 void CPlayerHUD::CreateGauge_HP(CRectTransform* _parent)
 {
-	CTexture* emptyTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_HP_Cube_Empty (Texture)");
-	CTexture* fullTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_HP_Cube_Full (Texture)");
+	CTexture* emptyTex = CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_Hp_Dot1_5x_bg.png");
+	CTexture* fullTex = CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_Hp_Dot1_5x.png");
 
 	const _float rectSize = 7.f;
 
@@ -313,8 +313,8 @@ void CPlayerHUD::CreateGauge_HP(CRectTransform* _parent)
 
 void CPlayerHUD::CreateGauge_SH(CRectTransform* _parent)
 {
-	CTexture* emptyTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SH_Cube_Empty (Texture)");
-	CTexture* fullTex = CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SH_Cube_Full (Texture)");
+	CTexture* emptyTex = CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_Shield_Dot1_5x_Bg.png");
+	CTexture* fullTex = CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_Shield_Dot1_5x.png");
 
 	const _float rectSize = 7.f;
 	const _int rectCount = 11;
@@ -390,7 +390,7 @@ void CPlayerHUD::CreateSkillFrame()
 		CGameObject* dashAttackFrameObj = m_pGameObject->Get_Scene()->Add_GameObject(L"DashAttack Frame");
 		CImage* imgFrame = dashAttackFrameObj->AddComponent<CImage>();
 		imgFrame->GetRectTransform()->SetParent(rect);
-		imgFrame->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_DashFrame (Texture)"));
+		imgFrame->SetTexture(CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_skill_hud_dashframe.png"));
 		imgFrame->GetRectTransform()->Set_PivotY(0.f);
 		imgFrame->GetRectTransform()->Set_AnchoredPositionY(110.f);
 		imgFrame->GetRectTransform()->Set_WidthHeight(50);
@@ -399,13 +399,13 @@ void CPlayerHUD::CreateSkillFrame()
 		CImage* imgGlow = dashAttadckGlowObj->AddComponent<CImage>();
 		imgGlow->GetRectTransform()->SetParent(imgFrame->GetTransform());
 		imgGlow->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
-		imgGlow->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SkillGlow (Texture)"));
+		imgGlow->SetTexture(CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_cicle_glow.png"));
 
 		CGameObject* dashAttadckCoolObj = m_pGameObject->Get_Scene()->Add_GameObject(L"DashAttack Cool");
 		CImage* imgCool = dashAttadckCoolObj->AddComponent<CImage>();
 		imgCool->GetRectTransform()->SetParent(imgFrame->GetTransform());
 		imgCool->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
-		imgCool->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_DashFrame_Cool (Texture)"));
+		imgCool->SetTexture(CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_skill_hud_dashframe_Cool.png"));
 		imgCool->Set_FillMethod(CImage::FillMethod::Radial360);
 		imgCool->Set_FillOrigin((_int)CImage::Radial360_FillOrigin::Top);
 		imgCool->Set_FillClockwise(false);
@@ -414,20 +414,20 @@ void CPlayerHUD::CreateSkillFrame()
 		CImage* imgIcon = dashAttadckIconObj->AddComponent<CImage>();
 		imgIcon->GetRectTransform()->SetParent(imgFrame->GetTransform());
 		imgIcon->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
-		imgIcon->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"DashAttack_Icon (Texture)"));
+		imgIcon->SetTexture(CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/SI_DashAttack1.png"));
 
 		CGameObject* blur_CirleObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Blur_Clrcle");
 		CImage* imgBlur_Circle = blur_CirleObj->AddComponent<CImage>();
 		imgBlur_Circle->GetRectTransform()->SetParent(imgFrame->GetTransform());
 		imgBlur_Circle->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
-		imgBlur_Circle->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SkillBlur_Circle (Texture)"));
+		imgBlur_Circle->SetTexture(CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_blur_circle.png"));
 		imgBlur_Circle->SetColor(ColorValue(29, 101, 255));
 
 		CGameObject* blur_LineObj = m_pGameObject->Get_Scene()->Add_GameObject(L"Blur_Line");
 		CImage* imgBlur_Line = blur_LineObj->AddComponent<CImage>();
 		imgBlur_Line->GetRectTransform()->SetParent(imgFrame->GetTransform());
 		imgBlur_Line->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
-		imgBlur_Line->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SkillBlur_Line (Texture)"));
+		imgBlur_Line->SetTexture(CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_blur_circle_line.png"));
 		imgBlur_Line->SetColor(ColorValue(29, 101, 255));
 		imgBlur_Line->SetAlpha(0.5f);
 
@@ -436,7 +436,7 @@ void CPlayerHUD::CreateSkillFrame()
 		CImage* imgBlur_Icon = blur_IocnObj->AddComponent<CImage>();
 		imgBlur_Icon->GetRectTransform()->SetParent(imgFrame->GetTransform());
 		imgBlur_Icon->GetRectTransform()->Set_WidthHeight(imgFrame->GetRectTransform()->Get_WidthHeight());
-		imgBlur_Icon->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"DashAttack_Glow (Texture)"));
+		imgBlur_Icon->SetTexture(CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/SI_DashAttack1_glow.png"));
 		
 		m_sDashAttackFrame = { imgFrame, imgGlow, imgCool, imgIcon, imgBlur_Circle, imgBlur_Line, imgBlur_Icon };
 	}
@@ -447,7 +447,7 @@ void CPlayerHUD::CreateSkillFrame()
 			CGameObject* skillFrameObject = m_pGameObject->Get_Scene()->Add_GameObject(L"SkillFrame_" + to_wstring(i));
 			CImage* skillFrameImg = skillFrameObject->AddComponent<CImage>();
 			skillFrameImg->GetRectTransform()->SetParent(rect);
-			skillFrameImg->SetTexture(CResources::GetInstance().LoadOnScene<CTexture>(L"HUD_SkillFrame (Texture)"));
+			skillFrameImg->SetTexture(CResources::GetInstance().LoadOnPath<CTexture>(L"UI/HUDUI/HUD_skill_hud_frame.png"));
 
 			m_vSkillFrame.push_back({ skillFrameImg, nullptr });
 		}

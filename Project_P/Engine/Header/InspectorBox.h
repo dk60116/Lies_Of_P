@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EditorBox.h"
+#include "AnimationClip.h"
 #include <filesystem>
 
 NS_BEGIN(Engine)
@@ -33,9 +34,15 @@ private:
 	void RenderAnimatorComponent(CGameObject* _obj, CAnimator* _animator);
 	void RenderSelectedAssetInfo(const fs::path& path);
 	void RenderSelectedAssetPreview(const fs::path& path);
+	void RenderAnimDataInspector(const fs::path& path);
 	_float m_fRXDrag, m_fRYDrag, m_fRZDrag;
 	class CTexture* m_pPreviewTexture;
 	wstring m_previewAssetPath;
+
+	// AnimData inspector cache
+	wstring m_animDataCachePath;
+	vector<CAnimationClip::AnimationClipInitInfo> m_vAnimDataCache;
+	_bool m_bAnimDataDirty;
 };
 
 NS_END

@@ -123,9 +123,9 @@ const _float CMonster::GetRadius() const
 
 void CMonster::CreateBody()
 {
-	const wstring path = L"Mon_" + m_strCharacterName + L"_Body_Model (MeshBuffer)";
+	const wstring fbxPath = L"Monster/" + m_strCharacterName + L"/" + m_strCharacterName + L".fbx";
 
-	m_vMeshRenderers = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(path), CResources::GetInstance().LoadSkinnedBonesOnScene(path), 0.01f, vector3::up() * 270.f);
+	m_vMeshRenderers = m_pGameObject->CreateSkinnedMeshHierachy(CResources::GetInstance().LoadSkinnedMeshBuffersOnPath(fbxPath), CResources::GetInstance().LoadSkinnedBonesOnPath(fbxPath), 0.01f, vector3::up() * 270.f);
 	m_pBodyCollider = m_pGameObject->AddComponent<CCapsuleCollider>();
 	m_pRigidBody = m_pGameObject->AddComponent<CRigidBody>();
 
@@ -140,20 +140,21 @@ void CMonster::PaintTexture()
 {
 	for (size_t i = 0; i < m_vMeshRenderers.size(); ++i)
 	{
-		const wstring tdPath = L"Tex_Mon_" + m_strCharacterName + L'_' + to_wstring(i) + L"_TD (Texture)";
-		const wstring tnPath = L"Tex_Mon_" + m_strCharacterName + L'_' + to_wstring(i) + L"_TN (Texture)";
-		const wstring tormPath = L"Tex_Mon_" + m_strCharacterName + L'_' + to_wstring(i) + L"_TORM (Texture)";
+		if (i >= m_vTexturePathSets.size())
+			break;
 
-		CTexture* td = CResources::GetInstance().LoadOnScene<CTexture>(tdPath);
-		CTexture* tn = CResources::GetInstance().LoadOnScene<CTexture>(tnPath);
-		CTexture* torm = CResources::GetInstance().LoadOnScene<CTexture>(tormPath);
+		const TexturePathSet& paths = m_vTexturePathSets[i];
+
+		CTexture* td = !paths.diffuse.empty() ? CResources::GetInstance().LoadOnPath<CTexture>(paths.diffuse) : nullptr;
+		CTexture* tn = !paths.normal.empty() ? CResources::GetInstance().LoadOnPath<CTexture>(paths.normal) : nullptr;
+		CTexture* torm = !paths.orm.empty() ? CResources::GetInstance().LoadOnPath<CTexture>(paths.orm) : nullptr;
 
 		if (m_vMaterialTransparent[i])
 			m_vMeshRenderers[i]->Set_Material(CResources::GetInstance().LoadOnGame<CMaterial>(L"G_BufferCutoutLit (Material)"));
 
-		m_vMeshRenderers[i]->Get_Material()->Set_Texture(td);
-		m_vMeshRenderers[i]->Get_Material()->Set_Texture(tn, 1);
-		m_vMeshRenderers[i]->Get_Material()->Set_Texture(torm, 2);
+		if (td) m_vMeshRenderers[i]->Get_Material()->Set_Texture(td);
+		if (tn) m_vMeshRenderers[i]->Get_Material()->Set_Texture(tn, 1);
+		if (torm) m_vMeshRenderers[i]->Get_Material()->Set_Texture(torm, 2);
 	}
 }
 
@@ -161,8 +162,8 @@ void CMonster::CreateAnimator()
 {
 	m_pAnimator = m_pGameObject->AddComponent<CAnimator>();
 
-	const wstring path = L"Mon_" + m_strCharacterName + L"_AnimatorController (Animator Controller)";
-	CAnimatorController* animCon = CResources::GetInstance().LoadOnScene<CAnimatorController>(path);
+	const wstring path = L"Monster/" + m_strCharacterName + L"/AnimatorController/Mon_" + m_strCharacterName + L"_AC.animatorcontroller";
+	CAnimatorController* animCon = CResources::GetInstance().LoadOnPath<CAnimatorController>(path);
 	m_pAnimator->Set_Controller(animCon);
 }
 

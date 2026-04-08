@@ -29,6 +29,11 @@ HRESULT CMon_Creeper::Initialize()
 {
 	m_vMaterialTransparent = { false, true };
 
+	m_vTexturePathSets = {
+		{ L"Monster/Creeper/Textures/CH_M_NA_Antlion_Body_A.png", L"Monster/Creeper/Textures/CH_M_NA_Antlion_Body_N.png", L"Monster/Creeper/Textures/CH_M_NA_Antlion_Body_ORM.png" },
+		{ L"Monster/Creeper/Textures/CH_M_NA_Antlion_Fur_A.png", L"Monster/Creeper/Textures/CH_M_NA_Antlion_Fur_N.png", L"Monster/Creeper/Textures/CH_M_NA_Antlion_Fur_ORM.png" }
+	};
+
 	m_vHurtBoxInfoList.push_back({ L"FX_Tail_04_end", vector3::one() * 30.f });
 
 	m_vHitBoxInfoList.push_back({ L"Bip001-Pelvis", vector3::one() * 50.f, vector3::up() * 20.f });

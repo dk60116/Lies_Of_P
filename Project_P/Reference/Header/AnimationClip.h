@@ -35,6 +35,8 @@ public:
 		wstring name = L"";
 		_float duration = 0.f;
 		_float ticksPerSecond = 25.f;
+		_bool loop = false;
+		_float speed = 1.f;
 
 		vector<NodeTrack> tracks;
 	};
@@ -65,6 +67,8 @@ public:
 
 	const _bool IsLoop() const;
 	void SetLoop(const _bool _loop);
+	const _float Get_Speed() const;
+	void SetSpeed(const _float _speed);
 	const _float Get_Duration() const;
 	const _float Get_TickPerSecons() const;
 	const vector<ActionTrigger>& Get_ActionTriggerList() const;
@@ -78,6 +82,7 @@ private:
 	vector<NodeTrack> m_vBoneAnimation;
 	vector<ActionTrigger> m_vActionTriggerList;
 	_bool m_bLoopTime;
+	_float m_fSpeed;
 	_float m_fDuration;
 	_float m_fTicksPerSecond;
 };

@@ -77,6 +77,24 @@ static string GetTimePrefix()
     return string(buf);
 }
 
+static string FormatWideMessageToNarrow(const wchar_t* format, va_list args)
+{
+    if (!format)
+        return string();
+
+    va_list argsCopy;
+    va_copy(argsCopy, args);
+    const int length = _vscwprintf(format, argsCopy);
+    va_end(argsCopy);
+
+    if (length < 0)
+        return CEngineString::WStringToString(format);
+
+    vector<wchar_t> buffer(static_cast<size_t>(length) + 1u, L'\0');
+    vswprintf_s(buffer.data(), buffer.size(), format, args);
+    return CEngineString::WStringToString(buffer.data());
+}
+
 CDebug::CDebug()
 {
 }
@@ -137,6 +155,15 @@ void CDebug::Log(const char* format, ...)
     EnqueueLog(GetTimePrefix() + buf, COLOR_NORMAL);
 }
 
+void CDebug::Log(const wchar_t* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    const string text = FormatWideMessageToNarrow(format, args);
+    va_end(args);
+    EnqueueLog(GetTimePrefix() + text, COLOR_NORMAL);
+}
+
 void CDebug::Log(const string format, ...)
 {
     va_list args;
@@ -147,9 +174,13 @@ void CDebug::Log(const string format, ...)
     EnqueueLog(GetTimePrefix() + buf, COLOR_NORMAL);
 }
 
-void CDebug::Log(const wstring& format, ...)
+void CDebug::Log(const wstring format, ...)
 {
-    Log(CEngineString::WStringToString(format));
+    va_list args;
+    va_start(args, format);
+    const string text = FormatWideMessageToNarrow(format.c_str(), args);
+    va_end(args);
+    EnqueueLog(GetTimePrefix() + text, COLOR_NORMAL);
 }
 
 void CDebug::Log(const _bool format, ...)
@@ -248,6 +279,15 @@ void CDebug::LogError(const char* format, ...)
     EnqueueLog(GetTimePrefix() + buf, COLOR_ERROR);
 }
 
+void CDebug::LogError(const wchar_t* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    const string text = FormatWideMessageToNarrow(format, args);
+    va_end(args);
+    EnqueueLog(GetTimePrefix() + text, COLOR_ERROR);
+}
+
 void CDebug::LogError(const string format, ...)
 {
     va_list args;
@@ -258,9 +298,13 @@ void CDebug::LogError(const string format, ...)
     EnqueueLog(GetTimePrefix() + buf, COLOR_ERROR);
 }
 
-void CDebug::LogError(const wstring& format, ...)
+void CDebug::LogError(const wstring format, ...)
 {
-    LogError(CEngineString::WStringToString(format));
+    va_list args;
+    va_start(args, format);
+    const string text = FormatWideMessageToNarrow(format.c_str(), args);
+    va_end(args);
+    EnqueueLog(GetTimePrefix() + text, COLOR_ERROR);
 }
 
 void CDebug::LogError(const _bool format, ...)
@@ -313,6 +357,15 @@ void CDebug::LogWarnning(const char* format, ...)
     EnqueueLog(GetTimePrefix() + buf, COLOR_WARNING);
 }
 
+void CDebug::LogWarnning(const wchar_t* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    const string text = FormatWideMessageToNarrow(format, args);
+    va_end(args);
+    EnqueueLog(GetTimePrefix() + text, COLOR_WARNING);
+}
+
 void CDebug::LogWarnning(const string format, ...)
 {
     va_list args;
@@ -323,9 +376,13 @@ void CDebug::LogWarnning(const string format, ...)
     EnqueueLog(GetTimePrefix() + buf, COLOR_WARNING);
 }
 
-void CDebug::LogWarnning(const wstring& format, ...)
+void CDebug::LogWarnning(const wstring format, ...)
 {
-    LogWarnning(CEngineString::WStringToString(format));
+    va_list args;
+    va_start(args, format);
+    const string text = FormatWideMessageToNarrow(format.c_str(), args);
+    va_end(args);
+    EnqueueLog(GetTimePrefix() + text, COLOR_WARNING);
 }
 
 void CDebug::LogWarnning(const _bool format, ...)
