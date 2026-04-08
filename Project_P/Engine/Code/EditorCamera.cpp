@@ -1,5 +1,6 @@
 #include "epch.h"
 #include "EditorCamera.h"
+#include "ImGuizmo.h"
 
 CEditorCamera::CEditorCamera()
 	: CCamera{}
@@ -50,6 +51,11 @@ void CEditorCamera::Update_Editor()
 	const _bool isShift = CInput::GetInstance().GetKey_Editor(SHIFT);
 	const _bool isCtrl = CInput::GetInstance().GetKey_Editor(CONTROL);
 	const _bool wantsMouse = ImGui::GetIO().WantCaptureMouse;
+	const _bool isRightMousePressed = CInput::GetInstance().GetMouseButton_Editor(1);
+	const _bool isMiddleMousePressed = CInput::GetInstance().GetMouseButton_Editor(2);
+	const _bool isSceneNavigationMouseDown = isRightMousePressed || isMiddleMousePressed;
+	const _bool isGizmoCapturingMouse = ImGuizmo::IsOver() || ImGuizmo::IsUsing();
+	const _bool blockSceneNavigationMouse = wantsMouse && !(isSceneNavigationMouseDown && isGizmoCapturingMouse);
 
 	CTransform& camTransform = *GetTransform();
 
@@ -77,8 +83,8 @@ void CEditorCamera::Update_Editor()
 		else
 			m_sOptions.crtMoveSpeed = m_sOptions.moveSpeed;
 
-		const _bool isRightMouseDown = !wantsMouse && CInput::GetInstance().GetMouseButton_Editor(1);
-		const _bool isMiddleMouseDown = !wantsMouse && CInput::GetInstance().GetMouseButton_Editor(2);
+		const _bool isRightMouseDown = !blockSceneNavigationMouse && isRightMousePressed;
+		const _bool isMiddleMouseDown = !blockSceneNavigationMouse && isMiddleMousePressed;
 
 		if (isRightMouseDown || isMiddleMouseDown)
 		{
