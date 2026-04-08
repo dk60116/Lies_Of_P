@@ -86,6 +86,7 @@ public:
 	HRESULT BuildFromSources(const vector<MeshSource>& _sources);
 	bool FindPath(const vector3& _start, const vector3& _end, vector<vector3>& _outPath);
 	bool SamplePosition(const vector3& _position, vector3& _outPoint, int* _outPolygonIndex = nullptr);
+	bool ConstrainMovement(const vector3& _start, const vector3& _end, vector3& _outPoint, int* _outPolygonIndex = nullptr);
 	int FindContainingPolygon(const vector3& _position);
 	void SetBakeOptions(const NavBakeOptions& _options);
 	const NavBakeOptions& GetBakeOptions() const;

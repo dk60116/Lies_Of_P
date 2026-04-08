@@ -448,10 +448,11 @@ void CAnimator::ApplyRootMotionDelta(const vector3& rootPos)
 	if (CGameObject* go = m_pRootMotionParent->Get_GameObject())
 		rigidBody = go->GetComponent<CRigidBody>();
 
-	if (rigidBody && (rigidBody->IsConstPositionX() || rigidBody->IsConstPositionY() || rigidBody->IsConstPositionZ()))
+	if (rigidBody && !rigidBody->IsKinematic() &&
+		(rigidBody->IsConstPositionX() || rigidBody->IsConstPositionY() || rigidBody->IsConstPositionZ()))
 		rigidBody->Translate(-worldDelta);
 	else
-		m_pRootMotionParent->Translate(-worldDelta);
+		m_pRootMotionParent->Set_Position(m_pRootMotionParent->Get_Position() - worldDelta);
 
 	m_vPrevRootMotionPos = rootPos;
 }

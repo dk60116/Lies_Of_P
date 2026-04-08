@@ -1,6 +1,7 @@
 #include "cpch.h"
 #include "PlayerControllerContext.h"
 #include "PlayerController.h"
+#include "NaviMeshAgent.h"
 
 CPlayerControllerContext::CPlayerControllerContext()
 	: m_pPlayer(nullptr)
@@ -151,6 +152,16 @@ void CPlayerControllerContext::AddPosition(const vector3& delta)
 {
 	if (!m_pPlayer) 
 		return;
+
+	if (CNaviMeshAgent* navAgent = m_pPlayer->Get_GameObject()->GetComponent<CNaviMeshAgent>())
+	{
+		if (navAgent->Get_Enable())
+		{
+			CTransform* transform = m_pPlayer->GetTransform();
+			transform->Set_Position(transform->Get_Position() + delta);
+			return;
+		}
+	}
 
 	if (CRigidBody* rigidBody = m_pPlayer->GetRigidBody())
 	{

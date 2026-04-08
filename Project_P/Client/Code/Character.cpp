@@ -11,6 +11,9 @@ CCharacter::CCharacter()
 	, m_pRigidBody(nullptr)
 	, m_pAnimator(nullptr)
 	, m_pNavAgent(nullptr)
+	, m_bNavAgentPhysicsOverrideActive(false)
+	, m_bNavAgentPrevKinematic(false)
+	, m_bNavAgentPrevUseGravity(true)
 	, m_bIsGround(false)
 	, m_iGroundMask(0)
 	, m_vHurtBoxInfoList({})
@@ -114,8 +117,30 @@ const wstring& CCharacter::GetCharacterName() const
 
 void CCharacter::SetAbleNavAgent(const _bool _value)
 {
+	if (!m_pNavAgent || !m_pRigidBody)
+		return;
+
 	m_pNavAgent->SetEnable(_value);
-	m_pRigidBody->SetUseGravity(!_value);
+
+	if (_value)
+	{
+		if (!m_bNavAgentPhysicsOverrideActive)
+		{
+			m_bNavAgentPrevKinematic = m_pRigidBody->IsKinematic();
+			m_bNavAgentPrevUseGravity = m_pRigidBody->IsUseGravity();
+			m_bNavAgentPhysicsOverrideActive = true;
+		}
+
+		m_pRigidBody->SetKinematic(true);
+		m_pRigidBody->SetUseGravity(false);
+	}
+	else if (m_bNavAgentPhysicsOverrideActive)
+	{
+		m_pRigidBody->SetKinematic(m_bNavAgentPrevKinematic);
+		m_pRigidBody->SetUseGravity(m_bNavAgentPrevUseGravity);
+		m_bNavAgentPhysicsOverrideActive = false;
+	}
+
 	m_pRigidBody->ResetVelocity();
 }
 

@@ -66,6 +66,9 @@ protected:
 	CRigidBody* m_pRigidBody;
 	CAnimator* m_pAnimator;
 	CNaviMeshAgent* m_pNavAgent;
+	_bool m_bNavAgentPhysicsOverrideActive;
+	_bool m_bNavAgentPrevKinematic;
+	_bool m_bNavAgentPrevUseGravity;
 
 	CSceneManager::LayerMask m_iGroundMask;
 	_bool m_bIsGround;

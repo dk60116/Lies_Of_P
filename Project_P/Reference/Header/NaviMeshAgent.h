@@ -28,6 +28,7 @@ public:
 	void OnEnable() override;
 	void OnDisable() override;
 	void Update() override;
+	void LateUpdate() override;
 	void Render_Gizmo() override;
 	void OnDestroy() override;
 
@@ -73,6 +74,8 @@ private:
 	_float GetWorldAgentHeight() const;
 	_bool IsActivelyMovingForCollision() const;
 	vector3 ComputeSeparationOffset(const vector3& _currentNavigationPosition) const;
+	void ApplySeparationOnNavigation(EngineAI::CNaviMesh* _navMesh, const vector3& _worldGroundingOffset);
+	_bool ConstrainTransformToNavigation(EngineAI::CNaviMesh* _navMesh, const vector3& _worldGroundingOffset, const _bool _preferSurfaceMoveFromLastPosition, const _bool _clearPathOnFailure);
 	_bool SnapToNavigation(EngineAI::CNaviMesh* _navMesh, const vector3& _desiredPosition, vector3& _outPosition, _int* _outPolygonIndex = nullptr) const;
 	void RebuildPath(EngineAI::CNaviMesh* _navMesh, const vector3& _currentPosition, const vector3& _destinationOnNavigation);
 	void ClearRuntimePath();
@@ -96,7 +99,9 @@ private:
 	_bool m_bHasPath;
 	_bool m_bPathDirty;
 	_bool m_bOnNavigation;
+	_bool m_bHasLastNavigationPosition;
 	_bool m_bAlwaysLookAt;
+	vector3 m_vLastNavigationPosition;
 	class CMeshBuffer* m_pLineMesh;
 	class CMaterial* m_pLineMaterial;
 	CollisionWeight m_eCollisionWeight;

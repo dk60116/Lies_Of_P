@@ -900,6 +900,74 @@ bool CNaviMesh::SamplePosition(const vector3& _position, vector3& _outPoint, int
     return true;
 }
 
+bool CNaviMesh::ConstrainMovement(const vector3& _start, const vector3& _end, vector3& _outPoint, int* _outPolygonIndex)
+{
+	_outPoint = _start;
+	if (_outPolygonIndex)
+		*_outPolygonIndex = -1;
+
+	if (!IsBuilt())
+		return false;
+
+	float startPos[3] = {};
+	float endPos[3] = {};
+	float halfExtents[3] = {};
+	float nearestStart[3] = {};
+	ToFloatArray(_start, startPos);
+	ToFloatArray(_end, endPos);
+	BuildQueryHalfExtents(m_sBakeOptions, halfExtents);
+
+	dtQueryFilter filter = {};
+	dtPolyRef startRef = 0;
+	if (dtStatusFailed(m_pNavMeshQuery->findNearestPoly(startPos, halfExtents, &filter, &startRef, nearestStart)) || !startRef)
+		return false;
+
+	float startOnPoly[3] = { nearestStart[0], nearestStart[1], nearestStart[2] };
+	bool isStartOverPoly = false;
+	if (dtStatusFailed(m_pNavMeshQuery->closestPointOnPoly(startRef, startPos, startOnPoly, &isStartOverPoly)))
+		return false;
+
+	constexpr int kMaxVisitedPolygons = 128;
+	dtPolyRef visited[kMaxVisitedPolygons] = {};
+	int visitedCount = 0;
+	float resultPos[3] = { startOnPoly[0], startOnPoly[1], startOnPoly[2] };
+	if (dtStatusFailed(m_pNavMeshQuery->moveAlongSurface(
+		startRef,
+		startOnPoly,
+		endPos,
+		&filter,
+		resultPos,
+		visited,
+		&visitedCount,
+		kMaxVisitedPolygons)))
+	{
+		return false;
+	}
+
+	dtPolyRef resultRef = visitedCount > 0 ? visited[visitedCount - 1] : startRef;
+	float closestPoint[3] = { resultPos[0], resultPos[1], resultPos[2] };
+	bool isPointOverPoly = false;
+	if (dtStatusFailed(m_pNavMeshQuery->closestPointOnPoly(resultRef, resultPos, closestPoint, &isPointOverPoly)))
+	{
+		if (dtStatusFailed(m_pNavMeshQuery->closestPointOnPolyBoundary(resultRef, resultPos, closestPoint)))
+			return false;
+	}
+
+	float polygonHeight = closestPoint[1];
+	if (dtStatusSucceed(m_pNavMeshQuery->getPolyHeight(resultRef, closestPoint, &polygonHeight)))
+		closestPoint[1] = polygonHeight;
+
+	_outPoint = vector3(closestPoint[0], closestPoint[1], closestPoint[2]);
+	if (_outPolygonIndex)
+	{
+		const auto foundPolygon = m_mPolyRefToIndex.find(resultRef);
+		if (foundPolygon != m_mPolyRefToIndex.end())
+			*_outPolygonIndex = static_cast<int>(foundPolygon->second);
+	}
+
+	return true;
+}
+
 int CNaviMesh::FindContainingPolygon(const vector3& _position)
 {
 	if (!IsBuilt())

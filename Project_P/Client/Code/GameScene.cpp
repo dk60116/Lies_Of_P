@@ -32,6 +32,7 @@ HRESULT CGameScene::Initialize()
 
 	CGameObject* playerObj = Add_GameObject(L"Player");
 	m_pPlayer = playerObj->AddComponent<CPlayer>();
+	m_pPlayer->GetTransform()->Set_Position(0.f, 0.f, 40.f);
 
 	CGameObject* creeperObj = Add_GameObject(L"Creeper");
 	CMon_Creeper* creeper = creeperObj->AddComponent<CMon_Creeper>();

@@ -1,6 +1,7 @@
 #include "cpch.h"
 #include "PlayerController.h"
 #include "Player.h"
+#include "GameObject.h"
 
 #include "PlayerState_Locomotion.h"
 #include "PlayerState_Idle.h"
@@ -216,6 +217,20 @@ void CPlayerController::LateUpdate()
 	};
 	auto envMask = CSceneManager::GetInstance().MakeLayerMask(true, ignoreLayers);
 
+	const auto isEnvironmentBlockingHit = [this](const CPhysics::RAYCASTHIT& hit) -> _bool
+	{
+		if (!hit.isHit || !hit.object)
+			return false;
+
+		if (hit.object == m_pPlayer->Get_GameObject())
+			return false;
+
+		if (hit.object->GetComponent<CCharacter>())
+			return false;
+
+		return true;
+	};
+
 	vector3 frameDelta = pos - m_vPreAnimPos;
 	frameDelta.y = 0.f;
 
@@ -242,7 +257,7 @@ void CPlayerController::LateUpdate()
 
 			for (const auto& hit : wallHits)
 			{
-				if (hit.isHit)
+				if (isEnvironmentBlockingHit(hit))
 				{
 					pos = vector3(m_vPreAnimPos.x, pos.y, m_vPreAnimPos.z);
 					tr->Set_Position(pos);
@@ -265,7 +280,7 @@ void CPlayerController::LateUpdate()
 	_float groundY = pos.y;
 	for (const auto& hit : groundHits)
 	{
-		if (hit.isHit && hit.distance < closestGroundDist)
+		if (isEnvironmentBlockingHit(hit) && hit.distance < closestGroundDist)
 		{
 			closestGroundDist = hit.distance;
 			groundY = hit.hitPos.y;

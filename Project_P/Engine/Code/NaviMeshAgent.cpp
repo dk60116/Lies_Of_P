@@ -2,6 +2,7 @@
 #include "NaviMeshAgent.h"
 
 #include "Camera.h"
+#include "CapsuleCollider.h"
 #include "Editor.h"
 #include "GameObject.h"
 #include "Material.h"
@@ -10,6 +11,7 @@
 #include "Resources.h"
 #include "Scene.h"
 #include "SceneManager.h"
+#include "SphereCollider.h"
 #include "Transform.h"
 #include <unordered_set>
 
@@ -21,6 +23,10 @@ namespace
 	constexpr _uint kAgentGizmoSegmentCount = 32u;
 	constexpr _float kAgentSeparationPadding = 0.02f;
 	constexpr _float kAgentSeparationDirectionEpsilon = 0.0001f;
+	constexpr _float kAgentSeparationMinShare = 0.25f;
+	constexpr _float kAgentSeparationMaxShare = 0.75f;
+	constexpr _float kAgentSeparationMovingShare = 0.6f;
+	constexpr _int kNavigationConstraintSortIndex = 1000;
 
 	unordered_set<CNaviMeshAgent*> g_vActiveNavigationAgents = {};
 
@@ -105,12 +111,15 @@ CNaviMeshAgent::CNaviMeshAgent()
 	, m_bHasPath(false)
 	, m_bPathDirty(true)
 	, m_bOnNavigation(false)
+	, m_bHasLastNavigationPosition(false)
 	, m_bAlwaysLookAt(false)
+	, m_vLastNavigationPosition(vector3::zero())
 	, m_pLineMesh(nullptr)
 	, m_pLineMaterial(nullptr)
 	, m_eCollisionWeight(CollisionWeight::Default)
 {
 	m_strName = L"NaviMeshAgent";
+	m_iSortIndex = kNavigationConstraintSortIndex;
 }
 
 CNaviMeshAgent::~CNaviMeshAgent()
@@ -139,6 +148,7 @@ CComponent* CNaviMeshAgent::Clone() const
 	clone->m_bHasDestination = m_bHasDestination;
 	clone->m_bAlwaysLookAt = m_bAlwaysLookAt;
 	clone->m_eCollisionWeight = m_eCollisionWeight;
+	clone->m_iSortIndex = m_iSortIndex;
 	clone->m_bPathDirty = true;
 	return clone;
 }
@@ -170,6 +180,7 @@ HRESULT CNaviMeshAgent::Initialize()
 	ClearRuntimePath();
 	m_bOnNavigation = false;
 	m_iCurrentPolygonIndex = -1;
+	m_bHasLastNavigationPosition = false;
 	return S_OK;
 }
 
@@ -177,12 +188,14 @@ void CNaviMeshAgent::Awake()
 {
 	RegisterNavigationAgent(this);
 	m_bPathDirty = m_bHasDestination;
+	m_bHasLastNavigationPosition = false;
 }
 
 void CNaviMeshAgent::OnEnable()
 {
 	RegisterNavigationAgent(this);
 	m_bPathDirty = m_bHasDestination;
+	m_bHasLastNavigationPosition = false;
 }
 
 void CNaviMeshAgent::OnDisable()
@@ -191,6 +204,7 @@ void CNaviMeshAgent::OnDisable()
 	ClearRuntimePath();
 	m_bOnNavigation = false;
 	m_iCurrentPolygonIndex = -1;
+	m_bHasLastNavigationPosition = false;
 }
 
 void CNaviMeshAgent::Update()
@@ -210,45 +224,13 @@ void CNaviMeshAgent::Update()
 	}
 
 	const vector3 worldGroundingOffset = GetNavigationBaseOffset() - vector3(0.f, m_fGroundSnapOffset, 0.f);
-	vector3 currentPosition = transform->Get_Position();
-	vector3 currentNavigationPosition = currentPosition - worldGroundingOffset;
-	vector3 snappedNavigationPosition = currentNavigationPosition;
-	_int currentPolygonIndex = -1;
-	if (!SnapToNavigation(navMesh, currentNavigationPosition, snappedNavigationPosition, &currentPolygonIndex))
-	{
-		m_bOnNavigation = false;
-		m_iCurrentPolygonIndex = -1;
-		ClearRuntimePath();
-		m_bPathDirty = m_bHasDestination;
+	if (!ConstrainTransformToNavigation(navMesh, worldGroundingOffset, true, true))
 		return;
-	}
 
-	m_bOnNavigation = true;
-	m_iCurrentPolygonIndex = currentPolygonIndex;
+	ApplySeparationOnNavigation(navMesh, worldGroundingOffset);
 
-	const vector3 snappedWorldPosition = snappedNavigationPosition + worldGroundingOffset;
-	if (vector3::Distance(currentPosition, snappedWorldPosition) > kAgentPositionEpsilon)
-		transform->Set_Position(snappedWorldPosition);
-
-	currentPosition = snappedWorldPosition;
-	currentNavigationPosition = snappedNavigationPosition;
-
-	const vector3 separationOffset = ComputeSeparationOffset(currentNavigationPosition);
-	if (separationOffset.lengthSq() > 0.f)
-	{
-		vector3 separatedNavigationPosition = currentNavigationPosition + separationOffset;
-		_int separatedPolygonIndex = -1;
-		if (SnapToNavigation(navMesh, separatedNavigationPosition, separatedNavigationPosition, &separatedPolygonIndex))
-		{
-			const vector3 separatedWorldPosition = separatedNavigationPosition + worldGroundingOffset;
-			if (vector3::Distance(currentPosition, separatedWorldPosition) > kAgentPositionEpsilon)
-				transform->Set_Position(separatedWorldPosition);
-
-			currentPosition = separatedWorldPosition;
-			currentNavigationPosition = separatedNavigationPosition;
-			m_iCurrentPolygonIndex = separatedPolygonIndex;
-		}
-	}
+	vector3 currentPosition = transform->Get_Position();
+	vector3 currentNavigationPosition = m_vLastNavigationPosition;
 
 	auto rotateTowardsHorizontal = [&](const vector3& worldDirection, const vector3& worldOrigin)
 	{
@@ -363,10 +345,11 @@ void CNaviMeshAgent::Update()
 	const vector3 desiredNavigationPosition = currentNavigationPosition + direction * moveDistance;
 	vector3 constrainedNavigationPosition = desiredNavigationPosition;
 	_int nextPolygonIndex = -1;
-	if (!SnapToNavigation(navMesh, desiredNavigationPosition, constrainedNavigationPosition, &nextPolygonIndex))
+	if (!navMesh->ConstrainMovement(currentNavigationPosition, desiredNavigationPosition, constrainedNavigationPosition, &nextPolygonIndex))
 	{
 		m_bOnNavigation = false;
 		m_iCurrentPolygonIndex = -1;
+		m_bHasLastNavigationPosition = false;
 		ClearRuntimePath();
 		m_bPathDirty = true;
 		return;
@@ -377,12 +360,36 @@ void CNaviMeshAgent::Update()
 	rotateTowardsHorizontal((targetPoint + worldGroundingOffset) - newWorldPosition, newWorldPosition);
 	m_bOnNavigation = true;
 	m_iCurrentPolygonIndex = nextPolygonIndex;
+	m_vLastNavigationPosition = constrainedNavigationPosition;
+	m_bHasLastNavigationPosition = true;
 
 	if (vector3::Distance(constrainedNavigationPosition, destinationOnNavigation) <= stoppingDistance)
 	{
 		m_vResolvedDestination = destinationOnNavigation;
 		ClearRuntimePath();
 	}
+}
+
+void CNaviMeshAgent::LateUpdate()
+{
+	CTransform* transform = GetTransform();
+	if (!transform)
+		return;
+
+	EngineAI::CNaviMesh* navMesh = ResolveNavigationMesh();
+	if (!navMesh || !navMesh->IsBuilt())
+	{
+		m_bOnNavigation = false;
+		m_iCurrentPolygonIndex = -1;
+		m_bHasLastNavigationPosition = false;
+		return;
+	}
+
+	const vector3 worldGroundingOffset = GetNavigationBaseOffset() - vector3(0.f, m_fGroundSnapOffset, 0.f);
+	if (!ConstrainTransformToNavigation(navMesh, worldGroundingOffset, true, true))
+		return;
+
+	ApplySeparationOnNavigation(navMesh, worldGroundingOffset);
 }
 
 void CNaviMeshAgent::Render_Gizmo()
@@ -734,7 +741,18 @@ _float CNaviMeshAgent::GetWorldAgentRadius() const
 
 	const vector3 scale = transform->Get_LocalScale();
 	const _float radialScale = max(fabsf(scale.x), fabsf(scale.z));
-	return max(m_fAgentRadius * radialScale, 0.05f);
+	_float worldRadius = max(m_fAgentRadius * radialScale, 0.05f);
+
+	if (m_pGameObject)
+	{
+		if (CCapsuleCollider* capsuleCollider = m_pGameObject->GetComponent<CCapsuleCollider>())
+			worldRadius = max(worldRadius, max(capsuleCollider->GetRadius() * radialScale, 0.05f));
+
+		if (CSphereCollider* sphereCollider = m_pGameObject->GetComponent<CSphereCollider>())
+			worldRadius = max(worldRadius, max(sphereCollider->GetRadius() * radialScale, 0.05f));
+	}
+
+	return worldRadius;
 }
 
 _float CNaviMeshAgent::GetWorldAgentHeight() const
@@ -784,7 +802,9 @@ vector3 CNaviMeshAgent::ComputeSeparationOffset(const vector3& _currentNavigatio
 			continue;
 
 		const vector3 otherGroundingOffset = other->GetNavigationBaseOffset() - vector3(0.f, other->m_fGroundSnapOffset, 0.f);
-		const vector3 otherNavigationPosition = otherTransform->Get_Position() - otherGroundingOffset;
+		const vector3 otherNavigationPosition = other->m_bHasLastNavigationPosition
+			? other->m_vLastNavigationPosition
+			: (otherTransform->Get_Position() - otherGroundingOffset);
 		const _float otherHeight = other->GetWorldAgentHeight();
 		const _float verticalOverlapThreshold = (selfHeight + otherHeight) * 0.5f;
 		if (fabsf(_currentNavigationPosition.y - otherNavigationPosition.y) > verticalOverlapThreshold)
@@ -822,17 +842,17 @@ vector3 CNaviMeshAgent::ComputeSeparationOffset(const vector3& _currentNavigatio
 
 		if (selfCollisionPriority < otherCollisionPriority)
 		{
-			selfDisplacementShare = 1.f;
+			selfDisplacementShare = kAgentSeparationMaxShare;
 		}
 		else if (selfCollisionPriority > otherCollisionPriority)
 		{
-			selfDisplacementShare = 0.f;
+			selfDisplacementShare = kAgentSeparationMinShare;
 		}
 		else
 		{
 			const _bool otherIsMoving = other->IsActivelyMovingForCollision();
 			if (selfIsMoving != otherIsMoving)
-				selfDisplacementShare = selfIsMoving ? 1.f : 0.f;
+				selfDisplacementShare = selfIsMoving ? kAgentSeparationMovingShare : (1.f - kAgentSeparationMovingShare);
 		}
 
 		if (selfDisplacementShare <= 0.f)
@@ -853,6 +873,87 @@ vector3 CNaviMeshAgent::ComputeSeparationOffset(const vector3& _currentNavigatio
 		separation = (separation / separationLength) * maxSeparationStep;
 
 	return separation;
+}
+
+void CNaviMeshAgent::ApplySeparationOnNavigation(EngineAI::CNaviMesh* _navMesh, const vector3& _worldGroundingOffset)
+{
+	CTransform* transform = GetTransform();
+	if (!transform || !_navMesh || !m_bOnNavigation || !m_bHasLastNavigationPosition)
+		return;
+
+	const vector3 currentNavigationPosition = m_vLastNavigationPosition;
+	const vector3 separationOffset = ComputeSeparationOffset(currentNavigationPosition);
+	if (separationOffset.lengthSq() <= 0.f)
+		return;
+
+	vector3 separatedNavigationPosition = currentNavigationPosition + separationOffset;
+	_int separatedPolygonIndex = -1;
+	_bool constrained = _navMesh->ConstrainMovement(currentNavigationPosition, separatedNavigationPosition, separatedNavigationPosition, &separatedPolygonIndex);
+	if (!constrained || (separatedNavigationPosition - currentNavigationPosition).lengthSq() <= (kAgentPositionEpsilon * kAgentPositionEpsilon))
+	{
+		separatedNavigationPosition = currentNavigationPosition + separationOffset;
+		constrained = SnapToNavigation(_navMesh, separatedNavigationPosition, separatedNavigationPosition, &separatedPolygonIndex);
+	}
+
+	if (!constrained)
+		return;
+
+	const vector3 separatedWorldPosition = separatedNavigationPosition + _worldGroundingOffset;
+	if (vector3::Distance(transform->Get_Position(), separatedWorldPosition) > kAgentPositionEpsilon)
+		transform->Set_Position(separatedWorldPosition);
+
+	m_iCurrentPolygonIndex = separatedPolygonIndex;
+	m_vLastNavigationPosition = separatedNavigationPosition;
+	m_bHasLastNavigationPosition = true;
+}
+
+_bool CNaviMeshAgent::ConstrainTransformToNavigation(EngineAI::CNaviMesh* _navMesh, const vector3& _worldGroundingOffset, const _bool _preferSurfaceMoveFromLastPosition, const _bool _clearPathOnFailure)
+{
+	CTransform* transform = GetTransform();
+	if (!transform || !_navMesh)
+		return false;
+
+	const vector3 currentNavigationPosition = transform->Get_Position() - _worldGroundingOffset;
+	vector3 constrainedNavigationPosition = currentNavigationPosition;
+	_int constrainedPolygonIndex = -1;
+
+	_bool constrained = false;
+	if (_preferSurfaceMoveFromLastPosition && m_bHasLastNavigationPosition)
+	{
+		constrained = _navMesh->ConstrainMovement(
+			m_vLastNavigationPosition,
+			currentNavigationPosition,
+			constrainedNavigationPosition,
+			&constrainedPolygonIndex);
+	}
+
+	if (!constrained)
+	{
+		constrained = SnapToNavigation(_navMesh, currentNavigationPosition, constrainedNavigationPosition, &constrainedPolygonIndex);
+	}
+
+	if (!constrained)
+	{
+		m_bOnNavigation = false;
+		m_iCurrentPolygonIndex = -1;
+		m_bHasLastNavigationPosition = false;
+		if (_clearPathOnFailure)
+		{
+			ClearRuntimePath();
+			m_bPathDirty = m_bHasDestination;
+		}
+		return false;
+	}
+
+	const vector3 constrainedWorldPosition = constrainedNavigationPosition + _worldGroundingOffset;
+	if (vector3::Distance(transform->Get_Position(), constrainedWorldPosition) > kAgentPositionEpsilon)
+		transform->Set_Position(constrainedWorldPosition);
+
+	m_bOnNavigation = true;
+	m_iCurrentPolygonIndex = constrainedPolygonIndex;
+	m_vLastNavigationPosition = constrainedNavigationPosition;
+	m_bHasLastNavigationPosition = true;
+	return true;
 }
 
 _bool CNaviMeshAgent::SnapToNavigation(EngineAI::CNaviMesh* _navMesh, const vector3& _desiredPosition, vector3& _outPosition, _int* _outPolygonIndex) const
