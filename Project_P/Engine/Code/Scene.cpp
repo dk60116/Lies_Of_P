@@ -1404,8 +1404,6 @@ void CScene::EndFrame()
 		if (obj && obj->m_bKill)
 		{
 			m_mObjectOfId.erase(obj->m_iUniqueID);
-			if (auto* parent = (*it)->GetTransform()->Get_Parent())
-				parent->RemoveChild((*it)->GetTransform());
 			Safe_Release(obj);
 			it = m_lObjectList.erase(it); 
 		}

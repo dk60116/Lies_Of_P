@@ -396,6 +396,9 @@ void CGameObject::OnApplicationQuit()
 
 void CGameObject::Destroy()
 {
+	if (m_bKill)
+		return;
+
 	m_bKill = true;
 }
 

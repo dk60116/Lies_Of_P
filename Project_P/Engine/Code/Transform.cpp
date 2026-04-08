@@ -311,10 +311,36 @@ void CTransform::Render_Gizmo()
 
 void CTransform::OnDestroy()
 {
-    for (TRAVERSAL_ITER(m_lChildList, it))
-        (*it)->Get_GameObject()->Destroy();
+    const list<CTransform*> childList = m_lChildList;
 
-    Safe_Release(m_pParent);
+    for (CTransform* child : childList)
+    {
+        if (!child)
+            continue;
+
+        if (child->m_pParent == this)
+        {
+            m_lChildList.remove(child);
+            child->m_pParent = nullptr;
+            child->m_bIsRootParent = true;
+            CTransform* selfRef = this;
+            Safe_Release(selfRef);
+        }
+
+        if (CGameObject* childObject = child->Get_GameObject())
+            childObject->Destroy();
+    }
+
+    m_lChildList.clear();
+
+    if (m_pParent)
+    {
+        CTransform* parent = m_pParent;
+        m_pParent = nullptr;
+        m_bIsRootParent = true;
+        parent->m_lChildList.remove(this);
+        Safe_Release(parent);
+    }
 }
 
 CTransform* CTransform::Get_Parent() const
@@ -1297,6 +1323,20 @@ const quaternion CTransform::LookQuaternion(const vector3& _target, const _uint 
 
 void CTransform::RemoveChild(CTransform* _child)
 {
-    if (_child)
-        m_lChildList.remove(_child);
+    if (!_child)
+        return;
+
+    auto childIter = find(m_lChildList.begin(), m_lChildList.end(), _child);
+    if (childIter == m_lChildList.end())
+        return;
+
+    m_lChildList.erase(childIter);
+
+    if (_child->m_pParent == this)
+    {
+        _child->m_pParent = nullptr;
+        _child->m_bIsRootParent = true;
+        CTransform* selfRef = this;
+        Safe_Release(selfRef);
+    }
 }
