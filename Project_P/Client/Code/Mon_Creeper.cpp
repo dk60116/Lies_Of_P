@@ -85,26 +85,29 @@ void CMon_Creeper::SetAnimationAction()
 	{
 		CAnimationClip* ac = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Anim_Mon_Creeper_BaseAttack (Animation Clip)");
 
-		const _uint end = ac->Get_NormalizedFrameIndex(0.78f);
-
+		if (ac)
 		{
-			CAnimationClip::ActionTrigger at = { 19, L"AttackBase_Start" };
+			const _uint end = ac->Get_NormalizedFrameIndex(0.78f);
 
-			ac->Add_ActionTrigger(at);
-			m_pAnimator->RegisterActionHandler(L"AttackBase_Start", [this]()
-				{
-					m_mHurtBoxList[L"FX_Tail_04_end"]->EnableBox();
-				});
-		}
+			{
+				CAnimationClip::ActionTrigger at = { 19, L"AttackBase_Start" };
 
-		{
-			CAnimationClip::ActionTrigger at = { end, L"AttackBase_End" };
+				ac->Add_ActionTrigger(at);
+				m_pAnimator->RegisterActionHandler(L"AttackBase_Start", [this]()
+					{
+						m_mHurtBoxList[L"FX_Tail_04_end"]->EnableBox();
+					});
+			}
 
-			ac->Add_ActionTrigger(at);
-			m_pAnimator->RegisterActionHandler(L"AttackBase_End", [this]()
-				{
-					m_mHurtBoxList[L"FX_Tail_04_end"]->DisableBox();
-				});
+			{
+				CAnimationClip::ActionTrigger at = { end, L"AttackBase_End" };
+
+				ac->Add_ActionTrigger(at);
+				m_pAnimator->RegisterActionHandler(L"AttackBase_End", [this]()
+					{
+						m_mHurtBoxList[L"FX_Tail_04_end"]->DisableBox();
+					});
+			}
 		}
 	}
 }

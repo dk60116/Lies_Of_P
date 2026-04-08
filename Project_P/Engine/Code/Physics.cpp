@@ -1152,7 +1152,7 @@ void CPhysics::RemoveContactPairs(const BodyID& _bodyID)
 	m_pContactListener->RemovePairsForBody(_bodyID);
 }
 
-vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray, const CSceneManager::LayerMask _mask)
+vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray, const CSceneManager::LayerMask _mask, const _bool _debugDraw)
 {
 	vector<RAYCASTHIT> hits;
 
@@ -1174,7 +1174,8 @@ vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray, const CSceneMana
 	if (!collector.HadHit())
 	{
 #ifndef _CLIENT_BUILD
-		AddDebugRaycastDisplay(_ray.origin, _ray.origin + _ray.dir * _ray.maxDist, false);
+		if (_debugDraw)
+			AddDebugRaycastDisplay(_ray.origin, _ray.origin + _ray.dir * _ray.maxDist, false);
 #endif
 		return hits;
 	}
@@ -1213,8 +1214,9 @@ vector<CPhysics::RAYCASTHIT> CPhysics::Raycast(const Ray& _ray, const CSceneMana
 	sort(hits.begin(), hits.end(),
 		[](const RAYCASTHIT& a, const RAYCASTHIT& b) { return a.distance < b.distance; });
 
-	#ifndef _CLIENT_BUILD
-	AddDebugRaycastDisplay(_ray.origin, _ray.origin + _ray.dir * _ray.maxDist, !hits.empty());
+#ifndef _CLIENT_BUILD
+	if (_debugDraw)
+		AddDebugRaycastDisplay(_ray.origin, _ray.origin + _ray.dir * _ray.maxDist, !hits.empty());
 #endif
 
 	return hits;

@@ -167,8 +167,8 @@ HRESULT CPlayer::Initialize()
 
 	m_pWeaponObj->GetTransform()->SetParent(m_pWeaponHolder);
 	m_pWeaponObj->GetTransform()->Set_LocalPosition(vector3::zero());
-	m_pWeaponObj->GetTransform()->Set_LocalEulerAngles(vector3(0.f, -90.f, -90.f));
-	m_pWeaponObj->GetTransform()->Set_LocalScale(1.f);
+	m_pWeaponObj->GetTransform()->Set_LocalEulerAngles(vector3::back() * 90.f);
+	m_pWeaponObj->GetTransform()->Set_LocalScale(0.5f);
 
 	m_pBodyCollider = m_pGameObject->AddComponent<CCapsuleCollider>();
 	m_pBodyCollider->SetCenter(vector3::up() * 1.75f);

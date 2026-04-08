@@ -23,32 +23,38 @@ void CPlayerState_Locomotion::Initialize(CPlayerControllerContext* _ctx, const C
     {
         CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Sprint_End (Animation Clip)");
 
-        const wstring clipName = startClip->Get_ResourceName();
-        const _uint frameCount = startClip->Get_FrameCount();
-
+        if (startClip)
         {
-            CAnimationClip::ActionTrigger at = { 1, L"SprintEndStart" };
-            startClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"SprintEndStart", [this]()
-                {
-                    m_pCtx->StopMoveImmediate();
-                });
+            const wstring clipName = startClip->Get_ResourceName();
+            const _uint frameCount = startClip->Get_FrameCount();
+
+            {
+                CAnimationClip::ActionTrigger at = { 1, L"SprintEndStart" };
+                startClip->Add_ActionTrigger(at);
+                m_pCtx->Animator()->RegisterActionHandler(L"SprintEndStart", [this]()
+                    {
+                        m_pCtx->StopMoveImmediate();
+                    });
+            }
         }
     }
 
     {
         CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_BattleSprint_End (Animation Clip)");
 
-        const wstring clipName = startClip->Get_ResourceName();
-        const _uint frameCount = startClip->Get_FrameCount();
-
+        if (startClip)
         {
-            CAnimationClip::ActionTrigger at = { 1, L"BattleSprintEndStart" };
-            startClip->Add_ActionTrigger(at);
-            m_pCtx->Animator()->RegisterActionHandler(L"BattleSprintEndStart", [this]()
-                {
-                    m_pCtx->StopMoveImmediate();
-                });
+            const wstring clipName = startClip->Get_ResourceName();
+            const _uint frameCount = startClip->Get_FrameCount();
+
+            {
+                CAnimationClip::ActionTrigger at = { 1, L"BattleSprintEndStart" };
+                startClip->Add_ActionTrigger(at);
+                m_pCtx->Animator()->RegisterActionHandler(L"BattleSprintEndStart", [this]()
+                    {
+                        m_pCtx->StopMoveImmediate();
+                    });
+            }
         }
     }
 }

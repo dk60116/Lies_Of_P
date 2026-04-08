@@ -143,6 +143,13 @@ void CSceneLoader::ThreadLoadingLoop()
 
 					const wstring meshdataPath = meshDataFolder + L"_" + meshDataName + L".meshdata";
 
+					if (!CResources::FileExists(L"BinaryAssets/MeshData/" + meshdataPath))
+					{
+						const HRESULT convertResult = CResources::GetInstance().ConvertFBXToMeshBufferData(wFile);
+						if (FAILED(convertResult))
+							CDebug::LogError(L"Failed create MeshData while scene loading: " + wFile);
+					}
+
 					auto meshInfoList = CResources::GetInstance().ReadMeshBufferInfos(meshdataPath);
 
 					CResources::GetInstance().CreateSceneMeshBundle(wName + L" (MeshBuffer)", meshInfoList, filter, nullptr, true);
@@ -172,6 +179,13 @@ void CSceneLoader::ThreadLoadingLoop()
 
 					const wstring skinnedDataPath = skinnedDataFolder + L"_" + skinnedDataName + L".skinneddata";
 
+					if (!CResources::FileExists(L"BinaryAssets/SkinnedMeshData/" + skinnedDataPath))
+					{
+						const HRESULT convertResult = CResources::GetInstance().ConvertFBXToSkinnedBufferData(wFile);
+						if (FAILED(convertResult))
+							CDebug::LogError(L"Failed create SkinnedData while scene loading: " + wFile);
+					}
+
 					auto skinnedInfoList = CResources::GetInstance().ReadSkinnedBufferInfos(skinnedDataPath);
 
 					CResources::GetInstance().CreateSceneSkinnedBundle(wName + L" (MeshBuffer)", skinnedInfoList.initList, skinnedInfoList.skeletalList, filter, nullptr, true);
@@ -184,6 +198,13 @@ void CSceneLoader::ThreadLoadingLoop()
 					wstring animationDataName = CEngineString::Split(animationDataTail, L".")[0];
 
 					const wstring animationdataPath = animationDataFolder + L"_" + animationDataName + L".animdata";
+
+					if (!CResources::FileExists(L"BinaryAssets/AnimationClipData/" + animationdataPath))
+					{
+						const HRESULT convertResult = CResources::GetInstance().ConvertFBXToAnimationClipData(wFile);
+						if (FAILED(convertResult))
+							CDebug::LogError(L"Failed create AnimationData while scene loading: " + wFile);
+					}
 
 					auto animaitonInfoList = CResources::GetInstance().ReadAnimationClipBufferInfos(animationdataPath);
 

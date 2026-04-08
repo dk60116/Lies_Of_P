@@ -20,52 +20,56 @@ void CPlayerState_DashAttack::Initialize(CPlayerControllerContext* _ctx, const C
 	__super::Initialize(_ctx, _type);
 
 	CAnimationClip* clip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Attack_Thrust (Animation Clip)");
-	const _uint endFrame = clip->Get_NormalizedFrameIndex(0.38f);
 
-	const auto registerActionTrigger = [this, clip](const _uint frame, const wstring& triggerName, const function<void()>& handler)
+	if (clip)
 	{
-		CAnimationClip::ActionTrigger at = { frame, triggerName };
-		clip->Add_ActionTrigger(at);
-		m_pCtx->Animator()->RegisterActionHandler(triggerName, [this, handler]()
+		const _uint endFrame = clip->Get_NormalizedFrameIndex(0.38f);
+
+		const auto registerActionTrigger = [this, clip](const _uint frame, const wstring& triggerName, const function<void()>& handler)
+		{
+			CAnimationClip::ActionTrigger at = { frame, triggerName };
+			clip->Add_ActionTrigger(at);
+			m_pCtx->Animator()->RegisterActionHandler(triggerName, [this, handler]()
+				{
+					if (!m_pCtx->IsActionActive(m_eStateType))
+						return;
+
+					handler();
+				});
+		};
+
+		registerActionTrigger(1, L"DashAttack_Start", [this]()
 			{
-				if (!m_pCtx->IsActionActive(m_eStateType))
-					return;
-
-				handler();
+				m_bDash = true;
 			});
-	};
 
-	registerActionTrigger(1, L"DashAttack_Start", [this]()
-		{
-			m_bDash = true;
-		});
+		registerActionTrigger(4, L"DashAttack_EnableBox", [this]()
+			{
+				m_pCtx->Get_Player()->OnSwordAttackHandler();
+			});
 
-	registerActionTrigger(4, L"DashAttack_EnableBox", [this]()
-		{
-			m_pCtx->Get_Player()->OnSwordAttackHandler();
-		});
+		registerActionTrigger(11, L"DashAttack_Stop", [this]()
+			{
+				m_bDash = false;
+				m_pCtx->StopMoveImmediate();
+			});
 
-	registerActionTrigger(11, L"DashAttack_Stop", [this]()
-		{
-			m_bDash = false;
-			m_pCtx->StopMoveImmediate();
-		});
+		registerActionTrigger(13, L"DashAttack_DisableBox", [this]()
+			{
 
-	registerActionTrigger(13, L"DashAttack_DisableBox", [this]()
-		{
+			});
 
-		});
+		registerActionTrigger(18, L"DashAttack_StartRun", [this]()
+			{
+				if (m_pCtx->IsKeyPressed_Hold(PlayerState::Move))
+					Exit();
+			});
 
-	registerActionTrigger(18, L"DashAttack_StartRun", [this]()
-		{
-			if (m_pCtx->IsKeyPressed_Hold(PlayerState::Move))
+		registerActionTrigger(endFrame, L"DashAttack_End", [this]()
+			{
 				Exit();
-		});
-
-	registerActionTrigger(endFrame, L"DashAttack_End", [this]()
-		{
-			Exit();
-		});
+			});
+	}
 }
 
 void CPlayerState_DashAttack::Enter()

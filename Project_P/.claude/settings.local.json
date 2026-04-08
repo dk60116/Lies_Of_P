@@ -4,7 +4,10 @@
       "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" DX11EngineProject.sln -p:Configuration=Release -p:Platform=x64 -verbosity:minimal -nologo)",
       "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" DX11EngineProject.sln -p:Configuration=Release -p:Platform=x64 -verbosity:minimal -nologo -t:Client)",
       "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" Client/Default/Client.vcxproj -p:Configuration=Release -p:Platform=x64 -verbosity:minimal -nologo)",
-      "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" Engine/Default/Engine.vcxproj -p:Configuration=Release -p:Platform=x64 -verbosity:minimal -nologo)"
+      "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" Engine/Default/Engine.vcxproj -p:Configuration=Release -p:Platform=x64 -verbosity:minimal -nologo)",
+      "Bash(ls -d Client/Assets/*/)",
+      "Bash(git ls-tree:*)",
+      "Bash(grep -E \"\\\\.\\(cpp|h\\)$\")"
     ]
   }
 }

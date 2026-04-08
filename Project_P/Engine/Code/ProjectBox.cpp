@@ -65,6 +65,137 @@ static _bool DirectoryMatchesQuery(const fs::path& dir, const string& query)
     return false;
 }
 
+static string NormalizeSlashPath(const string& path)
+{
+    string out = path;
+    std::replace(out.begin(), out.end(), '\\', '/');
+    return out;
+}
+
+template<typename ConvertFn>
+static void BatchConvertFiles(const vector<string>& targets, const string& label, ConvertFn convertFn)
+{
+    const int total = (int)targets.size();
+    if (total > 1)
+        CDebug::Log("[Batch:" + label + "] Starting " + to_string(total) + " files");
+
+    int succeeded = 0;
+    for (int i = 0; i < total; ++i)
+    {
+        const string fname = fs::path(targets[i]).filename().string();
+        if (total > 1)
+            CDebug::Log("[" + to_string(i + 1) + "/" + to_string(total) + "] " + fname);
+
+        if (SUCCEEDED(convertFn(targets[i])))
+            ++succeeded;
+        else
+            CDebug::LogError("[" + to_string(i + 1) + "/" + to_string(total) + "] Failed: " + fname);
+    }
+
+    if (total > 1)
+        CDebug::Log("[Batch:" + label + "] Done " + to_string(succeeded) + "/" + to_string(total));
+}
+
+template<typename ExtPred>
+static vector<string> CollectFilesFromPaths(const vector<string>& paths, ExtPred extPred)
+{
+    vector<string> result;
+    for (const string& p : paths)
+    {
+        error_code ec;
+        if (fs::is_directory(p, ec))
+        {
+            for (const auto& e : fs::recursive_directory_iterator(p, ec))
+            {
+                if (e.is_regular_file())
+                {
+                    string ext = ToLowerCopy(e.path().extension().string());
+                    if (!ext.empty()) ext = ext.substr(1);
+                    if (extPred(ext))
+                        result.push_back(e.path().string());
+                }
+            }
+        }
+        else if (fs::is_regular_file(p, ec))
+        {
+            string ext = ToLowerCopy(fs::path(p).extension().string());
+            if (!ext.empty()) ext = ext.substr(1);
+            if (extPred(ext))
+                result.push_back(p);
+        }
+    }
+    return result;
+}
+
+static void DeleteAssociatedBinariesForFile(const fs::path& filePath)
+{
+    const string ext = ToLowerCopy(filePath.extension().string());
+    const string folder = filePath.parent_path().filename().string();
+    const string stem = filePath.stem().string();
+    const string binaryPrefix = folder + "_" + stem;
+
+    struct BinaryMapping { string dir; string ext; };
+    vector<BinaryMapping> mappings;
+
+    if (ext == ".fbx")
+    {
+        mappings.push_back({ "BinaryAssets/MeshData", ".meshdata" });
+        mappings.push_back({ "BinaryAssets/SkinnedMeshData", ".skinneddata" });
+        mappings.push_back({ "BinaryAssets/AnimationClipData", ".animdata" });
+    }
+    else if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga" || ext == ".tif" || ext == ".tiff")
+    {
+        mappings.push_back({ "BinaryAssets/TextureData", ".dds" });
+    }
+    else if (ext == ".animatorcontroller")
+    {
+        mappings.push_back({ "BinaryAssets/AnimatorControllerData", ".acdata" });
+    }
+    else if (ext == ".ttf" || ext == ".otf")
+    {
+        mappings.push_back({ "BinaryAssets/FontData", ".spritefont" });
+    }
+
+    for (const auto& m : mappings)
+    {
+        fs::path binaryPath = fs::path(m.dir) / (binaryPrefix + m.ext);
+        error_code ec;
+        if (fs::exists(binaryPath, ec))
+        {
+            fs::remove(binaryPath, ec);
+            if (!ec)
+                CDebug::Log(L"Deleted associated binary: " + binaryPath.wstring());
+        }
+    }
+}
+
+static void DeleteAssociatedBinaries(const fs::path& sourcePath)
+{
+    error_code ec;
+    if (fs::is_directory(sourcePath, ec))
+    {
+        for (const auto& entry : fs::recursive_directory_iterator(sourcePath, ec))
+        {
+            if (entry.is_regular_file())
+                DeleteAssociatedBinariesForFile(entry.path());
+        }
+    }
+    else if (fs::is_regular_file(sourcePath, ec))
+    {
+        DeleteAssociatedBinariesForFile(sourcePath);
+    }
+}
+
+static string BuildAssetRelativePath(const fs::path& path)
+{
+    error_code ec;
+    const fs::path relative = path.lexically_relative(fs::path(L"../Assets"));
+    if (relative.empty() || (!relative.native().empty() && relative.native()[0] == L'.'))
+        return {};
+
+    return NormalizeSlashPath(relative.generic_string());
+}
+
 CProjectBox::CProjectBox()
 	: m_bRequestDelete(false)
 	, m_createTargetDir("")
@@ -188,6 +319,9 @@ void CProjectBox::Render()
 		if (ImGui::Button("Yes", ImVec2(120, 0)))
 		{
 			for (const string& p : m_vPendingDeletePaths)
+				DeleteAssociatedBinaries(fs::path(p));
+
+			for (const string& p : m_vPendingDeletePaths)
 			{
 				error_code ec;
 				if (fs::is_directory(p, ec))
@@ -250,15 +384,63 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
     string folderName = _dirPath.filename().string();
     string folderLabel = folderName + "##" + _dirPath.string();
 	const _bool isRoot = (_dirPath == fs::path(L"../Assets") || _dirPath == fs::path(L"BinaryAssets"));
+    const string folderPathStr = _dirPath.string();
+
+    m_vFlatVisibleFilesBuilding.push_back(folderPathStr);
 
     if (hasQuery)
         ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
-    const ImGuiTreeNodeFlags folderNodeFlags = ImGuiTreeNodeFlags_OpenOnArrow;
+    ImGuiTreeNodeFlags folderNodeFlags = ImGuiTreeNodeFlags_OpenOnArrow;
+    if (m_vSelectedPaths.count(folderPathStr) > 0)
+        folderNodeFlags |= ImGuiTreeNodeFlags_Selected;
+
     _bool opened = ImGui::TreeNodeEx(folderLabel.c_str(), folderNodeFlags);
+
+    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+    {
+        const bool shiftHeld = ImGui::GetIO().KeyShift;
+        const bool ctrlHeld = ImGui::GetIO().KeyCtrl;
+
+        if (shiftHeld && !m_strLastClickedPath.empty())
+        {
+            auto itA = std::find(m_vFlatVisibleFiles.begin(), m_vFlatVisibleFiles.end(), m_strLastClickedPath);
+            auto itB = std::find(m_vFlatVisibleFiles.begin(), m_vFlatVisibleFiles.end(), folderPathStr);
+            if (itA != m_vFlatVisibleFiles.end() && itB != m_vFlatVisibleFiles.end())
+            {
+                if (itA > itB) std::swap(itA, itB);
+                m_vSelectedPaths.clear();
+                for (auto it = itA; it != itB + 1; ++it)
+                    m_vSelectedPaths.insert(*it);
+            }
+            else
+            {
+                m_vSelectedPaths.clear();
+                m_vSelectedPaths.insert(folderPathStr);
+                m_strLastClickedPath = folderPathStr;
+            }
+        }
+        else if (ctrlHeld)
+        {
+            if (m_vSelectedPaths.count(folderPathStr) > 0)
+                m_vSelectedPaths.erase(folderPathStr);
+            else
+                m_vSelectedPaths.insert(folderPathStr);
+            m_strLastClickedPath = folderPathStr;
+        }
+        else
+        {
+            m_vSelectedPaths.clear();
+            m_vSelectedPaths.insert(folderPathStr);
+            m_strLastClickedPath = folderPathStr;
+        }
+        CEditor::GetInstance().Set_SelectedAssetPath(_dirPath);
+    }
 
     if (ImGui::BeginPopupContextItem(("FolderCtx##" + _dirPath.string()).c_str()))
     {
+        const bool isMultiContext = m_vSelectedPaths.count(folderPathStr) > 0 && m_vSelectedPaths.size() > 1;
+
         if (ImGui::BeginMenu("Create"))
         {
 			if (ImGui::MenuItem("Folder"))
@@ -277,6 +459,79 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
         if (ImGui::MenuItem("Show in Explorer"))
             ShowInExplorer(_dirPath, false);
 
+        ImGui::Separator();
+
+        {
+            vector<string> sources = isMultiContext
+                ? vector<string>(m_vSelectedPaths.begin(), m_vSelectedPaths.end())
+                : vector<string>{ folderPathStr };
+
+            auto fbxPred = [](const string& e) { return e == "fbx"; };
+            auto texPred = [](const string& e) { return e == "png" || e == "jpg" || e == "jpeg" || e == "bmp" || e == "tga" || e == "tif" || e == "tiff"; };
+            auto fontPred = [](const string& e) { return e == "ttf" || e == "otf"; };
+            auto acPred = [](const string& e) { return e == "animatorcontroller"; };
+
+            auto fbxConvertRel = [](const string& t) -> wstring {
+                wstring rel = fs::path(t).wstring();
+                rel = CEngineString::Erase(rel, L"../Assets\\");
+                rel = CEngineString::Replace(rel, L"\\", L"/");
+                return rel;
+            };
+
+            if (ImGui::Selectable("Create Mesh Data"))
+            {
+                auto targets = CollectFilesFromPaths(sources, fbxPred);
+                BatchConvertFiles(targets, "Mesh Data", [&](const string& t) {
+                    return CResources::GetInstance().ConvertFBXToMeshBufferData(fbxConvertRel(t));
+                });
+            }
+
+            if (ImGui::Selectable("Create Skinned Data"))
+            {
+                auto targets = CollectFilesFromPaths(sources, fbxPred);
+                BatchConvertFiles(targets, "Skinned Data", [&](const string& t) {
+                    return CResources::GetInstance().ConvertFBXToSkinnedBufferData(fbxConvertRel(t));
+                });
+            }
+
+            if (ImGui::Selectable("Create Animation Data"))
+            {
+                auto targets = CollectFilesFromPaths(sources, fbxPred);
+                BatchConvertFiles(targets, "Animation Data", [&](const string& t) {
+                    return CResources::GetInstance().ConvertFBXToAnimationClipData(fbxConvertRel(t));
+                });
+            }
+
+            if (ImGui::Selectable("Create Texture Data"))
+            {
+                auto targets = CollectFilesFromPaths(sources, texPred);
+                BatchConvertFiles(targets, "Texture Data", [&](const string& t) {
+                    return CResources::GetInstance().ConvertImageToDDS(fs::path(t).wstring());
+                });
+            }
+
+            if (ImGui::Selectable("Create Font Data"))
+            {
+                auto targets = CollectFilesFromPaths(sources, fontPred);
+                BatchConvertFiles(targets, "Font Data", [&](const string& t) {
+                    return CResources::GetInstance().ConvertOTFTTFToSpriteFont(fs::path(t).wstring());
+                });
+            }
+
+            if (ImGui::Selectable("Build Binary"))
+            {
+                auto targets = CollectFilesFromPaths(sources, acPred);
+                BatchConvertFiles(targets, "Build Binary", [](const string& t) {
+                    wstring rel = fs::path(t).wstring();
+                    rel = CEngineString::Erase(rel, L"../Assets\\");
+                    rel = CEngineString::Replace(rel, L"\\", L"/");
+                    return CResources::GetInstance().ConvertAnimatorControllerToBinary(rel);
+                });
+            }
+        }
+
+        ImGui::Separator();
+
 		if (isRoot)
 		{
 			ImGui::BeginDisabled();
@@ -286,7 +541,15 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 		else if (ImGui::MenuItem("Delete"))
 		{
 			m_vPendingDeletePaths.clear();
-			m_vPendingDeletePaths.push_back(_dirPath.string());
+            if (isMultiContext)
+            {
+                for (const string& p : m_vSelectedPaths)
+                    m_vPendingDeletePaths.push_back(p);
+            }
+            else
+            {
+			    m_vPendingDeletePaths.push_back(folderPathStr);
+            }
 			m_bRequestDelete = true;
 		}
 
@@ -311,7 +574,61 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 
                 m_vFlatVisibleFilesBuilding.push_back(pathStr);
 
+                const string lowerExtension = ToLowerCopy(entry.path().extension().string());
+                const _bool isFbx = (lowerExtension == ".fbx");
                 _bool isSelected = m_vSelectedPaths.count(pathStr) > 0;
+                _bool fbxNodeOpened = false;
+
+                if (isFbx)
+                {
+                    ImGuiTreeNodeFlags fbxFlags = ImGuiTreeNodeFlags_OpenOnArrow;
+                    if (isSelected)
+                        fbxFlags |= ImGuiTreeNodeFlags_Selected;
+
+                    fbxNodeOpened = ImGui::TreeNodeEx(buttonId.c_str(), fbxFlags);
+
+                    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+                    {
+                        const bool shiftHeld = ImGui::GetIO().KeyShift;
+                        const bool ctrlHeld = ImGui::GetIO().KeyCtrl;
+
+                        if (shiftHeld && !m_strLastClickedPath.empty())
+                        {
+                            auto itA = std::find(m_vFlatVisibleFiles.begin(), m_vFlatVisibleFiles.end(), m_strLastClickedPath);
+                            auto itB = std::find(m_vFlatVisibleFiles.begin(), m_vFlatVisibleFiles.end(), pathStr);
+                            if (itA != m_vFlatVisibleFiles.end() && itB != m_vFlatVisibleFiles.end())
+                            {
+                                if (itA > itB) std::swap(itA, itB);
+                                m_vSelectedPaths.clear();
+                                for (auto it = itA; it != itB + 1; ++it)
+                                    m_vSelectedPaths.insert(*it);
+                            }
+                            else
+                            {
+                                m_vSelectedPaths.clear();
+                                m_vSelectedPaths.insert(pathStr);
+                                m_strLastClickedPath = pathStr;
+                            }
+                        }
+                        else if (ctrlHeld)
+                        {
+                            if (isSelected)
+                                m_vSelectedPaths.erase(pathStr);
+                            else
+                                m_vSelectedPaths.insert(pathStr);
+                            m_strLastClickedPath = pathStr;
+                        }
+                        else
+                        {
+                            m_vSelectedPaths.clear();
+                            m_vSelectedPaths.insert(pathStr);
+                            m_strLastClickedPath = pathStr;
+                        }
+                        CEditor::GetInstance().Set_SelectedAssetPath(entry.path());
+                    }
+                }
+                else
+                {
                 if (ImGui::Selectable(buttonId.c_str(), isSelected))
                 {
                     const bool shiftHeld = ImGui::GetIO().KeyShift;
@@ -351,8 +668,9 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                     }
                     CEditor::GetInstance().Set_SelectedAssetPath(entry.path());
                 }
+                }
 
-                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                if (!isFbx && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
                     const fs::path binaryRoot = fs::path(L"BinaryAssets");
                     const fs::path relativeToBinary = entry.path().lexically_relative(binaryRoot);
@@ -360,6 +678,18 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                         ShowInExplorer(entry.path(), true);
                     else
                         CEditor::GetInstance().OpenAsset(entry.path());
+                }
+
+                if (isFbx)
+                {
+                    const string assetRelPath = BuildAssetRelativePath(entry.path());
+                    if (!assetRelPath.empty() && ImGui::BeginDragDropSource())
+                    {
+                        ImGui::SetDragDropPayload("ProjectAssetPath", assetRelPath.c_str(), assetRelPath.size() + 1u);
+                        ImGui::TextUnformatted(filename.c_str());
+                        ImGui::TextUnformatted("Drop into Editor Scene to spawn");
+                        ImGui::EndDragDropSource();
+                    }
                 }
 
                 if (ImGui::BeginPopupContextItem(buttonId.c_str()))
@@ -371,43 +701,9 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 
                     const bool isMultiContext = m_vSelectedPaths.count(pathStr) > 0 && m_vSelectedPaths.size() > 1;
 
-                    auto GetTargets = [&](auto extPred) -> vector<string>
-                    {
-                        if (!isMultiContext)
-                            return { pathStr };
-                        vector<string> result;
-                        for (const string& p : m_vSelectedPaths)
-                        {
-                            string pExt = ToLowerCopy(fs::path(p).extension().string());
-                            if (!pExt.empty()) pExt = pExt.substr(1);
-                            if (extPred(pExt))
-                                result.push_back(p);
-                        }
-                        return result;
-                    };
-
-                    auto BatchConvert = [](const vector<string>& targets, const string& label, auto convertFn)
-                    {
-                        const int total = (int)targets.size();
-                        if (total > 1)
-                            CDebug::Log("[Batch:" + label + "] Starting " + to_string(total) + " files");
-
-                        int succeeded = 0;
-                        for (int i = 0; i < total; ++i)
-                        {
-                            const string fname = fs::path(targets[i]).filename().string();
-                            if (total > 1)
-                                CDebug::Log("[" + to_string(i + 1) + "/" + to_string(total) + "] " + fname);
-
-                            if (SUCCEEDED(convertFn(targets[i])))
-                                ++succeeded;
-                            else
-                                CDebug::LogError("[" + to_string(i + 1) + "/" + to_string(total) + "] Failed: " + fname);
-                        }
-
-                        if (total > 1)
-                            CDebug::Log("[Batch:" + label + "] Done " + to_string(succeeded) + "/" + to_string(total));
-                    };
+                    vector<string> selectedSources = isMultiContext
+                        ? vector<string>(m_vSelectedPaths.begin(), m_vSelectedPaths.end())
+                        : vector<string>{ pathStr };
 
                     if (ImGui::Selectable("Log info"))
                     {
@@ -430,23 +726,19 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 
                         if (ImGui::Selectable("Build Binary"))
                         {
-                            BatchConvert(
-                                GetTargets([](const string& e) { return e == "animatorcontroller"; }),
-                                "Build Binary",
-                                [](const string& t) {
-                                    wstring rel = fs::path(t).wstring();
-                                    rel = CEngineString::Erase(rel, L"../Assets\\");
-                                    rel = CEngineString::Replace(rel, L"\\", L"/");
-                                    return CResources::GetInstance().ConvertAnimatorControllerToBinary(rel);
-                                }
-                            );
+                            auto targets = CollectFilesFromPaths(selectedSources,
+                                [](const string& e) { return e == "animatorcontroller"; });
+                            BatchConvertFiles(targets, "Build Binary", [](const string& t) {
+                                wstring rel = fs::path(t).wstring();
+                                rel = CEngineString::Erase(rel, L"../Assets\\");
+                                rel = CEngineString::Replace(rel, L"\\", L"/");
+                                return CResources::GetInstance().ConvertAnimatorControllerToBinary(rel);
+                            });
                         }
                     }
 
                     if (extension == "fbx")
                     {
-                        auto fbxPred = [](const string& e) { return e == "fbx"; };
-
                         auto fbxConvertRel = [](const string& t) -> wstring {
                             wstring rel = fs::path(t).wstring();
                             rel = CEngineString::Erase(rel, L"../Assets\\");
@@ -456,21 +748,27 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 
                         if (ImGui::Selectable("Create Mesh Data"))
                         {
-                            BatchConvert(GetTargets(fbxPred), "Mesh Data", [&](const string& t) {
+                            auto targets = CollectFilesFromPaths(selectedSources,
+                                [](const string& e) { return e == "fbx"; });
+                            BatchConvertFiles(targets, "Mesh Data", [&](const string& t) {
                                 return CResources::GetInstance().ConvertFBXToMeshBufferData(fbxConvertRel(t));
                             });
                         }
 
                         if (ImGui::Selectable("Create Skinned Data"))
                         {
-                            BatchConvert(GetTargets(fbxPred), "Skinned Data", [&](const string& t) {
+                            auto targets = CollectFilesFromPaths(selectedSources,
+                                [](const string& e) { return e == "fbx"; });
+                            BatchConvertFiles(targets, "Skinned Data", [&](const string& t) {
                                 return CResources::GetInstance().ConvertFBXToSkinnedBufferData(fbxConvertRel(t));
                             });
                         }
 
                         if (ImGui::Selectable("Create Animation Data"))
                         {
-                            BatchConvert(GetTargets(fbxPred), "Animation Data", [&](const string& t) {
+                            auto targets = CollectFilesFromPaths(selectedSources,
+                                [](const string& e) { return e == "fbx"; });
+                            BatchConvertFiles(targets, "Animation Data", [&](const string& t) {
                                 return CResources::GetInstance().ConvertFBXToAnimationClipData(fbxConvertRel(t));
                             });
                         }
@@ -480,13 +778,11 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                     {
                         if (ImGui::Selectable("Create Font Data"))
                         {
-                            BatchConvert(
-                                GetTargets([](const string& e) { return e == "ttf" || e == "otf"; }),
-                                "Font Data",
-                                [](const string& t) {
-                                    return CResources::GetInstance().ConvertOTFTTFToSpriteFont(fs::path(t).wstring());
-                                }
-                            );
+                            auto targets = CollectFilesFromPaths(selectedSources,
+                                [](const string& e) { return e == "ttf" || e == "otf"; });
+                            BatchConvertFiles(targets, "Font Data", [](const string& t) {
+                                return CResources::GetInstance().ConvertOTFTTFToSpriteFont(fs::path(t).wstring());
+                            });
                         }
                     }
 
@@ -494,15 +790,13 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                     {
                         if (ImGui::Selectable("Create Texture Data"))
                         {
-                            BatchConvert(
-                                GetTargets([](const string& e) {
+                            auto targets = CollectFilesFromPaths(selectedSources,
+                                [](const string& e) {
                                     return e == "png" || e == "jpg" || e == "jpeg" || e == "bmp" || e == "tga" || e == "tif" || e == "tiff";
-                                }),
-                                "Texture Data",
-                                [](const string& t) {
-                                    return CResources::GetInstance().ConvertImageToDDS(fs::path(t).wstring());
-                                }
-                            );
+                                });
+                            BatchConvertFiles(targets, "Texture Data", [](const string& t) {
+                                return CResources::GetInstance().ConvertImageToDDS(fs::path(t).wstring());
+                            });
                         }
                     }
 
@@ -522,6 +816,69 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                     }
 
                     ImGui::EndPopup();
+                }
+
+                if (isFbx)
+                {
+                    if (fbxNodeOpened)
+                    {
+                        const string fbxStem = entry.path().stem().string();
+                        const string fbxFolder = entry.path().parent_path().filename().string();
+                        const string binaryPrefix = fbxFolder + "_" + fbxStem;
+
+                        struct BinaryEntry
+                        {
+                            string label;
+                            fs::path path;
+                        };
+                        vector<BinaryEntry> binaryEntries;
+
+                        {
+                            fs::path meshPath = fs::path("BinaryAssets/MeshData") / (binaryPrefix + ".meshdata");
+                            error_code ec;
+                            if (fs::exists(meshPath, ec))
+                                binaryEntries.push_back({ binaryPrefix + ".meshdata", meshPath });
+                        }
+                        {
+                            fs::path skinnedPath = fs::path("BinaryAssets/SkinnedMeshData") / (binaryPrefix + ".skinneddata");
+                            error_code ec;
+                            if (fs::exists(skinnedPath, ec))
+                                binaryEntries.push_back({ binaryPrefix + ".skinneddata", skinnedPath });
+                        }
+                        {
+                            fs::path animPath = fs::path("BinaryAssets/AnimationClipData") / (binaryPrefix + ".animdata");
+                            error_code ec;
+                            if (fs::exists(animPath, ec))
+                                binaryEntries.push_back({ binaryPrefix + ".animdata", animPath });
+                        }
+
+                        if (binaryEntries.empty())
+                        {
+                            ImGui::TextDisabled("No binary data");
+                        }
+                        else
+                        {
+                            for (const auto& be : binaryEntries)
+                            {
+                                const string childId = be.label + "##" + be.path.string();
+                                const string childPathStr = be.path.string();
+                                _bool childSelected = m_vSelectedPaths.count(childPathStr) > 0;
+
+                                if (ImGui::Selectable(childId.c_str(), childSelected))
+                                {
+                                    m_vSelectedPaths.clear();
+                                    m_vSelectedPaths.insert(childPathStr);
+                                    m_strLastClickedPath = childPathStr;
+                                    CEditor::GetInstance().Set_SelectedAssetPath(be.path);
+                                }
+
+                                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                                    ShowInExplorer(be.path, true);
+                            }
+                        }
+
+                        ImGui::TreePop();
+                    }
                 }
             }
         }

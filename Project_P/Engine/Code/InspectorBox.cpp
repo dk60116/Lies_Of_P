@@ -1119,6 +1119,15 @@ static vector<SkinnedMeshBundle> EnsureSceneSkinnedMeshBundles(const wstring& sc
     return CResources::GetInstance().CreateSceneSkinnedBundle(sceneMeshResourceName, skinnedInfos.initList, skinnedInfos.skeletalList, FILTER_MESHBUFFER | FILTER_MATERIAL, nullptr, false);
 }
 
+static void ClearMaterialTextures(CMaterial* material)
+{
+    if (!material)
+        return;
+
+    while (material->Get_TextureCount() > 0u)
+        material->Remove_Texture(static_cast<_int>(material->Get_TextureCount() - 1u));
+}
+
 static void ClearMeshRendererMaterialTextures(const vector<CMeshRenderer*>& renderers)
 {
     for (CMeshRenderer* renderer : renderers)
@@ -1126,12 +1135,7 @@ static void ClearMeshRendererMaterialTextures(const vector<CMeshRenderer*>& rend
         if (!renderer)
             continue;
 
-        CMaterial* material = renderer->Get_Material();
-        if (!material)
-            continue;
-
-        while (material->Get_TextureCount() > 0u)
-            material->Remove_Texture(static_cast<_int>(material->Get_TextureCount() - 1u));
+        ClearMaterialTextures(renderer->Get_Material());
     }
 }
 
@@ -1259,6 +1263,8 @@ static void ApplySkinnedMeshSelectionToObject(CGameObject* obj, CSkinnedMeshRend
         skinnedMeshRenderer->Set_MeshBuffer(bundles[0].meshBuffer);
         if (bundles[0].material)
             skinnedMeshRenderer->Set_Material(bundles[0].material);
+        if (!selectedSkinnedData)
+            ClearMaterialTextures(skinnedMeshRenderer->Get_Material());
         return;
     }
 
@@ -1287,6 +1293,7 @@ static void ApplySkinnedMeshSelectionToObject(CGameObject* obj, CSkinnedMeshRend
     skinnedMeshRenderer->Set_MeshBuffer(bundles[0].meshBuffer);
     if (bundles[0].material)
         skinnedMeshRenderer->Set_Material(bundles[0].material);
+    ClearMaterialTextures(skinnedMeshRenderer->Get_Material());
 }
 
 static void QueueSkinnedMeshSelectionRequest(CGameObject* obj, CSkinnedMeshRenderer* skinnedMeshRenderer, const string& relPath, const _bool selectedSkinnedData)

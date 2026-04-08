@@ -735,6 +735,46 @@ void CAnimator::Stop()
 	m_bIsPlaying = false;
 }
 
+static CAnimationClip* TryLoadAnimationClipFromBinary(const wstring& motionName)
+{
+	const fs::path animDir = fs::path("BinaryAssets/AnimationClipData");
+	error_code ec;
+	if (!fs::exists(animDir, ec))
+		return nullptr;
+
+	const wstring suffix = L"_" + motionName + L".animdata";
+
+	for (const auto& entry : fs::directory_iterator(animDir, ec))
+	{
+		if (!entry.is_regular_file())
+			continue;
+
+		const wstring filename = entry.path().filename().wstring();
+		if (filename.size() >= suffix.size() &&
+			filename.compare(filename.size() - suffix.size(), suffix.size(), suffix) == 0)
+		{
+			const wstring animdataName = entry.path().filename().stem().wstring();
+			// e.g. "Animations_Eve_Attack_LLS23"
+			// Split into folder part and file part using first underscore
+			const size_t underscorePos = animdataName.find(L'_');
+			if (underscorePos == wstring::npos)
+				continue;
+
+			const wstring animdataPath = animdataName + L".animdata";
+			auto infoList = CResources::GetInstance().ReadAnimationClipBufferInfos(animdataPath);
+
+			const wstring clipResourceName = motionName + L" (Animation Clip)";
+			CAnimationClip* newClip = CResources::LoadResourceComplete_Scene<CAnimationClip>(clipResourceName, L"BinaryAssets/AnimationClipData/" + animdataPath, nullptr, false);
+
+			if (newClip && !infoList.empty())
+				newClip->Initiailize_Custom(infoList[0], nullptr);
+
+			return newClip;
+		}
+	}
+	return nullptr;
+}
+
 void CAnimator::Set_Controller(CAnimatorController* _controller, const _bool _playEntry)
 {
 	(void)_playEntry;
@@ -761,9 +801,15 @@ void CAnimator::Set_Controller(CAnimatorController* _controller, const _bool _pl
 					if (m_mAnimationList.find(child.motionName) != m_mAnimationList.end())
 						continue;
 					wstring clipName = child.motionName + L" (Animation Clip)";
-					CAnimationClip* clip = CResources::GetInstance().LoadOnScene<CAnimationClip>(clipName);
+					CAnimationClip* clip = nullptr;
+					if (CScene* scene = CSceneManager::GetInstance().Get_CrtScene())
+						clip = dynamic_cast<CAnimationClip*>(scene->Find_Resource(clipName));
+					if (!clip)
+						clip = TryLoadAnimationClipFromBinary(child.motionName);
 					if (clip)
 						Add_Animation(child.motionName, clip);
+					else
+						CDebug::LogError(L"Failed load Animation Clip: " + child.motionName);
 				}
 				continue;
 			}
@@ -774,9 +820,15 @@ void CAnimator::Set_Controller(CAnimatorController* _controller, const _bool _pl
 					continue;
 
 				wstring clipName = state.motionName + L" (Animation Clip)";
-				CAnimationClip* clip = CResources::GetInstance().LoadOnScene<CAnimationClip>(clipName);
+				CAnimationClip* clip = nullptr;
+				if (CScene* scene = CSceneManager::GetInstance().Get_CrtScene())
+					clip = dynamic_cast<CAnimationClip*>(scene->Find_Resource(clipName));
+				if (!clip)
+					clip = TryLoadAnimationClipFromBinary(state.motionName);
 				if (clip)
 					Add_Animation(state.motionName, clip);
+				else
+					CDebug::LogError(L"Failed load Animation Clip: " + state.motionName);
 			}
 		}
 		m_ControllerInst.Initialize(m_pController, this, true);

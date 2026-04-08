@@ -17,29 +17,35 @@ void CPlayerState_Move::Initialize(CPlayerControllerContext* _ctx, const CPlayer
     {
         CAnimationClip* clip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_SprintForward_During (Animation Clip)");
 
-        const wstring clipName = clip->Get_ResourceName();
-        const _uint frameCount = clip->Get_FrameCount();
+        if (clip)
+        {
+            const wstring clipName = clip->Get_ResourceName();
+            const _uint frameCount = clip->Get_FrameCount();
 
-        CAnimationClip::ActionTrigger at = { 16, L"Sprint_During_End" };
-        clip->Add_ActionTrigger(at);
-        m_pCtx->Animator()->RegisterActionHandler(L"Sprint_During_End", [this]()
-            {
-                m_pCtx->Animator()->Stop();
-            });
+            CAnimationClip::ActionTrigger at = { 16, L"Sprint_During_End" };
+            clip->Add_ActionTrigger(at);
+            m_pCtx->Animator()->RegisterActionHandler(L"Sprint_During_End", [this]()
+                {
+                    m_pCtx->Animator()->Stop();
+                });
+        }
     }
 
     {
         CAnimationClip* clip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_BattleSprintForward_During (Animation Clip)");
 
-        const wstring clipName = clip->Get_ResourceName();
-        const _uint frameCount = clip->Get_FrameCount();
+        if (clip)
+        {
+            const wstring clipName = clip->Get_ResourceName();
+            const _uint frameCount = clip->Get_FrameCount();
 
-        CAnimationClip::ActionTrigger at = { 16, L"BattleSprint_During_End" };
-        clip->Add_ActionTrigger(at);
-        m_pCtx->Animator()->RegisterActionHandler(L"BattleSprint_During_End", [this]()
-            {
-                m_pCtx->Animator()->Stop();
-            });
+            CAnimationClip::ActionTrigger at = { 16, L"BattleSprint_During_End" };
+            clip->Add_ActionTrigger(at);
+            m_pCtx->Animator()->RegisterActionHandler(L"BattleSprint_During_End", [this]()
+                {
+                    m_pCtx->Animator()->Stop();
+                });
+        }
     }
 }
 

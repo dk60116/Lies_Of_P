@@ -2115,47 +2115,27 @@ void CAnimatorControllerEditorBox::RefreshMotionOptions()
     m_motionOptions.clear();
     m_bMotionOptionsDirty = false;
 
-    fs::path sceneDir = fs::path("../Assets") / "Scenes";
+    const fs::path animDataDir = fs::path("BinaryAssets/AnimationClipData");
 
     error_code ec;
-    if (!fs::exists(sceneDir, ec) || ec)
-    {
-        CDebug::LogError("Scene folder not found: " + sceneDir.generic_string());
+    if (!fs::exists(animDataDir, ec))
         return;
-    }
 
     std::unordered_set<string> uniq;
 
-    for (auto it = fs::directory_iterator(sceneDir, ec); it != fs::directory_iterator(); it.increment(ec))
+    for (const auto& entry : fs::directory_iterator(animDataDir, ec))
     {
-        if (ec) 
-            break;
-
-        const fs::path& p = it->path();
-        if (!it->is_regular_file(ec))
-            continue;
-        if (p.extension() != ".scene") 
+        if (!entry.is_regular_file())
             continue;
 
-        ifstream ifs(p, ios::binary);
-        if (!ifs.is_open()) 
+        const fs::path& p = entry.path();
+        if (p.extension() != ".animdata")
             continue;
 
-        string line;
-        while (getline(ifs, line))
-        {
-            string t = Trim(line);
-            if (t.empty()) 
-                continue;
-            if (IsSceneCommentLine(t))
-                continue;            
-            if (!ContainsAnimationClipTag(t)) 
-                continue;    
-
-            string key = ExtractKeyBeforeColon(t);
-            if (!key.empty())
-                uniq.insert(key);
-        }
+        const string stem = p.stem().string();
+        const size_t underscorePos = stem.find('_');
+        if (underscorePos != string::npos && underscorePos + 1 < stem.size())
+            uniq.insert(stem.substr(underscorePos + 1));
     }
 
     m_motionOptions.assign(uniq.begin(), uniq.end());

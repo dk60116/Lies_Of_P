@@ -114,7 +114,7 @@ public:
 	static CollisionObjectType GetCollisionObjectType(const ObjectLayer layer);
 	static _uint GetSceneLayerIndex(const ObjectLayer layer);
 
-	vector<RAYCASTHIT> Raycast(const Ray& _ray, const CSceneManager::LayerMask _mask = 0);
+	vector<RAYCASTHIT> Raycast(const Ray& _ray, const CSceneManager::LayerMask _mask = 0, const _bool _debugDraw = true);
 	vector<RAYCASTHIT> BoxRaycast(const BoxRay& _boxRay, const CSceneManager::LayerMask _mask = 0);
 	vector<RAYCASTHIT> SphereRaycast(const SphereRay& _sphereRay, const CSceneManager::LayerMask _mask = 0);
 

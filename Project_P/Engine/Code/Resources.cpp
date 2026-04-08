@@ -751,6 +751,8 @@ HRESULT CResources::Initialize()
 	if (!fs::exists("BinaryAssets/TextureData"))
 		fs::create_directories("BinaryAssets/TextureData");
 
+	CleanupOrphanedBinaries();
+
 	Ready_GameResources();
 
 	return S_OK;
@@ -762,6 +764,82 @@ void CResources::Release()
 		Safe_Release((*it).second);
 
 	m_mGameResourceList.clear();
+}
+
+static _bool HasSourceAssetForBinary(const fs::path& binaryFile, const wstring& assetRoot, const vector<wstring>& sourceExts)
+{
+	const wstring stem = binaryFile.stem().wstring();
+
+	for (size_t i = 0; i < stem.size(); ++i)
+	{
+		if (stem[i] != L'_')
+			continue;
+
+		const wstring folder = stem.substr(0, i);
+		const wstring name = stem.substr(i + 1);
+
+		if (folder.empty() || name.empty())
+			continue;
+
+		for (const wstring& ext : sourceExts)
+		{
+			// Search recursively under assetRoot for folder/name+ext
+			error_code ec;
+			for (const auto& dir : fs::recursive_directory_iterator(assetRoot, fs::directory_options::skip_permission_denied, ec))
+			{
+				if (!dir.is_directory())
+					continue;
+
+				if (dir.path().filename().wstring() == folder)
+				{
+					error_code ec2;
+					if (fs::exists(dir.path() / (name + ext), ec2))
+						return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+void CResources::CleanupOrphanedBinaries()
+{
+	const wstring assetRoot = m_strDefaultAssetPath;
+
+	struct BinaryFolderInfo
+	{
+		string dir;
+		vector<wstring> sourceExts;
+	};
+
+	const vector<BinaryFolderInfo> folders =
+	{
+		{ "BinaryAssets/MeshData",                 { L".fbx" } },
+		{ "BinaryAssets/SkinnedMeshData",          { L".fbx" } },
+		{ "BinaryAssets/AnimationClipData",        { L".fbx" } },
+		{ "BinaryAssets/TextureData",              { L".png", L".jpg", L".jpeg", L".bmp", L".tga", L".tif", L".tiff" } },
+		{ "BinaryAssets/AnimatorControllerData",   { L".animatorcontroller" } },
+	};
+
+	for (const auto& folder : folders)
+	{
+		error_code ec;
+		if (!fs::exists(folder.dir, ec))
+			continue;
+
+		for (const auto& entry : fs::directory_iterator(folder.dir, ec))
+		{
+			if (!entry.is_regular_file())
+				continue;
+
+			if (!HasSourceAssetForBinary(entry.path(), assetRoot, folder.sourceExts))
+			{
+				CDebug::Log(L"Cleanup orphaned binary: " + entry.path().wstring());
+				error_code removeEc;
+				fs::remove(entry.path(), removeEc);
+			}
+		}
+	}
 }
 
 HRESULT CResources::ConvertFBXToMeshBufferData(const wstring _filePath)

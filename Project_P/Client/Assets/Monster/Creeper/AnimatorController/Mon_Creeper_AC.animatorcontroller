@@ -17,20 +17,20 @@ motion=Anim_Mon_Creeper_Idle
 speedMul=1.000000
 pos=216,72
 
-[state Run_Loop]
-motion=Anim_Mon_Creeper_Run_Loop
+[state Attack]
+motion=Anim_Mon_Creeper_BaseAttack
 speedMul=1.000000
-pos=692,273
+pos=199,-101
 
 [state Run_Start]
 motion=Anim_Mon_Creeper_Run_Start
 speedMul=1.000000
 pos=595,118
 
-[state Attack]
-motion=Anim_Mon_Creeper_BaseAttack
+[state Run_Loop]
+motion=Anim_Mon_Creeper_Run_Loop
 speedMul=1.000000
-pos=199,-101
+pos=692,273
 
 [state Run_End]
 motion=Anim_Mon_Creeper_Run_End

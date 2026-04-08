@@ -3400,7 +3400,6 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 			{
 				if (CEngineString::Contains(e.format, L"[Animation Clip]") && !e.path.empty())
 					previousNonEditorClipPaths.insert(e.path);
-				preservedManualLines.push_back(line);
 			}
 		}
 	}

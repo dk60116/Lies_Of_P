@@ -6,6 +6,8 @@
 #include "AnimatorControllerEditorBox.h"
 #include "Physics.h"
 #include "Camera.h"
+#include "Material.h"
+#include "Renderer.h"
 
 namespace
 {
@@ -29,6 +31,415 @@ namespace
 			return candidates[3];
 
 		return candidates[0];
+	}
+
+	static string NormalizeSlashPath(const string& path)
+	{
+		string out = path;
+		std::replace(out.begin(), out.end(), '\\', '/');
+		return out;
+	}
+
+	static string BuildMeshDataBaseName(const string& assetRelPath)
+	{
+		const string normalized = NormalizeSlashPath(assetRelPath);
+		const size_t slash = normalized.find_last_of('/');
+		const string fileName = (slash == string::npos) ? normalized : normalized.substr(slash + 1);
+		const string folderPart = (slash == string::npos) ? string() : normalized.substr(0, slash);
+		const size_t folderSlash = folderPart.find_last_of('/');
+		const string folder = folderPart.empty() ? string("Root") : folderPart.substr(folderSlash == string::npos ? 0 : folderSlash + 1);
+		const size_t dot = fileName.find_last_of('.');
+		const string stem = (dot == string::npos) ? fileName : fileName.substr(0, dot);
+		return folder + "_" + stem;
+	}
+
+	static string MakeUniqueSceneEntryName(const string& base)
+	{
+		const auto now = std::chrono::system_clock::now().time_since_epoch();
+		const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+		return base + "_Auto_" + to_string(ms);
+	}
+
+	static void ClearMaterialTextures(CMaterial* material)
+	{
+		if (!material)
+			return;
+
+		while (material->Get_TextureCount() > 0u)
+			material->Remove_Texture(static_cast<_int>(material->Get_TextureCount() - 1u));
+	}
+
+	static void ClearSpawnedRendererTexturesRecursive(CGameObject* obj)
+	{
+		if (!obj)
+			return;
+
+		for (CComponent* component : obj->Get_ComponentList())
+		{
+			CRenderer* renderer = dynamic_cast<CRenderer*>(component);
+			if (!renderer)
+				continue;
+
+			ClearMaterialTextures(renderer->Get_Material());
+		}
+
+		CTransform* transform = obj->GetTransform();
+		if (!transform)
+			return;
+
+		for (CTransform* child : transform->Get_ChldList())
+		{
+			if (!child)
+				continue;
+
+			CGameObject* childObj = child->Get_GameObject();
+			if (!childObj)
+				continue;
+
+			ClearSpawnedRendererTexturesRecursive(childObj);
+		}
+	}
+
+	static _bool FindSceneEntryWithFormat(const fs::path& scenePath, const string& assetRelPath, const string& format, string& outEntryName)
+	{
+		ifstream in(scenePath);
+		if (!in.is_open())
+			return false;
+
+		const string normalizedTarget = NormalizeSlashPath(assetRelPath);
+		string line;
+
+		while (getline(in, line))
+		{
+			if (line.empty() || CEngineString::Contains(line, "//") || !CEngineString::Contains(line, " : "))
+				continue;
+
+			vector<string> parts = CEngineString::Split(line, " : ");
+			if (parts.size() < 3)
+				continue;
+
+			if (NormalizeSlashPath(parts[1]) != normalizedTarget)
+				continue;
+
+			if (parts[2] != format)
+				continue;
+
+			outEntryName = parts[0];
+			return true;
+		}
+
+		return false;
+	}
+
+	static _bool EnsureSceneEntryWithFormat(const fs::path& scenePath, const string& assetRelPath, const string& format, string& outEntryName)
+	{
+		if (FindSceneEntryWithFormat(scenePath, assetRelPath, format, outEntryName))
+			return true;
+
+		fs::create_directories(scenePath.parent_path());
+		outEntryName = MakeUniqueSceneEntryName(BuildMeshDataBaseName(assetRelPath));
+
+		ofstream out(scenePath, ios::app);
+		if (!out.is_open())
+			return false;
+
+		out << outEntryName << " : " << NormalizeSlashPath(assetRelPath) << " : " << format << "\n";
+		return true;
+	}
+
+	static vector<MeshBundle> EnsureSceneMeshBundles(const wstring& sceneMeshResourceName, const string& meshDataFile, const _bool forceReload = false)
+	{
+		if (!forceReload)
+		{
+			vector<MeshBundle> bundles = CResources::GetInstance().LoadMeshBuffersOnScene(sceneMeshResourceName);
+			if (!bundles.empty())
+				return bundles;
+		}
+
+		vector<CMeshBuffer::MeshBufferInitiaizeInfo> meshInfos = CResources::GetInstance().ReadMeshBufferInfos(CEngineString::StringToWString(meshDataFile));
+		if (meshInfos.empty())
+			return {};
+
+		CResources::GetInstance().CreateSceneMeshBundle(sceneMeshResourceName, meshInfos, FILTER_MESHBUFFER | FILTER_MATERIAL, nullptr, false);
+		return CResources::GetInstance().LoadMeshBuffersOnScene(sceneMeshResourceName);
+	}
+
+	static vector<SkinnedMeshBundle> EnsureSceneSkinnedMeshBundles(const wstring& sceneMeshResourceName, const string& skinnedDataFile, const _bool forceReload = false)
+	{
+		if (!forceReload)
+		{
+			vector<SkinnedMeshBundle> bundles = CResources::GetInstance().LoadSkinnedMeshBuffersOnScene(sceneMeshResourceName);
+			if (!bundles.empty())
+				return bundles;
+		}
+
+		auto skinnedInfos = CResources::GetInstance().ReadSkinnedBufferInfos(CEngineString::StringToWString(skinnedDataFile));
+		if (skinnedInfos.initList.empty())
+			return {};
+
+		return CResources::GetInstance().CreateSceneSkinnedBundle(sceneMeshResourceName, skinnedInfos.initList, skinnedInfos.skeletalList, FILTER_MESHBUFFER | FILTER_MATERIAL, nullptr, false);
+	}
+
+	static _bool CopyImportedBinary(const fs::path& sourcePath, const fs::path& targetPath)
+	{
+		if (!fs::exists(sourcePath))
+			return false;
+
+		if (sourcePath == targetPath)
+			return true;
+
+		error_code ec;
+		fs::create_directories(targetPath.parent_path(), ec);
+		ec.clear();
+		fs::copy_file(sourcePath, targetPath, fs::copy_options::overwrite_existing, ec);
+		return !ec;
+	}
+
+	static wstring BuildUniqueObjectName(CScene* scene, const wstring& desiredName)
+	{
+		if (!scene)
+			return desiredName;
+
+		unordered_set<wstring> existingNames;
+		for (CGameObject* obj : scene->Get_ObjectList())
+		{
+			if (obj)
+				existingNames.insert(obj->Get_ObjectName());
+		}
+
+		if (existingNames.find(desiredName) == existingNames.end())
+			return desiredName;
+
+		for (_uint i = 1; i < 1000000; ++i)
+		{
+			const wstring candidate = desiredName + L" (" + to_wstring(i) + L")";
+			if (existingNames.find(candidate) == existingNames.end())
+				return candidate;
+		}
+
+		return desiredName + L" (New)";
+	}
+
+	static vector3 ResolveSceneDropSpawnPosition(CCamera* editorCamera, const vector2Int& dropViewportPos)
+	{
+		if (!editorCamera || !editorCamera->GetTransform())
+			return vector3::zero();
+
+		const vector3 cameraPos = editorCamera->GetTransform()->Get_Position();
+		const vector3 cameraForward = editorCamera->GetTransform()->Get_Directions().forward.normalized();
+		const vector3 fallbackPosition = cameraPos + cameraForward * 10.f;
+
+		const CPhysics::Ray ray = editorCamera->ScreenPointToRay_Editor(dropViewportPos, 50000.f);
+		const vector<CPhysics::RAYCASTHIT> hits = CPhysics::GetInstance().Raycast(ray, 0, false);
+		for (const CPhysics::RAYCASTHIT& hit : hits)
+		{
+			if (!hit.isHit || !hit.object)
+				continue;
+
+			if (hit.object == editorCamera->Get_GameObject())
+				continue;
+
+			return hit.hitPos + hit.hitNormal * 0.05f;
+		}
+
+		const vector3 up = vector3::up();
+		const _float denom = ray.dir.dot(up);
+		if (fabsf(denom) > 1e-5f)
+		{
+			const _float t = -ray.origin.dot(up) / denom;
+			if (t > 0.f && t < ray.maxDist)
+				return ray.origin + ray.dir * t;
+		}
+
+		return fallbackPosition;
+	}
+
+	static _bool SpawnFbxAssetIntoScene(const string& assetRelPath, const vector2Int& dropViewportPos, CGameObject*& outSpawnedRoot)
+	{
+		outSpawnedRoot = nullptr;
+
+		CScene* scene = CSceneManager::GetInstance().Get_CrtScene();
+		if (!scene)
+			return false;
+
+		CCamera* editorCamera = scene->Get_EditorCamera();
+		if (!editorCamera)
+			return false;
+
+		const string normalizedRelPath = NormalizeSlashPath(assetRelPath);
+		const string extension = CEditor::ToLowerCopy(fs::path(normalizedRelPath).extension().string());
+		if (extension != ".fbx")
+			return false;
+
+		const fs::path sourceAssetPath = fs::path(L"../Assets") / fs::path(normalizedRelPath);
+		if (!fs::exists(sourceAssetPath))
+			return false;
+
+		const wstring relAssetPathW = CEngineString::StringToWString(normalizedRelPath);
+		CResources::GetInstance().ConvertFBXToMeshBufferData(relAssetPathW);
+		CResources::GetInstance().ConvertFBXToSkinnedBufferData(relAssetPathW);
+
+		const string convertedBase = BuildMeshDataBaseName(normalizedRelPath);
+		const fs::path convertedMeshDataPath = fs::path(L"BinaryAssets/MeshData") / fs::path(convertedBase + ".meshdata");
+		const fs::path convertedSkinnedDataPath = fs::path(L"BinaryAssets/SkinnedMeshData") / fs::path(convertedBase + ".skinneddata");
+		const fs::path scenePath = fs::path(L"../Assets/Scenes") / fs::path(CEngineString::WStringToString(scene->Get_SceneName()) + ".scene");
+
+		string skinnedEntryName;
+		const _bool hadSkinnedEntry = FindSceneEntryWithFormat(scenePath, normalizedRelPath, "[Skinned Mesh]", skinnedEntryName);
+		if (!hadSkinnedEntry && fs::exists(convertedSkinnedDataPath))
+		{
+			if (!EnsureSceneEntryWithFormat(scenePath, normalizedRelPath, "[Skinned Mesh]", skinnedEntryName))
+				return false;
+		}
+
+		_bool spawned = false;
+		const vector3 spawnPosition = ResolveSceneDropSpawnPosition(editorCamera, dropViewportPos);
+		const wstring desiredRootName = CEngineString::StringToWString(fs::path(normalizedRelPath).stem().string());
+
+		if (!skinnedEntryName.empty())
+		{
+			const string expectedSkinnedDataFile = skinnedEntryName + ".skinneddata";
+			const fs::path expectedSkinnedDataPath = fs::path(L"BinaryAssets/SkinnedMeshData") / fs::path(expectedSkinnedDataFile);
+
+			if (fs::exists(convertedSkinnedDataPath) && !CopyImportedBinary(convertedSkinnedDataPath, expectedSkinnedDataPath))
+				return false;
+
+			vector<SkinnedMeshBundle> skinnedBundles = EnsureSceneSkinnedMeshBundles(
+				CEngineString::StringToWString(skinnedEntryName + " (MeshBuffer)"),
+				expectedSkinnedDataFile,
+				fs::exists(convertedSkinnedDataPath));
+			auto skinnedInfo = CResources::GetInstance().ReadSkinnedBufferInfos(CEngineString::StringToWString(expectedSkinnedDataFile));
+
+			if (!skinnedBundles.empty() && !skinnedInfo.initList.empty() && !skinnedInfo.skeletalList.empty())
+			{
+				CGameObject* root = scene->Add_GameObject(BuildUniqueObjectName(scene, desiredRootName));
+				if (!root || !root->GetTransform())
+					return false;
+
+				root->GetTransform()->Set_Position(spawnPosition);
+				root->CreateSkinnedMeshHierachy(skinnedBundles, skinnedInfo.skeletalList, 1.f, vector3::zero());
+				ClearSpawnedRendererTexturesRecursive(root);
+				outSpawnedRoot = root;
+				spawned = true;
+			}
+		}
+
+		if (spawned)
+			return true;
+
+		string meshEntryName;
+		if (!EnsureSceneEntryWithFormat(scenePath, normalizedRelPath, "[Mesh]", meshEntryName))
+			return false;
+
+		const string expectedMeshDataFile = meshEntryName + ".meshdata";
+		const fs::path expectedMeshDataPath = fs::path(L"BinaryAssets/MeshData") / fs::path(expectedMeshDataFile);
+		if (fs::exists(convertedMeshDataPath) && !CopyImportedBinary(convertedMeshDataPath, expectedMeshDataPath))
+			return false;
+
+		vector<MeshBundle> meshBundles = EnsureSceneMeshBundles(
+			CEngineString::StringToWString(meshEntryName + " (MeshBuffer)"),
+			expectedMeshDataFile,
+			fs::exists(convertedMeshDataPath));
+		if (meshBundles.empty())
+			return false;
+
+		CGameObject* root = scene->Add_GameObject(BuildUniqueObjectName(scene, desiredRootName));
+		if (!root || !root->GetTransform())
+		return false;
+
+	root->GetTransform()->Set_Position(spawnPosition);
+	root->CreateMeshHierachy(meshBundles, 1.f);
+	ClearSpawnedRendererTexturesRecursive(root);
+	outSpawnedRoot = root;
+	return true;
+}
+
+	static void RenderSceneAssetDropTargetOverlay()
+	{
+		const ImGuiPayload* activePayload = ImGui::GetDragDropPayload();
+		if (!activePayload || !activePayload->IsDataType("ProjectAssetPath"))
+			return;
+
+		if (!activePayload->Data || activePayload->DataSize <= 0)
+			return;
+
+		const char* payloadPath = reinterpret_cast<const char*>(activePayload->Data);
+		if (!payloadPath || payloadPath[0] == '\0')
+			return;
+
+		const string assetRelPath = NormalizeSlashPath(payloadPath);
+		if (CEditor::ToLowerCopy(fs::path(assetRelPath).extension().string()) != ".fbx")
+			return;
+
+		const CEditor::EDITORWINOPTION options = CEditor::GetInstance().Get_Options();
+		ImGuiViewport* viewport = ImGui::GetMainViewport();
+		if (!viewport)
+			return;
+
+		const ImVec2 scenePos = ImVec2(viewport->Pos.x, viewport->Pos.y + static_cast<_float>(options.topBarHeight));
+		const ImVec2 sceneSize = ImVec2(
+			static_cast<_float>(CEditor::GetInstance().Get_WindowResolution().x - options.projectWidth - options.hierachyWidth - options.inspectorWidth),
+			static_cast<_float>(CEditor::GetInstance().Get_WindowResolution().y - options.topBarHeight));
+
+		if (sceneSize.x <= 1.f || sceneSize.y <= 1.f)
+			return;
+
+		ImGui::SetNextWindowPos(scenePos);
+		ImGui::SetNextWindowSize(sceneSize);
+		ImGui::SetNextWindowBgAlpha(0.10f);
+
+		const ImGuiWindowFlags flags =
+			ImGuiWindowFlags_NoDecoration |
+			ImGuiWindowFlags_NoMove |
+			ImGuiWindowFlags_NoSavedSettings |
+			ImGuiWindowFlags_NoNav |
+			ImGuiWindowFlags_NoScrollbar |
+			ImGuiWindowFlags_NoScrollWithMouse;
+
+		if (!ImGui::Begin("##EditorSceneAssetDropTarget", nullptr, flags))
+		{
+			ImGui::End();
+			return;
+		}
+
+		ImGui::InvisibleButton("##EditorSceneAssetDropTargetButton", sceneSize);
+
+		_bool delivered = false;
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ProjectAssetPath", ImGuiDragDropFlags_AcceptBeforeDelivery))
+			{
+				if (payload->Preview)
+				{
+					ImDrawList* drawList = ImGui::GetWindowDrawList();
+					const ImVec2 min = ImGui::GetItemRectMin();
+					const ImVec2 max = ImGui::GetItemRectMax();
+					drawList->AddRectFilled(min, max, IM_COL32(80, 150, 110, 40), 6.f);
+					drawList->AddRect(min, max, IM_COL32(120, 220, 160, 220), 6.f, 0, 2.f);
+
+					const string label = "Drop FBX to spawn in scene";
+					const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+					const ImVec2 textPos = ImVec2(
+						min.x + (sceneSize.x - textSize.x) * 0.5f,
+						min.y + (sceneSize.y - textSize.y) * 0.5f);
+					drawList->AddText(textPos, IM_COL32(230, 255, 235, 255), label.c_str());
+				}
+
+				if (payload->Delivery)
+					delivered = true;
+			}
+
+			ImGui::EndDragDropTarget();
+		}
+
+		ImGui::End();
+
+		if (!delivered)
+			return;
+
+		CGameObject* spawnedRoot = nullptr;
+		if (SpawnFbxAssetIntoScene(assetRelPath, CInput::GetInstance().GetMousePos_Editor(), spawnedRoot) && spawnedRoot)
+			CEditor::GetInstance().Set_SelectedGameObject(spawnedRoot, true);
 	}
 }
 
@@ -153,6 +564,8 @@ void CEditor::Editor_Update_Begin()
 
 	for (TRAVERSAL_ITER(m_mBoxList, it))
 		(*it).second->Render();
+
+	RenderSceneAssetDropTargetOverlay();
 }
 
 void CEditor::Editor_Update_During()

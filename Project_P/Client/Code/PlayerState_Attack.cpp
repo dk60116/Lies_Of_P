@@ -184,6 +184,10 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
         const function<void()>& onStart) -> CAnimationClip*
     {
         CAnimationClip* clip = CResources::GetInstance().LoadOnScene<CAnimationClip>(clipName);
+
+        if (!clip)
+            return (CAnimationClip*)nullptr;
+
         const _uint endFrame = clip->Get_NormalizedFrameIndex(endRate);
 
         registerActionTrigger(clip, 1, startTrigger, [beginCombo, canTurnOnStart, knockbackAmount, onStart]()
@@ -285,11 +289,14 @@ void CPlayerState_Attack::Initialize(CPlayerControllerContext* _ctx, const CPlay
         }
     );
 
-    registerActionTrigger(thrustClip, 11, L"Eve_Attack_Thrust_Stop", [this]()
-        {
-            m_bThrust = false;
-            m_pCtx->StopMoveImmediate();
-        });
+    if (thrustClip)
+    {
+        registerActionTrigger(thrustClip, 11, L"Eve_Attack_Thrust_Stop", [this]()
+            {
+                m_bThrust = false;
+                m_pCtx->StopMoveImmediate();
+            });
+    }
 }
 
 void CPlayerState_Attack::Enter()

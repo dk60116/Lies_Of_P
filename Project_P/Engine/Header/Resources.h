@@ -87,6 +87,7 @@ public:
     unordered_map<wstring, CEngineResource*> m_mGameResourceList;
 
 private:
+    void CleanupOrphanedBinaries();
     void Ready_GameResources();
     void TraverseSkeleton(aiNode* _node, _int _parentId, vector<CSkinnedMeshBuffer::SKINNEDSKELETAL>& _outList);
 
@@ -217,6 +218,10 @@ inline T* CResources::LoadOnScene(const wstring& _name)
 
     if (!r)
     {
+        auto gameIter = GetInstance().m_mGameResourceList.find(_name);
+        if (gameIter != GetInstance().m_mGameResourceList.end())
+            return dynamic_cast<T*>(gameIter->second);
+
         if (!CSceneManager::GetInstance().Get_TempScene())
         {
             CDebug::LogError(L"Failed LoadOnScene: " + _name);

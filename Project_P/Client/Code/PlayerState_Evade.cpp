@@ -25,89 +25,95 @@ void CPlayerState_Evade::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 	{
 		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Evade_Forward (Animation Clip)");
 
-		const wstring clipName = startClip->Get_ResourceName();
-		const _uint frameCount = startClip->Get_FrameCount();
-
+		if (startClip)
 		{
-			CAnimationClip::ActionTrigger at = { stopTime, L"Evade_Forward_Stop" };
-			startClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Forward_Stop", [this]()
-				{
-					m_pCtx->StopMoveImmediate();
-					m_pCtx->SetCanTurn(false);
+			const wstring clipName = startClip->Get_ResourceName();
+			const _uint frameCount = startClip->Get_FrameCount();
 
-					m_bIsDash = false;
-
-					if (m_bGuardBffer)
-					{
-						m_pCtx->SetActionActive(CPlayerController::PlayerState::Guard, true);
-						Exit();
-					}
-					else if (m_bAttackBuffer)
-					{
-						m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, true);
-						Exit();
-					}
-					else if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
+			{
+				CAnimationClip::ActionTrigger at = { stopTime, L"Evade_Forward_Stop" };
+				startClip->Add_ActionTrigger(at);
+				m_pCtx->Animator()->RegisterActionHandler(L"Evade_Forward_Stop", [this]()
 					{
 						m_pCtx->StopMoveImmediate();
-						Exit();
-					}
-				});
-		}
+						m_pCtx->SetCanTurn(false);
 
-		{
-			CAnimationClip::ActionTrigger at = { endTime, L"Evade_Forward_End" };
-			startClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Forward_End", [this]()
-				{
-					m_pCtx->SetActionActive(CPlayerController::PlayerState::Evade, false);
-				});
+						m_bIsDash = false;
+
+						if (m_bGuardBffer)
+						{
+							m_pCtx->SetActionActive(CPlayerController::PlayerState::Guard, true);
+							Exit();
+						}
+						else if (m_bAttackBuffer)
+						{
+							m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, true);
+							Exit();
+						}
+						else if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
+						{
+							m_pCtx->StopMoveImmediate();
+							Exit();
+						}
+					});
+			}
+
+			{
+				CAnimationClip::ActionTrigger at = { endTime, L"Evade_Forward_End" };
+				startClip->Add_ActionTrigger(at);
+				m_pCtx->Animator()->RegisterActionHandler(L"Evade_Forward_End", [this]()
+					{
+						m_pCtx->SetActionActive(CPlayerController::PlayerState::Evade, false);
+					});
+			}
 		}
 	}
 
 	{
 		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Evade_Backward (Animation Clip)");
 
-		const wstring clipName = startClip->Get_ResourceName();
-		const _uint frameCount = startClip->Get_FrameCount();
-
+		if (startClip)
 		{
-			CAnimationClip::ActionTrigger at = { stopTime, L"Evade_Backward_Stop" };
-			startClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Backward_Stop", [this]()
-				{
-					m_pCtx->StopMoveImmediate();
-					m_pCtx->SetCanTurn(false);
+			const wstring clipName = startClip->Get_ResourceName();
+			const _uint frameCount = startClip->Get_FrameCount();
 
-					m_bIsDash = false;
-
-					if (m_bGuardBffer)
-					{
-						m_pCtx->SetActionActive(CPlayerController::PlayerState::Guard, true);
-						Exit();
-						return;
-					}
-					else if (m_bAttackBuffer)
-					{
-						m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, true);
-						Exit();
-					}
-					else if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
+			{
+				CAnimationClip::ActionTrigger at = { stopTime, L"Evade_Backward_Stop" };
+				startClip->Add_ActionTrigger(at);
+				m_pCtx->Animator()->RegisterActionHandler(L"Evade_Backward_Stop", [this]()
 					{
 						m_pCtx->StopMoveImmediate();
-						Exit();
-					}
-				});
-		}
+						m_pCtx->SetCanTurn(false);
 
-		{
-			CAnimationClip::ActionTrigger at = { endTime, L"Evade_Backward_End" };
-			startClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"Evade_Backward_End", [this]()
-				{
-					Exit();
-				});
+						m_bIsDash = false;
+
+						if (m_bGuardBffer)
+						{
+							m_pCtx->SetActionActive(CPlayerController::PlayerState::Guard, true);
+							Exit();
+							return;
+						}
+						else if (m_bAttackBuffer)
+						{
+							m_pCtx->SetActionActive(CPlayerController::PlayerState::Attack, true);
+							Exit();
+						}
+						else if (m_pCtx->IsKeyPressed_Hold(CPlayerController::PlayerState::Move))
+						{
+							m_pCtx->StopMoveImmediate();
+							Exit();
+						}
+					});
+			}
+
+			{
+				CAnimationClip::ActionTrigger at = { endTime, L"Evade_Backward_End" };
+				startClip->Add_ActionTrigger(at);
+				m_pCtx->Animator()->RegisterActionHandler(L"Evade_Backward_End", [this]()
+					{
+						Exit();
+					});
+			}
 		}
 	}
 }

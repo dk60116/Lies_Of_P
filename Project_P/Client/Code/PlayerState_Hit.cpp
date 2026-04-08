@@ -26,24 +26,27 @@ void PlayerState_Hit::Initialize(CPlayerControllerContext* _ctx, const CPlayerCo
 		{
 			CAnimationClip* ac = CResources::GetInstance().LoadOnScene<CAnimationClip>(m_vAnimationNames[i]);
 
-			const _uint endFrame = ac->Get_NormalizedFrameIndex(0.78f);
-
+			if (ac)
 			{
-				CAnimationClip::ActionTrigger at = { 14, L"Hit_"+ to_wstring(i) + L"_Stop" };
-				ac->Add_ActionTrigger(at);
-				m_pCtx->Animator()->RegisterActionHandler(L"Hit_" + to_wstring(i) + L"_Stop", [this]()
-					{
-						StopHandler();
-					});
-			}
+				const _uint endFrame = ac->Get_NormalizedFrameIndex(0.78f);
 
-			{
-				CAnimationClip::ActionTrigger at = { endFrame, L"Hit_" + to_wstring(i) + L"_End" };
-				ac->Add_ActionTrigger(at);
-				m_pCtx->Animator()->RegisterActionHandler(L"Hit_" + to_wstring(i) + L"_End", [this]()
-					{
-						Exit();
-					});
+				{
+					CAnimationClip::ActionTrigger at = { 14, L"Hit_"+ to_wstring(i) + L"_Stop" };
+					ac->Add_ActionTrigger(at);
+					m_pCtx->Animator()->RegisterActionHandler(L"Hit_" + to_wstring(i) + L"_Stop", [this]()
+						{
+							StopHandler();
+						});
+				}
+
+				{
+					CAnimationClip::ActionTrigger at = { endFrame, L"Hit_" + to_wstring(i) + L"_End" };
+					ac->Add_ActionTrigger(at);
+					m_pCtx->Animator()->RegisterActionHandler(L"Hit_" + to_wstring(i) + L"_End", [this]()
+						{
+							Exit();
+						});
+				}
 			}
 		}
 	}

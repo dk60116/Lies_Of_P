@@ -18,47 +18,14 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 	{
 		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_Start (Animation Clip)");
 
-		const wstring clipName = startClip->Get_ResourceName();
-		const _uint frameCount = startClip->Get_FrameCount();
-
-		CAnimationClip::ActionTrigger at = { 10, L"Guard_ExitAbleTime" };
-		startClip->Add_ActionTrigger(at);
-		m_pCtx->Animator()->RegisterActionHandler(L"Guard_ExitAbleTime", [this]()
-			{
-				m_bExitableTime = true;
-				m_pCtx->SetCanTurn(false);
-			});
-	}
-
-	{
-		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_Walk_Forward_Start (Animation Clip)");
-
-		const wstring clipName = startClip->Get_ResourceName();
-		const _uint frameCount = startClip->Get_FrameCount();
-
-		CAnimationClip::ActionTrigger at = { 5, L"Guard_Start" };
-		startClip->Add_ActionTrigger(at);
-		m_pCtx->Animator()->RegisterActionHandler(L"Guard_Start", [this]()
-			{
-				m_pCtx-> SetCanMove(true);
-				m_pCtx->SetCanTurn(true);
-			});
-	}
-
-	{
-		CAnimationClip* idleClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_Idle (Animation Clip)");
-
+		if (startClip)
 		{
-			CAnimationClip::ActionTrigger atMove = { 5, L"Guard_CanMoveTime" };
-			idleClip->Add_ActionTrigger(atMove);
-			m_pCtx->Animator()->RegisterActionHandler(L"Guard_CanMoveTime", [this]()
-				{
-					m_pCtx->SetCanMove(true);
-				});
+			const wstring clipName = startClip->Get_ResourceName();
+			const _uint frameCount = startClip->Get_FrameCount();
 
-			CAnimationClip::ActionTrigger atExit = { 2, L"Guard_Idle_ExitAbleTime" };
-			idleClip->Add_ActionTrigger(atExit);
-			m_pCtx->Animator()->RegisterActionHandler(L"Guard_Idle_ExitAbleTime", [this]()
+			CAnimationClip::ActionTrigger at = { 10, L"Guard_ExitAbleTime" };
+			startClip->Add_ActionTrigger(at);
+			m_pCtx->Animator()->RegisterActionHandler(L"Guard_ExitAbleTime", [this]()
 				{
 					m_bExitableTime = true;
 					m_pCtx->SetCanTurn(false);
@@ -67,60 +34,111 @@ void CPlayerState_Guard::Initialize(CPlayerControllerContext* _ctx, const CPlaye
 	}
 
 	{
+		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_Walk_Forward_Start (Animation Clip)");
+
+		if (startClip)
+		{
+			const wstring clipName = startClip->Get_ResourceName();
+			const _uint frameCount = startClip->Get_FrameCount();
+
+			CAnimationClip::ActionTrigger at = { 5, L"Guard_Start" };
+			startClip->Add_ActionTrigger(at);
+			m_pCtx->Animator()->RegisterActionHandler(L"Guard_Start", [this]()
+				{
+					m_pCtx-> SetCanMove(true);
+					m_pCtx->SetCanTurn(true);
+				});
+		}
+	}
+
+	{
+		CAnimationClip* idleClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_Idle (Animation Clip)");
+
+		if (idleClip)
+		{
+			{
+				CAnimationClip::ActionTrigger atMove = { 5, L"Guard_CanMoveTime" };
+				idleClip->Add_ActionTrigger(atMove);
+				m_pCtx->Animator()->RegisterActionHandler(L"Guard_CanMoveTime", [this]()
+					{
+						m_pCtx->SetCanMove(true);
+					});
+
+				CAnimationClip::ActionTrigger atExit = { 2, L"Guard_Idle_ExitAbleTime" };
+				idleClip->Add_ActionTrigger(atExit);
+				m_pCtx->Animator()->RegisterActionHandler(L"Guard_Idle_ExitAbleTime", [this]()
+					{
+						m_bExitableTime = true;
+						m_pCtx->SetCanTurn(false);
+					});
+			}
+		}
+	}
+
+	{
 		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_Walk_Forward_During (Animation Clip)");
 
-		const wstring clipName = startClip->Get_ResourceName();
-		const _uint frameCount = startClip->Get_FrameCount();
+		if (startClip)
+		{
+			const wstring clipName = startClip->Get_ResourceName();
+			const _uint frameCount = startClip->Get_FrameCount();
 
-		CAnimationClip::ActionTrigger at = { 1, L"Guard_During" };
-		startClip->Add_ActionTrigger(at);
-		m_pCtx->Animator()->RegisterActionHandler(L"Guard_During", [this]()
-			{
-			});
+			CAnimationClip::ActionTrigger at = { 1, L"Guard_During" };
+			startClip->Add_ActionTrigger(at);
+			m_pCtx->Animator()->RegisterActionHandler(L"Guard_During", [this]()
+				{
+				});
+		}
 	}
 
 	{
 		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_Walk_Forward_End (Animation Clip)");
 
-		const wstring clipName = startClip->Get_ResourceName();
-		const _uint frameCount = startClip->Get_FrameCount();
-
+		if (startClip)
 		{
-			CAnimationClip::ActionTrigger at = { 1, L"Guard_WalkEndStart" };
-			startClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"Guard_WalkEndStart", [this]()
-				{
-				});
+			const wstring clipName = startClip->Get_ResourceName();
+			const _uint frameCount = startClip->Get_FrameCount();
+
+			{
+				CAnimationClip::ActionTrigger at = { 1, L"Guard_WalkEndStart" };
+				startClip->Add_ActionTrigger(at);
+				m_pCtx->Animator()->RegisterActionHandler(L"Guard_WalkEndStart", [this]()
+					{
+					});
+			}
 		}
 	}
 
 	{
 		CAnimationClip* startClip = CResources::GetInstance().LoadOnScene<CAnimationClip>(L"Eve_Guard_End (Animation Clip)");
 
-		const wstring clipName = startClip->Get_ResourceName();
-		const _uint frameCount = startClip->Get_FrameCount();
-
+		if (startClip)
 		{
-			CAnimationClip::ActionTrigger at = { 1, L"Guard_EndStart" };
-			startClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"Guard_EndStart", [this]()
-				{
-					m_pCtx->SetCanMove(false);
-					m_pCtx->SetCanAttack(true);
-				});
-		}
+			const wstring clipName = startClip->Get_ResourceName();
+			const _uint frameCount = startClip->Get_FrameCount();
 
-		{
-			CAnimationClip::ActionTrigger at = { 10, L"Guard_Exit" };
-			startClip->Add_ActionTrigger(at);
-			m_pCtx->Animator()->RegisterActionHandler(L"Guard_Exit", [this]()
-				{
-					if (m_bExit)
+			{
+				CAnimationClip::ActionTrigger at = { 1, L"Guard_EndStart" };
+				startClip->Add_ActionTrigger(at);
+				m_pCtx->Animator()->RegisterActionHandler(L"Guard_EndStart", [this]()
 					{
-						m_pCtx->StopMoveImmediate();
-						Exit();
-					}
-				});
+						m_pCtx->SetCanMove(false);
+						m_pCtx->SetCanAttack(true);
+					});
+			}
+
+			{
+				CAnimationClip::ActionTrigger at = { 10, L"Guard_Exit" };
+				startClip->Add_ActionTrigger(at);
+				m_pCtx->Animator()->RegisterActionHandler(L"Guard_Exit", [this]()
+					{
+						if (m_bExit)
+						{
+							m_pCtx->StopMoveImmediate();
+							Exit();
+						}
+					});
+			}
 		}
 	}
 }
