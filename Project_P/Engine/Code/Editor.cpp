@@ -11,6 +11,18 @@
 
 namespace
 {
+	static const char* GetTransformSpaceLabel(const CEditor::TransformSpace space)
+	{
+		switch (space)
+		{
+		case CEditor::TransformSpace::WORLD:
+			return "World";
+		case CEditor::TransformSpace::LOCAL:
+		default:
+			return "Local";
+		}
+	}
+
 	static fs::path ResolveEditorSettingsPath(const _bool forSave)
 	{
 		const fs::path candidates[] =
@@ -354,6 +366,98 @@ namespace
 	return true;
 }
 
+	static _bool GetEditorViewToolbarRect(ImVec2& outPos, ImVec2& outSize)
+	{
+		const CEditor::EDITORWINOPTION options = CEditor::GetInstance().Get_Options();
+		ImGuiViewport* viewport = ImGui::GetMainViewport();
+		if (!viewport)
+			return false;
+
+		const _float width = static_cast<_float>(CEditor::GetInstance().Get_WindowResolution().x - options.projectWidth - options.hierachyWidth - options.inspectorWidth);
+		const _float height = static_cast<_float>(options.editorViewToolbarHeight);
+		if (width <= 1.f || height <= 0.f)
+			return false;
+
+		outPos = ImVec2(viewport->Pos.x, viewport->Pos.y + static_cast<_float>(options.topBarHeight));
+		outSize = ImVec2(width, height);
+		return true;
+	}
+
+	static _bool GetEditorViewRect(ImVec2& outPos, ImVec2& outSize)
+	{
+		const CEditor::EDITORWINOPTION options = CEditor::GetInstance().Get_Options();
+		ImGuiViewport* viewport = ImGui::GetMainViewport();
+		if (!viewport)
+			return false;
+
+		const _float width = static_cast<_float>(CEditor::GetInstance().Get_WindowResolution().x - options.projectWidth - options.hierachyWidth - options.inspectorWidth);
+		const _float height = static_cast<_float>(CEditor::GetInstance().Get_WindowResolution().y - options.topBarHeight - options.editorViewToolbarHeight);
+		if (width <= 1.f || height <= 1.f)
+			return false;
+
+		outPos = ImVec2(viewport->Pos.x, viewport->Pos.y + static_cast<_float>(options.topBarHeight + options.editorViewToolbarHeight));
+		outSize = ImVec2(width, height);
+		return true;
+	}
+
+	static void RenderEditorViewToolbar()
+	{
+		ImVec2 toolbarPos = {};
+		ImVec2 toolbarSize = {};
+		if (!GetEditorViewToolbarRect(toolbarPos, toolbarSize))
+			return;
+
+		ImGui::SetNextWindowPos(toolbarPos);
+		ImGui::SetNextWindowSize(toolbarSize);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(12.f, 4.f));
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.f, 0.f, 1.f));
+
+		const ImGuiWindowFlags flags =
+			ImGuiWindowFlags_NoDecoration |
+			ImGuiWindowFlags_NoMove |
+			ImGuiWindowFlags_NoSavedSettings |
+			ImGuiWindowFlags_NoNav |
+			ImGuiWindowFlags_NoScrollbar |
+			ImGuiWindowFlags_NoScrollWithMouse |
+			ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+		ImGui::Begin("##EditorViewToolbarPlaceholder", nullptr, flags);
+
+		CEditor& editor = CEditor::GetInstance();
+		CEditor::TransformSpace transformSpace = editor.Get_GizmoTransformSpace();
+
+		ImGui::AlignTextToFramePadding();
+		ImGui::TextUnformatted("Transform");
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(110.f);
+		if (ImGui::BeginCombo("##EditorTransformSpace", GetTransformSpaceLabel(transformSpace)))
+		{
+			const CEditor::TransformSpace options[] =
+			{
+				CEditor::TransformSpace::LOCAL,
+				CEditor::TransformSpace::WORLD
+			};
+
+			for (const CEditor::TransformSpace option : options)
+			{
+				const _bool isSelected = transformSpace == option;
+				if (ImGui::Selectable(GetTransformSpaceLabel(option), isSelected))
+					editor.Set_GizmoTransformSpace(option);
+
+				if (isSelected)
+					ImGui::SetItemDefaultFocus();
+			}
+
+			ImGui::EndCombo();
+		}
+
+		ImGui::End();
+
+		ImGui::PopStyleColor();
+		ImGui::PopStyleVar(2);
+	}
+
 	static void RenderSceneAssetDropTargetOverlay()
 	{
 		const ImGuiPayload* activePayload = ImGui::GetDragDropPayload();
@@ -371,17 +475,9 @@ namespace
 		if (CEditor::ToLowerCopy(fs::path(assetRelPath).extension().string()) != ".fbx")
 			return;
 
-		const CEditor::EDITORWINOPTION options = CEditor::GetInstance().Get_Options();
-		ImGuiViewport* viewport = ImGui::GetMainViewport();
-		if (!viewport)
-			return;
-
-		const ImVec2 scenePos = ImVec2(viewport->Pos.x, viewport->Pos.y + static_cast<_float>(options.topBarHeight));
-		const ImVec2 sceneSize = ImVec2(
-			static_cast<_float>(CEditor::GetInstance().Get_WindowResolution().x - options.projectWidth - options.hierachyWidth - options.inspectorWidth),
-			static_cast<_float>(CEditor::GetInstance().Get_WindowResolution().y - options.topBarHeight));
-
-		if (sceneSize.x <= 1.f || sceneSize.y <= 1.f)
+		ImVec2 scenePos = {};
+		ImVec2 sceneSize = {};
+		if (!GetEditorViewRect(scenePos, sceneSize))
 			return;
 
 		ImGui::SetNextWindowPos(scenePos);
@@ -451,6 +547,7 @@ CEditor::CEditor()
 	, m_sOptions({})
 	, m_eControleTool(TransformControleTool::MOVE)
 	, m_eLastGizmoTool(TransformControleTool::MOVE)
+	, m_eGizmoTransformSpace(TransformSpace::LOCAL)
 	, m_pSelectedGameObject(nullptr)
 	, m_pMoveTargetGameObject(nullptr)
 	, m_bOpenSelectedInHierarchyRequested(false)
@@ -565,6 +662,7 @@ void CEditor::Editor_Update_Begin()
 	for (TRAVERSAL_ITER(m_mBoxList, it))
 		(*it).second->Render();
 
+	RenderEditorViewToolbar();
 	RenderSceneAssetDropTargetOverlay();
 }
 
@@ -859,7 +957,7 @@ const vector2Int CEditor::Get_WindowResolution() const
 const vector2Int CEditor::Get_ScreenResolution() const
 {
 	_int width = _int(m_sOptions.windowWidth - (m_sOptions.projectWidth + m_sOptions.hierachyWidth + m_sOptions.inspectorWidth));
-	_int height = _int(m_sOptions.windowHeight - (m_sOptions.topBarHeight));
+	_int height = _int(m_sOptions.windowHeight - (m_sOptions.topBarHeight + m_sOptions.editorViewToolbarHeight));
 
 	return vector2Int(width, height);
 }
@@ -882,6 +980,11 @@ const CEditor::TransformControleTool CEditor::Get_GizmoControleTool() const
 	}
 }
 
+const CEditor::TransformSpace CEditor::Get_GizmoTransformSpace() const
+{
+	return m_eGizmoTransformSpace;
+}
+
 void CEditor::Change_ControleTool(const TransformControleTool _tool)
 {
 	m_eControleTool = _tool;
@@ -892,6 +995,11 @@ void CEditor::Change_ControleTool(const TransformControleTool _tool)
 	{
 		m_eLastGizmoTool = _tool;
 	}
+}
+
+void CEditor::Set_GizmoTransformSpace(const TransformSpace _space)
+{
+	m_eGizmoTransformSpace = _space;
 }
 
 const vector3 CEditor::Get_EditorCamPositon() const

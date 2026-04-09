@@ -588,6 +588,7 @@ HRESULT CNaviMesh::BuildFromSources(const vector<MeshSource>& _sources)
 		config.walkableHeight = max(1, static_cast<int>(ceilf(bakeOptions.agentHeight / config.ch)));
 		config.walkableClimb = max(0, static_cast<int>(floorf(bakeOptions.agentMaxClimb / config.ch)));
 		config.walkableRadius = max(0, static_cast<int>(ceilf(bakeOptions.agentRadius / config.cs)));
+		config.borderSize = config.walkableRadius + 3;
 		config.maxEdgeLen = max(0, static_cast<int>(floorf(bakeOptions.edgeMaxLen / config.cs)));
 		config.maxSimplificationError = max(0.1f, bakeOptions.edgeMaxError);
 		config.minRegionArea = max(0, bakeOptions.regionMinSize * bakeOptions.regionMinSize);
@@ -598,25 +599,73 @@ HRESULT CNaviMesh::BuildFromSources(const vector<MeshSource>& _sources)
 	};
 	applyBakeOptionsToConfig(effectiveBakeOptions);
 
-	rcCalcBounds(geometry.vertices.data(), vertexCount, config.bmin, config.bmax);
-	rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
+	float sourceBoundsMin[3] = {};
+	float sourceBoundsMax[3] = {};
+	rcCalcBounds(geometry.vertices.data(), vertexCount, sourceBoundsMin, sourceBoundsMax);
 
-	const float boundsSizeX = config.bmax[0] - config.bmin[0];
-	const float boundsSizeZ = config.bmax[2] - config.bmin[2];
+	const float boundsSizeX = sourceBoundsMax[0] - sourceBoundsMin[0];
+	const float boundsSizeZ = sourceBoundsMax[2] - sourceBoundsMin[2];
 	const float requestedCellSize = effectiveBakeOptions.cellSize;
-	const float requiredCellSizeByDimension = max(boundsSizeX, boundsSizeZ) / static_cast<float>(kMaxNavigationGridDimension);
-	const float boundsAreaXZ = max(0.f, boundsSizeX) * max(0.f, boundsSizeZ);
-	const float requiredCellSizeByCellCount =
-		boundsAreaXZ > 0.f
-		? sqrtf(boundsAreaXZ / static_cast<float>(kMaxNavigationGridCellCount))
-		: 0.f;
-	const float adjustedCellSize = max(requestedCellSize, max(requiredCellSizeByDimension, requiredCellSizeByCellCount));
-	if (adjustedCellSize > requestedCellSize + 0.0001f)
+	const auto applyExpandedBoundsAndGrid = [&]()
 	{
-		effectiveBakeOptions.cellSize = adjustedCellSize;
-		applyBakeOptionsToConfig(effectiveBakeOptions);
-		rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
+		rcVcopy(config.bmin, sourceBoundsMin);
+		rcVcopy(config.bmax, sourceBoundsMax);
 
+		const float borderWorldPadding = static_cast<float>(config.borderSize) * config.cs;
+		config.bmin[0] -= borderWorldPadding;
+		config.bmin[2] -= borderWorldPadding;
+		config.bmax[0] += borderWorldPadding;
+		config.bmax[2] += borderWorldPadding;
+
+		rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
+	};
+
+	_bool autoAdjustedCellSize = false;
+	for (_uint iteration = 0; iteration < 8u; ++iteration)
+	{
+		applyBakeOptionsToConfig(effectiveBakeOptions);
+		applyExpandedBoundsAndGrid();
+
+		const int64_t gridCellCount = static_cast<int64_t>(config.width) * static_cast<int64_t>(config.height);
+		if (config.width > 0 &&
+			config.height > 0 &&
+			config.width <= kMaxNavigationGridDimension &&
+			config.height <= kMaxNavigationGridDimension &&
+			gridCellCount <= static_cast<int64_t>(kMaxNavigationGridCellCount))
+		{
+			break;
+		}
+
+		const float dimensionScale = max(
+			config.width > 0 ? static_cast<float>(config.width) / static_cast<float>(kMaxNavigationGridDimension) : 1.f,
+			config.height > 0 ? static_cast<float>(config.height) / static_cast<float>(kMaxNavigationGridDimension) : 1.f);
+		const float cellCountScale =
+			gridCellCount > 0
+			? sqrtf(static_cast<float>(gridCellCount) / static_cast<float>(kMaxNavigationGridCellCount))
+			: 1.f;
+		const float scale = max(1.01f, max(dimensionScale, cellCountScale));
+		effectiveBakeOptions.cellSize *= scale;
+		autoAdjustedCellSize = true;
+	}
+
+	applyBakeOptionsToConfig(effectiveBakeOptions);
+	applyExpandedBoundsAndGrid();
+
+	const int64_t finalGridCellCount = static_cast<int64_t>(config.width) * static_cast<int64_t>(config.height);
+	if (config.width > kMaxNavigationGridDimension ||
+		config.height > kMaxNavigationGridDimension ||
+		finalGridCellCount > static_cast<int64_t>(kMaxNavigationGridCellCount))
+	{
+		CDebug::LogError(
+			wstring(L"Navigation build failed - navigation bounds remain too large after Cell Size auto-adjustment. ") +
+			L"BoundsXZ=(" + to_wstring(boundsSizeX) + L", " + to_wstring(boundsSizeZ) + L"), " +
+			L"Grid=(" + to_wstring(config.width) + L", " + to_wstring(config.height) + L"), " +
+			L"CellSize=" + to_wstring(config.cs) + L", BorderSize=" + to_wstring(config.borderSize));
+		return E_FAIL;
+	}
+
+	if (autoAdjustedCellSize)
+	{
 		CDebug::LogWarnning(
 			L"Navigation build warning - requested Cell Size " + to_wstring(requestedCellSize) +
 			L" is too dense for BoundsXZ=(" + to_wstring(boundsSizeX) + L", " + to_wstring(boundsSizeZ) + L"). " +
@@ -630,6 +679,7 @@ HRESULT CNaviMesh::BuildFromSources(const vector<MeshSource>& _sources)
 		L", Triangles=" + to_wstring(triangleCount) +
 		L", WalkableTriangles=" + to_wstring(walkableTriangleCount) +
 		L", Grid=(" + to_wstring(config.width) + L", " + to_wstring(config.height) + L"), " +
+		L"BorderSize=" + to_wstring(config.borderSize) + L", " +
 		L"CellSize=" + to_wstring(config.cs));
 
 	if (config.width <= 0 || config.height <= 0)
@@ -699,34 +749,104 @@ HRESULT CNaviMesh::BuildFromSources(const vector<MeshSource>& _sources)
 		return E_FAIL;
 	}
 
-	if (!rcBuildDistanceField(&buildContext, *compactHeightField))
+	enum class RegionPartitionMode
 	{
-		CDebug::LogError(L"Navigation build failed - rcBuildDistanceField failed.");
-		return E_FAIL;
-	}
+		Watershed,
+		Monotone
+	};
 
-	if (!rcBuildRegions(&buildContext, *compactHeightField, 0, config.minRegionArea, config.mergeRegionArea))
+	const auto buildNavigationMeshes = [&](rcCompactHeightfield& sourceCompactHeightField, const RegionPartitionMode partitionMode) -> _bool
 	{
-		CDebug::LogError(L"Navigation build failed - rcBuildRegions failed.");
-		return E_FAIL;
-	}
+		contourSet.reset(rcAllocContourSet());
+		polyMesh.reset(rcAllocPolyMesh());
+		detailMesh.reset(rcAllocPolyMeshDetail());
 
-	if (!rcBuildContours(&buildContext, *compactHeightField, config.maxSimplificationError, config.maxEdgeLen, *contourSet))
-	{
-		CDebug::LogError(L"Navigation build failed - rcBuildContours failed.");
-		return E_FAIL;
-	}
+		if (!contourSet || !polyMesh || !detailMesh)
+		{
+			CDebug::LogError(L"Navigation build failed - could not allocate Recast mesh buffers.");
+			return false;
+		}
 
-	if (!rcBuildPolyMesh(&buildContext, *contourSet, config.maxVertsPerPoly, *polyMesh))
-	{
-		CDebug::LogError(L"Navigation build failed - rcBuildPolyMesh failed.");
-		return E_FAIL;
-	}
+		if (partitionMode == RegionPartitionMode::Watershed)
+		{
+			if (!rcBuildDistanceField(&buildContext, sourceCompactHeightField))
+			{
+				CDebug::LogError(L"Navigation build failed - rcBuildDistanceField failed.");
+				return false;
+			}
 
-	if (!rcBuildPolyMeshDetail(&buildContext, *polyMesh, *compactHeightField, config.detailSampleDist, config.detailSampleMaxError, *detailMesh))
-	{
-		CDebug::LogError(L"Navigation build failed - rcBuildPolyMeshDetail failed.");
+			if (!rcBuildRegions(&buildContext, sourceCompactHeightField, config.borderSize, config.minRegionArea, config.mergeRegionArea))
+			{
+				CDebug::LogError(L"Navigation build failed - rcBuildRegions failed.");
+				return false;
+			}
+		}
+		else
+		{
+			if (!rcBuildRegionsMonotone(&buildContext, sourceCompactHeightField, config.borderSize, config.minRegionArea, config.mergeRegionArea))
+			{
+				CDebug::LogError(L"Navigation build failed - rcBuildRegionsMonotone failed.");
+				return false;
+			}
+		}
+
+		if (!rcBuildContours(&buildContext, sourceCompactHeightField, config.maxSimplificationError, config.maxEdgeLen, *contourSet))
+		{
+			CDebug::LogError(L"Navigation build failed - rcBuildContours failed.");
+			return false;
+		}
+
+		if (!rcBuildPolyMesh(&buildContext, *contourSet, config.maxVertsPerPoly, *polyMesh))
+		{
+			CDebug::LogError(L"Navigation build failed - rcBuildPolyMesh failed.");
+			return false;
+		}
+
+		if (polyMesh->npolys == 0)
+			return true;
+
+		if (!rcBuildPolyMeshDetail(&buildContext, *polyMesh, sourceCompactHeightField, config.detailSampleDist, config.detailSampleMaxError, *detailMesh))
+		{
+			CDebug::LogError(L"Navigation build failed - rcBuildPolyMeshDetail failed.");
+			return false;
+		}
+
+		return true;
+	};
+
+	if (!buildNavigationMeshes(*compactHeightField, RegionPartitionMode::Watershed))
 		return E_FAIL;
+
+	_bool usedMonotoneFallback = false;
+	if (polyMesh->npolys == 0)
+	{
+		CDebug::LogWarnning(
+			L"Navigation build warning - watershed partitioning produced no polygons. "
+			L"Retrying with monotone partitioning.");
+
+		CompactHeightFieldPtr monotoneCompactHeightField(rcAllocCompactHeightfield());
+		if (!monotoneCompactHeightField)
+		{
+			CDebug::LogError(L"Navigation build failed - could not allocate fallback compact heightfield.");
+			return E_OUTOFMEMORY;
+		}
+
+		if (!rcBuildCompactHeightfield(&buildContext, config.walkableHeight, config.walkableClimb, *solid, *monotoneCompactHeightField))
+		{
+			CDebug::LogError(L"Navigation build failed - fallback rcBuildCompactHeightfield failed.");
+			return E_FAIL;
+		}
+
+		if (config.walkableRadius > 0 && !rcErodeWalkableArea(&buildContext, config.walkableRadius, *monotoneCompactHeightField))
+		{
+			CDebug::LogError(L"Navigation build failed - fallback rcErodeWalkableArea failed.");
+			return E_FAIL;
+		}
+
+		if (!buildNavigationMeshes(*monotoneCompactHeightField, RegionPartitionMode::Monotone))
+			return E_FAIL;
+
+		usedMonotoneFallback = polyMesh->npolys > 0;
 	}
 
 	if (polyMesh->npolys == 0)
@@ -743,6 +863,12 @@ HRESULT CNaviMesh::BuildFromSources(const vector<MeshSource>& _sources)
 
 		CDebug::LogError(L"Navigation build failed - no walkable polygons were generated.");
 		return E_FAIL;
+	}
+
+	if (usedMonotoneFallback)
+	{
+		CDebug::LogWarnning(
+			L"Navigation build warning - monotone partition fallback was used for this NavigationMesh build.");
 	}
 
 	for (int polygonIndex = 0; polygonIndex < polyMesh->npolys; ++polygonIndex)

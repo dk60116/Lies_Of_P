@@ -20,6 +20,7 @@ public:
 	const wstring& Get_ResourceName() const;
 	const wstring& Get_FilePath() const;
 	void Set_ResourceName(const wstring& _name);
+	void Set_FilePath(const wstring& _path);
 
 protected:
 	_uint m_resourceID;

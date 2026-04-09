@@ -35,6 +35,11 @@ void CEngineResource::Set_ResourceName(const wstring& _name)
 	m_strResourceName = _name;
 }
 
+void CEngineResource::Set_FilePath(const wstring& _path)
+{
+	m_strFilePath = _path;
+}
+
 void CEngineResource::OnDestroy()
 {
 }

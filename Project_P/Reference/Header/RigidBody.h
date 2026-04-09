@@ -57,6 +57,10 @@ public:
 	void SetUseGravity(_bool _useGravity);
 	_float GetMass() const;
 	void SetMass(_float _mass);
+	_float GetDrag() const;
+	void SetDrag(_float _drag);
+	_float GetAngularDrag() const;
+	void SetAngularDrag(_float _angularDrag);
 	_bool IsConstPositionX() const;
 	void SetConstPositionX(_bool _value);
 	_bool IsConstPositionY() const;
@@ -76,6 +80,7 @@ public:
 	void SetVelocityY(const _float _value);
 	void SetVelocityZ(const _float _value);
 	void ResetVelocity();
+	void SuspendLinearDragUntilNextPhysicsStep();
 	void AddForce(const vector3& _force);
 	void AddForceX(_float _force);
 	void AddForceY(_float _force);
@@ -111,6 +116,8 @@ private:
 	_bool m_bKinematic;
 	_bool m_bUseGravity;
 	_float m_fMass;
+	_float m_fDrag;
+	_float m_fAngularDrag;
 
 	_bool m_bConstPositionX;
 	_bool m_bConstPositionY;
@@ -121,6 +128,7 @@ private:
 	vector3 m_vConstPosition;
 	vector3 m_vConstRotation;
 	_bool m_bSkipPositionConstraintSyncOnce;
+	_bool m_bRestoreDragAfterTranslate;
 
 	_bool m_bHasLastSyncedTransform;
 	vector3 m_vLastSyncedPosition;

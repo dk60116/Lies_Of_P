@@ -149,7 +149,11 @@ void CPlayerState_Jump::Enter()
 
 	vector3 jumpVector = vector3::up() * m_pCtx->PlayerStatus().jumpPower;
 
-	m_pCtx->RigidBody()->AddForce(jumpVector);
+	if (CRigidBody* rigidBody = m_pCtx->RigidBody())
+	{
+		rigidBody->SuspendLinearDragUntilNextPhysicsStep();
+		rigidBody->AddForce(jumpVector);
+	}
 
 	m_bForward = m_pCtx->GetMoveLocalDir().z > 0.1f;
 
@@ -161,6 +165,9 @@ void CPlayerState_Jump::Enter()
 void CPlayerState_Jump::Update()
 {
 	__super::Update();
+
+	if (CRigidBody* rigidBody = m_pCtx->RigidBody())
+		rigidBody->SuspendLinearDragUntilNextPhysicsStep();
 
 	if (m_bExitable)
 	{

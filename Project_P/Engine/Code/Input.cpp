@@ -156,7 +156,8 @@ const vector2Int CInput::GetMousePos_Editor()
 
     ScreenToClient(CEditor::GetInstance().Get_EditorWindow(), &ptMouse);
 
-    ptMouse.y -= CEditor::GetInstance().Get_Options().topBarHeight;
+    const CEditor::EDITORWINOPTION option = CEditor::GetInstance().Get_Options();
+    ptMouse.y -= LONG(option.topBarHeight + option.editorViewToolbarHeight);
 
     return vector2Int((_int)ptMouse.x, (_int)ptMouse.y);
 }

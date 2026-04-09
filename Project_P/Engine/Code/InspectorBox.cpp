@@ -3022,6 +3022,14 @@ void CInspectorBox::ShowComponents(CGameObject* _obj)
                 if (ImGui::InputFloat("Mass", &mass, 0.1f, 1.f, "%.3f"))
                     rigidBody->SetMass(mass);
 
+                _float drag = rigidBody->GetDrag();
+                if (ImGui::InputFloat("Drag", &drag, 0.01f, 0.1f, "%.3f"))
+                    rigidBody->SetDrag(drag);
+
+                _float angularDrag = rigidBody->GetAngularDrag();
+                if (ImGui::InputFloat("Angular Drag", &angularDrag, 0.01f, 0.1f, "%.3f"))
+                    rigidBody->SetAngularDrag(angularDrag);
+
                 _bool constPosX = rigidBody->IsConstPositionX();
                 _bool constPosY = rigidBody->IsConstPositionY();
                 _bool constPosZ = rigidBody->IsConstPositionZ();
@@ -3866,6 +3874,49 @@ void CInspectorBox::RenderSelectedAssetInfo(const fs::path& path)
         }
 
         ImGui::EndTable();
+    }
+
+    CResources& resources = CResources::GetInstance();
+    const vector<fs::path> usageBinaryPaths = resources.GetResourceUsageBinaryPaths(path);
+    const vector<wstring> usageScenes = resources.GetResourceUsageScenes(path);
+
+    if (!usageBinaryPaths.empty())
+    {
+        ImGui::Spacing();
+        ImGui::Text("Usage Metadata");
+
+        if (ImGui::BeginTable("AssetUsageMetadataTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchProp))
+        {
+            ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 80.f);
+            ImGui::TableSetupColumn("Value");
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::TextUnformatted("Binary");
+            ImGui::TableSetColumnIndex(1);
+            for (size_t i = 0; i < usageBinaryPaths.size(); ++i)
+            {
+                ImGui::TextWrapped("%s", usageBinaryPaths[i].string().c_str());
+                if (i + 1 < usageBinaryPaths.size())
+                    ImGui::Separator();
+            }
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::TextUnformatted("Scenes");
+            ImGui::TableSetColumnIndex(1);
+            if (usageScenes.empty())
+            {
+                ImGui::TextDisabled("None");
+            }
+            else
+            {
+                for (const wstring& sceneName : usageScenes)
+                    ImGui::BulletText("%s", CEngineString::WStringToString(sceneName).c_str());
+            }
+
+            ImGui::EndTable();
+        }
     }
 }
 

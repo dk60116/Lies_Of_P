@@ -196,6 +196,291 @@ static string BuildAssetRelativePath(const fs::path& path)
     return NormalizeSlashPath(relative.generic_string());
 }
 
+static string BuildSceneStoredResourcePath(const fs::path& path)
+{
+    const string assetRelativePath = BuildAssetRelativePath(path);
+    if (!assetRelativePath.empty())
+        return assetRelativePath;
+
+    return NormalizeSlashPath(path.lexically_normal().generic_string());
+}
+
+static fs::path BuildSceneFilePath(const wstring& sceneName)
+{
+    return fs::path(L"../Assets/Scenes") / fs::path(sceneName + L".scene");
+}
+
+static _bool UpdateSceneResourcePathsOnDisk(const fs::path& sceneFilePath, const unordered_map<string, string>& replacements, _uint* outUpdatedCount = nullptr)
+{
+    if (outUpdatedCount)
+        *outUpdatedCount = 0u;
+
+    if (replacements.empty())
+        return true;
+
+    ifstream in(sceneFilePath);
+    if (!in.is_open())
+        return false;
+
+    vector<string> lines;
+    string line;
+    _uint updatedCount = 0u;
+
+    while (getline(in, line))
+    {
+        const size_t firstSeparator = line.find(" : ");
+        const size_t secondSeparator = firstSeparator == string::npos ? string::npos : line.find(" : ", firstSeparator + 3u);
+
+        if (firstSeparator != string::npos && secondSeparator != string::npos)
+        {
+            const string currentPath = NormalizeSlashPath(line.substr(firstSeparator + 3u, secondSeparator - (firstSeparator + 3u)));
+            const auto found = replacements.find(ToLowerCopy(currentPath));
+            if (found != replacements.end())
+            {
+                line = line.substr(0, firstSeparator + 3u) + found->second + line.substr(secondSeparator);
+                ++updatedCount;
+            }
+        }
+
+        lines.push_back(line);
+    }
+
+    in.close();
+
+    if (updatedCount == 0u)
+        return true;
+
+    ofstream out(sceneFilePath, ios::trunc);
+    if (!out.is_open())
+        return false;
+
+    for (size_t i = 0; i < lines.size(); ++i)
+    {
+        out << lines[i];
+        if (i + 1u < lines.size())
+            out << "\n";
+    }
+
+    if (outUpdatedCount)
+        *outUpdatedCount = updatedCount;
+
+    return out.good();
+}
+
+static void RemapLoadedSceneResourcePaths(const vector<pair<fs::path, fs::path>>& filePairs)
+{
+    if (filePairs.empty())
+        return;
+
+    unordered_set<CScene*> remappedScenes;
+    auto remapScene = [&](CScene* scene)
+        {
+            if (!scene || !remappedScenes.insert(scene).second)
+                return;
+
+            scene->RemapResourceFilePaths(filePairs);
+        };
+
+    for (const auto& [sceneName, scene] : CSceneManager::GetInstance().Get_SceneList())
+        remapScene(scene);
+
+    remapScene(CSceneManager::GetInstance().Get_CrtScene());
+    remapScene(CSceneManager::GetInstance().Get_TempScene());
+}
+
+static void UpdateSceneReferencesForRenamePairs(const vector<pair<fs::path, fs::path>>& filePairs)
+{
+    if (filePairs.empty())
+        return;
+
+    unordered_map<wstring, unordered_map<string, string>> sceneReplacements;
+
+    for (const auto& filePair : filePairs)
+    {
+        const string oldScenePath = BuildSceneStoredResourcePath(filePair.first);
+        const string newScenePath = BuildSceneStoredResourcePath(filePair.second);
+        if (oldScenePath.empty() || newScenePath.empty())
+            continue;
+
+        const vector<wstring> usageScenes = CResources::GetInstance().GetResourceUsageScenes(filePair.first);
+        for (const wstring& sceneName : usageScenes)
+            sceneReplacements[sceneName][ToLowerCopy(oldScenePath)] = newScenePath;
+    }
+
+    for (const auto& [sceneName, replacements] : sceneReplacements)
+    {
+        _uint updatedCount = 0u;
+        const fs::path sceneFilePath = BuildSceneFilePath(sceneName);
+        if (!UpdateSceneResourcePathsOnDisk(sceneFilePath, replacements, &updatedCount))
+        {
+            CDebug::LogWarnning(L"Scene reference update failed after rename: " + sceneFilePath.wstring());
+            continue;
+        }
+
+        if (updatedCount > 0u)
+            CDebug::Log(L"Updated renamed asset references in scene: " + sceneName + L" (" + to_wstring(updatedCount) + L")");
+    }
+}
+
+static string SanitizeItemName(const string& name)
+{
+    string sanitized = CEngineString::Trim(name);
+    for (char& c : sanitized)
+    {
+        if (c == '/' || c == '\\' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|')
+            c = '_';
+    }
+    return sanitized;
+}
+
+static string StripPreservedExtension(const string& name, const string& extension)
+{
+    if (name.empty() || extension.empty())
+        return name;
+
+    const string lowerName = ToLowerCopy(name);
+    const string lowerExt = ToLowerCopy(extension);
+    if (lowerName.size() <= lowerExt.size())
+        return name;
+
+    if (lowerName.compare(lowerName.size() - lowerExt.size(), lowerExt.size(), lowerExt) != 0)
+        return name;
+
+    return name.substr(0, name.size() - extension.size());
+}
+
+static _bool IsPathInsideRoot(const fs::path& path, const fs::path& root)
+{
+    const fs::path relative = path.lexically_normal().lexically_relative(root.lexically_normal());
+    if (relative.empty())
+        return false;
+
+    const string rel = NormalizeSlashPath(relative.generic_string());
+    return rel == "." || (rel != ".." && rel.rfind("../", 0) != 0);
+}
+
+static vector<pair<fs::path, fs::path>> CollectFileRenamePairs(const fs::path& oldPath, const fs::path& newPath)
+{
+    vector<pair<fs::path, fs::path>> pairs;
+
+    error_code ec;
+    if (fs::is_regular_file(oldPath, ec))
+    {
+        pairs.push_back({ oldPath, newPath });
+        return pairs;
+    }
+
+    ec.clear();
+    if (!fs::is_directory(oldPath, ec))
+        return pairs;
+
+    for (const auto& entry : fs::recursive_directory_iterator(oldPath, ec))
+    {
+        if (ec)
+            break;
+
+        if (!entry.is_regular_file())
+            continue;
+
+        const fs::path relative = entry.path().lexically_relative(oldPath);
+        pairs.push_back({ entry.path(), newPath / relative });
+    }
+
+    return pairs;
+}
+
+struct AssociatedBinaryRename
+{
+    fs::path oldPath;
+    fs::path newPath;
+};
+
+static void AppendAssociatedBinaryRenamesForFile(const fs::path& oldFilePath, const fs::path& newFilePath, vector<AssociatedBinaryRename>& outRenames)
+{
+    const string ext = ToLowerCopy(oldFilePath.extension().string());
+    const string oldPrefix = oldFilePath.parent_path().filename().string() + "_" + oldFilePath.stem().string();
+    const string newPrefix = newFilePath.parent_path().filename().string() + "_" + newFilePath.stem().string();
+    if (oldPrefix == newPrefix)
+        return;
+
+    struct BinaryMapping { string dir; string ext; };
+    vector<BinaryMapping> mappings;
+
+    if (ext == ".fbx")
+    {
+        mappings.push_back({ "BinaryAssets/MeshData", ".meshdata" });
+        mappings.push_back({ "BinaryAssets/SkinnedMeshData", ".skinneddata" });
+        mappings.push_back({ "BinaryAssets/AnimationClipData", ".animdata" });
+    }
+    else if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga" || ext == ".tif" || ext == ".tiff")
+    {
+        mappings.push_back({ "BinaryAssets/TextureData", ".dds" });
+    }
+    else if (ext == ".animatorcontroller")
+    {
+        mappings.push_back({ "BinaryAssets/AnimatorControllerData", ".acdata" });
+    }
+    else if (ext == ".ttf" || ext == ".otf")
+    {
+        mappings.push_back({ "BinaryAssets/FontData", ".spritefont" });
+    }
+
+    for (const auto& mapping : mappings)
+    {
+        const fs::path oldBinaryPath = fs::path(mapping.dir) / (oldPrefix + mapping.ext);
+        error_code ec;
+        if (!fs::exists(oldBinaryPath, ec) || ec)
+            continue;
+
+        const fs::path newBinaryPath = fs::path(mapping.dir) / (newPrefix + mapping.ext);
+        outRenames.push_back({ oldBinaryPath, newBinaryPath });
+    }
+}
+
+static _bool ValidateAssociatedBinaryRenames(const vector<AssociatedBinaryRename>& renames, string* outError)
+{
+    unordered_set<string> targetSet;
+
+    for (const auto& rename : renames)
+    {
+        const string oldKey = ToLowerCopy(NormalizeSlashPath(rename.oldPath.generic_string()));
+        const string newKey = ToLowerCopy(NormalizeSlashPath(rename.newPath.generic_string()));
+        if (oldKey == newKey)
+            continue;
+
+        if (!targetSet.insert(newKey).second)
+        {
+            if (outError)
+                *outError = "Rename would create duplicate binary file names.";
+            return false;
+        }
+
+        error_code ec;
+        if (fs::exists(rename.newPath, ec) && !ec)
+        {
+            if (outError)
+                *outError = "Associated binary already exists: " + rename.newPath.filename().string();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static void ApplyAssociatedBinaryRenames(const vector<AssociatedBinaryRename>& renames)
+{
+    for (const auto& rename : renames)
+    {
+        error_code ec;
+        fs::create_directories(rename.newPath.parent_path(), ec);
+
+        ec.clear();
+        fs::rename(rename.oldPath, rename.newPath, ec);
+        if (ec)
+            CDebug::LogWarnning(L"Associated binary rename failed: " + rename.oldPath.wstring() + L" -> " + rename.newPath.wstring());
+    }
+}
+
 CProjectBox::CProjectBox()
 	: m_bRequestDelete(false)
 	, m_createTargetDir("")
@@ -204,6 +489,9 @@ CProjectBox::CProjectBox()
 	, m_createFolderTargetDir("")
 	, m_bRequestCreateFolder(false)
 	, m_newFolderName({})
+	, m_renameTargetPath("")
+	, m_bRequestRename(false)
+	, m_newRenameName({})
 {
 }
 
@@ -289,6 +577,15 @@ void CProjectBox::Render()
         }
     }
 
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
+        ImGui::IsKeyPressed(ImGuiKey_F2, false) &&
+        m_vSelectedPaths.size() == 1 &&
+        !ImGui::IsPopupOpen("RenameItemPopup"))
+    {
+        const fs::path renameTarget = fs::path(*m_vSelectedPaths.begin());
+        BeginRename(renameTarget);
+    }
+
 	RenderAssetFoldersHierarchy();
 	RenderBinaryFoldersHierarchy();
 
@@ -349,6 +646,7 @@ void CProjectBox::Render()
 		ImGui::EndPopup();
 	}
 
+	RenderRenamePopup();
     RenderCreateAnimatorControllerPopup();
 	RenderCreateFolderPopup();
 
@@ -458,6 +756,17 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
 
         if (ImGui::MenuItem("Show in Explorer"))
             ShowInExplorer(_dirPath, false);
+
+        if (isRoot || isMultiContext)
+        {
+            ImGui::BeginDisabled();
+            ImGui::MenuItem("Rename", "F2");
+            ImGui::EndDisabled();
+        }
+        else if (ImGui::MenuItem("Rename", "F2"))
+        {
+            BeginRename(_dirPath);
+        }
 
         ImGui::Separator();
 
@@ -724,6 +1033,17 @@ void CProjectBox::RenderDirectoryRecursive(const fs::path& _dirPath)
                     if (ImGui::Selectable("Show in Explorer"))
                         ShowInExplorer(entry.path(), true);
 
+                    if (isMultiContext)
+                    {
+                        ImGui::BeginDisabled();
+                        ImGui::MenuItem("Rename", "F2");
+                        ImGui::EndDisabled();
+                    }
+                    else if (ImGui::MenuItem("Rename", "F2"))
+                    {
+                        BeginRename(entry.path());
+                    }
+
                     if (extension == "animatorcontroller")
                     {
                         if (ImGui::Selectable("Open"))
@@ -968,15 +1288,76 @@ void CProjectBox::RenderCreateAnimatorControllerPopup()
 
 static string SanitizeFileName(const string& name)
 {
-    string n = name;
+    string sanitized = SanitizeItemName(name);
+    if (sanitized.empty())
+        sanitized = "NewAnimatorController";
+    return sanitized;
+}
 
-    if (n.empty()) n = "NewAnimatorController";
-    for (char& c : n)
+void CProjectBox::RenderRenamePopup()
+{
+    if (m_bRequestRename)
     {
-        if (c == '/' || c == '\\' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|')
-            c = '_';
+        ImGui::OpenPopup("RenameItemPopup");
+        m_bRequestRename = false;
     }
-    return n;
+
+    if (!ImGui::BeginPopupModal("RenameItemPopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        return;
+
+    error_code ec;
+    const _bool isDirectory = fs::is_directory(m_renameTargetPath, ec);
+    const string extension = isDirectory ? "" : m_renameTargetPath.extension().string();
+
+    ImGui::Text(isDirectory ? "Rename Folder" : "Rename File");
+    ImGui::Separator();
+
+    ImGui::Text("Target:");
+    ImGui::SameLine();
+    ImGui::Text("%s", m_renameTargetPath.string().c_str());
+
+    if (!extension.empty())
+    {
+        ImGui::Text("Extension:");
+        ImGui::SameLine();
+        ImGui::TextDisabled("%s", extension.c_str());
+    }
+
+    if (ImGui::IsWindowAppearing())
+        ImGui::SetKeyboardFocusHere();
+
+    _bool applyRename = ImGui::InputText("Name", m_newRenameName.data(), m_newRenameName.size(), ImGuiInputTextFlags_EnterReturnsTrue);
+
+    if (!m_strRenameError.empty())
+        ImGui::TextColored(ImVec4(1.f, 0.35f, 0.35f, 1.f), "%s", m_strRenameError.c_str());
+
+    ImGui::Separator();
+
+    if (ImGui::Button("Rename", ImVec2(120, 0)))
+        applyRename = true;
+
+    if (applyRename)
+    {
+        string errorMessage;
+        if (RenamePath(m_renameTargetPath, m_newRenameName.data(), &errorMessage))
+        {
+            m_strRenameError.clear();
+            ImGui::CloseCurrentPopup();
+        }
+        else
+        {
+            m_strRenameError = errorMessage;
+        }
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel", ImVec2(120, 0)))
+    {
+        m_strRenameError.clear();
+        ImGui::CloseCurrentPopup();
+    }
+
+    ImGui::EndPopup();
 }
 
 void CProjectBox::RenderCreateFolderPopup()
@@ -1013,6 +1394,109 @@ void CProjectBox::RenderCreateFolderPopup()
 
 		ImGui::EndPopup();
 	}
+}
+
+void CProjectBox::BeginRename(const fs::path& targetPath)
+{
+    error_code ec;
+    if (!fs::exists(targetPath, ec) || ec)
+        return;
+
+    const fs::path normalized = targetPath.lexically_normal();
+    if (normalized == fs::path(L"../Assets").lexically_normal() ||
+        normalized == fs::path(L"BinaryAssets").lexically_normal())
+        return;
+
+    m_renameTargetPath = targetPath;
+    m_bRequestRename = true;
+    m_strRenameError.clear();
+
+    string initialName = fs::is_directory(targetPath, ec)
+        ? targetPath.filename().string()
+        : targetPath.stem().string();
+
+    m_newRenameName.fill(0);
+    strncpy_s(m_newRenameName.data(), m_newRenameName.size(), initialName.c_str(), _TRUNCATE);
+
+    m_vSelectedPaths.clear();
+    m_vSelectedPaths.insert(targetPath.string());
+    m_strLastClickedPath = targetPath.string();
+    CEditor::GetInstance().Set_SelectedAssetPath(targetPath);
+}
+
+_bool CProjectBox::RenamePath(const fs::path& sourcePath, const string& requestedName, string* outError)
+{
+    auto setError = [&](const string& message)
+        {
+            if (outError)
+                *outError = message;
+            return false;
+        };
+
+    error_code ec;
+    if (!fs::exists(sourcePath, ec) || ec)
+        return setError("Selected item no longer exists.");
+
+    const _bool isDirectory = fs::is_directory(sourcePath, ec);
+    const _bool isFile = fs::is_regular_file(sourcePath, ec);
+    if (!isDirectory && !isFile)
+        return setError("Unsupported item type.");
+
+    string sanitizedName = SanitizeItemName(requestedName);
+    if (isFile)
+        sanitizedName = StripPreservedExtension(sanitizedName, sourcePath.extension().string());
+
+    if (sanitizedName.empty())
+        return setError("Name cannot be empty.");
+
+    const fs::path targetPath = isFile
+        ? (sourcePath.parent_path() / (sanitizedName + sourcePath.extension().string()))
+        : (sourcePath.parent_path() / sanitizedName);
+    const vector<pair<fs::path, fs::path>> resourcePathRenames = CollectFileRenamePairs(sourcePath, targetPath);
+
+    const string sourceKey = ToLowerCopy(NormalizeSlashPath(sourcePath.lexically_normal().generic_string()));
+    const string targetKey = ToLowerCopy(NormalizeSlashPath(targetPath.lexically_normal().generic_string()));
+    if (sourceKey == targetKey)
+    {
+        m_vSelectedPaths.clear();
+        m_vSelectedPaths.insert(targetPath.string());
+        m_strLastClickedPath = targetPath.string();
+        CEditor::GetInstance().Set_SelectedAssetPath(targetPath);
+        return true;
+    }
+
+    ec.clear();
+    if (fs::exists(targetPath, ec) && !ec)
+        return setError("An item with the same name already exists.");
+
+    vector<AssociatedBinaryRename> binaryRenames;
+    vector<pair<fs::path, fs::path>> sceneReferenceRenames;
+    if (IsPathInsideRoot(sourcePath, fs::path(L"../Assets")))
+    {
+        sceneReferenceRenames = resourcePathRenames;
+        for (const auto& filePair : resourcePathRenames)
+            AppendAssociatedBinaryRenamesForFile(filePair.first, filePair.second, binaryRenames);
+
+        if (!ValidateAssociatedBinaryRenames(binaryRenames, outError))
+            return false;
+    }
+
+    ec.clear();
+    fs::rename(sourcePath, targetPath, ec);
+    if (ec)
+        return setError("Rename failed.");
+
+    ApplyAssociatedBinaryRenames(binaryRenames);
+    UpdateSceneReferencesForRenamePairs(sceneReferenceRenames);
+    RemapLoadedSceneResourcePaths(resourcePathRenames);
+
+    m_vSelectedPaths.clear();
+    m_vSelectedPaths.insert(targetPath.string());
+    m_strLastClickedPath = targetPath.string();
+    CEditor::GetInstance().Set_SelectedAssetPath(targetPath);
+
+    CDebug::Log(L"Renamed: " + sourcePath.wstring() + L" -> " + targetPath.wstring());
+    return true;
 }
 
 void CProjectBox::CreateAnimatorControllerFile(const fs::path& dir, const string& name)

@@ -167,6 +167,79 @@ namespace
 		return clone;
 	}
 
+	wstring NormalizeSceneResourceComparePath(const wstring& path)
+	{
+		wstring normalized = CEngineString::Replace(path, L"\\", L"/");
+		transform(normalized.begin(), normalized.end(), normalized.begin(),
+			[](wchar_t ch) { return static_cast<wchar_t>(towlower(ch)); });
+		return normalized;
+	}
+
+	wstring BuildSceneStoredAssetPath(const fs::path& path)
+	{
+		wstring generic = CEngineString::Replace(path.lexically_normal().generic_wstring(), L"\\", L"/");
+
+		static const wchar_t* prefixes[] =
+		{
+			L"../Assets/",
+			L"Assets/",
+			L"Client/Assets/",
+			L"../Client/Assets/"
+		};
+
+		const wstring lowerGeneric = NormalizeSceneResourceComparePath(generic);
+		for (const wchar_t* prefix : prefixes)
+		{
+			const wstring lowerPrefix = NormalizeSceneResourceComparePath(prefix);
+			if (lowerGeneric.rfind(lowerPrefix, 0) == 0)
+				return generic.substr(wcslen(prefix));
+		}
+
+		return generic;
+	}
+
+	_bool TryRemapResourcePath(const wstring& currentPath, const fs::path& oldPath, const fs::path& newPath, wstring& outPath)
+	{
+		const wstring normalizedCurrent = CEngineString::Replace(currentPath, L"\\", L"/");
+		const wstring compareCurrent = NormalizeSceneResourceComparePath(normalizedCurrent);
+		const wstring oldGeneric = CEngineString::Replace(oldPath.lexically_normal().generic_wstring(), L"\\", L"/");
+		const wstring newGeneric = CEngineString::Replace(newPath.lexically_normal().generic_wstring(), L"\\", L"/");
+		const wstring oldScenePath = BuildSceneStoredAssetPath(oldPath);
+		const wstring newScenePath = BuildSceneStoredAssetPath(newPath);
+
+		if (compareCurrent == NormalizeSceneResourceComparePath(oldGeneric))
+		{
+			outPath = newGeneric;
+			return true;
+		}
+
+		if (!oldScenePath.empty() && compareCurrent == NormalizeSceneResourceComparePath(oldScenePath))
+		{
+			outPath = newScenePath;
+			return true;
+		}
+
+		static const wchar_t* assetPrefixes[] =
+		{
+			L"../Assets/",
+			L"Assets/",
+			L"Client/Assets/",
+			L"../Client/Assets/"
+		};
+
+		for (const wchar_t* prefix : assetPrefixes)
+		{
+			const wstring currentCandidate = wstring(prefix) + oldScenePath;
+			if (compareCurrent != NormalizeSceneResourceComparePath(currentCandidate))
+				continue;
+
+			outPath = wstring(prefix) + newScenePath;
+			return true;
+		}
+
+		return false;
+	}
+
 	vector<EngineAI::CNaviMesh::MeshSource> GatherNavigationStaticMeshSources(CScene* scene)
 	{
 		vector<EngineAI::CNaviMesh::MeshSource> sources = {};
@@ -1587,6 +1660,8 @@ vector<CScene::SCENETRANSFORMINFO> CScene::Convert_ObjectsTransformInfo() const
 			info.rigidBodyKinematic = rigidBody->IsKinematic();
 			info.rigidBodyUseGravity = rigidBody->IsUseGravity();
 			info.rigidBodyMass = rigidBody->GetMass();
+			info.rigidBodyDrag = rigidBody->GetDrag();
+			info.rigidBodyAngularDrag = rigidBody->GetAngularDrag();
 			info.rigidBodyConstPositionX = rigidBody->IsConstPositionX();
 			info.rigidBodyConstPositionY = rigidBody->IsConstPositionY();
 			info.rigidBodyConstPositionZ = rigidBody->IsConstPositionZ();
@@ -1940,6 +2015,8 @@ void CScene::Bind_ObjectsTransform(const vector<SCENETRANSFORMINFO> _infoList)
 			rigidBody->SetKinematic(info.rigidBodyKinematic);
 			rigidBody->SetUseGravity(info.rigidBodyUseGravity);
 			rigidBody->SetMass(info.rigidBodyMass);
+			rigidBody->SetDrag(info.rigidBodyDrag);
+			rigidBody->SetAngularDrag(info.rigidBodyAngularDrag);
 			rigidBody->SetConstPositionX(info.rigidBodyConstPositionX);
 			rigidBody->SetConstPositionY(info.rigidBodyConstPositionY);
 			rigidBody->SetConstPositionZ(info.rigidBodyConstPositionZ);
@@ -3652,7 +3729,84 @@ HRESULT CScene::SaveScene(const wstring& _filePath)
 
 	out.close();
 
+	vector<pair<fs::path, wstring>> usageReferences;
+	usageReferences.reserve(sortedEntries.size());
+	for (const auto& entry : sortedEntries)
+		usageReferences.emplace_back(fs::path(entry.path), entry.format);
+
+	CResources::GetInstance().SyncResourceUsageScene(m_strSceneName, usageReferences);
+
 	return S_OK;
+}
+
+void CScene::RemapResourceFilePaths(const vector<pair<fs::path, fs::path>>& renames)
+{
+	if (renames.empty())
+		return;
+
+	unordered_set<CEngineResource*> visitedResources;
+
+	auto remapResource = [&](CEngineResource* resource)
+	{
+		if (!resource || !visitedResources.insert(resource).second)
+			return;
+
+		wstring remappedPath = resource->Get_FilePath();
+		for (const auto& renamePair : renames)
+		{
+			wstring candidatePath = remappedPath;
+			if (!TryRemapResourcePath(remappedPath, renamePair.first, renamePair.second, candidatePath))
+				continue;
+
+			remappedPath = candidatePath;
+		}
+
+		if (remappedPath != resource->Get_FilePath())
+			resource->Set_FilePath(remappedPath);
+	};
+
+	auto remapResourceMap = [&](auto& resourceMap)
+	{
+		for (auto& [name, resource] : resourceMap)
+			remapResource(resource);
+	};
+
+	auto remapMeshBundleMap = [&](auto& bundleMap)
+	{
+		for (auto& [name, bundles] : bundleMap)
+		{
+			for (auto& bundle : bundles)
+			{
+				remapResource(bundle.meshBuffer);
+				remapResource(bundle.material);
+				remapResource(bundle.texture);
+			}
+		}
+	};
+
+	auto remapSkinnedBundleMap = [&](auto& bundleMap)
+	{
+		for (auto& [name, bundles] : bundleMap)
+		{
+			for (auto& bundle : bundles)
+			{
+				remapResource(bundle.meshBuffer);
+				remapResource(bundle.material);
+				remapResource(bundle.texture);
+			}
+		}
+	};
+
+	remapResourceMap(m_mResourceList);
+	remapResourceMap(m_mTempResourceList);
+
+	for (CEngineResource* resource : m_vCloneResourceList)
+		remapResource(resource);
+
+	remapMeshBundleMap(m_mMeshBundleList);
+	remapMeshBundleMap(m_mTempMeshBundleList);
+	remapSkinnedBundleMap(m_mSkinnedBundleList);
+	remapSkinnedBundleMap(m_mTempSkinnedBundleList);
 }
 
 const _uint CScene::Get_UniqueObjectCount() const
@@ -3792,6 +3946,7 @@ HRESULT CScene::PreLoadResources()
 	vector<string> nameList;
 	vector<string> fileList;
 	vector<string> formatList;
+	vector<pair<fs::path, wstring>> usageReferences;
 
 	while (getline(file, line))
 	{
@@ -3865,6 +4020,10 @@ HRESULT CScene::PreLoadResources()
 				continue;
 			}
 
+			usageReferences.emplace_back(
+				fs::path(CEngineString::StringToWString(filepath)),
+				CEngineString::StringToWString(format));
+
 			if (reuseEditorTaggedResource(name, format))
 				continue;
 
@@ -3882,6 +4041,7 @@ HRESULT CScene::PreLoadResources()
 			CDebug::LogError("Invalid line format: " + line);
 	}
 
+	CResources::GetInstance().SyncResourceUsageScene(m_strSceneName, usageReferences);
 	CSceneLoader::GetInstance().StartLoading(nameList, fileList, formatList);
 
 	return S_OK;

@@ -10,12 +10,14 @@ class ENGINE_DLL CEditor final
 {
 public:
 	enum class TransformControleTool { VIEW, MOVE, ROTATE, SCALE, RECT, TRANSFORM };
+	enum class TransformSpace { LOCAL, WORLD };
 
 	typedef struct EditopWindowOptionsDescription
 	{
 		_uint windowWidth = 1750;
 		_uint windowHeight = 720;
 		_uint topBarHeight = 28;
+		_uint editorViewToolbarHeight = 32;
 		_uint projectWidth = 220;
 		_uint hierachyWidth = 250;
 		_uint inspectorWidth = 260;
@@ -42,7 +44,9 @@ public:
 public:
 	const TransformControleTool Get_ControleTool() const;
 	const TransformControleTool Get_GizmoControleTool() const;
+	const TransformSpace Get_GizmoTransformSpace() const;
 	void Change_ControleTool(const TransformControleTool _tool);
+	void Set_GizmoTransformSpace(const TransformSpace _space);
 	const vector3 Get_EditorCamPositon() const;
 	const quaternion Get_EditorCamQuaternion() const;
 	void Set_EditorCamTransform(class CTransform* _transform);
@@ -116,6 +120,7 @@ private:
 private:
 	TransformControleTool m_eControleTool;
 	TransformControleTool m_eLastGizmoTool;
+	TransformSpace m_eGizmoTransformSpace;
 	CGameObject* m_pSelectedGameObject;
 	CGameObject* m_pMoveTargetGameObject;
 	_bool m_bOpenSelectedInHierarchyRequested;

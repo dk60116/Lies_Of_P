@@ -13,6 +13,9 @@ namespace
 {
 	constexpr UINT kDDSMaxTextureSize = 4096;
 	constexpr UINT kDDSMinMipDimension = 64;
+	constexpr _uint kResourceUsageFooterMagic = 0x55534731; // USG1
+	constexpr _uint kResourceUsageFooterVersion = 1;
+	constexpr _uint kResourceUsageFooterTailMagic = 0x55534746; // USGF
 	constexpr const wchar_t* kSupportedTextureSourceExtensions[] =
 	{
 		L".png", L".jpg", L".jpeg", L".bmp", L".tga", L".tif", L".tiff", L".gif"
@@ -130,6 +133,284 @@ namespace
 		}
 
 		return {};
+	}
+
+	wstring NormalizeGenericLower(const wstring& value)
+	{
+		wstring normalized = CEngineString::Replace(value, L"\\", L"/");
+		return ToLowerCopy(normalized);
+	}
+
+	void SortUniqueSceneNames(vector<wstring>& scenes)
+	{
+		sort(scenes.begin(), scenes.end(), [](const wstring& lhs, const wstring& rhs)
+			{
+				return NormalizeGenericLower(lhs) < NormalizeGenericLower(rhs);
+			});
+
+		scenes.erase(unique(scenes.begin(), scenes.end(), [](const wstring& lhs, const wstring& rhs)
+			{
+				return NormalizeGenericLower(lhs) == NormalizeGenericLower(rhs);
+			}), scenes.end());
+	}
+
+	void AppendBinaryUsageTarget(const fs::path& targetPath, vector<fs::path>& outTargets)
+	{
+		if (targetPath.empty())
+			return;
+
+		const wstring normalized = NormalizeGenericLower(targetPath.generic_wstring());
+		for (const fs::path& existing : outTargets)
+		{
+			if (NormalizeGenericLower(existing.generic_wstring()) == normalized)
+				return;
+		}
+
+		outTargets.push_back(targetPath);
+	}
+
+	vector<fs::path> ResolveResourceUsageBinaryTargets(const fs::path& sourcePath, const wstring& formatHint)
+	{
+		vector<fs::path> targets;
+		if (sourcePath.empty())
+			return targets;
+
+		const fs::path normalizedPath = sourcePath.lexically_normal();
+		const wstring normalizedGeneric = NormalizeGenericLower(normalizedPath.generic_wstring());
+		const wstring lowerFormat = NormalizeGenericLower(formatHint);
+		const wstring extension = ToLowerCopy(normalizedPath.extension().wstring());
+
+		const auto isBinaryPath = normalizedGeneric.rfind(L"binaryassets/", 0) == 0 || normalizedGeneric.rfind(L"../binaryassets/", 0) == 0;
+		if (isBinaryPath)
+		{
+			AppendBinaryUsageTarget(normalizedPath, targets);
+			return targets;
+		}
+
+		auto makeBinaryName = [&](const wstring& binaryDir, const wstring& binaryExtension)
+			{
+				const fs::path parentPath = normalizedPath.parent_path();
+				const wstring folder = parentPath.filename().wstring();
+				const wstring stem = normalizedPath.stem().wstring();
+				if (folder.empty() || stem.empty())
+					return;
+
+				AppendBinaryUsageTarget(fs::path(binaryDir) / fs::path(folder + L"_" + stem + binaryExtension), targets);
+			};
+
+		if (extension == L".fbx")
+		{
+			const _bool wantsMesh = lowerFormat.empty() || lowerFormat.find(L"[mesh]") != wstring::npos;
+			const _bool wantsSkinned = lowerFormat.empty() || lowerFormat.find(L"[skinned mesh]") != wstring::npos;
+			const _bool wantsAnimation = lowerFormat.empty() || lowerFormat.find(L"[animation clip]") != wstring::npos;
+
+			if (wantsMesh)
+				makeBinaryName(L"BinaryAssets/MeshData", L".meshdata");
+			if (wantsSkinned)
+				makeBinaryName(L"BinaryAssets/SkinnedMeshData", L".skinneddata");
+			if (wantsAnimation)
+				makeBinaryName(L"BinaryAssets/AnimationClipData", L".animdata");
+		}
+		else if (extension == L".png" || extension == L".jpg" || extension == L".jpeg" || extension == L".bmp" || extension == L".tga" || extension == L".tif" || extension == L".tiff" || extension == L".gif")
+		{
+			makeBinaryName(L"BinaryAssets/TextureData", L".dds");
+		}
+		else if (extension == L".animatorcontroller")
+		{
+			makeBinaryName(L"BinaryAssets/AnimatorControllerData", L".acdata");
+		}
+		else if (extension == L".ttf" || extension == L".otf")
+		{
+			AppendBinaryUsageTarget(fs::path(L"BinaryAssets/FontData") / fs::path(normalizedPath.stem().wstring() + L".spritefont"), targets);
+		}
+		else if (extension == L".meshdata" || extension == L".skinneddata" || extension == L".animdata" || extension == L".acdata" || extension == L".dds" || extension == L".spritefont")
+		{
+			AppendBinaryUsageTarget(normalizedPath, targets);
+		}
+
+		return targets;
+	}
+
+	_bool TryReadResourceUsageFooter(const fs::path& binaryPath, vector<wstring>& outScenes, uint64_t* outPrefixSize = nullptr)
+	{
+		outScenes.clear();
+
+		error_code ec;
+		if (!fs::exists(binaryPath, ec) || ec)
+			return false;
+
+		ifstream in(binaryPath, ios::binary);
+		if (!in.is_open())
+			return false;
+
+		in.seekg(0, ios::end);
+		const streamoff fileSize = in.tellg();
+		if (fileSize < static_cast<streamoff>(sizeof(_uint) * 2))
+			return false;
+
+		in.seekg(fileSize - static_cast<streamoff>(sizeof(_uint) * 2), ios::beg);
+		_uint footerSize = 0;
+		_uint tailMagic = 0;
+		in.read(reinterpret_cast<char*>(&footerSize), sizeof(_uint));
+		in.read(reinterpret_cast<char*>(&tailMagic), sizeof(_uint));
+
+		if (tailMagic != kResourceUsageFooterTailMagic)
+			return false;
+
+		const uint64_t trailerSize = sizeof(_uint) * 2ull;
+		if (footerSize < sizeof(_uint) * 3ull || footerSize + trailerSize > static_cast<uint64_t>(fileSize))
+			return false;
+
+		const uint64_t payloadStart = static_cast<uint64_t>(fileSize) - trailerSize - footerSize;
+		in.seekg(static_cast<streamoff>(payloadStart), ios::beg);
+
+		_uint magic = 0;
+		_uint version = 0;
+		_uint sceneCount = 0;
+		in.read(reinterpret_cast<char*>(&magic), sizeof(_uint));
+		in.read(reinterpret_cast<char*>(&version), sizeof(_uint));
+		in.read(reinterpret_cast<char*>(&sceneCount), sizeof(_uint));
+
+		if (magic != kResourceUsageFooterMagic || version != kResourceUsageFooterVersion)
+			return false;
+
+		for (_uint index = 0; index < sceneCount; ++index)
+		{
+			_uint nameLen = 0;
+			in.read(reinterpret_cast<char*>(&nameLen), sizeof(_uint));
+			if (!in.good())
+				return false;
+
+			wstring sceneName(nameLen, L'\0');
+			if (nameLen > 0)
+			{
+				in.read(reinterpret_cast<char*>(sceneName.data()), sizeof(wchar_t) * nameLen);
+				if (!in.good())
+					return false;
+			}
+
+			outScenes.push_back(move(sceneName));
+		}
+
+		SortUniqueSceneNames(outScenes);
+		if (outPrefixSize)
+			*outPrefixSize = payloadStart;
+		return true;
+	}
+
+	_bool WriteResourceUsageFooter(const fs::path& binaryPath, const vector<wstring>& scenes)
+	{
+		vector<char> fileBytes;
+		uint64_t prefixSize = 0;
+		vector<wstring> existingScenes;
+		TryReadResourceUsageFooter(binaryPath, existingScenes, &prefixSize);
+
+		ifstream in(binaryPath, ios::binary);
+		if (!in.is_open())
+			return false;
+
+		in.seekg(0, ios::end);
+		const uint64_t fileSize = static_cast<uint64_t>(in.tellg());
+		if (prefixSize == 0 || prefixSize > fileSize)
+			prefixSize = fileSize;
+
+		fileBytes.resize(static_cast<size_t>(prefixSize));
+		in.seekg(0, ios::beg);
+		if (prefixSize > 0)
+			in.read(fileBytes.data(), static_cast<streamsize>(prefixSize));
+		in.close();
+
+		vector<char> footerPayload;
+		auto appendRaw = [&footerPayload](const void* data, size_t size)
+			{
+				const char* bytes = static_cast<const char*>(data);
+				footerPayload.insert(footerPayload.end(), bytes, bytes + size);
+			};
+
+		const _uint magic = kResourceUsageFooterMagic;
+		const _uint version = kResourceUsageFooterVersion;
+		const _uint sceneCount = static_cast<_uint>(scenes.size());
+		appendRaw(&magic, sizeof(_uint));
+		appendRaw(&version, sizeof(_uint));
+		appendRaw(&sceneCount, sizeof(_uint));
+
+		for (const wstring& sceneName : scenes)
+		{
+			const _uint nameLen = static_cast<_uint>(sceneName.size());
+			appendRaw(&nameLen, sizeof(_uint));
+			if (nameLen > 0)
+				appendRaw(sceneName.data(), sizeof(wchar_t) * nameLen);
+		}
+
+		ofstream out(binaryPath, ios::binary | ios::trunc);
+		if (!out.is_open())
+			return false;
+
+		if (!fileBytes.empty())
+			out.write(fileBytes.data(), static_cast<streamsize>(fileBytes.size()));
+
+		if (!footerPayload.empty())
+			out.write(footerPayload.data(), static_cast<streamsize>(footerPayload.size()));
+
+		const _uint footerSize = static_cast<_uint>(footerPayload.size());
+		out.write(reinterpret_cast<const char*>(&footerSize), sizeof(_uint));
+		out.write(reinterpret_cast<const char*>(&kResourceUsageFooterTailMagic), sizeof(_uint));
+		return out.good();
+	}
+
+	_bool ContainsSceneName(const vector<wstring>& scenes, const wstring& sceneName)
+	{
+		const wstring normalizedSceneName = NormalizeGenericLower(sceneName);
+		for (const wstring& existing : scenes)
+		{
+			if (NormalizeGenericLower(existing) == normalizedSceneName)
+				return true;
+		}
+
+		return false;
+	}
+
+	_bool RemoveSceneName(vector<wstring>& scenes, const wstring& sceneName)
+	{
+		const size_t previousSize = scenes.size();
+		const wstring normalizedSceneName = NormalizeGenericLower(sceneName);
+
+		scenes.erase(remove_if(scenes.begin(), scenes.end(), [&normalizedSceneName](const wstring& existing)
+			{
+				return NormalizeGenericLower(existing) == normalizedSceneName;
+			}), scenes.end());
+
+		return previousSize != scenes.size();
+	}
+
+	vector<fs::path> EnumerateResourceUsageBinaryFiles()
+	{
+		vector<fs::path> binaries;
+		const fs::path binaryRoot = L"BinaryAssets";
+		error_code ec;
+		if (!fs::exists(binaryRoot, ec) || ec)
+			return binaries;
+
+		for (const auto& entry : fs::recursive_directory_iterator(binaryRoot, fs::directory_options::skip_permission_denied, ec))
+		{
+			if (!entry.is_regular_file())
+				continue;
+
+			const wstring extension = ToLowerCopy(entry.path().extension().wstring());
+			if (extension != L".meshdata" &&
+				extension != L".skinneddata" &&
+				extension != L".animdata" &&
+				extension != L".acdata" &&
+				extension != L".dds" &&
+				extension != L".spritefont")
+			{
+				continue;
+			}
+
+			AppendBinaryUsageTarget(entry.path().lexically_normal(), binaries);
+		}
+
+		return binaries;
 	}
 
 	struct PrivateFontRegistration
@@ -764,6 +1045,92 @@ void CResources::Release()
 		Safe_Release((*it).second);
 
 	m_mGameResourceList.clear();
+}
+
+vector<fs::path> CResources::GetResourceUsageBinaryPaths(const fs::path& path, const wstring& formatHint) const
+{
+	return ResolveResourceUsageBinaryTargets(path, formatHint);
+}
+
+vector<wstring> CResources::GetResourceUsageScenes(const fs::path& path, const wstring& formatHint) const
+{
+	vector<wstring> scenes;
+	for (const fs::path& binaryPath : ResolveResourceUsageBinaryTargets(path, formatHint))
+	{
+		vector<wstring> fileScenes;
+		if (!TryReadResourceUsageFooter(binaryPath, fileScenes))
+			continue;
+
+		scenes.insert(scenes.end(), fileScenes.begin(), fileScenes.end());
+	}
+
+	SortUniqueSceneNames(scenes);
+	return scenes;
+}
+
+void CResources::EnsureResourceUsageScene(const fs::path& path, const wstring& sceneName, const wstring& formatHint)
+{
+	if (path.empty() || sceneName.empty())
+		return;
+
+	for (const fs::path& binaryPath : ResolveResourceUsageBinaryTargets(path, formatHint))
+	{
+		error_code ec;
+		if (!fs::exists(binaryPath, ec) || ec)
+			continue;
+
+		vector<wstring> scenes;
+		TryReadResourceUsageFooter(binaryPath, scenes);
+		scenes.push_back(sceneName);
+		SortUniqueSceneNames(scenes);
+		WriteResourceUsageFooter(binaryPath, scenes);
+	}
+}
+
+void CResources::SyncResourceUsageScene(const wstring& sceneName, const vector<pair<fs::path, wstring>>& references)
+{
+	if (sceneName.empty())
+		return;
+
+	vector<fs::path> keepTargets;
+	for (const auto& reference : references)
+	{
+		for (const fs::path& binaryPath : ResolveResourceUsageBinaryTargets(reference.first, reference.second))
+			AppendBinaryUsageTarget(binaryPath.lexically_normal(), keepTargets);
+	}
+
+	vector<fs::path> candidateTargets = EnumerateResourceUsageBinaryFiles();
+	for (const fs::path& keepTarget : keepTargets)
+		AppendBinaryUsageTarget(keepTarget, candidateTargets);
+
+	for (const fs::path& binaryPath : candidateTargets)
+	{
+		error_code ec;
+		if (!fs::exists(binaryPath, ec) || ec)
+			continue;
+
+		vector<wstring> scenes;
+		const _bool hasFooter = TryReadResourceUsageFooter(binaryPath, scenes);
+		_bool changed = RemoveSceneName(scenes, sceneName);
+
+		const wstring normalizedBinaryPath = NormalizeGenericLower(binaryPath.generic_wstring());
+		const _bool shouldContainScene = any_of(keepTargets.begin(), keepTargets.end(), [&normalizedBinaryPath](const fs::path& keepTarget)
+			{
+				return NormalizeGenericLower(keepTarget.generic_wstring()) == normalizedBinaryPath;
+			});
+
+		if (shouldContainScene && !ContainsSceneName(scenes, sceneName))
+		{
+			scenes.push_back(sceneName);
+			changed = true;
+		}
+
+		if (!changed && !hasFooter)
+			continue;
+
+		SortUniqueSceneNames(scenes);
+		WriteResourceUsageFooter(binaryPath, scenes);
+	}
 }
 
 static _bool HasSourceAssetForBinary(const fs::path& binaryFile, const wstring& assetRoot, const vector<wstring>& sourceExts)
@@ -1613,7 +1980,7 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 	}
 
 	const _uint magic = 0x53434E32;
-	const _uint version = 25;
+	const _uint version = 26;
 	_uint count = static_cast<_uint>(_infoList.size());
 	out.write(reinterpret_cast<const char*>(&magic), sizeof(_uint));
 	out.write(reinterpret_cast<const char*>(&version), sizeof(_uint));
@@ -1655,6 +2022,8 @@ HRESULT CResources::SaveSceneObjectTransformInfos(const wstring _filePath, vecto
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyKinematic), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyUseGravity), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyMass), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&info.rigidBodyDrag), sizeof(_float));
+		out.write(reinterpret_cast<const char*>(&info.rigidBodyAngularDrag), sizeof(_float));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyConstPositionX), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyConstPositionY), sizeof(_bool));
 		out.write(reinterpret_cast<const char*>(&info.rigidBodyConstPositionZ), sizeof(_bool));
@@ -1927,6 +2296,12 @@ vector<CScene::ObjectsTransformInfo> CResources::ReadSceneObjectTransformInfos(c
 			in.read(reinterpret_cast<char*>(&info.rigidBodyKinematic), sizeof(_bool));
 			in.read(reinterpret_cast<char*>(&info.rigidBodyUseGravity), sizeof(_bool));
 			in.read(reinterpret_cast<char*>(&info.rigidBodyMass), sizeof(_float));
+		}
+
+		if (version >= 26)
+		{
+			in.read(reinterpret_cast<char*>(&info.rigidBodyDrag), sizeof(_float));
+			in.read(reinterpret_cast<char*>(&info.rigidBodyAngularDrag), sizeof(_float));
 		}
 
 		if (version >= 9)

@@ -54,6 +54,10 @@ public:
     HRESULT SaveAnimationClipBufferInfos(const wstring _filePath, vector<CAnimationClip::AnimationClipInitInfo> _infoList);
     vector<CAnimationClip::AnimationClipInitInfo> ReadAnimationClipBufferInfos(const wstring _binFileName);
     CAnimatorController::AnimatorControllerInitInfo ReadAnimatorControllerBufferInfos(const wstring _binFileName);
+    vector<fs::path> GetResourceUsageBinaryPaths(const fs::path& path, const wstring& formatHint = L"") const;
+    vector<wstring> GetResourceUsageScenes(const fs::path& path, const wstring& formatHint = L"") const;
+    void EnsureResourceUsageScene(const fs::path& path, const wstring& sceneName, const wstring& formatHint = L"");
+    void SyncResourceUsageScene(const wstring& sceneName, const vector<pair<fs::path, wstring>>& references);
 
     static CEngineResource* AddSceneResource(const wstring& _name, CEngineResource* _resource, const _bool _tempScene);
 public:

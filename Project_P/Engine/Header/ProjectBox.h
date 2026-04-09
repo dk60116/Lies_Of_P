@@ -26,9 +26,12 @@ private:
 	void RenderDirectoryRecursive(const fs::path& _dirPath);
 	void RenderCreateAnimatorControllerPopup();
 	void RenderCreateFolderPopup();
+	void RenderRenamePopup();
 
 	void CreateAnimatorControllerFile(const fs::path& dir, const string& name);
 	void CreateFolder(const fs::path& dir, const string& name);
+	void BeginRename(const fs::path& targetPath);
+	_bool RenamePath(const fs::path& sourcePath, const string& requestedName, string* outError = nullptr);
 	string MakeAnimatorControllerTemplateText(const string& controllerName);
 
 private:
@@ -46,6 +49,10 @@ private:
 	fs::path m_createFolderTargetDir;
 	_bool m_bRequestCreateFolder;
 	array<char, 128> m_newFolderName;
+	fs::path m_renameTargetPath;
+	_bool m_bRequestRename;
+	array<char, 260> m_newRenameName;
+	string m_strRenameError;
 	array<char, 128> m_searchBuffer{};
 };
 

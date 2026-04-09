@@ -219,7 +219,11 @@ void CTransform::Render_Gizmo()
         memcpy(world, &gizmoPrev, sizeof(float) * 16);
     }
 
-    ImGuizmo::MODE gizmoMode = isMultiSelect ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
+    const CEditor::TransformSpace transformSpace = editor.Get_GizmoTransformSpace();
+    ImGuizmo::MODE gizmoMode =
+        transformSpace == CEditor::TransformSpace::WORLD
+        ? ImGuizmo::WORLD
+        : ImGuizmo::LOCAL;
 
     _bool manipulated = ImGuizmo::Manipulate(view, projection, gizmoOperation, gizmoMode, world);
 

@@ -96,6 +96,9 @@ void CSceneLoader::ThreadLoadingLoop()
 			wstring wName = CEngineString::StringToWString(name);
 			wstring wFile = CEngineString::StringToWString(file);
 			wstring wFormat = CEngineString::StringToWString(format);
+			const wstring currentSceneName = CSceneManager::GetInstance().Get_CrtScene()
+				? CSceneManager::GetInstance().Get_CrtScene()->Get_SceneName()
+				: L"";
 
 			if (CEngineString::Contains(wFile, L".png") || CEngineString::Contains(wFile, L".jpg") || CEngineString::Contains(wFile, L".jpeg") || CEngineString::Contains(wFile, L".bmp") || CEngineString::Contains(wFile, L".tga") || CEngineString::Contains(wFile, L".tif") || CEngineString::Contains(wFile, L".tiff"))
 			{
@@ -256,6 +259,8 @@ void CSceneLoader::ThreadLoadingLoop()
 				CMeshBuffer::TERRAINBUFFERDESC terranDesc = FormatToTerrainDesc(wName, wFormat);
 				CResources::LoadResourceComplete_Scene<CMeshBuffer>(wName + L" (Terrain MeshBuffer)", wFile, &terranDesc, true);
 			}
+
+			CResources::GetInstance().EnsureResourceUsageScene(fs::path(wFile), currentSceneName, wFormat);
 
 			++GetInstance().m_iLoadedFile;
 		}

@@ -40,6 +40,49 @@ namespace
         return GetPS().GetBodyInterface();
     }
 
+    inline void ApplyBodyDamping(const BodyID& _bodyID, const _float _linearDamping, const _float _angularDamping)
+    {
+        if (!CPhysics::GetInstance().IsInitialized() || _bodyID == BodyID())
+            return;
+
+        BodyLockWrite lock(GetPS().GetBodyLockInterface(), _bodyID);
+        if (!lock.Succeeded())
+            return;
+
+        Body& body = lock.GetBody();
+        if (!body.IsDynamic())
+            return;
+
+        if (MotionProperties* motion = body.GetMotionPropertiesUnchecked())
+        {
+            motion->SetLinearDamping(max(_linearDamping, 0.f));
+            motion->SetAngularDamping(max(_angularDamping, 0.f));
+        }
+
+        lock.ReleaseLock();
+        GetBI().ActivateBody(_bodyID);
+    }
+
+    inline void ApplyBodyMass(const BodyID& _bodyID, const _float _mass)
+    {
+        if (!CPhysics::GetInstance().IsInitialized() || _bodyID == BodyID())
+            return;
+
+        BodyLockWrite lock(GetPS().GetBodyLockInterface(), _bodyID);
+        if (!lock.Succeeded())
+            return;
+
+        Body& body = lock.GetBody();
+        if (!body.IsDynamic())
+            return;
+
+        if (MotionProperties* motion = body.GetMotionPropertiesUnchecked())
+            motion->ScaleToMass(max(_mass, 0.001f));
+
+        lock.ReleaseLock();
+        GetBI().ActivateBody(_bodyID);
+    }
+
     inline _bool IsPlayerAttackLockedMovement(const CGameObject* _gameObject, const _bool _bypassPositionConstraints)
     {
         if (!_bypassPositionConstraints || !_gameObject)
@@ -89,6 +132,8 @@ CRigidBody::CRigidBody()
     , m_bKinematic(false)
     , m_bUseGravity(false)
     , m_fMass(1.f)
+    , m_fDrag(0.05f)
+    , m_fAngularDrag(0.05f)
     , m_bConstPositionX(false)
     , m_bConstPositionY(false)
     , m_bConstPositionZ(false)
@@ -98,6 +143,7 @@ CRigidBody::CRigidBody()
     , m_vConstPosition(vector3::zero())
     , m_vConstRotation(vector3::zero())
     , m_bSkipPositionConstraintSyncOnce(false)
+    , m_bRestoreDragAfterTranslate(false)
     , m_bHasLastSyncedTransform(false)
     , m_vLastSyncedPosition(vector3::zero())
     , m_vLastSyncedRotation(quaternion::identity())
@@ -121,6 +167,8 @@ CComponent* CRigidBody::Clone() const
     clone->m_bKinematic = m_bKinematic;
     clone->m_bUseGravity = m_bUseGravity;
     clone->m_fMass = m_fMass;
+    clone->m_fDrag = m_fDrag;
+    clone->m_fAngularDrag = m_fAngularDrag;
     clone->m_bConstPositionX = m_bConstPositionX;
     clone->m_bConstPositionY = m_bConstPositionY;
     clone->m_bConstPositionZ = m_bConstPositionZ;
@@ -130,6 +178,7 @@ CComponent* CRigidBody::Clone() const
     clone->m_vConstPosition = m_vConstPosition;
     clone->m_vConstRotation = m_vConstRotation;
     clone->m_bSkipPositionConstraintSyncOnce = false;
+    clone->m_bRestoreDragAfterTranslate = false;
 
     return clone;
 }
@@ -167,6 +216,17 @@ void CRigidBody::OnDisable()
 void CRigidBody::FixedUpdate()
 {
     RebuildBodiesIfDirty();
+
+    if (m_bRestoreDragAfterTranslate)
+    {
+        if (m_bHasBody)
+            ApplyBodyDamping(m_iBodyID, m_fDrag, m_fAngularDrag);
+
+        if (m_bHasSensorBody)
+            ApplyBodyDamping(m_iSensorBodyID, m_fDrag, m_fAngularDrag);
+
+        m_bRestoreDragAfterTranslate = false;
+    }
 
     if (m_bKinematic)
         SyncKinematicToJolt();
@@ -444,11 +504,56 @@ _float CRigidBody::GetMass() const
 void CRigidBody::SetMass(_float _mass)
 {
     const _float clampedMass = max(_mass, 0.001f);
-    if (m_fMass == clampedMass)
+    if (fabsf(m_fMass - clampedMass) <= 1e-6f)
         return;
 
     m_fMass = clampedMass;
-    m_bBodyDirty = true;
+
+    if (m_bHasBody)
+        ApplyBodyMass(m_iBodyID, m_fMass);
+
+    if (m_bHasSensorBody)
+        ApplyBodyMass(m_iSensorBodyID, m_fMass);
+}
+
+_float CRigidBody::GetDrag() const
+{
+    return m_fDrag;
+}
+
+void CRigidBody::SetDrag(_float _drag)
+{
+    const _float clampedDrag = max(_drag, 0.f);
+    if (fabsf(m_fDrag - clampedDrag) <= 1e-6f)
+        return;
+
+    m_fDrag = clampedDrag;
+
+    if (m_bHasBody)
+        ApplyBodyDamping(m_iBodyID, m_fDrag, m_fAngularDrag);
+
+    if (m_bHasSensorBody)
+        ApplyBodyDamping(m_iSensorBodyID, m_fDrag, m_fAngularDrag);
+}
+
+_float CRigidBody::GetAngularDrag() const
+{
+    return m_fAngularDrag;
+}
+
+void CRigidBody::SetAngularDrag(_float _angularDrag)
+{
+    const _float clampedAngularDrag = max(_angularDrag, 0.f);
+    if (fabsf(m_fAngularDrag - clampedAngularDrag) <= 1e-6f)
+        return;
+
+    m_fAngularDrag = clampedAngularDrag;
+
+    if (m_bHasBody)
+        ApplyBodyDamping(m_iBodyID, m_fDrag, m_fAngularDrag);
+
+    if (m_bHasSensorBody)
+        ApplyBodyDamping(m_iSensorBodyID, m_fDrag, m_fAngularDrag);
 }
 
 
@@ -586,6 +691,8 @@ void CRigidBody::Translate(const vector3& _deltaWorld)
         static_cast<float>(appliedDelta.x / commandDt),
         static_cast<float>(appliedDelta.y / commandDt),
         static_cast<float>(appliedDelta.z / commandDt));
+
+    SuspendLinearDragUntilNextPhysicsStep();
 
     if (m_bHasBody)
     {
@@ -863,6 +970,21 @@ void CRigidBody::ResetVelocity()
     }
 }
 
+void CRigidBody::SuspendLinearDragUntilNextPhysicsStep()
+{
+    if (m_fDrag <= 0.f)
+        return;
+
+    if (m_bHasBody)
+        ApplyBodyDamping(m_iBodyID, 0.f, m_fAngularDrag);
+
+    if (m_bHasSensorBody)
+        ApplyBodyDamping(m_iSensorBodyID, 0.f, m_fAngularDrag);
+
+    if (m_bHasBody || m_bHasSensorBody)
+        m_bRestoreDragAfterTranslate = true;
+}
+
 void CRigidBody::ApplyPositionConstraints(vector3& _pos)
 {
     if (m_bConstPositionX)
@@ -991,6 +1113,8 @@ void CRigidBody::RebuildBodiesIfDirty()
             CPhysics::CollisionObjectType::Moving);
 
         BodyCreationSettings settings(m_pCompoundShape, pos, rot, motion, layer);
+        settings.mLinearDamping = m_fDrag;
+        settings.mAngularDamping = m_fAngularDrag;
 
         if (!m_bKinematic)
         {
@@ -1026,6 +1150,8 @@ void CRigidBody::RebuildBodiesIfDirty()
 
         BodyCreationSettings settings(m_pSensorCompoundShape, pos, rot, motion, layer);
         settings.mIsSensor = true;
+        settings.mLinearDamping = m_fDrag;
+        settings.mAngularDamping = m_fAngularDrag;
 
         Body* body = GetBI().CreateBody(settings);
         m_iSensorBodyID = body->GetID();
@@ -1043,6 +1169,7 @@ void CRigidBody::DestroyBodies()
 {
     m_bHasLastSyncedTransform = false;
     m_bSkipPositionConstraintSyncOnce = false;
+    m_bRestoreDragAfterTranslate = false;
 
     if (!CPhysics::GetInstance().IsInitialized())
     {

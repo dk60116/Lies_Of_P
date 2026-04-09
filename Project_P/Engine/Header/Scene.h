@@ -105,6 +105,8 @@ public:
         _bool rigidBodyKinematic = false;
         _bool rigidBodyUseGravity = true;
         _float rigidBodyMass = 1.f;
+        _float rigidBodyDrag = 0.05f;
+        _float rigidBodyAngularDrag = 0.05f;
         _bool rigidBodyConstPositionX = false;
         _bool rigidBodyConstPositionY = false;
         _bool rigidBodyConstPositionZ = false;
@@ -249,6 +251,7 @@ public:
     void Remove_Canvas(CCanvas* _canvas);
 
     HRESULT SaveScene(const wstring& _filePath);
+    void RemapResourceFilePaths(const vector<pair<fs::path, fs::path>>& renames);
     const _uint Get_UniqueObjectCount() const;
 	const _bool Is_SaveRegistrationEnabled() const;
 	void Set_SaveRegistrationEnabled(const _bool _enabled);

@@ -179,6 +179,8 @@ HRESULT CPlayer::Initialize()
 	m_pRigidBody->SetConstRotationY(true);
 	m_pRigidBody->SetConstRotationZ(true);
 	m_pRigidBody->SetUseGravity(true);
+	m_pRigidBody->SetMass(2.f);
+	m_pRigidBody->SetDrag(40.f);
 
 	m_sPlayerStatus.crtHp = m_sPlayerStatus.maxHp + m_sEquipStatus.hp;
 	m_sPlayerStatus.crtPotion = m_sPlayerStatus.maxPotion;
