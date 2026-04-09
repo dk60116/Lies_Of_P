@@ -45,6 +45,8 @@ SamplerState gSampler : register(s0);
 #define LIGHT_TYPE_DIRECTIONAL 0
 #define LIGHT_TYPE_POINT 1
 #define LIGHT_TYPE_SPOT 2
+#define DIRECT_METAL_SPEC_BOOST 1.55f
+#define DIRECT_SMOOTH_SPEC_BOOST 1.18f
 #define gShadowInvMapSize (gShadowParams.xy)
 #define gShadowBias (gShadowParams.z)
 #define gLightSize (gShadowParams.w)
@@ -363,7 +365,7 @@ float4 PSMain(VSOut i) : SV_Target
         float G = GeometrySmith(NdotV, NdotL, roughnessSpecular);
         float3 F = FresnelSchlick(VdotH, F0);
 
-        float metallicSpecBoost = lerp(1.0f, 1.25f, metallic);
+        float metallicSpecBoost = lerp(1.0f, DIRECT_METAL_SPEC_BOOST, metallic) * lerp(1.0f, DIRECT_SMOOTH_SPEC_BOOST, 1.0f - roughnessSpecular);
         float3 spec = (D * G * F) / max(4.0f * NdotV * NdotL, 1e-6f);
         float3 kS = F;
         float3 kD = (1.0f - kS) * (1.0f - metallic);

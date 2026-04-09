@@ -35,6 +35,8 @@ cbuffer PerCustomValue : register(b10)
 #define LIGHT_TYPE_DIRECTIONAL 0
 #define LIGHT_TYPE_POINT 1
 #define LIGHT_TYPE_SPOT 2
+#define DEFAULT_SPECULAR_POWER 80.0f
+#define DEFAULT_SPECULAR_BOOST 1.8f
 
 #pragma pack_matrix(row_major)
 cbuffer PerLight : register(b4)
@@ -171,8 +173,10 @@ float4 PSMain(VSOut input) : SV_TARGET
 
         float3 R = reflect(-L, N);
         float RdotV = saturate(dot(R, V));
-        float3 fSpecular = pow(RdotV, 50);
-        float specularStrength = gSmoothness;
+        float smoothness = saturate(gSmoothness);
+        float specularPower = lerp(18.0f, DEFAULT_SPECULAR_POWER, smoothness);
+        float3 fSpecular = pow(RdotV, specularPower);
+        float specularStrength = smoothness * DEFAULT_SPECULAR_BOOST;
         float3 specular = lightColor * fSpecular * specularStrength * intensity * attenuation;
         specularSum += specular;
 

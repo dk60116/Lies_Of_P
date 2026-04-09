@@ -4,6 +4,8 @@
 #define LIGHT_TYPE_DIRECTIONAL 0
 #define LIGHT_TYPE_POINT 1
 #define LIGHT_TYPE_SPOT 2
+#define DIRECT_METAL_SPEC_BOOST 1.55f
+#define DIRECT_SMOOTH_SPEC_BOOST 1.18f
 
 cbuffer PerObject : register(b0)
 {
@@ -302,7 +304,7 @@ float4 PSMain(VSOut i) : SV_Target
         float G = GeometrySmith(NdotV, NdotL, roughness);
         float3 F = FresnelSchlick(VdotH, F0);
 
-        float metallicSpecBoost = lerp(1.0f, 1.25f, metallic);
+        float metallicSpecBoost = lerp(1.0f, DIRECT_METAL_SPEC_BOOST, metallic) * lerp(1.0f, DIRECT_SMOOTH_SPEC_BOOST, 1.0f - roughness);
         float3 spec = (D * G * F) / max(4.0f * NdotV * NdotL, 1e-6f);
         specSum += spec * radiance * NdotL * metallicSpecBoost;
     }
